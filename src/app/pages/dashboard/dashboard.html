@@ -1,1 +1,109 @@
-<p>dashboard works!</p>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-upload"></i>
+        Carga de información, incidencia delictiva
+      </div>
+
+      <div class="p-4">
+        <div class="mb-3">
+          <span class="required">*</span>
+          <em> Seleccionar Archivo Expedientes:</em>
+          <div class="mt-1">
+            <input type="file" class="form-control form-control-sm w-50">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <span class="required">*</span>
+          <em> Seleccionar Archivo Delitos:</em>
+          <div class="mt-1">
+            <input type="file" class="form-control form-control-sm w-50">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <span class="required">*</span>
+          <em> Seleccionar Archivo Víctimas:</em>
+          <div class="mt-1">
+            <input type="file" class="form-control form-control-sm w-50">
+          </div>
+        </div>
+
+        <button class="btn btn-siiid btn-sm">
+          Cargar Archivos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-file-excel"></i>
+        Descargar Plantillas
+      </div>
+
+      <div class="p-4">
+        <div class="row text-center">
+          <div class="col-4">
+            <i class="fa-solid fa-file-excel excel-icon"></i>
+            <div>Carpetas</div>
+          </div>
+          <div class="col-4">
+            <i class="fa-solid fa-file-excel excel-icon"></i>
+            <div>Delitos</div>
+          </div>
+          <div class="col-4">
+            <i class="fa-solid fa-file-excel excel-icon"></i>
+            <div>Víctimas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-xl-8">
+    <div class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-diagram-project"></i>
+        Flujo SIIID2 implementado
+      </div>
+
+      <div class="p-4">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="border p-3 bg-light h-100">
+              <strong>1. Validar</strong>
+              <p class="small text-muted mb-0">Carga de CSV/XLSX por API.</p>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border p-3 bg-light h-100">
+              <strong>2. Acuse previo</strong>
+              <p class="small text-muted mb-0">PDF antes de confirmar.</p>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border p-3 bg-light h-100">
+              <strong>3. Confirmación</strong>
+              <p class="small text-muted mb-0">Aceptar o rechazar.</p>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="border p-3 bg-light h-100">
+              <strong>4. Acuse final</strong>
+              <p class="small text-muted mb-0">PDF confirmado.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+.update-message {
+  padding: 16px 18px;
+  border-bottom: 1px solid #ddd;
+  color: #586575;
+  font-weight: 700;
+}
+
+.actualizacion-form {
+  min-height: 285px;
+}
+
+.select-corte {
+  max-width: 380px;
+}
+
+.file-input {
+  max-width: 380px;
+  margin-top: 4px;
+}
+
+.excel-icon {
+  font-size: 62px;
+  color: #2f8f4e;
+  margin-bottom: 8px;
+}

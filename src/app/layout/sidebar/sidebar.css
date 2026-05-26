@@ -1,0 +1,102 @@
+.sidebar {
+  width: 318px;
+  min-height: calc(100vh - 90px);
+  background: #ffffff;
+  border-right: 1px solid #e5e5e5;
+  color: #111;
+}
+
+.user-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 16px 10px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  color: #333;
+  display: grid;
+  place-items: center;
+  font-size: 31px;
+}
+
+.user-name {
+  font-size: 12px;
+  line-height: 1.2;
+  color: #333;
+}
+
+.user-status {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 700;
+}
+
+.version {
+  text-align: center;
+  font-size: 13px;
+  padding: 8px 0 14px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.menu {
+  padding-top: 6px;
+}
+
+.menu-link {
+  width: 100%;
+  min-height: 32px;
+  padding: 7px 14px;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  font-size: 14px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.menu-button {
+  cursor: pointer;
+}
+
+.menu-button span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.menu-link i {
+  width: 15px;
+  font-size: 13px;
+  text-align: center;
+  color: #000;
+}
+
+.menu-link:hover,
+.menu-link.active {
+  background: var(--siiid-guinda);
+  color: #fff;
+}
+
+.menu-link:hover i,
+.menu-link.active i {
+  color: #fff;
+}
+
+.level-2 {
+  padding-left: 14px;
+}
+
+.level-3 {
+  padding-left: 14px;
+  font-weight: 700;
+}
+
+.level-3 i {
+  font-size: 12px;
+}
