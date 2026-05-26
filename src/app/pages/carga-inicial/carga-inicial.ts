@@ -1,10 +1,10 @@
 import { Component, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
 import { CargaService } from '../../core/services/carga.service';
 import {
-  CargaValidacionError,
   CargaValidacionResponse,
   CargaValidacionResumenItem
 } from '../../core/models/carga.models';
@@ -57,8 +57,9 @@ acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
 
 constructor(
   private cargaService: CargaService,
-  private sanitizer: DomSanitizer
-) {} 
+  private sanitizer: DomSanitizer,
+  private router: Router
+) {}
 
   seleccionarArchivo(event: Event, tipo: 'carpetas' | 'delitos' | 'victimas'): void {
     const input = event.target as HTMLInputElement;
@@ -176,53 +177,56 @@ constructor(
     });
   }
 
-  rechazarCarga(): void {
-    const codigoReferencia = this.codigoReferencia();
+rechazarCarga(): void {
+  const codigoReferencia = this.codigoReferencia();
 
-    if (!codigoReferencia) {
-      return;
+  if (!codigoReferencia) {
+    return;
+  }
+
+  this.estado.set('CONFIRMANDO');
+
+  this.cargaService.confirmarCarga({
+    codigoReferencia,
+    aceptar: false
+  }).subscribe({
+    next: () => {
+      this.estado.set('RECHAZADO');
+      this.limpiarUrlsPdf();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Carga rechazada',
+        text: 'La carga fue rechazada correctamente.',
+        confirmButtonColor: '#691C32'
+      }).then(() => {
+        this.router.navigateByUrl('/');
+      });
+    },
+    error: (error) => {
+      this.estado.set('MOSTRANDO_ACUSE');
+
+      Swal.fire({
+        icon: 'error',
+        title: 'No fue posible rechazar la carga',
+        text: error?.error?.mensaje || 'Intente nuevamente.',
+        confirmButtonColor: '#691C32'
+      });
     }
+  });
+}
 
-    this.estado.set('CONFIRMANDO');
+cerrarAcuse(): void {
+  this.estado.set('INICIAL');
+  this.limpiarUrlsPdf();
+}
 
-    this.cargaService.confirmarCarga({
-      codigoReferencia,
-      aceptar: false
-    }).subscribe({
-      next: () => {
-        this.estado.set('RECHAZADO');
-        this.cerrarAcuse();
-        this.reiniciarFormulario();
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Carga rechazada',
-          text: 'La carga fue rechazada correctamente.',
-          confirmButtonColor: '#691C32'
-        });
-      },
-      error: (error) => {
-        this.estado.set('MOSTRANDO_ACUSE');
-
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible rechazar la carga',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
-        });
-      }
-    });
-  }
-
-  cerrarAcuse(): void {
-    this.estado.set(this.estado() === 'CONFIRMADO' ? 'CONFIRMADO' : 'INICIAL');
-    this.limpiarUrlsPdf();
-  }
-
-  cerrarProcesoConfirmado(): void {
-    this.cerrarAcuse();
-    this.reiniciarFormulario();
-  }
+cerrarProcesoConfirmado(): void {
+  this.limpiarUrlsPdf();
+  this.reiniciarFormulario();
+  this.estado.set('INICIAL');
+  this.router.navigateByUrl('/');
+}
 
   private abrirAcusePrevio(codigoReferencia: string): void {
     this.cargaService.descargarAcusePrevio(codigoReferencia).subscribe({
