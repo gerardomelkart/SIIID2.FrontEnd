@@ -1,8 +1,8 @@
 <aside class="sidebar">
   <div class="user-panel">
-<div class="avatar">
-  <img src="/img/logoMujBandera.png" alt="Usuario en línea">
-</div>
+    <div class="avatar">
+      <img src="/img/logoMujBandera.png" alt="Usuario en línea">
+    </div>
 
     <div>
       <div class="user-name">{{ usuario()?.nombreCompleto || usuario()?.usuario || 'usuario' }}</div>
@@ -12,6 +12,7 @@
 
   <div class="version">Ver. 3.0.0</div>
 
+  <nav class="menu">
     @if (habilitaCarga() || habilitaModificacion()) {
       <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
         <span>
@@ -45,7 +46,7 @@
         }
       }
     }
-    
+
     <a class="menu-link" routerLink="/informes" routerLinkActive="active">
       <i class="fa-solid fa-bars"></i>
       Informes
@@ -66,6 +67,6 @@
         <i class="fa-solid fa-power-off"></i>
         Cerrar Sesión
       </span>
-</button>
+    </button>
   </nav>
 </aside>
