@@ -9,6 +9,7 @@ import { DiferenciasActualizacion } from './pages/diferencias-actualizacion/dife
 import { Informes } from './pages/informes/informes';
 import { CrudRegistros } from './pages/crud-registros/crud-registros';
 import { Configuracion } from './pages/configuracion/configuracion';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -18,6 +19,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayout,
+    canActivate: [authGuard],
     children: [
       { path: '', component: Dashboard },
       { path: 'carga-inicial', component: CargaInicial },

@@ -5,42 +5,47 @@
 </div>
 
     <div>
-      <div class="user-name">gerardo melkart noeller alvarez</div>
+      <div class="user-name">{{ usuario()?.nombreCompleto || usuario()?.usuario || 'usuario' }}</div>
       <div class="user-status">EN LÍNEA</div>
     </div>
   </div>
 
   <div class="version">Ver. 3.0.0</div>
 
-  <nav class="menu">
-    <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
-      <span>
-        <i class="fa-solid fa-upload"></i>
-        Carga de Información
-      </span>
-    </button>
-
-    @if (cargaAbierta()) {
-      <button type="button" class="menu-link menu-button level-2" (click)="toggleIncidencia()">
+    @if (habilitaCarga() || habilitaModificacion()) {
+      <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
         <span>
-          <i class="fa-solid fa-folder"></i>
-          Incidencia Delictiva
+          <i class="fa-solid fa-upload"></i>
+          Carga de Información
         </span>
       </button>
 
-      @if (incidenciaAbierta()) {
-        <a class="menu-link level-3" routerLink="/carga-inicial" routerLinkActive="active">
-          <i class="fa-solid fa-upload"></i>
-          Integrar Información
-        </a>
+      @if (cargaAbierta()) {
+        <button type="button" class="menu-link menu-button level-2" (click)="toggleIncidencia()">
+          <span>
+            <i class="fa-solid fa-folder"></i>
+            Incidencia Delictiva
+          </span>
+        </button>
 
-        <a class="menu-link level-3" routerLink="/actualizacion" routerLinkActive="active">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          Actualizar Información
-        </a>
+        @if (incidenciaAbierta()) {
+          @if (habilitaCarga()) {
+            <a class="menu-link level-3" routerLink="/carga-inicial" routerLinkActive="active">
+              <i class="fa-solid fa-upload"></i>
+              Integrar Información
+            </a>
+          }
+
+          @if (habilitaModificacion()) {
+            <a class="menu-link level-3" routerLink="/actualizacion" routerLinkActive="active">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              Actualizar Información
+            </a>
+          }
+        }
       }
     }
-
+    
     <a class="menu-link" routerLink="/informes" routerLinkActive="active">
       <i class="fa-solid fa-bars"></i>
       Informes
@@ -56,9 +61,11 @@
       Configuración
     </a>
 
-    <a class="menu-link" routerLink="/login">
-      <i class="fa-solid fa-power-off"></i>
-      Cerrar Sesión
-    </a>
+    <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">
+      <span>
+        <i class="fa-solid fa-power-off"></i>
+        Cerrar Sesión
+      </span>
+</button>
   </nav>
 </aside>

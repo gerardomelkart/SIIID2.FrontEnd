@@ -38,9 +38,18 @@
             (ngModelChange)="password.set($event)"
           >
         </div>
+        @if (mensajeError()) {
+          <div class="login-error">
+            {{ mensajeError() }}
+          </div>
+        }
 
-        <button type="submit" class="btn-login">
-          Entrar
+        <button type="submit" class="btn-login" [disabled]="cargando()">
+          @if (cargando()) {
+            Entrando...
+          } @else {
+            Entrar
+          }
         </button>
       </form>
     </div>
