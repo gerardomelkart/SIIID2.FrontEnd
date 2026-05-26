@@ -1,82 +1,14 @@
 .topbar {
   height: 90px;
   background: var(--siiid-guinda);
-  color: #fff;
   display: flex;
   align-items: center;
-  padding: 0 70px;
+  padding-left: 86px;
+  overflow: hidden;
 }
 
-.institutional-logos {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.logo-emblem {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: var(--siiid-dorado);
-  border: 2px solid rgba(188, 149, 92, .7);
-  font-size: 27px;
-}
-
-.logo-block {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
-
-.logo-block span {
-  font-size: 11px;
-  opacity: .92;
-}
-
-.logo-block.gobierno span {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.logo-block.gobierno strong {
-  font-size: 34px;
-  font-family: Georgia, 'Times New Roman', serif;
-}
-
-.logo-block.seguridad strong {
-  font-size: 36px;
-  font-family: Georgia, 'Times New Roman', serif;
-}
-
-.logo-block.seguridad span {
-  font-size: 10px;
-}
-
-.logo-block.sesnsp strong {
-  font-size: 18px;
-  letter-spacing: .02em;
-}
-
-.logo-block.sesnsp span {
-  font-size: 8px;
-  margin-top: 3px;
-}
-
-.logo-shield {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.4);
-  font-size: 25px;
-}
-
-.divider {
-  width: 2px;
-  height: 50px;
-  background: var(--siiid-dorado);
+.topbar-logo {
+  height: 88px;
+  width: auto;
+  display: block;
 }
