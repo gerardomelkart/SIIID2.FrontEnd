@@ -8,11 +8,15 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
-  cargaAbierta = signal(true);
-  incidenciaAbierta = signal(true);
+  cargaAbierta = signal(false);
+  incidenciaAbierta = signal(false);
 
   toggleCarga(): void {
     this.cargaAbierta.update(valor => !valor);
+
+    if (!this.cargaAbierta()) {
+      this.incidenciaAbierta.set(false);
+    }
   }
 
   toggleIncidencia(): void {

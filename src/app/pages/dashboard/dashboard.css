@@ -1,5 +1,3 @@
-.excel-icon {
-  font-size: 56px;
-  color: #2f8f4e;
-  margin-bottom: 8px;
+:host {
+  display: block;
 }
