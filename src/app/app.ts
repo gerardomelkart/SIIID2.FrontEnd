@@ -14,10 +14,21 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
-
     const esRecarga = navigationEntry?.type === 'reload';
 
-    if (esRecarga) {
+    if (!esRecarga) {
+      return;
+    }
+
+    const rutaActual = window.location.pathname.toLowerCase();
+
+    // Si está en login, no lo movemos.
+    if (rutaActual === '/login') {
+      return;
+    }
+
+    // Si está dentro del sistema, al refrescar regresa al inicio vacío.
+    if (rutaActual !== '/') {
       this.router.navigateByUrl('/');
     }
   }

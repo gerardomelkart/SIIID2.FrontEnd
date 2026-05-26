@@ -7,7 +7,8 @@
 }
 
 .excel-icon {
-  font-size: 62px;
-  color: #2f8f4e;
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
   margin-bottom: 8px;
 }

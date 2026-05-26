@@ -1,0 +1,52 @@
+.configuracion-card {
+  width: 100%;
+  min-height: 420px;
+}
+
+.configuracion-body {
+  background: #fff;
+  min-height: 360px;
+}
+
+.configuracion-instruccion {
+  color: #ff001f;
+  font-size: 13px;
+  padding: 18px 16px 6px;
+  margin: 0;
+}
+
+.configuracion-body hr {
+  margin: 8px 0 16px;
+  border-color: #d6d6d6;
+  opacity: 1;
+}
+
+.configuracion-form {
+  padding: 0 16px 24px;
+}
+
+.config-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  line-height: 1.35;
+  color: #223;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+
+.config-check input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: #0d8ddb;
+  cursor: pointer;
+}
+
+.config-check span {
+  cursor: pointer;
+}
+
+.btn-siiid {
+  min-width: 74px;
+}

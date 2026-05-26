@@ -8,6 +8,7 @@ import { Actualizacion } from './pages/actualizacion/actualizacion';
 import { DiferenciasActualizacion } from './pages/diferencias-actualizacion/diferencias-actualizacion';
 import { Informes } from './pages/informes/informes';
 import { CrudRegistros } from './pages/crud-registros/crud-registros';
+import { Configuracion } from './pages/configuracion/configuracion';
 
 export const routes: Routes = [
   {
@@ -23,7 +24,8 @@ export const routes: Routes = [
       { path: 'actualizacion', component: Actualizacion },
       { path: 'actualizacion/diferencias', component: DiferenciasActualizacion },
       { path: 'informes', component: Informes },
-      { path: 'crud-registros', component: CrudRegistros }
+      { path: 'crud-registros', component: CrudRegistros },
+      { path: 'configuracion', component: Configuracion }
     ]
   },
   {
