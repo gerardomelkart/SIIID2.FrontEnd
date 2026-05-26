@@ -15,20 +15,28 @@
         <div class="mb-2">
           <span class="required">*</span>
           <em> Seleccionar Año:</em>
-          <select class="form-select form-select-sm select-corte">
-            <option selected>Seleccione Año...</option>
-            <option>2026</option>
-            <option>2025</option>
-            <option>2024</option>
-            <option>2023</option>
+          <select
+            class="form-select form-select-sm select-corte"
+            [ngModel]="anioCorte()"
+            (ngModelChange)="anioCorte.set($event); onPeriodoChange()"
+          >
+            <option value="">Seleccione Año...</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
           </select>
         </div>
 
-        <div class="mb-4">
+        <div class="mb-3">
           <span class="required">*</span>
           <em> Seleccionar Mes:</em>
-          <select class="form-select form-select-sm select-corte">
-            <option selected>Seleccione Mes...</option>
+          <select
+            class="form-select form-select-sm select-corte"
+            [ngModel]="mesCorte()"
+            (ngModelChange)="mesCorte.set($event); onPeriodoChange()"
+          >
+            <option value="">Seleccione Mes...</option>
             <option value="1">Enero</option>
             <option value="2">Febrero</option>
             <option value="3">Marzo</option>
@@ -44,27 +52,55 @@
           </select>
         </div>
 
-        <div class="mb-2">
-          <span class="required">*</span>
-          <em> Seleccionar Archivo Expedientes:</em>
-          <input type="file" class="form-control form-control-sm file-input">
-        </div>
-
-        <div class="mb-2">
-          <span class="required">*</span>
-          <em> Seleccionar Archivo Delitos:</em>
-          <input type="file" class="form-control form-control-sm file-input">
-        </div>
-
-        <div class="mb-4">
-          <span class="required">*</span>
-          <em> Seleccionar Archivo Víctimas:</em>
-          <input type="file" class="form-control form-control-sm file-input">
-        </div>
-
-        <button class="btn btn-siiid btn-sm">
-          Cargar Archivos
+        <button
+          type="button"
+          class="btn btn-siiid btn-sm mb-3"
+          [disabled]="!puedeConsultar() || estadoPeriodo() === 'VALIDANDO'"
+          (click)="consultarPeriodo()"
+        >
+          @if (estadoPeriodo() === 'VALIDANDO') {
+            Consultando...
+          } @else {
+            Consultar periodo
+          }
         </button>
+
+        @if (mensajePeriodo()) {
+          <div
+            class="periodo-alert"
+            [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE'"
+            [class.periodo-info]="estadoPeriodo() === 'VALIDANDO'"
+          >
+            {{ mensajePeriodo() }}
+          </div>
+        }
+
+        @if (mostrarArchivos()) {
+          <div class="archivos-actualizacion mt-4">
+            <div class="mb-2">
+              <span class="required">*</span>
+              <em> Seleccionar Archivo Expedientes:</em>
+              <input type="file" class="form-control form-control-sm file-input">
+            </div>
+
+            <div class="mb-2">
+              <span class="required">*</span>
+              <em> Seleccionar Archivo Delitos:</em>
+              <input type="file" class="form-control form-control-sm file-input">
+            </div>
+
+            <div class="mb-4">
+              <span class="required">*</span>
+              <em> Seleccionar Archivo Víctimas:</em>
+              <input type="file" class="form-control form-control-sm file-input">
+            </div>
+
+            <button class="btn btn-siiid btn-sm">
+              Cargar Archivos
+            </button>
+          </div>
+        }
       </div>
     </div>
   </div>

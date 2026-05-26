@@ -6,7 +6,7 @@
 }
 
 .actualizacion-form {
-  min-height: 285px;
+  min-height: 245px;
 }
 
 .select-corte {
@@ -22,4 +22,35 @@
   font-size: 62px;
   color: #2f8f4e;
   margin-bottom: 8px;
+}
+
+.periodo-alert {
+  max-width: 720px;
+  padding: 10px 12px;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.periodo-info {
+  background: #eef3f7;
+  color: #435466;
+  border: 1px solid #cfd9e2;
+}
+
+.periodo-ok {
+  background: #edf7ed;
+  color: #1f6b35;
+  border: 1px solid #b9dfc1;
+}
+
+.periodo-error {
+  background: #fff0f0;
+  color: #8a1f1f;
+  border: 1px solid #e0b4b4;
+}
+
+.archivos-actualizacion {
+  border-top: 1px solid #e5e5e5;
+  padding-top: 18px;
 }
