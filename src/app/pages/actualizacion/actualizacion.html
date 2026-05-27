@@ -11,96 +11,156 @@
         a la información reportada en periodos anteriores."
       </div>
 
-      <div class="p-4 actualizacion-form">
+      @if (mostrarSelectorEntidad()) {
         <div class="mb-2">
           <span class="required">*</span>
-          <em> Seleccionar Año:</em>
+          <em> Seleccionar Entidad Federativa:</em>
           <select
             class="form-select form-select-sm select-corte"
-            [ngModel]="anioCorte()"
-            (ngModelChange)="anioCorte.set($event); onPeriodoChange()"
+            [ngModel]="idEntidadFederativa()"
+            (ngModelChange)="idEntidadFederativa.set($event); onPeriodoChange()"
           >
-            <option value="">Seleccione Año...</option>
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
+            <option value="">Seleccione Entidad...</option>
+            <option value="1">Aguascalientes</option>
+            <option value="2">Baja California</option>
+            <option value="3">Baja California Sur</option>
+            <option value="4">Campeche</option>
+            <option value="5">Coahuila</option>
+            <option value="6">Colima</option>
+            <option value="7">Chiapas</option>
+            <option value="8">Chihuahua</option>
+            <option value="9">Ciudad de México</option>
+            <option value="10">Durango</option>
+            <option value="11">Guanajuato</option>
+            <option value="12">Guerrero</option>
+            <option value="13">Hidalgo</option>
+            <option value="14">Jalisco</option>
+            <option value="15">México</option>
+            <option value="16">Michoacán</option>
+            <option value="17">Morelos</option>
+            <option value="18">Nayarit</option>
+            <option value="19">Nuevo León</option>
+            <option value="20">Oaxaca</option>
+            <option value="21">Puebla</option>
+            <option value="22">Querétaro</option>
+            <option value="23">Quintana Roo</option>
+            <option value="24">San Luis Potosí</option>
+            <option value="25">Sinaloa</option>
+            <option value="26">Sonora</option>
+            <option value="27">Tabasco</option>
+            <option value="28">Tamaulipas</option>
+            <option value="29">Tlaxcala</option>
+            <option value="30">Veracruz</option>
+            <option value="31">Yucatán</option>
+            <option value="32">Zacatecas</option>
           </select>
         </div>
+      }
 
-        <div class="mb-3">
-          <span class="required">*</span>
-          <em> Seleccionar Mes:</em>
-          <select
-            class="form-select form-select-sm select-corte"
-            [ngModel]="mesCorte()"
-            (ngModelChange)="mesCorte.set($event); onPeriodoChange()"
-          >
-            <option value="">Seleccione Mes...</option>
-            <option value="1">Enero</option>
-            <option value="2">Febrero</option>
-            <option value="3">Marzo</option>
-            <option value="4">Abril</option>
-            <option value="5">Mayo</option>
-            <option value="6">Junio</option>
-            <option value="7">Julio</option>
-            <option value="8">Agosto</option>
-            <option value="9">Septiembre</option>
-            <option value="10">Octubre</option>
-            <option value="11">Noviembre</option>
-            <option value="12">Diciembre</option>
-          </select>
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-siiid btn-sm mb-3"
-          [disabled]="!puedeConsultar() || estadoPeriodo() === 'VALIDANDO'"
-          (click)="consultarPeriodo()"
+      <div class="mb-2">
+        <span class="required">*</span>
+        <em> Seleccionar Año:</em>
+        <select
+          class="form-select form-select-sm select-corte"
+          [ngModel]="anioCorte()"
+          (ngModelChange)="anioCorte.set($event); onPeriodoChange()"
         >
-          @if (estadoPeriodo() === 'VALIDANDO') {
-            Consultando...
-          } @else {
-            Consultar periodo
-          }
-        </button>
+          <option value="">Seleccione Año...</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+      </div>
 
-        @if (mensajePeriodo()) {
-          <div
-            class="periodo-alert"
-            [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE'"
-            [class.periodo-info]="estadoPeriodo() === 'VALIDANDO'"
-          >
-            {{ mensajePeriodo() }}
-          </div>
+      <div class="mb-3">
+        <span class="required">*</span>
+        <em> Seleccionar Mes:</em>
+        <select
+          class="form-select form-select-sm select-corte"
+          [ngModel]="mesCorte()"
+          (ngModelChange)="mesCorte.set($event); onPeriodoChange()"
+        >
+          <option value="">Seleccione Mes...</option>
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-siiid btn-sm mb-3"
+        [disabled]="!puedeConsultar() || estadoPeriodo() === 'CONSULTANDO'"
+        (click)="consultarPeriodo()"
+      >
+        @if (estadoPeriodo() === 'CONSULTANDO') {
+          Consultando...
+        } @else {
+          Consultar periodo
         }
+      </button>
 
-        @if (mostrarArchivos()) {
-          <div class="archivos-actualizacion mt-4">
-            <div class="mb-2">
-              <span class="required">*</span>
-              <em> Seleccionar Archivo Expedientes:</em>
-              <input type="file" class="form-control form-control-sm file-input">
-            </div>
+      @if (mensajePeriodo()) {
+        <div
+          class="periodo-alert"
+          [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+          [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+          [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
+        >
+          {{ mensajePeriodo() }}
+        </div>
+      }
 
-            <div class="mb-2">
-              <span class="required">*</span>
-              <em> Seleccionar Archivo Delitos:</em>
-              <input type="file" class="form-control form-control-sm file-input">
-            </div>
-
-            <div class="mb-4">
-              <span class="required">*</span>
-              <em> Seleccionar Archivo Víctimas:</em>
-              <input type="file" class="form-control form-control-sm file-input">
-            </div>
-
-            <button class="btn btn-siiid btn-sm">
-              Cargar Archivos
-            </button>
+      @if (mostrarArchivos()) {
+        <div class="archivos-actualizacion mt-4">
+          <div class="mb-2">
+            <span class="required">*</span>
+            <em> Seleccionar Archivo Expedientes:</em>
+            <input
+              type="file"
+              class="form-control form-control-sm file-input"
+              accept=".csv,.xlsx,.xls"
+              (change)="seleccionarArchivo($event, 'carpetas')"
+            >
           </div>
-        }
+
+          <div class="mb-2">
+            <span class="required">*</span>
+            <em> Seleccionar Archivo Delitos:</em>
+            <input
+              type="file"
+              class="form-control form-control-sm file-input"
+              accept=".csv,.xlsx,.xls"
+              (change)="seleccionarArchivo($event, 'delitos')"
+            >
+          </div>
+
+          <div class="mb-4">
+            <span class="required">*</span>
+            <em> Seleccionar Archivo Víctimas:</em>
+            <input
+              type="file"
+              class="form-control form-control-sm file-input"
+              accept=".csv,.xlsx,.xls"
+              (change)="seleccionarArchivo($event, 'victimas')"
+            >
+          </div>
+
+          <button class="btn btn-siiid btn-sm">
+            Cargar Archivos
+          </button>
+        </div>
+      }
       </div>
     </div>
   </div>

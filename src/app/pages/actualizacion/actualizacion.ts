@@ -1,48 +1,71 @@
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-type EstadoPeriodo = 'SIN_CONSULTAR' | 'VALIDANDO' | 'DISPONIBLE' | 'NO_DISPONIBLE';
+import { ActualizacionPeriodoResponse } from '../../core/models/actualizacion.models';
+import { ActualizacionService } from '../../core/services/actualizacion.service';
+import { SessionService } from '../../core/services/session.service';
+
+type EstadoPeriodo =
+  | 'SIN_CONSULTAR'
+  | 'CONSULTANDO'
+  | 'DISPONIBLE'
+  | 'NO_DISPONIBLE'
+  | 'ERROR';
 
 @Component({
   selector: 'app-actualizacion',
   imports: [FormsModule],
   templateUrl: './actualizacion.html',
-  styleUrl: './actualizacion.css',
+  styleUrl: './actualizacion.css'
 })
 export class Actualizacion {
   anioCorte = signal<string>('');
   mesCorte = signal<string>('');
+  idEntidadFederativa = signal<string>('');
+
   estadoPeriodo = signal<EstadoPeriodo>('SIN_CONSULTAR');
+  respuestaPeriodo = signal<ActualizacionPeriodoResponse | null>(null);
+  mensajePeriodo = signal('');
 
-  mensajePeriodo = computed(() => {
-    const mes = this.mesCorte();
-    const anio = this.anioCorte();
+  carpetas = signal<File | null>(null);
+  delitos = signal<File | null>(null);
+  victimas = signal<File | null>(null);
 
-    if (this.estadoPeriodo() === 'SIN_CONSULTAR') {
-      return '';
-    }
+  usuario = this.sessionService.usuario;
 
-    if (this.estadoPeriodo() === 'VALIDANDO') {
-      return 'Consultando si existe carga inicial confirmada para el periodo seleccionado...';
-    }
-
-    if (this.estadoPeriodo() === 'DISPONIBLE') {
-      return `Existe carga inicial confirmada para el periodo ${this.formatearPeriodo(mes, anio)}. Puede continuar con la actualización.`;
-    }
-
-    return `No existe carga inicial confirmada para el periodo ${this.formatearPeriodo(mes, anio)}. Primero debe existir una carga inicial confirmada.`;
+  esSuperUsuario = computed(() => {
+    const rol = this.usuario()?.rol?.toLowerCase() ?? '';
+    return rol.includes('super');
   });
 
   puedeConsultar = computed(() => {
-    return this.anioCorte() !== '' && this.mesCorte() !== '';
+    const tienePeriodo = this.anioCorte() !== '' && this.mesCorte() !== '';
+
+    if (!tienePeriodo) {
+      return false;
+    }
+
+    if (this.esSuperUsuario()) {
+      return this.idEntidadFederativa() !== '';
+    }
+
+    return true;
   });
 
-  mostrarArchivos = computed(() => {
-    return this.estadoPeriodo() === 'DISPONIBLE';
-  });
+  mostrarSelectorEntidad = computed(() => this.esSuperUsuario());
+
+  mostrarArchivos = computed(() => this.estadoPeriodo() === 'DISPONIBLE');
+
+  constructor(
+    private actualizacionService: ActualizacionService,
+    private sessionService: SessionService
+  ) {}
 
   onPeriodoChange(): void {
     this.estadoPeriodo.set('SIN_CONSULTAR');
+    this.respuestaPeriodo.set(null);
+    this.mensajePeriodo.set('');
+    this.limpiarArchivos();
   }
 
   consultarPeriodo(): void {
@@ -50,20 +73,65 @@ export class Actualizacion {
       return;
     }
 
-    this.estadoPeriodo.set('VALIDANDO');
+    const mes = Number(this.mesCorte());
+    const anio = Number(this.anioCorte());
 
-    // Temporal para demo:
-    // Después esto se cambia por una llamada real a la API.
-    setTimeout(() => {
-      this.estadoPeriodo.set('DISPONIBLE');
-    }, 500);
+    const idEntidad = this.esSuperUsuario()
+      ? Number(this.idEntidadFederativa())
+      : null;
+
+    this.estadoPeriodo.set('CONSULTANDO');
+    this.respuestaPeriodo.set(null);
+    this.mensajePeriodo.set('Consultando periodo seleccionado...');
+
+    this.actualizacionService.consultarPeriodo(mes, anio, idEntidad).subscribe({
+      next: (response) => {
+        this.respuestaPeriodo.set(response);
+        this.mensajePeriodo.set(response.mensaje || '');
+
+        if (response.puedeActualizar) {
+          this.estadoPeriodo.set('DISPONIBLE');
+          return;
+        }
+
+        this.estadoPeriodo.set('NO_DISPONIBLE');
+      },
+      error: (error) => {
+        const response = error?.error as ActualizacionPeriodoResponse | undefined;
+
+        if (response?.mensaje) {
+          this.respuestaPeriodo.set(response);
+          this.mensajePeriodo.set(response.mensaje);
+          this.estadoPeriodo.set('NO_DISPONIBLE');
+          return;
+        }
+
+        this.estadoPeriodo.set('ERROR');
+        this.mensajePeriodo.set('No fue posible consultar el periodo seleccionado.');
+      }
+    });
   }
 
-  private formatearPeriodo(mes: string, anio: string): string {
-    if (!mes || !anio) {
-      return '';
+  seleccionarArchivo(event: Event, tipo: 'carpetas' | 'delitos' | 'victimas'): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0] ?? null;
+
+    if (tipo === 'carpetas') {
+      this.carpetas.set(archivo);
     }
 
-    return `${mes.padStart(2, '0')}/${anio}`;
+    if (tipo === 'delitos') {
+      this.delitos.set(archivo);
+    }
+
+    if (tipo === 'victimas') {
+      this.victimas.set(archivo);
+    }
+  }
+
+  private limpiarArchivos(): void {
+    this.carpetas.set(null);
+    this.delitos.set(null);
+    this.victimas.set(null);
   }
 }
