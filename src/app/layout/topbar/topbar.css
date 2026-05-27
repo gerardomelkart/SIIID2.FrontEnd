@@ -1,0 +1,14 @@
+.topbar {
+  height: 90px;
+  background: var(--siiid-guinda);
+  display: flex;
+  align-items: center;
+  padding-left: 86px;
+  overflow: hidden;
+}
+
+.topbar-logo {
+  height: 88px;
+  width: auto;
+  display: block;
+}
