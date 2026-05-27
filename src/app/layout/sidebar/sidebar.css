@@ -55,11 +55,14 @@
 .menu-link {
   width: 100%;
   min-height: 32px;
-  padding: 7px 14px;
+  padding-top: 7px;
+  padding-right: 14px;
+  padding-bottom: 7px;
+  padding-left: 14px;
   color: #000;
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 6px;
   text-decoration: none;
   font-size: 14px;
   border: 0;
@@ -96,14 +99,59 @@
 }
 
 .level-2 {
-  padding-left: 14px;
+  padding-left: 42px;
 }
 
 .level-3 {
-  padding-left: 14px;
+  padding-left: 64px;
   font-weight: 700;
 }
 
 .level-3 i {
   font-size: 12px;
+}
+
+.menu {
+  position: relative;
+}
+
+.level-2,
+.level-3 {
+  position: relative;
+}
+
+.level-2::before,
+.level-3::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: black;
+}
+
+.level-2::after,
+.level-3::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 1px;
+  background-color: black;
+}
+
+.level-2::before {
+  left: 22px;
+}
+
+.level-2::after {
+  left: 22px;
+}
+
+.level-3::before {
+  left: 42px;
+}
+
+.level-3::after {
+  left: 42px;
 }
