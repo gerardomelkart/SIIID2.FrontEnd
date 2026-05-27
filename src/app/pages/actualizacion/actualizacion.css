@@ -55,3 +55,23 @@
   border-top: 1px solid #e5e5e5;
   padding-top: 18px;
 }
+
+.plantilla-link {
+  color: #000;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.plantilla-link:hover {
+  color: #691C32;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.plantilla-link:hover .excel-icon {
+  transform: scale(1.04);
+}
+
+.excel-icon {
+  transition: transform .12s ease-in-out;
+}
