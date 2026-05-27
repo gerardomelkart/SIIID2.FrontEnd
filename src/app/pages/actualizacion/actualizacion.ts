@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { ActualizacionPeriodoResponse } from '../../core/models/actualizacion.models';
@@ -19,6 +19,8 @@ type EstadoPeriodo =
   styleUrl: './actualizacion.css'
 })
 export class Actualizacion {
+  private readonly actualizacionService = inject(ActualizacionService);
+  private readonly sessionService = inject(SessionService);
   anioCorte = signal<string>('');
   mesCorte = signal<string>('');
   idEntidadFederativa = signal<string>('');
@@ -56,10 +58,7 @@ export class Actualizacion {
 
   mostrarArchivos = computed(() => this.estadoPeriodo() === 'DISPONIBLE');
 
-  constructor(
-    private actualizacionService: ActualizacionService,
-    private sessionService: SessionService
-  ) {}
+  constructor() {}
 
   onPeriodoChange(): void {
     this.estadoPeriodo.set('SIN_CONSULTAR');
