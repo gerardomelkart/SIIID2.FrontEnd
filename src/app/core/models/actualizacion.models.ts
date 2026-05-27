@@ -9,3 +9,25 @@ export interface ActualizacionPeriodoResponse {
   anioCorte: number;
   mensaje: string;
 }
+
+export interface ActualizacionDiferenciasResponse {
+  esValido: boolean;
+  codigoReferencia: string;
+  mensaje: string;
+  carpetas: ActualizacionDiferenciaRegistro[];
+  delitos: ActualizacionDiferenciaRegistro[];
+  victimas: ActualizacionDiferenciaRegistro[];
+}
+
+export interface ActualizacionDiferenciaRegistro {
+  tipoMovimiento: string;
+  campoIdentificador: string;
+  identificadorFiscalia: string;
+  camposModificados: ActualizacionCampoDiferencia[];
+}
+
+export interface ActualizacionCampoDiferencia {
+  campo: string;
+  valorAnterior: string | null;
+  valorNuevo: string | null;
+}

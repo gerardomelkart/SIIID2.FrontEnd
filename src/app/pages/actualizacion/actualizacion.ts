@@ -4,8 +4,16 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
-import { ActualizacionPeriodoResponse } from '../../core/models/actualizacion.models';
-import { CargaValidacionResponse, CargaValidacionResumenItem } from '../../core/models/carga.models';
+import {
+  ActualizacionDiferenciasResponse,
+  ActualizacionPeriodoResponse
+} from '../../core/models/actualizacion.models';
+
+import {
+  CargaValidacionResponse,
+  CargaValidacionResumenItem
+} from '../../core/models/carga.models';
+
 import { ActualizacionService } from '../../core/services/actualizacion.service';
 import { SessionService } from '../../core/services/session.service';
 
@@ -16,6 +24,7 @@ type EstadoPeriodo =
   | 'NO_DISPONIBLE'
   | 'VALIDANDO'
   | 'VALIDADO_ERROR'
+  | 'MOSTRANDO_DIFERENCIAS'
   | 'MOSTRANDO_ACUSE'
   | 'CONFIRMANDO'
   | 'CONFIRMADO'
@@ -41,6 +50,8 @@ export class Actualizacion {
   estadoPeriodo = signal<EstadoPeriodo>('SIN_CONSULTAR');
   respuestaPeriodo = signal<ActualizacionPeriodoResponse | null>(null);
   respuestaValidacion = signal<CargaValidacionResponse | null>(null);
+  diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
+
   mensajePeriodo = signal('');
   errorGeneral = signal('');
 
@@ -97,10 +108,25 @@ export class Actualizacion {
   errores = computed(() => this.respuestaValidacion()?.errores ?? []);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
+  totalDiferenciasCarpetas = computed(() => this.diferencias()?.carpetas?.length ?? 0);
+  totalDiferenciasDelitos = computed(() => this.diferencias()?.delitos?.length ?? 0);
+  totalDiferenciasVictimas = computed(() => this.diferencias()?.victimas?.length ?? 0);
+
+  totalDiferencias = computed(() => {
+    return this.totalDiferenciasCarpetas()
+      + this.totalDiferenciasDelitos()
+      + this.totalDiferenciasVictimas();
+  });
+
+  mostrarDiferencias = computed(() => {
+    return this.estadoPeriodo() === 'MOSTRANDO_DIFERENCIAS' && !!this.diferencias();
+  });
+
   onPeriodoChange(): void {
     this.estadoPeriodo.set('SIN_CONSULTAR');
     this.respuestaPeriodo.set(null);
     this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
     this.mensajePeriodo.set('');
     this.errorGeneral.set('');
     this.limpiarArchivos();
@@ -122,6 +148,7 @@ export class Actualizacion {
     this.estadoPeriodo.set('CONSULTANDO');
     this.respuestaPeriodo.set(null);
     this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
     this.mensajePeriodo.set('Consultando periodo seleccionado...');
     this.errorGeneral.set('');
 
@@ -170,6 +197,7 @@ export class Actualizacion {
     }
 
     this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
     this.errorGeneral.set('');
   }
 
@@ -185,6 +213,7 @@ export class Actualizacion {
 
     const mes = Number(this.mesCorte());
     const anio = Number(this.anioCorte());
+
     const idEntidad = this.esSuperUsuario()
       ? Number(this.idEntidadFederativa())
       : null;
@@ -192,6 +221,7 @@ export class Actualizacion {
     this.estadoPeriodo.set('VALIDANDO');
     this.errorGeneral.set('');
     this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
     this.limpiarUrlsPdf();
 
     this.actualizacionService.validarActualizacion(
@@ -210,7 +240,7 @@ export class Actualizacion {
           return;
         }
 
-        this.abrirAcusePrevio(response.codigoReferencia);
+        this.prepararRevisionDiferencias(response.codigoReferencia);
       },
       error: (error: any) => {
         const response = error?.error as CargaValidacionResponse | undefined;
@@ -225,6 +255,22 @@ export class Actualizacion {
         this.errorGeneral.set(error?.error?.mensaje || 'No fue posible validar la actualización.');
       }
     });
+  }
+
+  verAcusePrevio(): void {
+    const codigoReferencia = this.codigoReferencia();
+
+    if (!codigoReferencia) {
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
+  }
+
+  volverADiferencias(): void {
+    if (this.diferencias()) {
+      this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+    }
   }
 
   aceptarActualizacion(): void {
@@ -267,7 +313,7 @@ export class Actualizacion {
         });
       },
       error: (error: any) => {
-        this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
         Swal.fire({
           icon: 'error',
@@ -306,7 +352,7 @@ export class Actualizacion {
         });
       },
       error: (error: any) => {
-        this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
         Swal.fire({
           icon: 'error',
@@ -325,6 +371,25 @@ export class Actualizacion {
     this.router.navigateByUrl('/');
   }
 
+  private prepararRevisionDiferencias(codigoReferencia: string): void {
+    this.actualizacionService.obtenerDiferencias(codigoReferencia).subscribe({
+      next: (response: ActualizacionDiferenciasResponse) => {
+        if (!response.esValido) {
+          this.estadoPeriodo.set('DISPONIBLE');
+          this.errorGeneral.set(response.mensaje || 'No fue posible obtener las diferencias de la actualización.');
+          return;
+        }
+
+        this.diferencias.set(response);
+        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+      },
+      error: (error: any) => {
+        this.estadoPeriodo.set('DISPONIBLE');
+        this.errorGeneral.set(error?.error?.mensaje || 'No fue posible consultar las diferencias de la actualización.');
+      }
+    });
+  }
+
   private abrirAcusePrevio(codigoReferencia: string): void {
     this.actualizacionService.descargarAcusePrevio(codigoReferencia).subscribe({
       next: (blob: Blob) => {
@@ -332,7 +397,7 @@ export class Actualizacion {
         this.estadoPeriodo.set('MOSTRANDO_ACUSE');
       },
       error: () => {
-        this.estadoPeriodo.set('DISPONIBLE');
+        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
         this.errorGeneral.set('La validación fue correcta, pero no fue posible generar el acuse previo.');
       }
     });
@@ -385,6 +450,7 @@ export class Actualizacion {
     this.limpiarArchivos();
     this.respuestaPeriodo.set(null);
     this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
     this.mensajePeriodo.set('');
     this.errorGeneral.set('');
   }

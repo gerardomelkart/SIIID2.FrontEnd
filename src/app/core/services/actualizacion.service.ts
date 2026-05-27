@@ -1,7 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
-import { ActualizacionPeriodoResponse } from '../models/actualizacion.models';
+import {
+  ActualizacionDiferenciasResponse,
+  ActualizacionPeriodoResponse
+} from '../models/actualizacion.models';
+
 import {
   CargaValidacionResponse,
   ConfirmarCargaRequest,
@@ -50,6 +54,12 @@ export class ActualizacionService {
     formData.append('victimas', victimas);
 
     return this.http.post<CargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+  }
+
+  obtenerDiferencias(codigoReferencia: string) {
+    return this.http.get<ActualizacionDiferenciasResponse>(
+      `${this.apiUrl}/diferencias/${codigoReferencia}`
+    );
   }
 
   confirmarActualizacion(request: ConfirmarCargaRequest) {

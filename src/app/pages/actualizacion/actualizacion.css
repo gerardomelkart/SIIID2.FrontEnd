@@ -292,3 +292,132 @@
     width: 45%;
   }
 }
+
+.diferencias-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 4400;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+}
+
+.diferencias-header {
+  height: 60px;
+  background: var(--siiid-guinda);
+  color: #fff;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+}
+
+.diferencias-body {
+  flex: 1;
+  overflow: auto;
+  padding: 22px;
+}
+
+.diferencias-resumen {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.diferencia-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 14px 16px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .15);
+}
+
+.diferencia-total {
+  border-left-color: #BC955C;
+}
+
+.diferencia-numero {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--siiid-guinda);
+  line-height: 1;
+}
+
+.diferencia-label {
+  margin-top: 6px;
+  font-weight: 700;
+  color: #333;
+}
+
+.diferencias-mensaje {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-weight: 700;
+  color: #586575;
+}
+
+.diferencias-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.diferencias-section {
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .15);
+}
+
+.diferencias-title {
+  background: #aaa7a7;
+  color: #222;
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+.diferencias-table {
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.diferencias-table thead th {
+  background: #e5e5e5;
+  color: #222;
+}
+
+.diferencias-actions {
+  height: 76px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 10px 40px;
+}
+
+.btn-acuse-previo {
+  width: 360px;
+  height: 48px;
+  border: 0;
+  color: #fff;
+  background: #6c757d;
+  font-size: 20px;
+  border-radius: 4px;
+}
+
+@media (max-width: 1200px) {
+  .diferencias-resumen {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .diferencias-actions {
+    gap: 12px;
+  }
+
+  .btn-acuse-previo {
+    width: 30%;
+  }
+}
