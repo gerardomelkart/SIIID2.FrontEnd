@@ -8,7 +8,7 @@ import { SessionService } from '../../core/services/session.service';
   selector: 'app-sidebar',
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css',
+  styleUrl: './sidebar.css'
 })
 export class Sidebar {
   private readonly sessionService = inject(SessionService);
@@ -17,6 +17,7 @@ export class Sidebar {
 
   cargaAbierta = signal(false);
   incidenciaAbierta = signal(false);
+  administracionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
   habilitaCarga = this.sessionService.habilitaCarga;
@@ -32,6 +33,10 @@ export class Sidebar {
 
   toggleIncidencia(): void {
     this.incidenciaAbierta.update(valor => !valor);
+  }
+
+  toggleAdministracion(): void {
+    this.administracionAbierta.update(valor => !valor);
   }
 
   cerrarSesion(): void {

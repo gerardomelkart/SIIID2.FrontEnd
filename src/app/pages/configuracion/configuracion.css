@@ -1,52 +1,157 @@
-.configuracion-card {
-  width: 100%;
-  min-height: 420px;
+.config-page {
+  padding: 6px;
 }
 
-.configuracion-body {
-  background: #fff;
-  min-height: 360px;
+.admin-header {
+  margin-bottom: 18px;
 }
 
-.configuracion-instruccion {
-  color: #ff001f;
-  font-size: 13px;
-  padding: 18px 16px 6px;
+.admin-header h1 {
   margin: 0;
+  font-size: 26px;
+  color: #333;
+  font-weight: 800;
 }
 
-.configuracion-body hr {
-  margin: 8px 0 16px;
-  border-color: #d6d6d6;
-  opacity: 1;
+.admin-header p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 14px;
 }
 
-.configuracion-form {
-  padding: 0 16px 24px;
+.config-grid {
+  display: grid;
+  grid-template-columns: 1.3fr .9fr;
+  gap: 18px;
 }
 
-.config-check {
+.config-body {
+  padding: 18px;
+}
+
+.config-info {
+  background: #f8f8f8;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.config-info p {
+  margin: 3px 0 0;
+  color: #667085;
+}
+
+.config-switch-list {
+  display: grid;
+  gap: 12px;
+}
+
+.module-switch {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 22px;
-  line-height: 1.35;
-  color: #223;
-  margin-bottom: 2px;
-  cursor: pointer;
+  justify-content: space-between;
 }
 
-.config-check input[type="checkbox"] {
-  width: 24px;
+.module-switch strong {
+  display: block;
+  color: #222;
+}
+
+.module-switch span {
+  display: block;
+  color: #667085;
+  font-size: 13px;
+}
+
+.module-switch input {
+  width: 48px;
   height: 24px;
-  accent-color: #0d8ddb;
-  cursor: pointer;
 }
 
-.config-check span {
-  cursor: pointer;
+.mini-stat {
+  display: grid;
+  gap: 12px;
 }
 
-.btn-siiid {
-  min-width: 74px;
+.mini-stat div {
+  border: 1px solid #ddd;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.mini-stat span {
+  display: block;
+  font-size: 30px;
+  color: var(--siiid-guinda);
+  line-height: 1;
+}
+
+.config-note {
+  margin-top: 16px;
+  color: #667085;
+  background: #f8f8f8;
+  padding: 12px;
+}
+
+.usuarios-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.buscador {
+  width: 320px;
+  height: 34px;
+  background: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #777;
+}
+
+.buscador input {
+  border: 0;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.entidad-table {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.entidad-table thead th {
+  background: var(--siiid-guinda);
+  color: #fff;
+  border-color: #5b1428;
+  padding: 11px 10px;
+}
+
+.entidad-table tbody td {
+  vertical-align: middle;
+  padding: 10px;
+  border-color: #dedede;
+}
+
+@media (max-width: 1100px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .usuarios-card-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .buscador {
+    width: 100%;
+  }
 }

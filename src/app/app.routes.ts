@@ -26,8 +26,14 @@ export const routes: Routes = [
       { path: 'actualizacion', component: Actualizacion },
       { path: 'actualizacion/diferencias', component: DiferenciasActualizacion },
       { path: 'informes', component: Informes },
-      { path: 'crud-registros', component: CrudRegistros },
-      { path: 'configuracion', component: Configuracion }
+
+      // Nuevas rutas de administración
+      { path: 'administracion/usuarios', component: CrudRegistros },
+      { path: 'administracion/configuracion', component: Configuracion },
+
+      // Rutas viejas redirigidas para no romper nada
+      { path: 'crud-registros', redirectTo: 'administracion/usuarios' },
+      { path: 'configuracion', redirectTo: 'administracion/configuracion' }
     ]
   },
   {

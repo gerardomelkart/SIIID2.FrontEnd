@@ -1,1 +1,251 @@
-<p>crud-registros works!</p>
+<div class="admin-page">
+  <div class="admin-header">
+    <div>
+      <h1>Administración de usuarios</h1>
+      <p>Gestión de cuentas, roles, entidad federativa y permisos operativos del sistema.</p>
+    </div>
+
+    <button type="button" class="btn btn-siiid" (click)="abrirNuevoUsuario()">
+      <i class="fa-solid fa-user-plus"></i>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <div class="admin-kpis">
+    <div class="kpi-card">
+      <div class="kpi-value">{{ totalUsuarios() }}</div>
+      <div class="kpi-label">Usuarios registrados</div>
+    </div>
+
+    <div class="kpi-card kpi-ok">
+      <div class="kpi-value">{{ totalActivos() }}</div>
+      <div class="kpi-label">Activos</div>
+    </div>
+
+    <div class="kpi-card kpi-warn">
+      <div class="kpi-value">{{ totalInactivos() }}</div>
+      <div class="kpi-label">Inactivos</div>
+    </div>
+
+    <div class="kpi-card kpi-gold">
+      <div class="kpi-value">{{ totalSuperUsuarios() }}</div>
+      <div class="kpi-label">Super usuarios</div>
+    </div>
+  </div>
+
+  <div class="siiid-card usuarios-card">
+<div class="siiid-card-header usuarios-card-header">
+  <span>
+    <i class="fa-solid fa-users"></i>
+    Usuarios del sistema
+  </span>
+
+  <div class="usuarios-tools">
+    <label class="ver-inactivos">
+      <input
+        type="checkbox"
+        [ngModel]="mostrarInactivos()"
+        (ngModelChange)="mostrarInactivos.set($event)"
+      >
+      Ver inactivos
+    </label>
+
+    <div class="buscador">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input
+        type="text"
+        placeholder="Buscar por nombre, usuario, correo, rol o entidad..."
+        [ngModel]="busqueda()"
+        (ngModelChange)="busqueda.set($event)"
+      >
+    </div>
+  </div>
+</div>
+
+    <div class="table-responsive">
+      <table class="table table-sm usuarios-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Entidad</th>
+            <th>Carga</th>
+            <th>Modificación</th>
+            <th>Estado</th>
+            <th>Fecha alta</th>
+            <th class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (usuario of usuariosFiltrados(); track usuario.id) {
+            <tr>
+              <td>
+                <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
+                <div class="usuario-sub">Registro: {{ usuario.usuarioRegistro }}</div>
+              </td>
+              <td>{{ usuario.usuario }}</td>
+              <td>{{ usuario.correo }}</td>
+              <td>
+                <span class="rol-badge">{{ usuario.rol }}</span>
+              </td>
+              <td>{{ usuario.entidad }}</td>
+              <td>
+                <span class="permiso-badge" [class.permiso-on]="usuario.habilitaCarga" [class.permiso-off]="!usuario.habilitaCarga">
+                  {{ usuario.habilitaCarga ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span class="permiso-badge" [class.permiso-on]="usuario.habilitaModificacion" [class.permiso-off]="!usuario.habilitaModificacion">
+                  {{ usuario.habilitaModificacion ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span class="estado-badge" [class.estado-activo]="usuario.estado === 'ACTIVO'" [class.estado-inactivo]="usuario.estado === 'INACTIVO'">
+                  {{ usuario.estado }}
+                </span>
+              </td>
+              <td>{{ usuario.fechaAlta }}</td>
+              <td>
+<div class="acciones">
+  <button type="button" class="btn-icon btn-edit" title="Editar" (click)="abrirEditarUsuario(usuario)">
+    <i class="fa-solid fa-pen"></i>
+  </button>
+
+  <button
+    type="button"
+    class="btn-icon btn-toggle"
+    [title]="usuario.estado === 'ACTIVO' ? 'Desactivar usuario' : 'Activar usuario'"
+    (click)="cambiarEstado(usuario)"
+  >
+    <i
+      class="fa-solid"
+      [class.fa-toggle-on]="usuario.estado === 'ACTIVO'"
+      [class.fa-toggle-off]="usuario.estado === 'INACTIVO'"
+    ></i>
+  </button>
+</div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (modalAbierto()) {
+  <div class="drawer-backdrop" (click)="cerrarModal()"></div>
+
+  <aside class="usuario-drawer">
+    <div class="drawer-header">
+      <div>
+        <h2>{{ modoFormulario() === 'NUEVO' ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+        <p>{{ modoFormulario() === 'NUEVO' ? 'Registrar una nueva cuenta de acceso.' : 'Modificar datos y permisos del usuario.' }}</p>
+      </div>
+
+      <button type="button" class="drawer-close" (click)="cerrarModal()">×</button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="form-grid">
+        <div class="form-group span-2">
+          <label>Nombre(s) <span>*</span></label>
+          <input class="form-control form-control-sm" placeholder="Ingresa nombre">
+        </div>
+
+        <div class="form-group">
+          <label>Primer apellido <span>*</span></label>
+          <input class="form-control form-control-sm" placeholder="Ingresa primer apellido">
+        </div>
+
+        <div class="form-group">
+          <label>Segundo apellido</label>
+          <input class="form-control form-control-sm" placeholder="Ingresa segundo apellido">
+        </div>
+
+        <div class="form-group">
+          <label>RFC <span>*</span></label>
+          <input class="form-control form-control-sm" placeholder="Ingresa RFC">
+        </div>
+
+        <div class="form-group">
+          <label>CURP <span>*</span></label>
+          <input class="form-control form-control-sm" placeholder="Ingresa CURP">
+        </div>
+
+        <div class="form-group span-2">
+          <label>Correo electrónico <span>*</span></label>
+          <input class="form-control form-control-sm" placeholder="Ingresa correo">
+        </div>
+
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input class="form-control form-control-sm" placeholder="Teléfono de contacto">
+        </div>
+
+        <div class="form-group">
+          <label>Usuario <span>*</span></label>
+          <input class="form-control form-control-sm" placeholder="Nombre de usuario">
+        </div>
+
+        <div class="form-group">
+          <label>Rol <span>*</span></label>
+          <select class="form-select form-select-sm">
+            <option>Seleccione rol...</option>
+            <option>Super Usuario</option>
+            <option>Operador</option>
+            <option>Consulta</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Entidad federativa <span>*</span></label>
+          <select class="form-select form-select-sm">
+            <option>Seleccione entidad...</option>
+            <option>Nacional</option>
+            <option>Campeche</option>
+            <option>Aguascalientes</option>
+            <option>Baja California</option>
+          </select>
+        </div>
+
+        <div class="form-group span-2">
+          <label>Contraseña {{ modoFormulario() === 'NUEVO' ? '*' : '' }}</label>
+          <input class="form-control form-control-sm" type="password" placeholder="Ingresa contraseña">
+          @if (modoFormulario() === 'EDITAR') {
+            <small>Déjala vacía para conservar la contraseña actual.</small>
+          }
+        </div>
+      </div>
+
+      <div class="permisos-panel">
+        <div>
+          <strong>Permisos operativos</strong>
+          <p>Habilita los módulos que este usuario podrá operar.</p>
+        </div>
+
+        <label class="switch-row">
+          <span>Carga de información</span>
+          <input type="checkbox" checked>
+        </label>
+
+        <label class="switch-row">
+          <span>Actualización de información</span>
+          <input type="checkbox" checked>
+        </label>
+      </div>
+    </div>
+
+    <div class="drawer-actions">
+      <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button type="button" class="btn btn-siiid" (click)="guardarUsuarioDemo()">Guardar usuario</button>
+    </div>
+  </aside>
+}

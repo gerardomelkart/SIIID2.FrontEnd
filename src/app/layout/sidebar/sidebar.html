@@ -52,15 +52,24 @@
       Informes
     </a>
 
-    <a class="menu-link" routerLink="/crud-registros" routerLinkActive="active">
-      <i class="fa-solid fa-book"></i>
-      Catálogos
-    </a>
+    <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+      <span>
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        Administración
+      </span>
+    </button>
 
-    <a class="menu-link" routerLink="/configuracion" routerLinkActive="active">
-      <i class="fa-solid fa-gears"></i>
-      Configuración
-    </a>
+    @if (administracionAbierta()) {
+      <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
+        <i class="fa-solid fa-users"></i>
+        Usuarios
+      </a>
+
+      <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
+        <i class="fa-solid fa-sliders"></i>
+        Configuración de módulos
+      </a>
+    }
 
     <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">
       <span>

@@ -1,30 +1,142 @@
-<div class="siiid-card configuracion-card">
-  <div class="siiid-card-header">
-    <i class="fa-solid fa-gears"></i>
-    Configuración
+<div class="config-page">
+  <div class="admin-header">
+    <div>
+      <h1>Configuración de módulos</h1>
+      <p>Control global y por entidad para habilitar carga inicial y actualización de información.</p>
+    </div>
   </div>
 
-  <div class="configuracion-body">
-    <p class="configuracion-instruccion">
-      Seleccione la(s) opción(es) según se requiera.
-    </p>
+  <div class="config-grid">
+    <section class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-globe"></i>
+        Configuración global
+      </div>
 
-    <hr>
+      <div class="config-body">
+        <div class="config-info">
+          <strong>Aplicación general</strong>
+          <p>Estos switches funcionan como regla global para habilitar o bloquear módulos del sistema.</p>
+        </div>
 
-    <form class="configuracion-form">
-      <label class="config-check">
-        <input type="checkbox" checked>
-        <span>Habilitar módulo para la carga de información</span>
-      </label>
+        <div class="config-switch-list">
+          <label class="module-switch">
+            <div>
+              <strong>Carga de información</strong>
+              <span>Permite el envío de archivos de carga inicial.</span>
+            </div>
+            <input type="checkbox" checked>
+          </label>
 
-      <label class="config-check">
-        <input type="checkbox" checked>
-        <span>Habilitar módulo para actualizaciones de información</span>
-      </label>
+          <label class="module-switch">
+            <div>
+              <strong>Actualización de información</strong>
+              <span>Permite modificar periodos previamente confirmados.</span>
+            </div>
+            <input type="checkbox" checked>
+          </label>
+        </div>
 
-      <button type="button" class="btn btn-siiid btn-sm mt-3">
-        Guardar
-      </button>
-    </form>
+        <button class="btn btn-siiid mt-3">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Guardar configuración global
+        </button>
+      </div>
+    </section>
+
+    <section class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-map-location-dot"></i>
+        Resumen por entidad
+      </div>
+
+      <div class="config-body">
+        <div class="mini-stat">
+          <div>
+            <span>32</span>
+            Entidades
+          </div>
+          <div>
+            <span>29</span>
+            Con carga activa
+          </div>
+          <div>
+            <span>24</span>
+            Con actualización activa
+          </div>
+        </div>
+
+        <div class="config-note">
+          La configuración por entidad permite bloquear temporalmente una entidad sin afectar al resto.
+        </div>
+      </div>
+    </section>
   </div>
+
+  <section class="siiid-card mt-4">
+    <div class="siiid-card-header usuarios-card-header">
+      <span>
+        <i class="fa-solid fa-table-list"></i>
+        Configuración por entidad
+      </span>
+
+      <div class="buscador">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Buscar entidad...">
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm entidad-table">
+        <thead>
+          <tr>
+            <th>Entidad federativa</th>
+            <th>Carga inicial</th>
+            <th>Actualización</th>
+            <th>Última modificación</th>
+            <th>Usuario modificación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td><strong>Aguascalientes</strong></td>
+            <td><input class="form-check-input" type="checkbox" checked></td>
+            <td><input class="form-check-input" type="checkbox" checked></td>
+            <td>2026-05-27 12:17:05</td>
+            <td>melkart</td>
+            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
+          </tr>
+
+          <tr>
+            <td><strong>Campeche</strong></td>
+            <td><input class="form-check-input" type="checkbox" checked></td>
+            <td><input class="form-check-input" type="checkbox" checked></td>
+            <td>2026-05-27 12:20:30</td>
+            <td>melkart</td>
+            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
+          </tr>
+
+          <tr>
+            <td><strong>Baja California</strong></td>
+            <td><input class="form-check-input" type="checkbox" checked></td>
+            <td><input class="form-check-input" type="checkbox"></td>
+            <td>2026-05-26 18:02:12</td>
+            <td>super.usuario</td>
+            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
+          </tr>
+
+          <tr>
+            <td><strong>Ciudad de México</strong></td>
+            <td><input class="form-check-input" type="checkbox"></td>
+            <td><input class="form-check-input" type="checkbox"></td>
+            <td>2026-05-25 09:44:01</td>
+            <td>super.usuario</td>
+            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>
