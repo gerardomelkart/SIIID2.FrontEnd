@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import {
   CrearUsuarioRequest,
   EditarUsuarioRequest,
+  PermisosGlobalesUsuariosRequest,
   ReactivarUsuarioRequest,
   UsuarioDetalleResponse,
   UsuarioOperacionResponse,
@@ -43,4 +44,11 @@ export class UsuariosService {
   reactivarUsuario(idUsuario: number, request: ReactivarUsuarioRequest) {
     return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/reactivar`, request);
   }
+
+  actualizarPermisosGlobales(request: PermisosGlobalesUsuariosRequest) {
+  return this.http.put<UsuarioOperacionResponse>(
+    `${this.apiUrl}/permisos-globales`,
+    request
+  );
+}
 }

@@ -120,6 +120,33 @@ totalSuperUsuariosActivos = computed(() => {
   return this.usuarios().filter(x => x.activo && x.rol === 'SUPER_USUARIO').length;
 });
 
+formularioValido = computed(() => {
+  const form = this.formulario();
+
+  const camposBaseValidos =
+    form.nombre.trim() !== '' &&
+    form.primerApellido.trim() !== '' &&
+    form.rfc.trim() !== '' &&
+    form.curp.trim() !== '' &&
+    form.correoElectronico.trim() !== '' &&
+    form.usuario.trim() !== '' &&
+    form.rol.trim() !== '';
+
+  if (!camposBaseValidos) {
+    return false;
+  }
+
+  if (this.modoFormulario() === 'NUEVO' && form.password.trim() === '') {
+    return false;
+  }
+
+  if (form.rol !== 'SUPER_USUARIO' && form.idEntidadFederativa === '') {
+    return false;
+  }
+
+  return true;
+});
+
 esUsuarioActual(usuario: UsuarioListadoItem): boolean {
   return usuario.idUsuario === this.usuarioActual()?.idUsuario;
 }
@@ -233,16 +260,27 @@ motivoBloqueoEstado(usuario: UsuarioListadoItem): string {
     this.formulario.set(this.crearFormularioVacio());
   }
 
-  guardarUsuario(): void {
-    const form = this.formulario();
+guardarUsuario(): void {
+  if (!this.formularioValido()) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Formulario incompleto',
+      text: 'Revise los campos obligatorios antes de guardar.',
+      confirmButtonColor: '#691C32'
+    });
 
-    if (this.modoFormulario() === 'NUEVO') {
-      this.crearUsuario(form);
-      return;
-    }
-
-    this.editarUsuario(form);
+    return;
   }
+
+  const form = this.formulario();
+
+  if (this.modoFormulario() === 'NUEVO') {
+    this.crearUsuario(form);
+    return;
+  }
+
+  this.editarUsuario(form);
+}
 
 cambiarEstado(usuario: UsuarioListadoItem): void {
   if (!this.puedeCambiarEstado(usuario)) {

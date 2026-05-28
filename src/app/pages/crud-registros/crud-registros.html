@@ -266,13 +266,14 @@
 
       <div class="form-group span-2">
         <label>Contraseña {{ modoFormulario() === 'NUEVO' ? '*' : '' }}</label>
-        <input
-          class="form-control form-control-sm"
-          type="password"
-          placeholder="Ingresa contraseña"
-          [ngModel]="formulario().password"
-          (ngModelChange)="actualizarCampo('password', $event)"
-        >
+<input
+  class="form-control form-control-sm"
+  type="password"
+  autocomplete="new-password"
+  placeholder="Ingresa contraseña"
+  [ngModel]="formulario().password"
+  (ngModelChange)="actualizarCampo('password', $event)"
+>
         @if (modoFormulario() === 'EDITAR') {
           <small>Déjala vacía para conservar la contraseña actual.</small>
         }
@@ -310,7 +311,12 @@
   <div class="drawer-actions">
     <button type="button" class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
 
-    <button type="button" class="btn btn-siiid" (click)="guardarUsuario()" [disabled]="guardando()">
+<button
+  type="button"
+  class="btn btn-siiid"
+  (click)="guardarUsuario()"
+  [disabled]="guardando() || !formularioValido()"
+>
       @if (guardando()) {
         Guardando...
       } @else {

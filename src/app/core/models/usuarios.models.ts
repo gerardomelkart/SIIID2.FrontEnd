@@ -95,3 +95,8 @@ export interface UsuarioValidacionError {
   codigo: string;
   mensaje: string;
 }
+
+export interface PermisosGlobalesUsuariosRequest {
+  habilitaCarga: boolean;
+  habilitaModificacion: boolean;
+}

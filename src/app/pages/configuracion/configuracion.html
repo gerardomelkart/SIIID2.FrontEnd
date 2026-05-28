@@ -25,7 +25,7 @@
               <strong>Carga de información</strong>
               <span>Permite el envío de archivos de carga inicial.</span>
             </div>
-            <input type="checkbox" checked>
+            <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
           </label>
 
           <label class="module-switch">
@@ -33,13 +33,15 @@
               <strong>Actualización de información</strong>
               <span>Permite modificar periodos previamente confirmados.</span>
             </div>
-            <input type="checkbox" checked>
+            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
+              (ngModelChange)="cambiarModificacionGlobal($event)">
           </label>
         </div>
 
-        <button class="btn btn-siiid mt-3">
+        <button type="button" class="btn btn-siiid mt-3" [disabled]="guardandoGlobal()"
+          (click)="guardarConfiguracionGlobal()">
           <i class="fa-solid fa-floppy-disk"></i>
-          Guardar configuración global
+          {{ guardandoGlobal() ? 'Guardando...' : 'Guardar configuración global' }}
         </button>
       </div>
     </section>
@@ -53,17 +55,16 @@
       <div class="config-body">
         <div class="mini-stat">
           <div>
-            <span>32</span>
-            Entidades
+<span>{{ totalEntidades() }}</span>
+Entidades
           </div>
           <div>
-            <span>29</span>
-            Con carga activa
+<span>{{ totalEntidadesCargaActiva() }}</span>
+Con carga activa
           </div>
           <div>
-            <span>24</span>
-            Con actualización activa
-          </div>
+<span>{{ totalEntidadesModificacionActiva() }}</span>
+Con actualización activa
         </div>
 
         <div class="config-note">
@@ -99,43 +100,53 @@
           </tr>
         </thead>
 
-        <tbody>
-          <tr>
-            <td><strong>Aguascalientes</strong></td>
-            <td><input class="form-check-input" type="checkbox" checked></td>
-            <td><input class="form-check-input" type="checkbox" checked></td>
-            <td>2026-05-27 12:17:05</td>
-            <td>melkart</td>
-            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
-          </tr>
+<tbody>
+  @for (entidad of entidadesFiltradas(); track entidad.idEntidadFederativa) {
+    <tr>
+      <td><strong>{{ entidad.entidadFederativa }}</strong></td>
 
-          <tr>
-            <td><strong>Campeche</strong></td>
-            <td><input class="form-check-input" type="checkbox" checked></td>
-            <td><input class="form-check-input" type="checkbox" checked></td>
-            <td>2026-05-27 12:20:30</td>
-            <td>melkart</td>
-            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
-          </tr>
+      <td>
+        <span
+          class="estado-config"
+          [class.estado-config-activo]="entidad.estadoCarga === 'ACTIVO'"
+          [class.estado-config-inactivo]="entidad.estadoCarga === 'INACTIVO'"
+          [class.estado-config-mixto]="entidad.estadoCarga === 'MIXTO'"
+        >
+          {{ etiquetaEstado(entidad.estadoCarga) }}
+        </span>
+        <div class="config-subtexto">
+          {{ entidad.usuariosCarga }} de {{ entidad.totalUsuarios }} usuarios
+        </div>
+      </td>
 
-          <tr>
-            <td><strong>Baja California</strong></td>
-            <td><input class="form-check-input" type="checkbox" checked></td>
-            <td><input class="form-check-input" type="checkbox"></td>
-            <td>2026-05-26 18:02:12</td>
-            <td>super.usuario</td>
-            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
-          </tr>
+      <td>
+        <span
+          class="estado-config"
+          [class.estado-config-activo]="entidad.estadoModificacion === 'ACTIVO'"
+          [class.estado-config-inactivo]="entidad.estadoModificacion === 'INACTIVO'"
+          [class.estado-config-mixto]="entidad.estadoModificacion === 'MIXTO'"
+        >
+          {{ etiquetaEstado(entidad.estadoModificacion) }}
+        </span>
+        <div class="config-subtexto">
+          {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuarios }} usuarios
+        </div>
+      </td>
 
-          <tr>
-            <td><strong>Ciudad de México</strong></td>
-            <td><input class="form-check-input" type="checkbox"></td>
-            <td><input class="form-check-input" type="checkbox"></td>
-            <td>2026-05-25 09:44:01</td>
-            <td>super.usuario</td>
-            <td><button class="btn btn-sm btn-siiid">Guardar</button></td>
-          </tr>
-        </tbody>
+      <td>{{ entidad.totalUsuarios }} usuario(s)</td>
+      <td>Según permisos individuales</td>
+      <td>
+        <button class="btn btn-sm btn-secondary" routerLink="/administracion/usuarios">
+          Ver usuarios
+        </button>
+      </td>
+    </tr>
+  } @empty {
+    <tr>
+      <td colspan="6" class="text-center p-4">No se encontraron entidades.</td>
+    </tr>
+  }
+</tbody>
       </table>
     </div>
   </section>
