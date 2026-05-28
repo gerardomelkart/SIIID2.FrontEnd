@@ -257,7 +257,7 @@ export class Actualizacion {
     });
   }
 
-  verAcusePrevio(): void {
+  continuarAAcusePrevio(): void {
     const codigoReferencia = this.codigoReferencia();
 
     if (!codigoReferencia) {
@@ -369,6 +369,63 @@ export class Actualizacion {
     this.reiniciarFormulario();
     this.estadoPeriodo.set('SIN_CONSULTAR');
     this.router.navigateByUrl('/');
+  }
+
+  obtenerIdentificadoresDesdeBackend(campoIdentificador: string, identificadorFiscalia: string): string[] {
+    const campos = campoIdentificador
+      .split('+')
+      .map(x => x.trim().toUpperCase())
+      .filter(x => x.length > 0);
+
+    const valores = identificadorFiscalia
+      .split('|')
+      .map(x => x.trim())
+      .filter(x => x.length > 0);
+
+    if (campos.length === 0) {
+      return [identificadorFiscalia];
+    }
+
+    return campos.map((campo, index) => `${campo}: ${valores[index] ?? '-'}`);
+  }
+
+  normalizarValorDiferencia(valor: string | null): string {
+    if (valor === null || valor === undefined || valor === '') {
+      return 'Sin información';
+    }
+
+    return valor;
+  }
+
+  normalizarTipoMovimiento(tipoMovimiento: string): string {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+
+    if (valor === 'NUEVO') {
+      return 'Nuevo';
+    }
+
+    if (valor === 'MODIFICADO') {
+      return 'Modificado';
+    }
+
+    if (valor === 'ELIMINADO' || valor === 'BAJA') {
+      return 'Eliminado';
+    }
+
+    return tipoMovimiento;
+  }
+
+  esMovimientoNuevo(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
+  }
+
+  esMovimientoEliminado(tipoMovimiento: string): boolean {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+    return valor === 'ELIMINADO' || valor === 'BAJA';
+  }
+
+  esMovimientoModificado(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'MODIFICADO';
   }
 
   private prepararRevisionDiferencias(codigoReferencia: string): void {

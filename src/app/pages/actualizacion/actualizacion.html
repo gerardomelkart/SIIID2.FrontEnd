@@ -506,130 +506,306 @@
       <div class="diferencias-resumen">
         <div class="diferencia-card">
           <div class="diferencia-numero">{{ totalDiferenciasCarpetas() }}</div>
-          <div class="diferencia-label">Carpetas</div>
+          <div class="diferencia-label">Carpetas con cambios</div>
         </div>
 
         <div class="diferencia-card">
           <div class="diferencia-numero">{{ totalDiferenciasDelitos() }}</div>
-          <div class="diferencia-label">Delitos</div>
+          <div class="diferencia-label">Delitos con cambios</div>
         </div>
 
         <div class="diferencia-card">
           <div class="diferencia-numero">{{ totalDiferenciasVictimas() }}</div>
-          <div class="diferencia-label">Víctimas</div>
+          <div class="diferencia-label">Víctimas con cambios</div>
         </div>
 
         <div class="diferencia-card diferencia-total">
           <div class="diferencia-numero">{{ totalDiferencias() }}</div>
-          <div class="diferencia-label">Total</div>
+          <div class="diferencia-label">Total de registros con cambios</div>
         </div>
       </div>
 
       <div class="diferencias-mensaje">
-        {{ diferencias()?.mensaje || 'Revise las diferencias detectadas antes de confirmar la actualización.' }}
+        Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
+        <strong>OK, continuar al acuse previo</strong>.
       </div>
 
       <div class="diferencias-grid">
         <div class="diferencias-section">
           <div class="diferencias-title">Carpetas</div>
 
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered diferencias-table">
-              <thead>
-                <tr>
-                  <th>Movimiento</th>
-                  <th>Identificador</th>
-                  <th>Campos modificados</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of diferencias()?.carpetas ?? []; track $index) {
-                  <tr>
-                    <td>{{ item.tipoMovimiento }}</td>
-                    <td>{{ item.identificadorFiscalia }}</td>
-                    <td>{{ item.camposModificados.length }}</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="3" class="text-center">Sin diferencias</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+          @for (item of diferencias()?.carpetas ?? []; track $index) {
+            <div
+              class="diferencia-registro"
+              [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+              [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+              [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
+            >
+              <div class="diferencia-registro-head">
+                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+                <div class="identificadores">
+                  @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track id) {
+                    <span>{{ id }}</span>
+                  }
+                </div>
+              </div>
+
+              @if (esMovimientoNuevo(item.tipoMovimiento)) {
+                <div class="movimiento-descripcion nuevo-texto">
+                  <i class="fa-solid fa-circle-plus"></i>
+                  Este registro será agregado a la información activa.
+                </div>
+
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo</th>
+                      <th>Valor que se agregará</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+                <div class="movimiento-descripcion eliminado-texto">
+                  <i class="fa-solid fa-trash-can"></i>
+                  Este registro será eliminado de la información activa.
+                </div>
+
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo</th>
+                      <th>Valor que se eliminará</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo modificado</th>
+                      <th>Valor anterior</th>
+                      <th>Valor nuevo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          } @empty {
+            <div class="sin-diferencias">Sin diferencias en carpetas.</div>
+          }
         </div>
 
         <div class="diferencias-section">
           <div class="diferencias-title">Delitos</div>
 
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered diferencias-table">
-              <thead>
-                <tr>
-                  <th>Movimiento</th>
-                  <th>Identificador</th>
-                  <th>Campos modificados</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of diferencias()?.delitos ?? []; track $index) {
-                  <tr>
-                    <td>{{ item.tipoMovimiento }}</td>
-                    <td>{{ item.identificadorFiscalia }}</td>
-                    <td>{{ item.camposModificados.length }}</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="3" class="text-center">Sin diferencias</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+          @for (item of diferencias()?.delitos ?? []; track $index) {
+            <div
+              class="diferencia-registro"
+              [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+              [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+              [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
+            >
+              <div class="diferencia-registro-head">
+                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+                <div class="identificadores">
+                  @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track id) {
+                    <span>{{ id }}</span>
+                  }
+                </div>
+              </div>
+
+              @if (esMovimientoNuevo(item.tipoMovimiento)) {
+                <div class="movimiento-descripcion nuevo-texto">
+                  <i class="fa-solid fa-circle-plus"></i>
+                  Este registro será agregado a la información activa.
+                </div>
+
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo</th>
+                      <th>Valor que se agregará</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+                <div class="movimiento-descripcion eliminado-texto">
+                  <i class="fa-solid fa-trash-can"></i>
+                  Este registro será eliminado de la información activa.
+                </div>
+
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo</th>
+                      <th>Valor que se eliminará</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo modificado</th>
+                      <th>Valor anterior</th>
+                      <th>Valor nuevo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          } @empty {
+            <div class="sin-diferencias">Sin diferencias en delitos.</div>
+          }
         </div>
 
         <div class="diferencias-section">
           <div class="diferencias-title">Víctimas</div>
 
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered diferencias-table">
-              <thead>
-                <tr>
-                  <th>Movimiento</th>
-                  <th>Identificador</th>
-                  <th>Campos modificados</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of diferencias()?.victimas ?? []; track $index) {
-                  <tr>
-                    <td>{{ item.tipoMovimiento }}</td>
-                    <td>{{ item.identificadorFiscalia }}</td>
-                    <td>{{ item.camposModificados.length }}</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="3" class="text-center">Sin diferencias</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+          @for (item of diferencias()?.victimas ?? []; track $index) {
+            <div
+              class="diferencia-registro"
+              [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+              [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+              [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
+            >
+              <div class="diferencia-registro-head">
+                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+                <div class="identificadores">
+                  @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track id) {
+                    <span>{{ id }}</span>
+                  }
+                </div>
+              </div>
+
+              @if (esMovimientoNuevo(item.tipoMovimiento)) {
+                <div class="movimiento-descripcion nuevo-texto">
+                  <i class="fa-solid fa-circle-plus"></i>
+                  Este registro será agregado a la información activa.
+                </div>
+
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo</th>
+                      <th>Valor que se agregará</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+                <div class="movimiento-descripcion eliminado-texto">
+                  <i class="fa-solid fa-trash-can"></i>
+                  Este registro será eliminado de la información activa.
+                </div>
+
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo</th>
+                      <th>Valor que se eliminará</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <table class="table table-sm table-bordered diferencias-campos-table">
+                  <thead>
+                    <tr>
+                      <th>Campo modificado</th>
+                      <th>Valor anterior</th>
+                      <th>Valor nuevo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (campo of item.camposModificados; track $index) {
+                      <tr>
+                        <td class="campo-nombre">{{ campo.campo }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          } @empty {
+            <div class="sin-diferencias">Sin diferencias en víctimas.</div>
+          }
         </div>
       </div>
     </div>
 
-    <div class="diferencias-actions">
-      <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
-        Rechazar
-      </button>
-
-      <button type="button" class="btn-acuse-previo" (click)="verAcusePrevio()">
-        Ver acuse previo
-      </button>
-
-      <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
-        Aceptar
+    <div class="diferencias-actions diferencias-actions-ok">
+      <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
+        OK, continuar al acuse previo
       </button>
     </div>
   </div>
@@ -662,19 +838,19 @@
     </div>
 
     <div class="acuse-actions">
-      @if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
-        <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
-          Rechazar
-        </button>
+@if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
+  <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
+    Rechazar
+  </button>
 
-        <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
-          Volver a diferencias
-        </button>
+  <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
+    Volver a diferencias
+  </button>
 
-        <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
-          Aceptar
-        </button>
-      }
+  <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
+    Aceptar
+  </button>
+}
 
       @if (estadoPeriodo() === 'CONFIRMANDO') {
         <button type="button" class="btn-rechazar btn-disabled" disabled>
