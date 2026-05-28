@@ -90,3 +90,11 @@ body {
   color: #b00020;
   font-weight: 700;
 }
+
+.swal2-container {
+  z-index: 99999 !important;
+}
+
+.swal2-popup {
+  z-index: 100000 !important;
+}

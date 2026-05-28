@@ -357,3 +357,13 @@
   width: 15px;
   height: 15px;
 }
+
+.btn-disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  background: #f1f1f1;
+}
+
+.swal2-container {
+  z-index: 99999 !important;
+}

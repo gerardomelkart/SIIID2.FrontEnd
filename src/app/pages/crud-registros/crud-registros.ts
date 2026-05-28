@@ -11,6 +11,7 @@ import {
 } from '../../core/models/usuarios.models';
 
 import { UsuariosService } from '../../core/services/usuarios.service';
+import { SessionService } from '../../core/services/session.service';
 
 type ModoFormulario = 'NUEVO' | 'EDITAR';
 
@@ -39,6 +40,7 @@ interface UsuarioForm {
 })
 export class CrudRegistros implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
+  private readonly sessionService = inject(SessionService);
 
   busqueda = signal('');
   mostrarInactivos = signal(false);
@@ -111,6 +113,46 @@ export class CrudRegistros implements OnInit {
   totalActivos = computed(() => this.usuarios().filter(x => x.activo).length);
   totalInactivos = computed(() => this.usuarios().filter(x => !x.activo).length);
   totalSuperUsuarios = computed(() => this.usuarios().filter(x => x.rol === 'SUPER_USUARIO').length);
+
+  usuarioActual = this.sessionService.usuario;
+
+totalSuperUsuariosActivos = computed(() => {
+  return this.usuarios().filter(x => x.activo && x.rol === 'SUPER_USUARIO').length;
+});
+
+esUsuarioActual(usuario: UsuarioListadoItem): boolean {
+  return usuario.idUsuario === this.usuarioActual()?.idUsuario;
+}
+
+esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
+  return usuario.activo
+    && usuario.rol === 'SUPER_USUARIO'
+    && this.totalSuperUsuariosActivos() === 1;
+}
+
+puedeCambiarEstado(usuario: UsuarioListadoItem): boolean {
+  if (this.esUsuarioActual(usuario)) {
+    return false;
+  }
+
+  if (this.esUnicoSuperUsuarioActivo(usuario)) {
+    return false;
+  }
+
+  return true;
+}
+
+motivoBloqueoEstado(usuario: UsuarioListadoItem): string {
+  if (this.esUsuarioActual(usuario)) {
+    return 'No puedes desactivar tu propio usuario';
+  }
+
+  if (this.esUnicoSuperUsuarioActivo(usuario)) {
+    return 'No puedes desactivar el único super usuario activo';
+  }
+
+  return usuario.activo ? 'Desactivar usuario' : 'Activar usuario';
+}
 
   ngOnInit(): void {
     this.cargarUsuarios();
@@ -202,14 +244,25 @@ export class CrudRegistros implements OnInit {
     this.editarUsuario(form);
   }
 
-  cambiarEstado(usuario: UsuarioListadoItem): void {
-    if (usuario.activo) {
-      this.confirmarDesactivacion(usuario);
-      return;
-    }
+cambiarEstado(usuario: UsuarioListadoItem): void {
+  if (!this.puedeCambiarEstado(usuario)) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Operación no permitida',
+      text: this.motivoBloqueoEstado(usuario),
+      confirmButtonColor: '#691C32'
+    });
 
-    this.confirmarReactivacion(usuario);
+    return;
   }
+
+  if (usuario.activo) {
+    this.confirmarDesactivacion(usuario);
+    return;
+  }
+
+  this.confirmarReactivacion(usuario);
+}
 
   actualizarCampo<K extends keyof UsuarioForm>(campo: K, valor: UsuarioForm[K]): void {
     this.formulario.update(actual => ({
