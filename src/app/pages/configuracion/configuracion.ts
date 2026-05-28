@@ -20,7 +20,7 @@ interface ConfiguracionEntidad {
 
 @Component({
   selector: 'app-configuracion',
-imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './configuracion.html',
   styleUrl: './configuracion.css'
 })

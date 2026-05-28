@@ -2,53 +2,53 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import {
-  CrearUsuarioRequest,
-  EditarUsuarioRequest,
-  PermisosGlobalesUsuariosRequest,
-  ReactivarUsuarioRequest,
-  UsuarioDetalleResponse,
-  UsuarioOperacionResponse,
-  UsuariosListadoResponse
+    CrearUsuarioRequest,
+    EditarUsuarioRequest,
+    PermisosGlobalesUsuariosRequest,
+    ReactivarUsuarioRequest,
+    UsuarioDetalleResponse,
+    UsuarioOperacionResponse,
+    UsuariosListadoResponse
 } from '../models/usuarios.models';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class UsuariosService {
-  private readonly apiUrl = '/api/usuarios';
+    private readonly apiUrl = '/api/usuarios';
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) { }
 
-  obtenerUsuarios(incluirInactivos: boolean) {
-    const params = new HttpParams().set('incluirInactivos', incluirInactivos);
+    obtenerUsuarios(incluirInactivos: boolean) {
+        const params = new HttpParams().set('incluirInactivos', incluirInactivos);
 
-    return this.http.get<UsuariosListadoResponse>(this.apiUrl, { params });
-  }
+        return this.http.get<UsuariosListadoResponse>(this.apiUrl, { params });
+    }
 
-  obtenerDetalle(idUsuario: number) {
-    return this.http.get<UsuarioDetalleResponse>(`${this.apiUrl}/${idUsuario}`);
-  }
+    obtenerDetalle(idUsuario: number) {
+        return this.http.get<UsuarioDetalleResponse>(`${this.apiUrl}/${idUsuario}`);
+    }
 
-  crearUsuario(request: CrearUsuarioRequest) {
-    return this.http.post<UsuarioOperacionResponse>(this.apiUrl, request);
-  }
+    crearUsuario(request: CrearUsuarioRequest) {
+        return this.http.post<UsuarioOperacionResponse>(this.apiUrl, request);
+    }
 
-  editarUsuario(idUsuario: number, request: EditarUsuarioRequest) {
-    return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`, request);
-  }
+    editarUsuario(idUsuario: number, request: EditarUsuarioRequest) {
+        return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`, request);
+    }
 
-  desactivarUsuario(idUsuario: number) {
-    return this.http.delete<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`);
-  }
+    desactivarUsuario(idUsuario: number) {
+        return this.http.delete<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`);
+    }
 
-  reactivarUsuario(idUsuario: number, request: ReactivarUsuarioRequest) {
-    return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/reactivar`, request);
-  }
+    reactivarUsuario(idUsuario: number, request: ReactivarUsuarioRequest) {
+        return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/reactivar`, request);
+    }
 
-  actualizarPermisosGlobales(request: PermisosGlobalesUsuariosRequest) {
-  return this.http.put<UsuarioOperacionResponse>(
-    `${this.apiUrl}/permisos-globales`,
-    request
-  );
-}
+    actualizarPermisosGlobales(request: PermisosGlobalesUsuariosRequest) {
+        return this.http.put<UsuarioOperacionResponse>(
+            `${this.apiUrl}/permisos-globales`,
+            request
+        );
+    }
 }

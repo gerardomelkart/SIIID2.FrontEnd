@@ -55,16 +55,19 @@
       <div class="config-body">
         <div class="mini-stat">
           <div>
-<span>{{ totalEntidades() }}</span>
-Entidades
+            <span>{{ totalEntidades() }}</span>
+            Entidades
           </div>
+
           <div>
-<span>{{ totalEntidadesCargaActiva() }}</span>
-Con carga activa
+            <span>{{ totalEntidadesCargaActiva() }}</span>
+            Con carga activa
           </div>
+
           <div>
-<span>{{ totalEntidadesModificacionActiva() }}</span>
-Con actualización activa
+            <span>{{ totalEntidadesModificacionActiva() }}</span>
+            Con actualización activa
+          </div>
         </div>
 
         <div class="config-note">
@@ -83,7 +86,8 @@ Con actualización activa
 
       <div class="buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar entidad...">
+        <input type="text" placeholder="Buscar entidad..." [ngModel]="busquedaEntidad()"
+          (ngModelChange)="busquedaEntidad.set($event)">
       </div>
     </div>
 
@@ -100,53 +104,47 @@ Con actualización activa
           </tr>
         </thead>
 
-<tbody>
-  @for (entidad of entidadesFiltradas(); track entidad.idEntidadFederativa) {
-    <tr>
-      <td><strong>{{ entidad.entidadFederativa }}</strong></td>
+        <tbody>
+          @for (entidad of entidadesFiltradas(); track entidad.idEntidadFederativa) {
+          <tr>
+            <td><strong>{{ entidad.entidadFederativa }}</strong></td>
 
-      <td>
-        <span
-          class="estado-config"
-          [class.estado-config-activo]="entidad.estadoCarga === 'ACTIVO'"
-          [class.estado-config-inactivo]="entidad.estadoCarga === 'INACTIVO'"
-          [class.estado-config-mixto]="entidad.estadoCarga === 'MIXTO'"
-        >
-          {{ etiquetaEstado(entidad.estadoCarga) }}
-        </span>
-        <div class="config-subtexto">
-          {{ entidad.usuariosCarga }} de {{ entidad.totalUsuarios }} usuarios
-        </div>
-      </td>
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="entidad.estadoCarga === 'ACTIVO'"
+                [class.estado-config-inactivo]="entidad.estadoCarga === 'INACTIVO'"
+                [class.estado-config-mixto]="entidad.estadoCarga === 'MIXTO'">
+                {{ etiquetaEstado(entidad.estadoCarga) }}
+              </span>
+              <div class="config-subtexto">
+                {{ entidad.usuariosCarga }} de {{ entidad.totalUsuarios }} usuarios
+              </div>
+            </td>
 
-      <td>
-        <span
-          class="estado-config"
-          [class.estado-config-activo]="entidad.estadoModificacion === 'ACTIVO'"
-          [class.estado-config-inactivo]="entidad.estadoModificacion === 'INACTIVO'"
-          [class.estado-config-mixto]="entidad.estadoModificacion === 'MIXTO'"
-        >
-          {{ etiquetaEstado(entidad.estadoModificacion) }}
-        </span>
-        <div class="config-subtexto">
-          {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuarios }} usuarios
-        </div>
-      </td>
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="entidad.estadoModificacion === 'ACTIVO'"
+                [class.estado-config-inactivo]="entidad.estadoModificacion === 'INACTIVO'"
+                [class.estado-config-mixto]="entidad.estadoModificacion === 'MIXTO'">
+                {{ etiquetaEstado(entidad.estadoModificacion) }}
+              </span>
+              <div class="config-subtexto">
+                {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuarios }} usuarios
+              </div>
+            </td>
 
-      <td>{{ entidad.totalUsuarios }} usuario(s)</td>
-      <td>Según permisos individuales</td>
-      <td>
-        <button class="btn btn-sm btn-secondary" routerLink="/administracion/usuarios">
-          Ver usuarios
-        </button>
-      </td>
-    </tr>
-  } @empty {
-    <tr>
-      <td colspan="6" class="text-center p-4">No se encontraron entidades.</td>
-    </tr>
-  }
-</tbody>
+            <td>{{ entidad.totalUsuarios }} usuario(s)</td>
+            <td>Según permisos individuales</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" routerLink="/administracion/usuarios">
+                Ver usuarios
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="text-center p-4">No se encontraron entidades.</td>
+          </tr>
+          }
+        </tbody>
       </table>
     </div>
   </section>

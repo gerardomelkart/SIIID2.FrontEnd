@@ -34,33 +34,25 @@
   </div>
 
   <div class="siiid-card usuarios-card">
-<div class="siiid-card-header usuarios-card-header">
-  <span>
-    <i class="fa-solid fa-users"></i>
-    Usuarios del sistema
-  </span>
+    <div class="siiid-card-header usuarios-card-header">
+      <span>
+        <i class="fa-solid fa-users"></i>
+        Usuarios del sistema
+      </span>
 
-  <div class="usuarios-tools">
-    <label class="ver-inactivos">
-      <input
-        type="checkbox"
-        [ngModel]="mostrarInactivos()"
-        (ngModelChange)="cambiarFiltroInactivos($event)"
-      >
-      Ver inactivos
-    </label>
+      <div class="usuarios-tools">
+        <label class="ver-inactivos">
+          <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)">
+          Ver inactivos
+        </label>
 
-    <div class="buscador">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <input
-        type="text"
-        placeholder="Buscar por nombre, usuario, correo, rol o entidad..."
-        [ngModel]="busqueda()"
-        (ngModelChange)="busqueda.set($event)"
-      >
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar por nombre, usuario, correo, rol o entidad..." [ngModel]="busqueda()"
+            (ngModelChange)="busqueda.set($event)">
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <div class="table-responsive">
       <table class="table table-sm usuarios-table">
@@ -74,65 +66,59 @@
             <th>Carga</th>
             <th>Modificación</th>
             <th>Estado</th>
-<th>ID</th>
+            <th>ID</th>
             <th class="acciones-col">Acciones</th>
           </tr>
         </thead>
 
         <tbody>
           @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {
-            <tr>
-              <td>
-                <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
-              </td>
-              <td>{{ usuario.usuario }}</td>
-              <td>{{ usuario.correoElectronico }}</td>
-              <td>
-                <span class="rol-badge">{{ usuario.rol }}</span>
-              </td>
-              <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
-              <td>
-                <span class="permiso-badge" [class.permiso-on]="usuario.habilitaCarga" [class.permiso-off]="!usuario.habilitaCarga">
-                  {{ usuario.habilitaCarga ? 'Sí' : 'No' }}
-                </span>
-              </td>
-              <td>
-                <span class="permiso-badge" [class.permiso-on]="usuario.habilitaModificacion" [class.permiso-off]="!usuario.habilitaModificacion">
-                  {{ usuario.habilitaModificacion ? 'Sí' : 'No' }}
-                </span>
-              </td>
-              <td>
-            <span class="estado-badge" [class.estado-activo]="usuario.activo" [class.estado-inactivo]="!usuario.activo">
-              {{ usuario.activo ? 'ACTIVO' : 'INACTIVO' }}
-            </span>
-              </td>
-<td>{{ usuario.idUsuario }}</td>     
-              <td>
-<div class="acciones">
-  <button type="button" class="btn-icon btn-edit" title="Editar" (click)="abrirEditarUsuario(usuario)">
-    <i class="fa-solid fa-pen"></i>
-  </button>
+          <tr>
+            <td>
+              <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
+            </td>
+            <td>{{ usuario.usuario }}</td>
+            <td>{{ usuario.correoElectronico }}</td>
+            <td>
+              <span class="rol-badge">{{ usuario.rol }}</span>
+            </td>
+            <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
+            <td>
+              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaCarga"
+                [class.permiso-off]="!usuario.habilitaCarga">
+                {{ usuario.habilitaCarga ? 'Sí' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaModificacion"
+                [class.permiso-off]="!usuario.habilitaModificacion">
+                {{ usuario.habilitaModificacion ? 'Sí' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="estado-badge" [class.estado-activo]="usuario.activo"
+                [class.estado-inactivo]="!usuario.activo">
+                {{ usuario.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+            <td>{{ usuario.idUsuario }}</td>
+            <td>
+              <div class="acciones">
+                <button type="button" class="btn-icon btn-edit" title="Editar" (click)="abrirEditarUsuario(usuario)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
 
-<button
-  type="button"
-  class="btn-icon btn-toggle"
-  [class.btn-disabled]="!puedeCambiarEstado(usuario)"
-  [title]="motivoBloqueoEstado(usuario)"
-  (click)="cambiarEstado(usuario)"
->
-  <i
-    class="fa-solid"
-    [class.fa-toggle-on]="usuario.activo"
-    [class.fa-toggle-off]="!usuario.activo"
-  ></i>
-</button>
-</div>
-              </td>
-            </tr>
+                <button type="button" class="btn-icon btn-toggle" [class.btn-disabled]="!puedeCambiarEstado(usuario)"
+                  [title]="motivoBloqueoEstado(usuario)" (click)="cambiarEstado(usuario)">
+                  <i class="fa-solid" [class.fa-toggle-on]="usuario.activo" [class.fa-toggle-off]="!usuario.activo"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
           } @empty {
-            <tr>
-              <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
-            </tr>
+          <tr>
+            <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
+          </tr>
           }
         </tbody>
       </table>
@@ -141,13 +127,14 @@
 </div>
 
 @if (modalAbierto()) {
-  <div class="drawer-backdrop" (click)="cerrarModal()"></div>
+<div class="drawer-backdrop" (click)="cerrarModal()"></div>
 
 <aside class="usuario-drawer">
   <div class="drawer-header">
     <div>
       <h2>{{ modoFormulario() === 'NUEVO' ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
-      <p>{{ modoFormulario() === 'NUEVO' ? 'Registrar una nueva cuenta de acceso.' : 'Modificar datos y permisos del usuario.' }}</p>
+      <p>{{ modoFormulario() === 'NUEVO' ? 'Registrar una nueva cuenta de acceso.' : 'Modificar datos y permisos del
+        usuario.' }}</p>
     </div>
 
     <button type="button" class="drawer-close" (click)="cerrarModal()">×</button>
@@ -157,125 +144,81 @@
     <div class="form-grid">
       <div class="form-group span-2">
         <label>Nombre(s) <span>*</span></label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Ingresa nombre"
-          [ngModel]="formulario().nombre"
-          (ngModelChange)="actualizarCampo('nombre', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Ingresa nombre" [ngModel]="formulario().nombre"
+          (ngModelChange)="actualizarCampo('nombre', $event)">
       </div>
 
       <div class="form-group">
         <label>Primer apellido <span>*</span></label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Ingresa primer apellido"
-          [ngModel]="formulario().primerApellido"
-          (ngModelChange)="actualizarCampo('primerApellido', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Ingresa primer apellido"
+          [ngModel]="formulario().primerApellido" (ngModelChange)="actualizarCampo('primerApellido', $event)">
       </div>
 
       <div class="form-group">
         <label>Segundo apellido</label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Ingresa segundo apellido"
-          [ngModel]="formulario().segundoApellido"
-          (ngModelChange)="actualizarCampo('segundoApellido', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Ingresa segundo apellido"
+          [ngModel]="formulario().segundoApellido" (ngModelChange)="actualizarCampo('segundoApellido', $event)">
       </div>
 
       <div class="form-group">
         <label>RFC <span>*</span></label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Ingresa RFC"
-          [ngModel]="formulario().rfc"
-          (ngModelChange)="actualizarCampo('rfc', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Ingresa RFC" [ngModel]="formulario().rfc"
+          (ngModelChange)="actualizarCampo('rfc', $event)">
       </div>
 
       <div class="form-group">
         <label>CURP <span>*</span></label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Ingresa CURP"
-          [ngModel]="formulario().curp"
-          (ngModelChange)="actualizarCampo('curp', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Ingresa CURP" [ngModel]="formulario().curp"
+          (ngModelChange)="actualizarCampo('curp', $event)">
       </div>
 
       <div class="form-group span-2">
         <label>Correo electrónico <span>*</span></label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Ingresa correo"
-          [ngModel]="formulario().correoElectronico"
-          (ngModelChange)="actualizarCampo('correoElectronico', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Ingresa correo"
+          [ngModel]="formulario().correoElectronico" (ngModelChange)="actualizarCampo('correoElectronico', $event)">
       </div>
 
       <div class="form-group">
         <label>Teléfono</label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Teléfono de contacto"
-          [ngModel]="formulario().telefonoContacto"
-          (ngModelChange)="actualizarCampo('telefonoContacto', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Teléfono de contacto"
+          [ngModel]="formulario().telefonoContacto" (ngModelChange)="actualizarCampo('telefonoContacto', $event)">
       </div>
 
       <div class="form-group">
         <label>Usuario <span>*</span></label>
-        <input
-          class="form-control form-control-sm"
-          placeholder="Nombre de usuario"
-          [ngModel]="formulario().usuario"
-          (ngModelChange)="actualizarCampo('usuario', $event)"
-        >
+        <input class="form-control form-control-sm" placeholder="Nombre de usuario" [ngModel]="formulario().usuario"
+          (ngModelChange)="actualizarCampo('usuario', $event)">
       </div>
 
       <div class="form-group">
         <label>Rol <span>*</span></label>
-        <select
-          class="form-select form-select-sm"
-          [ngModel]="formulario().rol"
-          (ngModelChange)="actualizarCampo('rol', $event)"
-        >
+        <select class="form-select form-select-sm" [ngModel]="formulario().rol"
+          (ngModelChange)="actualizarCampo('rol', $event)">
           <option value="">Seleccione rol...</option>
           @for (rol of roles; track rol.clave) {
-            <option [value]="rol.clave">{{ rol.texto }}</option>
+          <option [value]="rol.clave">{{ rol.texto }}</option>
           }
         </select>
       </div>
 
       <div class="form-group">
         <label>Entidad federativa</label>
-        <select
-          class="form-select form-select-sm"
-          [disabled]="formulario().rol === 'SUPER_USUARIO'"
-          [ngModel]="formulario().idEntidadFederativa"
-          (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)"
-        >
+        <select class="form-select form-select-sm" [disabled]="formulario().rol === 'SUPER_USUARIO'"
+          [ngModel]="formulario().idEntidadFederativa" (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
           <option value="">Seleccione entidad...</option>
           @for (entidad of entidades; track entidad.id) {
-            <option [value]="entidad.id">{{ entidad.nombre }}</option>
+          <option [value]="entidad.id">{{ entidad.nombre }}</option>
           }
         </select>
       </div>
 
       <div class="form-group span-2">
         <label>Contraseña {{ modoFormulario() === 'NUEVO' ? '*' : '' }}</label>
-<input
-  class="form-control form-control-sm"
-  type="password"
-  autocomplete="new-password"
-  placeholder="Ingresa contraseña"
-  [ngModel]="formulario().password"
-  (ngModelChange)="actualizarCampo('password', $event)"
->
+        <input class="form-control form-control-sm" type="password" autocomplete="new-password"
+          placeholder="Ingresa contraseña" [ngModel]="formulario().password"
+          (ngModelChange)="actualizarCampo('password', $event)">
         @if (modoFormulario() === 'EDITAR') {
-          <small>Déjala vacía para conservar la contraseña actual.</small>
+        <small>Déjala vacía para conservar la contraseña actual.</small>
         }
       </div>
     </div>
@@ -288,22 +231,15 @@
 
       <label class="switch-row">
         <span>Carga de información</span>
-        <input
-          type="checkbox"
-          [disabled]="formulario().rol === 'CONSULTA'"
-          [ngModel]="formulario().habilitaCarga"
-          (ngModelChange)="actualizarCampo('habilitaCarga', $event)"
-        >
+        <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'" [ngModel]="formulario().habilitaCarga"
+          (ngModelChange)="actualizarCampo('habilitaCarga', $event)">
       </label>
 
       <label class="switch-row">
         <span>Actualización de información</span>
-        <input
-          type="checkbox"
-          [disabled]="formulario().rol === 'CONSULTA'"
+        <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'"
           [ngModel]="formulario().habilitaModificacion"
-          (ngModelChange)="actualizarCampo('habilitaModificacion', $event)"
-        >
+          (ngModelChange)="actualizarCampo('habilitaModificacion', $event)">
       </label>
     </div>
   </div>
@@ -311,16 +247,12 @@
   <div class="drawer-actions">
     <button type="button" class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
 
-<button
-  type="button"
-  class="btn btn-siiid"
-  (click)="guardarUsuario()"
-  [disabled]="guardando() || !formularioValido()"
->
+    <button type="button" class="btn btn-siiid" (click)="guardarUsuario()"
+      [disabled]="guardando() || !formularioValido()">
       @if (guardando()) {
-        Guardando...
+      Guardando...
       } @else {
-        Guardar usuario
+      Guardar usuario
       }
     </button>
   </div>

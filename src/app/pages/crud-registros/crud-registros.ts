@@ -116,70 +116,70 @@ export class CrudRegistros implements OnInit {
 
   usuarioActual = this.sessionService.usuario;
 
-totalSuperUsuariosActivos = computed(() => {
-  return this.usuarios().filter(x => x.activo && x.rol === 'SUPER_USUARIO').length;
-});
+  totalSuperUsuariosActivos = computed(() => {
+    return this.usuarios().filter(x => x.activo && x.rol === 'SUPER_USUARIO').length;
+  });
 
-formularioValido = computed(() => {
-  const form = this.formulario();
+  formularioValido = computed(() => {
+    const form = this.formulario();
 
-  const camposBaseValidos =
-    form.nombre.trim() !== '' &&
-    form.primerApellido.trim() !== '' &&
-    form.rfc.trim() !== '' &&
-    form.curp.trim() !== '' &&
-    form.correoElectronico.trim() !== '' &&
-    form.usuario.trim() !== '' &&
-    form.rol.trim() !== '';
+    const camposBaseValidos =
+      form.nombre.trim() !== '' &&
+      form.primerApellido.trim() !== '' &&
+      form.rfc.trim() !== '' &&
+      form.curp.trim() !== '' &&
+      form.correoElectronico.trim() !== '' &&
+      form.usuario.trim() !== '' &&
+      form.rol.trim() !== '';
 
-  if (!camposBaseValidos) {
-    return false;
+    if (!camposBaseValidos) {
+      return false;
+    }
+
+    if (this.modoFormulario() === 'NUEVO' && form.password.trim() === '') {
+      return false;
+    }
+
+    if (form.rol !== 'SUPER_USUARIO' && form.idEntidadFederativa === '') {
+      return false;
+    }
+
+    return true;
+  });
+
+  esUsuarioActual(usuario: UsuarioListadoItem): boolean {
+    return usuario.idUsuario === this.usuarioActual()?.idUsuario;
   }
 
-  if (this.modoFormulario() === 'NUEVO' && form.password.trim() === '') {
-    return false;
+  esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
+    return usuario.activo
+      && usuario.rol === 'SUPER_USUARIO'
+      && this.totalSuperUsuariosActivos() === 1;
   }
 
-  if (form.rol !== 'SUPER_USUARIO' && form.idEntidadFederativa === '') {
-    return false;
+  puedeCambiarEstado(usuario: UsuarioListadoItem): boolean {
+    if (this.esUsuarioActual(usuario)) {
+      return false;
+    }
+
+    if (this.esUnicoSuperUsuarioActivo(usuario)) {
+      return false;
+    }
+
+    return true;
   }
 
-  return true;
-});
+  motivoBloqueoEstado(usuario: UsuarioListadoItem): string {
+    if (this.esUsuarioActual(usuario)) {
+      return 'No puedes desactivar tu propio usuario';
+    }
 
-esUsuarioActual(usuario: UsuarioListadoItem): boolean {
-  return usuario.idUsuario === this.usuarioActual()?.idUsuario;
-}
+    if (this.esUnicoSuperUsuarioActivo(usuario)) {
+      return 'No puedes desactivar el único super usuario activo';
+    }
 
-esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
-  return usuario.activo
-    && usuario.rol === 'SUPER_USUARIO'
-    && this.totalSuperUsuariosActivos() === 1;
-}
-
-puedeCambiarEstado(usuario: UsuarioListadoItem): boolean {
-  if (this.esUsuarioActual(usuario)) {
-    return false;
+    return usuario.activo ? 'Desactivar usuario' : 'Activar usuario';
   }
-
-  if (this.esUnicoSuperUsuarioActivo(usuario)) {
-    return false;
-  }
-
-  return true;
-}
-
-motivoBloqueoEstado(usuario: UsuarioListadoItem): string {
-  if (this.esUsuarioActual(usuario)) {
-    return 'No puedes desactivar tu propio usuario';
-  }
-
-  if (this.esUnicoSuperUsuarioActivo(usuario)) {
-    return 'No puedes desactivar el único super usuario activo';
-  }
-
-  return usuario.activo ? 'Desactivar usuario' : 'Activar usuario';
-}
 
   ngOnInit(): void {
     this.cargarUsuarios();
@@ -260,47 +260,47 @@ motivoBloqueoEstado(usuario: UsuarioListadoItem): string {
     this.formulario.set(this.crearFormularioVacio());
   }
 
-guardarUsuario(): void {
-  if (!this.formularioValido()) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Formulario incompleto',
-      text: 'Revise los campos obligatorios antes de guardar.',
-      confirmButtonColor: '#691C32'
-    });
+  guardarUsuario(): void {
+    if (!this.formularioValido()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario incompleto',
+        text: 'Revise los campos obligatorios antes de guardar.',
+        confirmButtonColor: '#691C32'
+      });
 
-    return;
+      return;
+    }
+
+    const form = this.formulario();
+
+    if (this.modoFormulario() === 'NUEVO') {
+      this.crearUsuario(form);
+      return;
+    }
+
+    this.editarUsuario(form);
   }
 
-  const form = this.formulario();
+  cambiarEstado(usuario: UsuarioListadoItem): void {
+    if (!this.puedeCambiarEstado(usuario)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Operación no permitida',
+        text: this.motivoBloqueoEstado(usuario),
+        confirmButtonColor: '#691C32'
+      });
 
-  if (this.modoFormulario() === 'NUEVO') {
-    this.crearUsuario(form);
-    return;
+      return;
+    }
+
+    if (usuario.activo) {
+      this.confirmarDesactivacion(usuario);
+      return;
+    }
+
+    this.confirmarReactivacion(usuario);
   }
-
-  this.editarUsuario(form);
-}
-
-cambiarEstado(usuario: UsuarioListadoItem): void {
-  if (!this.puedeCambiarEstado(usuario)) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Operación no permitida',
-      text: this.motivoBloqueoEstado(usuario),
-      confirmButtonColor: '#691C32'
-    });
-
-    return;
-  }
-
-  if (usuario.activo) {
-    this.confirmarDesactivacion(usuario);
-    return;
-  }
-
-  this.confirmarReactivacion(usuario);
-}
 
   actualizarCampo<K extends keyof UsuarioForm>(campo: K, valor: UsuarioForm[K]): void {
     this.formulario.update(actual => ({
