@@ -156,23 +156,49 @@
 }
 
 @if (mostrarTablasErrores()) {
-  <div class="validation-result-header">
-    <div>
-      <h2>
-        <i class="fa-solid fa-triangle-exclamation"></i>
+<div
+  class="validation-result-header"
+  [class.validation-result-pending]="debeUsarActualizacion()"
+>
+  <div>
+    <h2>
+      <i class="fa-solid fa-triangle-exclamation"></i>
+
+      @if (debeUsarActualizacion()) {
+        Información confirmada previamente
+      } @else {
         Validación con inconsistencias
-      </h2>
+      }
+    </h2>
 
-      <p>
+    <p>
+      @if (debeUsarActualizacion()) {
+        Ya existe información confirmada para el periodo seleccionado. Para realizar cambios debe utilizar el flujo de actualización.
+      } @else {
         Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
-      </p>
-    </div>
-
-    <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
-      <i class="fa-solid fa-rotate-left"></i>
-      Corregir archivos y volver a cargar
-    </button>
+      }
+    </p>
   </div>
+
+  <div class="validation-actions">
+    @if (debeUsarActualizacion()) {
+      <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver
+      </button>
+
+      <button type="button" class="btn btn-siiid" (click)="irAActualizacion()">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        Ir a actualización
+      </button>
+    } @else {
+      <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+        <i class="fa-solid fa-rotate-left"></i>
+        Corregir archivos y volver a cargar
+      </button>
+    }
+  </div>
+</div>
   
 <div class="validacion-grid mt-4">
   <div class="validacion-panel">

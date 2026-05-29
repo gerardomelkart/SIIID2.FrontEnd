@@ -47,6 +47,36 @@ acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
   errores = computed(() => this.respuesta()?.errores ?? []);
   codigoReferencia = computed(() => this.respuesta()?.codigoReferencia ?? '');
 
+  codigoReferenciaPendiente = computed(() => {
+  const textoErrores = this.errores()
+    .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+    .join(' ');
+
+  const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
+
+  return match?.[1] ?? '';
+});
+
+hayCargaPendiente = computed(() => {
+  return this.codigoReferenciaPendiente() !== '';
+});
+
+codigoReferenciaOperacion = computed(() => {
+  return this.codigoReferenciaPendiente() || this.codigoReferencia();
+});
+
+  debeUsarActualizacion = computed(() => {
+  const textoErrores = this.errores()
+    .map(error => `${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+    .join(' ')
+    .toLowerCase();
+
+  return textoErrores.includes('flujo de actualización')
+    || textoErrores.includes('flujo de actualizacion')
+    || textoErrores.includes('información confirmada')
+    || textoErrores.includes('informacion confirmada');
+});
+
   puedeValidar = computed(() => {
     return !!this.carpetas() && !!this.delitos() && !!this.victimas() && this.estado() !== 'VALIDANDO';
   });
@@ -126,7 +156,7 @@ constructor(
   }
 
   aceptarCarga(): void {
-    const codigoReferencia = this.codigoReferencia();
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
       return;
@@ -178,7 +208,7 @@ constructor(
   }
 
 rechazarCarga(): void {
-  const codigoReferencia = this.codigoReferencia();
+  const codigoReferencia = this.codigoReferenciaOperacion();
 
   if (!codigoReferencia) {
     return;
@@ -233,6 +263,28 @@ cerrarProcesoConfirmado(): void {
   this.estado.set('INICIAL');
   this.router.navigateByUrl('/');
 }
+
+resolverCargaPendiente(): void {
+  const codigoReferencia = this.codigoReferenciaPendiente();
+
+  if (!codigoReferencia) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Sin referencia pendiente',
+      text: 'No fue posible identificar el código de referencia pendiente.',
+      confirmButtonColor: '#691C32'
+    });
+
+    return;
+  }
+
+  this.abrirAcusePrevio(codigoReferencia);
+}
+
+irAActualizacion(): void {
+  this.router.navigateByUrl('/actualizacion');
+}
+
 
   private abrirAcusePrevio(codigoReferencia: string): void {
     this.cargaService.descargarAcusePrevio(codigoReferencia).subscribe({

@@ -123,7 +123,7 @@ hayActualizacionPendiente = computed(() => {
 });
 
 codigoReferenciaOperacion = computed(() => {
-  return this.codigoReferencia() || this.codigoReferenciaPendiente();
+  return this.codigoReferenciaPendiente() || this.codigoReferencia();
 });
 
   totalDiferenciasCarpetas = computed(() => this.diferencias()?.carpetas?.length ?? 0);

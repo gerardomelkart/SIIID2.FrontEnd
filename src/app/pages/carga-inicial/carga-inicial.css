@@ -577,3 +577,34 @@
     width: 100%;
   }
 }
+
+.validation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.validation-result-pending {
+  border-left-color: #BC955C;
+  background: #fffaf0;
+}
+
+.validation-result-pending h2 {
+  color: #8a5b00;
+}
+
+.validation-result-pending h2 i {
+  color: #BC955C;
+}
+
+@media (max-width: 900px) {
+  .validation-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .validation-actions .btn {
+    width: 100%;
+  }
+}
