@@ -113,7 +113,7 @@ export class Actualizacion {
     .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
     .join(' ');
 
-  const match = textoErrores.match(/Código de referencia pendiente:\s*([a-fA-F0-9-]{20,})/);
+const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
 
   return match?.[1] ?? '';
 });
