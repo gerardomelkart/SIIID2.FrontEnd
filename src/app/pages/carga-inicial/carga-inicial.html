@@ -158,13 +158,15 @@
 @if (mostrarTablasErrores()) {
 <div
   class="validation-result-header"
-  [class.validation-result-pending]="debeUsarActualizacion()"
+  [class.validation-result-pending]="hayCargaPendiente() || debeUsarActualizacion()"
 >
   <div>
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
-      @if (debeUsarActualizacion()) {
+      @if (hayCargaPendiente()) {
+        Carga pendiente por resolver
+      } @else if (debeUsarActualizacion()) {
         Información confirmada previamente
       } @else {
         Validación con inconsistencias
@@ -172,16 +174,35 @@
     </h2>
 
     <p>
-      @if (debeUsarActualizacion()) {
+      @if (hayCargaPendiente()) {
+        Existe una carga validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+      } @else if (debeUsarActualizacion()) {
         Ya existe información confirmada para el periodo seleccionado. Para realizar cambios debe utilizar el flujo de actualización.
       } @else {
         Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
       }
     </p>
+
+    @if (hayCargaPendiente()) {
+      <div class="pending-reference">
+        Código pendiente:
+        <strong>{{ codigoReferenciaPendiente() }}</strong>
+      </div>
+    }
   </div>
 
   <div class="validation-actions">
-    @if (debeUsarActualizacion()) {
+    @if (hayCargaPendiente()) {
+      <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver
+      </button>
+
+      <button type="button" class="btn btn-siiid" (click)="resolverCargaPendiente()">
+        <i class="fa-solid fa-file-signature"></i>
+        Resolver pendiente
+      </button>
+    } @else if (debeUsarActualizacion()) {
       <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
         <i class="fa-solid fa-arrow-left"></i>
         Volver
@@ -266,9 +287,15 @@
 </div>
 
 <div class="texto-ayuda-validacion">
-  La información que se muestra en las tablas permite identificar a detalle las inconsistencias
-  detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
-  y cargar de nuevo sus archivos.
+  @if (hayCargaPendiente()) {
+    Existe una carga validada pendiente. Debe aceptar o rechazar dicha carga antes de enviar una nueva.
+  } @else if (debeUsarActualizacion()) {
+    La información del periodo ya fue confirmada. Para modificarla, utilice el módulo de actualización.
+  } @else {
+    La información que se muestra en las tablas permite identificar a detalle las inconsistencias
+    detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
+    y cargar de nuevo sus archivos.
+  }
 </div>
 
 @if (errores().length > 0) {
