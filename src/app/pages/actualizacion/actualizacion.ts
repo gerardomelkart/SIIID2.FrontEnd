@@ -108,18 +108,27 @@ export class Actualizacion {
   errores = computed(() => this.respuestaValidacion()?.errores ?? []);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
-  codigoReferenciaPendiente = computed(() => {
+codigoReferenciaPendiente = computed(() => {
   const textoErrores = this.errores()
     .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
     .join(' ');
 
-const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
+  const textoPeriodo = this.mensajePeriodo() ?? '';
+
+  const textoCompleto = `${textoPeriodo} ${textoErrores}`;
+
+  const match = textoCompleto.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
 
   return match?.[1] ?? '';
 });
 
 hayActualizacionPendiente = computed(() => {
   return this.codigoReferenciaPendiente() !== '';
+});
+
+hayActualizacionPendienteEnPeriodo = computed(() => {
+  return this.estadoPeriodo() === 'NO_DISPONIBLE'
+    && this.codigoReferenciaPendiente() !== '';
 });
 
 codigoReferenciaOperacion = computed(() => {

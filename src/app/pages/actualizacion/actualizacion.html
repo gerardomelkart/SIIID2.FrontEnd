@@ -156,13 +156,40 @@
             </button>
           </div>
 
-          @if (mensajePeriodo()) {
-          <div class="periodo-alert" [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
-            [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'">
-            {{ mensajePeriodo() }}
-          </div>
-          }
+@if (mensajePeriodo()) {
+<div
+  class="periodo-alert"
+  [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+  [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+  [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
+  [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()"
+>
+  <div class="periodo-alert-content">
+    <div>
+      @if (hayActualizacionPendienteEnPeriodo()) {
+        <strong>Actualización pendiente por resolver.</strong>
+        <span>
+          Existe una actualización validada pendiente de aceptar o rechazar.
+        </span>
+
+        <div class="pending-reference mt-2">
+          Código pendiente:
+          <strong>{{ codigoReferenciaPendiente() }}</strong>
+        </div>
+      } @else {
+        {{ mensajePeriodo() }}
+      }
+    </div>
+
+    @if (hayActualizacionPendienteEnPeriodo()) {
+      <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
+        <i class="fa-solid fa-file-signature"></i>
+        Resolver pendiente
+      </button>
+    }
+  </div>
+</div>
+}
         </div>
 
         @if (mostrarArchivos()) {
