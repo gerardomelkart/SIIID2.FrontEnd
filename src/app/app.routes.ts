@@ -5,7 +5,6 @@ import { Login } from './pages/login/login';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { CargaInicial } from './pages/carga-inicial/carga-inicial';
 import { Actualizacion } from './pages/actualizacion/actualizacion';
-import { DiferenciasActualizacion } from './pages/diferencias-actualizacion/diferencias-actualizacion';
 import { Informes } from './pages/informes/informes';
 import { CrudRegistros } from './pages/crud-registros/crud-registros';
 import { Configuracion } from './pages/configuracion/configuracion';
@@ -43,17 +42,6 @@ export const routes: Routes = [
           permiso: 'MODIFICACION'
         }
       },
-
-      {
-        path: 'actualizacion/diferencias',
-        component: DiferenciasActualizacion,
-        canActivate: [permissionGuard],
-        data: {
-          roles: ['SUPER_USUARIO', 'ENLACE_ESTATAL'],
-          permiso: 'MODIFICACION'
-        }
-      },
-
       { path: 'informes', redirectTo: 'informes/envios' },
 
       {

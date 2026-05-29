@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 import { SessionService } from '../services/session.service';
 
@@ -24,19 +25,42 @@ export const permissionGuard: CanActivateFn = (route) => {
   const data = route.data as PermissionRouteData;
 
   if (data.roles?.length && !data.roles.includes(usuario.rol as RolUsuario)) {
-    router.navigateByUrl('/');
+    mostrarAccesoDenegado(
+      router,
+      'No cuenta con el perfil necesario para acceder a este módulo.'
+    );
+
     return false;
   }
 
   if (data.permiso === 'CARGA' && !sessionService.habilitaCarga()) {
-    router.navigateByUrl('/');
+    mostrarAccesoDenegado(
+      router,
+      'No tiene habilitado el permiso de carga inicial.'
+    );
+
     return false;
   }
 
   if (data.permiso === 'MODIFICACION' && !sessionService.habilitaModificacion()) {
-    router.navigateByUrl('/');
+    mostrarAccesoDenegado(
+      router,
+      'No tiene habilitado el permiso de actualización.'
+    );
+
     return false;
   }
 
   return true;
 };
+
+function mostrarAccesoDenegado(router: Router, mensaje: string): void {
+  router.navigateByUrl('/').then(() => {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Acceso no permitido',
+      text: mensaje,
+      confirmButtonColor: '#691C32'
+    });
+  });
+}
