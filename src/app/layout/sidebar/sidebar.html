@@ -1,16 +1,25 @@
 <aside class="sidebar">
-  <div class="user-panel">
+<div class="user-card">
+  <div class="user-main">
     <div class="avatar">
       <img src="/img/logoMujBandera.png" alt="Usuario en línea">
     </div>
 
-    <div>
+    <div class="user-info">
       <div class="user-name">{{ usuario()?.nombreCompleto || usuario()?.usuario || 'usuario' }}</div>
-      <div class="user-status">EN LÍNEA</div>
+
+      <div class="user-status">
+        <span class="status-dot"></span>
+        EN LÍNEA
+      </div>
     </div>
   </div>
 
-  <div class="version">Ver. 3.0.0</div>
+  <div class="system-info">
+    <span>Sistema SIIID2</span>
+    <strong>Version. 3.0.0</strong>
+  </div>
+</div>
 
   <nav class="menu">
     @if (puedeVerCargaInformacion()) {
