@@ -66,7 +66,6 @@
             <th>Carga</th>
             <th>Modificación</th>
             <th>Estado</th>
-            <th>ID</th>
             <th class="acciones-col">Acciones</th>
           </tr>
         </thead>
@@ -101,7 +100,6 @@
                 {{ usuario.activo ? 'ACTIVO' : 'INACTIVO' }}
               </span>
             </td>
-            <td>{{ usuario.idUsuario }}</td>
             <td>
               <div class="acciones">
                 <button type="button" class="btn-icon btn-edit" title="Editar" (click)="abrirEditarUsuario(usuario)">
