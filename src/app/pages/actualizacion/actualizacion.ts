@@ -108,6 +108,24 @@ export class Actualizacion {
   errores = computed(() => this.respuestaValidacion()?.errores ?? []);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
+  codigoReferenciaPendiente = computed(() => {
+  const textoErrores = this.errores()
+    .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
+    .join(' ');
+
+  const match = textoErrores.match(/Código de referencia pendiente:\s*([a-fA-F0-9-]{20,})/);
+
+  return match?.[1] ?? '';
+});
+
+hayActualizacionPendiente = computed(() => {
+  return this.codigoReferenciaPendiente() !== '';
+});
+
+codigoReferenciaOperacion = computed(() => {
+  return this.codigoReferencia() || this.codigoReferenciaPendiente();
+});
+
   totalDiferenciasCarpetas = computed(() => this.diferencias()?.carpetas?.length ?? 0);
   totalDiferenciasDelitos = computed(() => this.diferencias()?.delitos?.length ?? 0);
   totalDiferenciasVictimas = computed(() => this.diferencias()?.victimas?.length ?? 0);
@@ -258,7 +276,7 @@ export class Actualizacion {
   }
 
   continuarAAcusePrevio(): void {
-    const codigoReferencia = this.codigoReferencia();
+const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
       return;
@@ -274,7 +292,7 @@ export class Actualizacion {
   }
 
   aceptarActualizacion(): void {
-    const codigoReferencia = this.codigoReferencia();
+const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
       return;
@@ -326,7 +344,7 @@ export class Actualizacion {
   }
 
   rechazarActualizacion(): void {
-    const codigoReferencia = this.codigoReferencia();
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
       return;
@@ -363,6 +381,23 @@ export class Actualizacion {
       }
     });
   }
+
+  resolverActualizacionPendiente(): void {
+  const codigoReferencia = this.codigoReferenciaPendiente();
+
+  if (!codigoReferencia) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Sin referencia pendiente',
+      text: 'No fue posible identificar el código de referencia pendiente.',
+      confirmButtonColor: '#691C32'
+    });
+
+    return;
+  }
+
+  this.abrirAcusePrevio(codigoReferencia);
+}
 
   cerrarProcesoConfirmado(): void {
     this.limpiarUrlsPdf();

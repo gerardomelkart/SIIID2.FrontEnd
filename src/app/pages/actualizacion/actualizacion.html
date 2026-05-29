@@ -285,22 +285,55 @@
 }
 
 @if (mostrarTablasErrores()) {
-<div class="validation-result-header">
+<div
+  class="validation-result-header"
+  [class.validation-result-pending]="hayActualizacionPendiente()"
+>
   <div>
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
-      Validación con inconsistencias
+
+      @if (hayActualizacionPendiente()) {
+        Actualización pendiente por resolver
+      } @else {
+        Validación con inconsistencias
+      }
     </h2>
 
     <p>
-      Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+      @if (hayActualizacionPendiente()) {
+        Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+      } @else {
+        Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+      }
     </p>
+
+    @if (hayActualizacionPendiente()) {
+      <div class="pending-reference">
+        Código pendiente:
+        <strong>{{ codigoReferenciaPendiente() }}</strong>
+      </div>
+    }
   </div>
 
-  <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
-    <i class="fa-solid fa-rotate-left"></i>
-    Corregir archivos y volver a cargar
-  </button>
+  <div class="validation-actions">
+    @if (hayActualizacionPendiente()) {
+      <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver
+      </button>
+
+      <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
+        <i class="fa-solid fa-file-signature"></i>
+        Resolver pendiente
+      </button>
+    } @else {
+      <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+        <i class="fa-solid fa-rotate-left"></i>
+        Corregir archivos y volver a cargar
+      </button>
+    }
+  </div>
 </div>
 
 
