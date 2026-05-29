@@ -11,164 +11,269 @@
         a la información reportada en periodos anteriores."
       </div>
 
-      <div class="p-4 actualizacion-form">
-        @if (mostrarSelectorEntidad()) {
-          <div class="mb-2">
-            <span class="required">*</span>
-            <em> Seleccionar Entidad Federativa:</em>
-            <select
-              class="form-select form-select-sm select-corte"
-              [ngModel]="idEntidadFederativa()"
-              (ngModelChange)="idEntidadFederativa.set($event); onPeriodoChange()"
-            >
-              <option value="">Seleccione Entidad...</option>
-              <option value="1">Aguascalientes</option>
-              <option value="2">Baja California</option>
-              <option value="3">Baja California Sur</option>
-              <option value="4">Campeche</option>
-              <option value="5">Coahuila</option>
-              <option value="6">Colima</option>
-              <option value="7">Chiapas</option>
-              <option value="8">Chihuahua</option>
-              <option value="9">Ciudad de México</option>
-              <option value="10">Durango</option>
-              <option value="11">Guanajuato</option>
-              <option value="12">Guerrero</option>
-              <option value="13">Hidalgo</option>
-              <option value="14">Jalisco</option>
-              <option value="15">México</option>
-              <option value="16">Michoacán</option>
-              <option value="17">Morelos</option>
-              <option value="18">Nayarit</option>
-              <option value="19">Nuevo León</option>
-              <option value="20">Oaxaca</option>
-              <option value="21">Puebla</option>
-              <option value="22">Querétaro</option>
-              <option value="23">Quintana Roo</option>
-              <option value="24">San Luis Potosí</option>
-              <option value="25">Sinaloa</option>
-              <option value="26">Sonora</option>
-              <option value="27">Tabasco</option>
-              <option value="28">Tamaulipas</option>
-              <option value="29">Tlaxcala</option>
-              <option value="30">Veracruz</option>
-              <option value="31">Yucatán</option>
-              <option value="32">Zacatecas</option>
-            </select>
-          </div>
-        }
+<div class="p-4 actualizacion-form">
+  <div class="module-intro">
+    <div class="intro-icon">
+      <i class="fa-solid fa-arrows-rotate"></i>
+    </div>
 
-        <div class="mb-2">
-          <span class="required">*</span>
-          <em> Seleccionar Año:</em>
+    <div>
+      <strong>Actualización de incidencia delictiva</strong>
+      <p>
+        Consulta el periodo previamente confirmado y, si está disponible, carga los archivos con las modificaciones.
+      </p>
+    </div>
+  </div>
+
+  <div class="update-steps">
+    <div
+      class="update-step"
+      [class.active]="!mostrarArchivos()"
+      [class.done]="mostrarArchivos()"
+    >
+      <span>1</span>
+      Consultar periodo
+    </div>
+
+    <div
+      class="update-step"
+      [class.active]="mostrarArchivos()"
+    >
+      <span>2</span>
+      Cargar archivos
+    </div>
+
+    <div class="update-step">
+      <span>3</span>
+      Validar actualización
+    </div>
+  </div>
+
+  <div class="periodo-panel">
+    <div class="panel-subtitle">
+      <i class="fa-solid fa-calendar-check"></i>
+      Selección del periodo
+    </div>
+
+    <div class="periodo-grid">
+      @if (mostrarSelectorEntidad()) {
+        <div class="form-group">
+          <label>
+            <span class="required">*</span>
+            Entidad federativa
+          </label>
+
           <select
             class="form-select form-select-sm select-corte"
-            [ngModel]="anioCorte()"
-            (ngModelChange)="anioCorte.set($event); onPeriodoChange()"
+            [ngModel]="idEntidadFederativa()"
+            (ngModelChange)="idEntidadFederativa.set($event); onPeriodoChange()"
           >
-            <option value="">Seleccione Año...</option>
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
+            <option value="">Seleccione Entidad...</option>
+            <option value="1">Aguascalientes</option>
+            <option value="2">Baja California</option>
+            <option value="3">Baja California Sur</option>
+            <option value="4">Campeche</option>
+            <option value="5">Coahuila</option>
+            <option value="6">Colima</option>
+            <option value="7">Chiapas</option>
+            <option value="8">Chihuahua</option>
+            <option value="9">Ciudad de México</option>
+            <option value="10">Durango</option>
+            <option value="11">Guanajuato</option>
+            <option value="12">Guerrero</option>
+            <option value="13">Hidalgo</option>
+            <option value="14">Jalisco</option>
+            <option value="15">México</option>
+            <option value="16">Michoacán</option>
+            <option value="17">Morelos</option>
+            <option value="18">Nayarit</option>
+            <option value="19">Nuevo León</option>
+            <option value="20">Oaxaca</option>
+            <option value="21">Puebla</option>
+            <option value="22">Querétaro</option>
+            <option value="23">Quintana Roo</option>
+            <option value="24">San Luis Potosí</option>
+            <option value="25">Sinaloa</option>
+            <option value="26">Sonora</option>
+            <option value="27">Tabasco</option>
+            <option value="28">Tamaulipas</option>
+            <option value="29">Tlaxcala</option>
+            <option value="30">Veracruz</option>
+            <option value="31">Yucatán</option>
+            <option value="32">Zacatecas</option>
           </select>
         </div>
+      }
 
-        <div class="mb-3">
+      <div class="form-group">
+        <label>
           <span class="required">*</span>
-          <em> Seleccionar Mes:</em>
-          <select
-            class="form-select form-select-sm select-corte"
-            [ngModel]="mesCorte()"
-            (ngModelChange)="mesCorte.set($event); onPeriodoChange()"
+          Año
+        </label>
+
+        <select
+          class="form-select form-select-sm select-corte"
+          [ngModel]="anioCorte()"
+          (ngModelChange)="anioCorte.set($event); onPeriodoChange()"
+        >
+          <option value="">Seleccione Año...</option>
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <span class="required">*</span>
+          Mes
+        </label>
+
+        <select
+          class="form-select form-select-sm select-corte"
+          [ngModel]="mesCorte()"
+          (ngModelChange)="mesCorte.set($event); onPeriodoChange()"
+        >
+          <option value="">Seleccione Mes...</option>
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="periodo-actions">
+      <div class="periodo-note">
+        <i class="fa-solid fa-circle-info"></i>
+        Solo se podrán actualizar periodos confirmados previamente.
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-siiid"
+        [disabled]="!puedeConsultar() || estadoPeriodo() === 'CONSULTANDO'"
+        (click)="consultarPeriodo()"
+      >
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        @if (estadoPeriodo() === 'CONSULTANDO') {
+          Consultando...
+        } @else {
+          Consultar periodo
+        }
+      </button>
+    </div>
+
+    @if (mensajePeriodo()) {
+      <div
+        class="periodo-alert"
+        [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+        [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+        [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
+      >
+        {{ mensajePeriodo() }}
+      </div>
+    }
+  </div>
+
+  @if (mostrarArchivos()) {
+    <div class="archivos-actualizacion mt-4">
+      <div class="panel-subtitle">
+        <i class="fa-solid fa-file-arrow-up"></i>
+        Archivos de actualización
+      </div>
+
+      <div class="file-upload-grid">
+        <label class="file-upload-card">
+          <div class="file-upload-header">
+            <div class="file-type-icon">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+
+            <div>
+              <strong>Archivo Expedientes</strong>
+              <span>Carpetas / expedientes</span>
+            </div>
+          </div>
+
+          <input
+            type="file"
+            class="form-control form-control-sm file-input"
+            accept=".csv,.xlsx,.xls"
+            (change)="seleccionarArchivo($event, 'carpetas')"
           >
-            <option value="">Seleccione Mes...</option>
-            <option value="1">Enero</option>
-            <option value="2">Febrero</option>
-            <option value="3">Marzo</option>
-            <option value="4">Abril</option>
-            <option value="5">Mayo</option>
-            <option value="6">Junio</option>
-            <option value="7">Julio</option>
-            <option value="8">Agosto</option>
-            <option value="9">Septiembre</option>
-            <option value="10">Octubre</option>
-            <option value="11">Noviembre</option>
-            <option value="12">Diciembre</option>
-          </select>
+        </label>
+
+        <label class="file-upload-card">
+          <div class="file-upload-header">
+            <div class="file-type-icon">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+
+            <div>
+              <strong>Archivo Delitos</strong>
+              <span>Hechos delictivos modificados</span>
+            </div>
+          </div>
+
+          <input
+            type="file"
+            class="form-control form-control-sm file-input"
+            accept=".csv,.xlsx,.xls"
+            (change)="seleccionarArchivo($event, 'delitos')"
+          >
+        </label>
+
+        <label class="file-upload-card">
+          <div class="file-upload-header">
+            <div class="file-type-icon">
+              <i class="fa-solid fa-users"></i>
+            </div>
+
+            <div>
+              <strong>Archivo Víctimas</strong>
+              <span>Personas víctimas modificadas</span>
+            </div>
+          </div>
+
+          <input
+            type="file"
+            class="form-control form-control-sm file-input"
+            accept=".csv,.xlsx,.xls"
+            (change)="seleccionarArchivo($event, 'victimas')"
+          >
+        </label>
+      </div>
+
+      <div class="upload-footer">
+        <div class="upload-note">
+          <i class="fa-solid fa-circle-info"></i>
+          La actualización validará diferencias contra la carga confirmada del periodo seleccionado.
         </div>
 
         <button
           type="button"
-          class="btn btn-siiid btn-sm mb-3"
-          [disabled]="!puedeConsultar() || estadoPeriodo() === 'CONSULTANDO'"
-          (click)="consultarPeriodo()"
+          class="btn btn-siiid"
+          [disabled]="!puedeValidarActualizacion()"
+          (click)="validarActualizacion()"
         >
-          @if (estadoPeriodo() === 'CONSULTANDO') {
-            Consultando...
-          } @else {
-            Consultar periodo
-          }
+          <i class="fa-solid fa-shield-halved"></i>
+          Validar actualización
         </button>
-
-        @if (mensajePeriodo()) {
-          <div
-            class="periodo-alert"
-            [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
-            [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
-          >
-            {{ mensajePeriodo() }}
-          </div>
-        }
-
-        @if (mostrarArchivos()) {
-          <div class="archivos-actualizacion mt-4">
-            <div class="mb-2">
-              <span class="required">*</span>
-              <em> Seleccionar Archivo Expedientes:</em>
-              <input
-                type="file"
-                class="form-control form-control-sm file-input"
-                accept=".csv,.xlsx,.xls"
-                (change)="seleccionarArchivo($event, 'carpetas')"
-              >
-            </div>
-
-            <div class="mb-2">
-              <span class="required">*</span>
-              <em> Seleccionar Archivo Delitos:</em>
-              <input
-                type="file"
-                class="form-control form-control-sm file-input"
-                accept=".csv,.xlsx,.xls"
-                (change)="seleccionarArchivo($event, 'delitos')"
-              >
-            </div>
-
-            <div class="mb-4">
-              <span class="required">*</span>
-              <em> Seleccionar Archivo Víctimas:</em>
-              <input
-                type="file"
-                class="form-control form-control-sm file-input"
-                accept=".csv,.xlsx,.xls"
-                (change)="seleccionarArchivo($event, 'victimas')"
-              >
-            </div>
-
-            <button
-              type="button"
-              class="btn btn-siiid btn-sm"
-              [disabled]="!puedeValidarActualizacion()"
-              (click)="validarActualizacion()"
-            >
-              Cargar Archivos
-            </button>
-
-          </div>
-        }
       </div>
+    </div>
+  }
+</div>
     </div>
   </div>
 
@@ -179,30 +284,29 @@
         Descargar Plantillas
       </div>
 
-      <div class="p-4">
-        <div class="row text-center">
-          <div class="col-4">
-            <a class="plantilla-link" href="/plantillas/carpetas.xlsx" download="carpetas.xlsx">
-              <img src="/img/logo_XLSX.png" alt="Plantilla de carpetas" class="excel-icon">
-              <div>Carpetas</div>
-            </a>
-          </div>
+<div class="p-4 plantillas-body">
+  <div class="plantillas-note">
+    <i class="fa-solid fa-download"></i>
+    Usa las mismas plantillas oficiales para preparar la actualización.
+  </div>
 
-          <div class="col-4">
-            <a class="plantilla-link" href="/plantillas/delitos.xlsx" download="delitos.xlsx">
-              <img src="/img/logo_XLSX.png" alt="Plantilla de delitos" class="excel-icon">
-              <div>Delitos</div>
-            </a>
-          </div>
+  <div class="plantillas-grid">
+    <a class="plantilla-link" href="/plantillas/carpetas.xlsx" download="carpetas.xlsx">
+      <img src="/img/logo_XLSX.png" alt="Plantilla de carpetas" class="excel-icon">
+      <strong>Carpetas</strong>
+    </a>
 
-          <div class="col-4">
-            <a class="plantilla-link" href="/plantillas/victimas.xlsx" download="victimas.xlsx">
-              <img src="/img/logo_XLSX.png" alt="Plantilla de víctimas" class="excel-icon">
-              <div>Víctimas</div>
-            </a>
-          </div>
-        </div>
-      </div>
+    <a class="plantilla-link" href="/plantillas/delitos.xlsx" download="delitos.xlsx">
+      <img src="/img/logo_XLSX.png" alt="Plantilla de delitos" class="excel-icon">
+      <strong>Delitos</strong>
+    </a>
+
+    <a class="plantilla-link" href="/plantillas/victimas.xlsx" download="victimas.xlsx">
+      <img src="/img/logo_XLSX.png" alt="Plantilla de víctimas" class="excel-icon">
+      <strong>Víctimas</strong>
+    </a>
+  </div>
+</div>
     </div>
   </div>
 </div>

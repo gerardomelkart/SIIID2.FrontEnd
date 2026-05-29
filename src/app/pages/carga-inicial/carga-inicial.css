@@ -1,3 +1,193 @@
+.module-intro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f8f8f8;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+
+.intro-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 8px;
+  background: var(--siiid-guinda);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.module-intro strong {
+  display: block;
+  color: #222;
+  font-size: 16px;
+}
+
+.module-intro p {
+  margin: 3px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.upload-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.upload-step {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-left: 5px solid #bbb;
+  padding: 10px 12px;
+  font-weight: 800;
+  color: #667085;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-step span {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e9ecef;
+  color: #333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.upload-step.active {
+  border-left-color: var(--siiid-guinda);
+  color: var(--siiid-guinda);
+}
+
+.upload-step.active span {
+  background: var(--siiid-guinda);
+  color: #fff;
+}
+
+.file-upload-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.file-upload-card {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 14px;
+  display: block;
+  cursor: pointer;
+  transition: box-shadow .12s ease-in-out, transform .12s ease-in-out;
+}
+
+.file-upload-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .14);
+  transform: translateY(-1px);
+}
+
+.file-upload-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.file-type-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 8px;
+  background: #f2eef0;
+  color: var(--siiid-guinda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-upload-header strong {
+  display: block;
+  color: #222;
+  font-size: 14px;
+}
+
+.file-upload-header span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+}
+
+.upload-footer {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.upload-note {
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.upload-note i {
+  color: var(--siiid-guinda);
+}
+
+.plantillas-body {
+  min-height: 220px;
+}
+
+.plantillas-note {
+  background: #f8f8f8;
+  border-left: 5px solid var(--siiid-guinda);
+  padding: 10px 12px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.plantillas-note i {
+  color: var(--siiid-guinda);
+}
+
+.plantillas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.plantilla-link {
+  color: #000;
+  text-decoration: none;
+  display: flex;
+  min-height: 120px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  background: #fff;
+  transition: transform .12s ease-in-out, box-shadow .12s ease-in-out;
+}
+
+.plantilla-link:hover {
+  color: var(--siiid-guinda);
+  text-decoration: none;
+  font-weight: 700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .14);
+}
+
 .carga-form {
   min-height: 245px;
 }
@@ -233,22 +423,26 @@
   }
 }
 
-.plantilla-link {
-  color: #000;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.plantilla-link:hover {
-  color: #691C32;
-  text-decoration: none;
-  font-weight: 700;
-}
-
-.plantilla-link:hover .excel-icon {
-  transform: scale(1.04);
-}
-
 .excel-icon {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  margin-bottom: 8px;
   transition: transform .12s ease-in-out;
+}
+
+@media (max-width: 900px) {
+  .upload-steps,
+  .plantillas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .upload-footer .btn {
+    width: 100%;
+  }
 }
