@@ -1,3 +1,4 @@
+@if (!mostrarTablasErrores()) {
 <div class="row g-4">
   <div class="col-xl-8">
     <div class="siiid-card">
@@ -6,122 +7,105 @@
         Carga de información, incidencia delictiva
       </div>
 
-<div class="p-4 carga-form">
-  <div class="module-intro">
-    <div class="intro-icon">
-      <i class="fa-solid fa-cloud-arrow-up"></i>
-    </div>
+      <div class="p-4 carga-form">
+        <div class="module-intro">
+          <div class="intro-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
 
-    <div>
-      <strong>Carga inicial de incidencia delictiva</strong>
-      <p>
-        Selecciona los tres archivos requeridos para validar la información y generar el acuse previo.
-      </p>
-    </div>
-  </div>
-
-  <div class="upload-steps">
-    <div class="upload-step active">
-      <span>1</span>
-      Seleccionar archivos
-    </div>
-
-    <div class="upload-step">
-      <span>2</span>
-      Validar información
-    </div>
-
-    <div class="upload-step">
-      <span>3</span>
-      Confirmar envío
-    </div>
-  </div>
-
-  <div class="file-upload-grid">
-    <label class="file-upload-card">
-      <div class="file-upload-header">
-        <div class="file-type-icon">
-          <i class="fa-solid fa-folder-open"></i>
+          <div>
+            <strong>Carga inicial de incidencia delictiva</strong>
+            <p>
+              Selecciona los tres archivos requeridos para validar la información y generar el acuse previo.
+            </p>
+          </div>
         </div>
 
-        <div>
-          <strong>Archivo Expedientes</strong>
-          <span>Carpetas / expedientes</span>
+        <div class="upload-steps">
+          <div class="upload-step active">
+            <span>1</span>
+            Seleccionar archivos
+          </div>
+
+          <div class="upload-step">
+            <span>2</span>
+            Validar información
+          </div>
+
+          <div class="upload-step">
+            <span>3</span>
+            Confirmar envío
+          </div>
         </div>
+
+        <div class="file-upload-grid">
+          <label class="file-upload-card">
+            <div class="file-upload-header">
+              <div class="file-type-icon">
+                <i class="fa-solid fa-folder-open"></i>
+              </div>
+
+              <div>
+                <strong>Archivo Expedientes</strong>
+                <span>Carpetas / expedientes</span>
+              </div>
+            </div>
+
+            <input type="file" class="form-control form-control-sm file-input" accept=".csv,.xlsx,.xls"
+              (change)="seleccionarArchivo($event, 'carpetas')">
+          </label>
+
+          <label class="file-upload-card">
+            <div class="file-upload-header">
+              <div class="file-type-icon">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+
+              <div>
+                <strong>Archivo Delitos</strong>
+                <span>Hechos delictivos</span>
+              </div>
+            </div>
+
+            <input type="file" class="form-control form-control-sm file-input" accept=".csv,.xlsx,.xls"
+              (change)="seleccionarArchivo($event, 'delitos')">
+          </label>
+
+          <label class="file-upload-card">
+            <div class="file-upload-header">
+              <div class="file-type-icon">
+                <i class="fa-solid fa-users"></i>
+              </div>
+
+              <div>
+                <strong>Archivo Víctimas</strong>
+                <span>Personas víctimas asociadas</span>
+              </div>
+            </div>
+
+            <input type="file" class="form-control form-control-sm file-input" accept=".csv,.xlsx,.xls"
+              (change)="seleccionarArchivo($event, 'victimas')">
+          </label>
+        </div>
+
+        <div class="upload-footer">
+          <div class="upload-note">
+            <i class="fa-solid fa-circle-info"></i>
+            Los archivos permitidos son CSV y XLSX. La carga solo continúa si no existen inconsistencias.
+          </div>
+
+          <button type="button" class="btn btn-siiid" [disabled]="!puedeValidar()" (click)="validarArchivos()">
+            <i class="fa-solid fa-shield-halved"></i>
+            Validar archivos
+          </button>
+        </div>
+
+        @if (errorGeneral()) {
+        <div class="alert alert-danger mt-3 mb-0">
+          {{ errorGeneral() }}
+        </div>
+        }
       </div>
-
-      <input
-        type="file"
-        class="form-control form-control-sm file-input"
-        accept=".csv,.xlsx,.xls"
-        (change)="seleccionarArchivo($event, 'carpetas')"
-      >
-    </label>
-
-    <label class="file-upload-card">
-      <div class="file-upload-header">
-        <div class="file-type-icon">
-          <i class="fa-solid fa-scale-balanced"></i>
-        </div>
-
-        <div>
-          <strong>Archivo Delitos</strong>
-          <span>Hechos delictivos</span>
-        </div>
-      </div>
-
-      <input
-        type="file"
-        class="form-control form-control-sm file-input"
-        accept=".csv,.xlsx,.xls"
-        (change)="seleccionarArchivo($event, 'delitos')"
-      >
-    </label>
-
-    <label class="file-upload-card">
-      <div class="file-upload-header">
-        <div class="file-type-icon">
-          <i class="fa-solid fa-users"></i>
-        </div>
-
-        <div>
-          <strong>Archivo Víctimas</strong>
-          <span>Personas víctimas asociadas</span>
-        </div>
-      </div>
-
-      <input
-        type="file"
-        class="form-control form-control-sm file-input"
-        accept=".csv,.xlsx,.xls"
-        (change)="seleccionarArchivo($event, 'victimas')"
-      >
-    </label>
-  </div>
-
-  <div class="upload-footer">
-    <div class="upload-note">
-      <i class="fa-solid fa-circle-info"></i>
-      Los archivos permitidos son CSV y XLSX. La carga solo continúa si no existen inconsistencias.
-    </div>
-
-    <button
-      type="button"
-      class="btn btn-siiid"
-      [disabled]="!puedeValidar()"
-      (click)="validarArchivos()"
-    >
-      <i class="fa-solid fa-shield-halved"></i>
-      Validar archivos
-    </button>
-  </div>
-
-  @if (errorGeneral()) {
-    <div class="alert alert-danger mt-3 mb-0">
-      {{ errorGeneral() }}
-    </div>
-  }
-</div>
 
     </div>
   </div>
@@ -133,203 +117,214 @@
         Descargar Plantillas
       </div>
 
-<div class="p-4 plantillas-body">
-  <div class="plantillas-note">
-    <i class="fa-solid fa-download"></i>
-    Descarga las plantillas oficiales antes de preparar la carga.
-  </div>
+      <div class="p-4 plantillas-body">
+        <div class="plantillas-note">
+          <i class="fa-solid fa-download"></i>
+          Descarga las plantillas oficiales antes de preparar la carga.
+        </div>
 
-  <div class="plantillas-grid">
-    <a class="plantilla-link" href="/plantillas/carpetas.xlsx" download="carpetas.xlsx">
-      <img src="/img/logo_XLSX.png" alt="Plantilla de carpetas" class="excel-icon">
-      <strong>Carpetas</strong>
-    </a>
+        <div class="plantillas-grid">
+          <a class="plantilla-link" href="/plantillas/carpetas.xlsx" download="carpetas.xlsx">
+            <img src="/img/logo_XLSX.png" alt="Plantilla de carpetas" class="excel-icon">
+            <strong>Carpetas</strong>
+          </a>
 
-    <a class="plantilla-link" href="/plantillas/delitos.xlsx" download="delitos.xlsx">
-      <img src="/img/logo_XLSX.png" alt="Plantilla de delitos" class="excel-icon">
-      <strong>Delitos</strong>
-    </a>
+          <a class="plantilla-link" href="/plantillas/delitos.xlsx" download="delitos.xlsx">
+            <img src="/img/logo_XLSX.png" alt="Plantilla de delitos" class="excel-icon">
+            <strong>Delitos</strong>
+          </a>
 
-    <a class="plantilla-link" href="/plantillas/victimas.xlsx" download="victimas.xlsx">
-      <img src="/img/logo_XLSX.png" alt="Plantilla de víctimas" class="excel-icon">
-      <strong>Víctimas</strong>
-    </a>
-  </div>
-</div>
+          <a class="plantilla-link" href="/plantillas/victimas.xlsx" download="victimas.xlsx">
+            <img src="/img/logo_XLSX.png" alt="Plantilla de víctimas" class="excel-icon">
+            <strong>Víctimas</strong>
+          </a>
+        </div>
+      </div>
 
     </div>
   </div>
 </div>
+}
 
 @if (estado() === 'VALIDANDO') {
-  <div class="processing-overlay">
-    <div class="processing-content">
-      <div class="processing-spinner"></div>
-      <div class="processing-text">Procesando...</div>
-    </div>
+<div class="processing-overlay">
+  <div class="processing-content">
+    <div class="processing-spinner"></div>
+    <div class="processing-text">Procesando...</div>
   </div>
+</div>
 }
 
 @if (mostrarTablasErrores()) {
-  <div class="validacion-grid mt-4">
-    <div class="validacion-panel">
-      <div class="validacion-title">Validación. Archivo Expedientes</div>
-
-      <table class="tabla-validacion">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Total<br>Registros</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumenCarpetas(); track item.codigo) {
-            <tr [class.error-row]="item.esError">
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="validacion-panel validacion-panel-wide">
-      <div class="validacion-title">Validación archivo Delitos</div>
-
-      <table class="tabla-validacion">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Total<br>Registros</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumenDelitos(); track item.codigo) {
-            <tr [class.error-row]="item.esError">
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="validacion-panel">
-      <div class="validacion-title">Validación archivo Víctimas</div>
-
-      <table class="tabla-validacion">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Total<br>Registros</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumenVictimas(); track item.codigo) {
-            <tr [class.error-row]="item.esError">
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="texto-ayuda-validacion">
-    La información que se muestra en las tablas permite identificar a detalle las inconsistencias
-    detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
-    y cargar de nuevo sus archivos.
-  </div>
-
-  @if (errores().length > 0) {
-    <div class="siiid-card mt-3">
-      <div class="siiid-card-header">
+  <div class="validation-result-header">
+    <div>
+      <h2>
         <i class="fa-solid fa-triangle-exclamation"></i>
-        Detalle de inconsistencias
-      </div>
+        Validación con inconsistencias
+      </h2>
 
-      <div class="table-responsive">
-        <table class="table table-sm table-bordered mb-0 detalle-errores">
-          <thead>
-            <tr>
-              <th>Archivo</th>
-              <th>Fila</th>
-              <th>Columna</th>
-              <th>Valor</th>
-              <th>Mensaje</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (error of errores(); track $index) {
-              <tr>
-                <td>{{ error.archivo }}</td>
-                <td>{{ error.fila || '-' }}</td>
-                <td>{{ error.columna }}</td>
-                <td>{{ error.valor || '-' }}</td>
-                <td>{{ error.mensaje }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      <p>
+        Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+      </p>
     </div>
-  }
+
+    <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-rotate-left"></i>
+      Corregir archivos y volver a cargar
+    </button>
+  </div>
+  
+<div class="validacion-grid mt-4">
+  <div class="validacion-panel">
+    <div class="validacion-title">Validación. Archivo Expedientes</div>
+
+    <table class="tabla-validacion">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Total<br>Registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of resumenCarpetas(); track item.codigo) {
+        <tr [class.error-row]="item.esError">
+          <td>{{ item.descripcion }}</td>
+          <td>{{ item.totalRegistros }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="validacion-panel validacion-panel-wide">
+    <div class="validacion-title">Validación archivo Delitos</div>
+
+    <table class="tabla-validacion">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Total<br>Registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of resumenDelitos(); track item.codigo) {
+        <tr [class.error-row]="item.esError">
+          <td>{{ item.descripcion }}</td>
+          <td>{{ item.totalRegistros }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="validacion-panel">
+    <div class="validacion-title">Validación archivo Víctimas</div>
+
+    <table class="tabla-validacion">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Total<br>Registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of resumenVictimas(); track item.codigo) {
+        <tr [class.error-row]="item.esError">
+          <td>{{ item.descripcion }}</td>
+          <td>{{ item.totalRegistros }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="texto-ayuda-validacion">
+  La información que se muestra en las tablas permite identificar a detalle las inconsistencias
+  detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
+  y cargar de nuevo sus archivos.
+</div>
+
+@if (errores().length > 0) {
+<div class="siiid-card mt-3">
+  <div class="siiid-card-header">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    Detalle de inconsistencias
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered mb-0 detalle-errores">
+      <thead>
+        <tr>
+          <th>Archivo</th>
+          <th>Fila</th>
+          <th>Columna</th>
+          <th>Valor</th>
+          <th>Mensaje</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (error of errores(); track $index) {
+        <tr>
+          <td>{{ error.archivo }}</td>
+          <td>{{ error.fila || '-' }}</td>
+          <td>{{ error.columna }}</td>
+          <td>{{ error.valor || '-' }}</td>
+          <td>{{ error.mensaje }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
 }
 
 @if (estado() === 'MOSTRANDO_ACUSE' || estado() === 'CONFIRMANDO' || estado() === 'CONFIRMADO') {
-  <div class="acuse-modal">
-    <div class="acuse-header">
-      <span>Acuse de entrega de información</span>
+<div class="acuse-modal">
+  <div class="acuse-header">
+    <span>Acuse de entrega de información</span>
 
-@if (estado() === 'CONFIRMADO') {
-  <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
-}
-    </div>
-
-    <div class="acuse-body">
-@if (acuseConfirmadoUrl()) {
-  <iframe
-    class="acuse-frame"
-    [src]="acuseConfirmadoUrl()"
-    title="Acuse confirmado"
-  ></iframe>
-} @else if (acusePrevioUrl()) {
-  <iframe
-    class="acuse-frame"
-    [src]="acusePrevioUrl()"
-    title="Acuse previo"
-  ></iframe>
-}
-    </div>
-
-    <div class="acuse-actions">
-      @if (estado() === 'MOSTRANDO_ACUSE') {
-        <button type="button" class="btn-rechazar" (click)="rechazarCarga()">
-          Rechazar
-        </button>
-
-        <button type="button" class="btn-aceptar" (click)="aceptarCarga()">
-          Aceptar
-        </button>
-      }
-
-      @if (estado() === 'CONFIRMANDO') {
-        <button type="button" class="btn-rechazar btn-disabled" disabled>
-          Rechazar
-        </button>
-
-        <button type="button" class="btn-aceptar btn-disabled" disabled>
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Procesando...
-        </button>
-      }
-
-      @if (estado() === 'CONFIRMADO') {
-        <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
-          Cerrar
-        </button>
-      }
-    </div>
+    @if (estado() === 'CONFIRMADO') {
+    <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
+    }
   </div>
+
+  <div class="acuse-body">
+    @if (acuseConfirmadoUrl()) {
+    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado"></iframe>
+    } @else if (acusePrevioUrl()) {
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Acuse previo"></iframe>
+    }
+  </div>
+
+  <div class="acuse-actions">
+    @if (estado() === 'MOSTRANDO_ACUSE') {
+    <button type="button" class="btn-rechazar" (click)="rechazarCarga()">
+      Rechazar
+    </button>
+
+    <button type="button" class="btn-aceptar" (click)="aceptarCarga()">
+      Aceptar
+    </button>
+    }
+
+    @if (estado() === 'CONFIRMANDO') {
+    <button type="button" class="btn-rechazar btn-disabled" disabled>
+      Rechazar
+    </button>
+
+    <button type="button" class="btn-aceptar btn-disabled" disabled>
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Procesando...
+    </button>
+    }
+
+    @if (estado() === 'CONFIRMADO') {
+    <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
+      Cerrar
+    </button>
+    }
+  </div>
+</div>
 }

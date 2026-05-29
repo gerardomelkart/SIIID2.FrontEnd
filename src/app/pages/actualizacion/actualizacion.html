@@ -1,3 +1,4 @@
+@if (!mostrarTablasErrores()) {
 <div class="row g-4">
   <div class="col-xl-8">
     <div class="siiid-card">
@@ -11,269 +12,231 @@
         a la información reportada en periodos anteriores."
       </div>
 
-<div class="p-4 actualizacion-form">
-  <div class="module-intro">
-    <div class="intro-icon">
-      <i class="fa-solid fa-arrows-rotate"></i>
-    </div>
+      <div class="p-4 actualizacion-form">
+        <div class="module-intro">
+          <div class="intro-icon">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </div>
 
-    <div>
-      <strong>Actualización de incidencia delictiva</strong>
-      <p>
-        Consulta el periodo previamente confirmado y, si está disponible, carga los archivos con las modificaciones.
-      </p>
-    </div>
-  </div>
-
-  <div class="update-steps">
-    <div
-      class="update-step"
-      [class.active]="!mostrarArchivos()"
-      [class.done]="mostrarArchivos()"
-    >
-      <span>1</span>
-      Consultar periodo
-    </div>
-
-    <div
-      class="update-step"
-      [class.active]="mostrarArchivos()"
-    >
-      <span>2</span>
-      Cargar archivos
-    </div>
-
-    <div class="update-step">
-      <span>3</span>
-      Validar actualización
-    </div>
-  </div>
-
-  <div class="periodo-panel">
-    <div class="panel-subtitle">
-      <i class="fa-solid fa-calendar-check"></i>
-      Selección del periodo
-    </div>
-
-    <div class="periodo-grid">
-      @if (mostrarSelectorEntidad()) {
-        <div class="form-group">
-          <label>
-            <span class="required">*</span>
-            Entidad federativa
-          </label>
-
-          <select
-            class="form-select form-select-sm select-corte"
-            [ngModel]="idEntidadFederativa()"
-            (ngModelChange)="idEntidadFederativa.set($event); onPeriodoChange()"
-          >
-            <option value="">Seleccione Entidad...</option>
-            <option value="1">Aguascalientes</option>
-            <option value="2">Baja California</option>
-            <option value="3">Baja California Sur</option>
-            <option value="4">Campeche</option>
-            <option value="5">Coahuila</option>
-            <option value="6">Colima</option>
-            <option value="7">Chiapas</option>
-            <option value="8">Chihuahua</option>
-            <option value="9">Ciudad de México</option>
-            <option value="10">Durango</option>
-            <option value="11">Guanajuato</option>
-            <option value="12">Guerrero</option>
-            <option value="13">Hidalgo</option>
-            <option value="14">Jalisco</option>
-            <option value="15">México</option>
-            <option value="16">Michoacán</option>
-            <option value="17">Morelos</option>
-            <option value="18">Nayarit</option>
-            <option value="19">Nuevo León</option>
-            <option value="20">Oaxaca</option>
-            <option value="21">Puebla</option>
-            <option value="22">Querétaro</option>
-            <option value="23">Quintana Roo</option>
-            <option value="24">San Luis Potosí</option>
-            <option value="25">Sinaloa</option>
-            <option value="26">Sonora</option>
-            <option value="27">Tabasco</option>
-            <option value="28">Tamaulipas</option>
-            <option value="29">Tlaxcala</option>
-            <option value="30">Veracruz</option>
-            <option value="31">Yucatán</option>
-            <option value="32">Zacatecas</option>
-          </select>
+          <div>
+            <strong>Actualización de incidencia delictiva</strong>
+            <p>
+              Consulta el periodo previamente confirmado y, si está disponible, carga los archivos con las
+              modificaciones.
+            </p>
+          </div>
         </div>
-      }
 
-      <div class="form-group">
-        <label>
-          <span class="required">*</span>
-          Año
-        </label>
+        <div class="update-steps">
+          <div class="update-step" [class.active]="!mostrarArchivos()" [class.done]="mostrarArchivos()">
+            <span>1</span>
+            Consultar periodo
+          </div>
 
-        <select
-          class="form-select form-select-sm select-corte"
-          [ngModel]="anioCorte()"
-          (ngModelChange)="anioCorte.set($event); onPeriodoChange()"
-        >
-          <option value="">Seleccione Año...</option>
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-        </select>
-      </div>
+          <div class="update-step" [class.active]="mostrarArchivos()">
+            <span>2</span>
+            Cargar archivos
+          </div>
 
-      <div class="form-group">
-        <label>
-          <span class="required">*</span>
-          Mes
-        </label>
+          <div class="update-step">
+            <span>3</span>
+            Validar actualización
+          </div>
+        </div>
 
-        <select
-          class="form-select form-select-sm select-corte"
-          [ngModel]="mesCorte()"
-          (ngModelChange)="mesCorte.set($event); onPeriodoChange()"
-        >
-          <option value="">Seleccione Mes...</option>
-          <option value="1">Enero</option>
-          <option value="2">Febrero</option>
-          <option value="3">Marzo</option>
-          <option value="4">Abril</option>
-          <option value="5">Mayo</option>
-          <option value="6">Junio</option>
-          <option value="7">Julio</option>
-          <option value="8">Agosto</option>
-          <option value="9">Septiembre</option>
-          <option value="10">Octubre</option>
-          <option value="11">Noviembre</option>
-          <option value="12">Diciembre</option>
-        </select>
-      </div>
-    </div>
+        <div class="periodo-panel">
+          <div class="panel-subtitle">
+            <i class="fa-solid fa-calendar-check"></i>
+            Selección del periodo
+          </div>
 
-    <div class="periodo-actions">
-      <div class="periodo-note">
-        <i class="fa-solid fa-circle-info"></i>
-        Solo se podrán actualizar periodos confirmados previamente.
-      </div>
+          <div class="periodo-grid">
+            @if (mostrarSelectorEntidad()) {
+            <div class="form-group">
+              <label>
+                <span class="required">*</span>
+                Entidad federativa
+              </label>
 
-      <button
-        type="button"
-        class="btn btn-siiid"
-        [disabled]="!puedeConsultar() || estadoPeriodo() === 'CONSULTANDO'"
-        (click)="consultarPeriodo()"
-      >
-        <i class="fa-solid fa-magnifying-glass"></i>
+              <select class="form-select form-select-sm select-corte" [ngModel]="idEntidadFederativa()"
+                (ngModelChange)="idEntidadFederativa.set($event); onPeriodoChange()">
+                <option value="">Seleccione Entidad...</option>
+                <option value="1">Aguascalientes</option>
+                <option value="2">Baja California</option>
+                <option value="3">Baja California Sur</option>
+                <option value="4">Campeche</option>
+                <option value="5">Coahuila</option>
+                <option value="6">Colima</option>
+                <option value="7">Chiapas</option>
+                <option value="8">Chihuahua</option>
+                <option value="9">Ciudad de México</option>
+                <option value="10">Durango</option>
+                <option value="11">Guanajuato</option>
+                <option value="12">Guerrero</option>
+                <option value="13">Hidalgo</option>
+                <option value="14">Jalisco</option>
+                <option value="15">México</option>
+                <option value="16">Michoacán</option>
+                <option value="17">Morelos</option>
+                <option value="18">Nayarit</option>
+                <option value="19">Nuevo León</option>
+                <option value="20">Oaxaca</option>
+                <option value="21">Puebla</option>
+                <option value="22">Querétaro</option>
+                <option value="23">Quintana Roo</option>
+                <option value="24">San Luis Potosí</option>
+                <option value="25">Sinaloa</option>
+                <option value="26">Sonora</option>
+                <option value="27">Tabasco</option>
+                <option value="28">Tamaulipas</option>
+                <option value="29">Tlaxcala</option>
+                <option value="30">Veracruz</option>
+                <option value="31">Yucatán</option>
+                <option value="32">Zacatecas</option>
+              </select>
+            </div>
+            }
 
-        @if (estadoPeriodo() === 'CONSULTANDO') {
-          Consultando...
-        } @else {
-          Consultar periodo
+            <div class="form-group">
+              <label>
+                <span class="required">*</span>
+                Año
+              </label>
+
+              <select class="form-select form-select-sm select-corte" [ngModel]="anioCorte()"
+                (ngModelChange)="anioCorte.set($event); onPeriodoChange()">
+                <option value="">Seleccione Año...</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>
+                <span class="required">*</span>
+                Mes
+              </label>
+
+              <select class="form-select form-select-sm select-corte" [ngModel]="mesCorte()"
+                (ngModelChange)="mesCorte.set($event); onPeriodoChange()">
+                <option value="">Seleccione Mes...</option>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="periodo-actions">
+            <div class="periodo-note">
+              <i class="fa-solid fa-circle-info"></i>
+              Solo se podrán actualizar periodos confirmados previamente.
+            </div>
+
+            <button type="button" class="btn btn-siiid"
+              [disabled]="!puedeConsultar() || estadoPeriodo() === 'CONSULTANDO'" (click)="consultarPeriodo()">
+              <i class="fa-solid fa-magnifying-glass"></i>
+
+              @if (estadoPeriodo() === 'CONSULTANDO') {
+              Consultando...
+              } @else {
+              Consultar periodo
+              }
+            </button>
+          </div>
+
+          @if (mensajePeriodo()) {
+          <div class="periodo-alert" [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+            [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'">
+            {{ mensajePeriodo() }}
+          </div>
+          }
+        </div>
+
+        @if (mostrarArchivos()) {
+        <div class="archivos-actualizacion mt-4">
+          <div class="panel-subtitle">
+            <i class="fa-solid fa-file-arrow-up"></i>
+            Archivos de actualización
+          </div>
+
+          <div class="file-upload-grid">
+            <label class="file-upload-card">
+              <div class="file-upload-header">
+                <div class="file-type-icon">
+                  <i class="fa-solid fa-folder-open"></i>
+                </div>
+
+                <div>
+                  <strong>Archivo Expedientes</strong>
+                  <span>Carpetas / expedientes</span>
+                </div>
+              </div>
+
+              <input type="file" class="form-control form-control-sm file-input" accept=".csv,.xlsx,.xls"
+                (change)="seleccionarArchivo($event, 'carpetas')">
+            </label>
+
+            <label class="file-upload-card">
+              <div class="file-upload-header">
+                <div class="file-type-icon">
+                  <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+
+                <div>
+                  <strong>Archivo Delitos</strong>
+                  <span>Hechos delictivos modificados</span>
+                </div>
+              </div>
+
+              <input type="file" class="form-control form-control-sm file-input" accept=".csv,.xlsx,.xls"
+                (change)="seleccionarArchivo($event, 'delitos')">
+            </label>
+
+            <label class="file-upload-card">
+              <div class="file-upload-header">
+                <div class="file-type-icon">
+                  <i class="fa-solid fa-users"></i>
+                </div>
+
+                <div>
+                  <strong>Archivo Víctimas</strong>
+                  <span>Personas víctimas modificadas</span>
+                </div>
+              </div>
+
+              <input type="file" class="form-control form-control-sm file-input" accept=".csv,.xlsx,.xls"
+                (change)="seleccionarArchivo($event, 'victimas')">
+            </label>
+          </div>
+
+          <div class="upload-footer">
+            <div class="upload-note">
+              <i class="fa-solid fa-circle-info"></i>
+              La actualización validará diferencias contra la carga confirmada del periodo seleccionado.
+            </div>
+
+            <button type="button" class="btn btn-siiid" [disabled]="!puedeValidarActualizacion()"
+              (click)="validarActualizacion()">
+              <i class="fa-solid fa-shield-halved"></i>
+              Validar actualización
+            </button>
+          </div>
+        </div>
         }
-      </button>
-    </div>
-
-    @if (mensajePeriodo()) {
-      <div
-        class="periodo-alert"
-        [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-        [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
-        [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
-      >
-        {{ mensajePeriodo() }}
       </div>
-    }
-  </div>
-
-  @if (mostrarArchivos()) {
-    <div class="archivos-actualizacion mt-4">
-      <div class="panel-subtitle">
-        <i class="fa-solid fa-file-arrow-up"></i>
-        Archivos de actualización
-      </div>
-
-      <div class="file-upload-grid">
-        <label class="file-upload-card">
-          <div class="file-upload-header">
-            <div class="file-type-icon">
-              <i class="fa-solid fa-folder-open"></i>
-            </div>
-
-            <div>
-              <strong>Archivo Expedientes</strong>
-              <span>Carpetas / expedientes</span>
-            </div>
-          </div>
-
-          <input
-            type="file"
-            class="form-control form-control-sm file-input"
-            accept=".csv,.xlsx,.xls"
-            (change)="seleccionarArchivo($event, 'carpetas')"
-          >
-        </label>
-
-        <label class="file-upload-card">
-          <div class="file-upload-header">
-            <div class="file-type-icon">
-              <i class="fa-solid fa-scale-balanced"></i>
-            </div>
-
-            <div>
-              <strong>Archivo Delitos</strong>
-              <span>Hechos delictivos modificados</span>
-            </div>
-          </div>
-
-          <input
-            type="file"
-            class="form-control form-control-sm file-input"
-            accept=".csv,.xlsx,.xls"
-            (change)="seleccionarArchivo($event, 'delitos')"
-          >
-        </label>
-
-        <label class="file-upload-card">
-          <div class="file-upload-header">
-            <div class="file-type-icon">
-              <i class="fa-solid fa-users"></i>
-            </div>
-
-            <div>
-              <strong>Archivo Víctimas</strong>
-              <span>Personas víctimas modificadas</span>
-            </div>
-          </div>
-
-          <input
-            type="file"
-            class="form-control form-control-sm file-input"
-            accept=".csv,.xlsx,.xls"
-            (change)="seleccionarArchivo($event, 'victimas')"
-          >
-        </label>
-      </div>
-
-      <div class="upload-footer">
-        <div class="upload-note">
-          <i class="fa-solid fa-circle-info"></i>
-          La actualización validará diferencias contra la carga confirmada del periodo seleccionado.
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-siiid"
-          [disabled]="!puedeValidarActualizacion()"
-          (click)="validarActualizacion()"
-        >
-          <i class="fa-solid fa-shield-halved"></i>
-          Validar actualización
-        </button>
-      </div>
-    </div>
-  }
-</div>
     </div>
   </div>
 
@@ -284,578 +247,576 @@
         Descargar Plantillas
       </div>
 
-<div class="p-4 plantillas-body">
-  <div class="plantillas-note">
-    <i class="fa-solid fa-download"></i>
-    Usa las mismas plantillas oficiales para preparar la actualización.
-  </div>
+      <div class="p-4 plantillas-body">
+        <div class="plantillas-note">
+          <i class="fa-solid fa-download"></i>
+          Usa las mismas plantillas oficiales para preparar la actualización.
+        </div>
 
-  <div class="plantillas-grid">
-    <a class="plantilla-link" href="/plantillas/carpetas.xlsx" download="carpetas.xlsx">
-      <img src="/img/logo_XLSX.png" alt="Plantilla de carpetas" class="excel-icon">
-      <strong>Carpetas</strong>
-    </a>
+        <div class="plantillas-grid">
+          <a class="plantilla-link" href="/plantillas/carpetas.xlsx" download="carpetas.xlsx">
+            <img src="/img/logo_XLSX.png" alt="Plantilla de carpetas" class="excel-icon">
+            <strong>Carpetas</strong>
+          </a>
 
-    <a class="plantilla-link" href="/plantillas/delitos.xlsx" download="delitos.xlsx">
-      <img src="/img/logo_XLSX.png" alt="Plantilla de delitos" class="excel-icon">
-      <strong>Delitos</strong>
-    </a>
+          <a class="plantilla-link" href="/plantillas/delitos.xlsx" download="delitos.xlsx">
+            <img src="/img/logo_XLSX.png" alt="Plantilla de delitos" class="excel-icon">
+            <strong>Delitos</strong>
+          </a>
 
-    <a class="plantilla-link" href="/plantillas/victimas.xlsx" download="victimas.xlsx">
-      <img src="/img/logo_XLSX.png" alt="Plantilla de víctimas" class="excel-icon">
-      <strong>Víctimas</strong>
-    </a>
-  </div>
-</div>
+          <a class="plantilla-link" href="/plantillas/victimas.xlsx" download="victimas.xlsx">
+            <img src="/img/logo_XLSX.png" alt="Plantilla de víctimas" class="excel-icon">
+            <strong>Víctimas</strong>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+}
 
 @if (estadoPeriodo() === 'VALIDANDO') {
-  <div class="processing-overlay">
-    <div class="processing-content">
-      <div class="processing-spinner"></div>
-      <div class="processing-text">Procesando...</div>
-    </div>
+<div class="processing-overlay">
+  <div class="processing-content">
+    <div class="processing-spinner"></div>
+    <div class="processing-text">Procesando...</div>
   </div>
+</div>
 }
 
 @if (mostrarTablasErrores()) {
-  <div class="validacion-grid mt-4">
-    <div class="validacion-panel">
-      <div class="validacion-title">Validación. Archivo Expedientes</div>
+<div class="validation-result-header">
+  <div>
+    <h2>
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      Validación con inconsistencias
+    </h2>
 
-      <table class="tabla-validacion">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Total<br>Registros</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumenCarpetas(); track item.codigo) {
-            <tr [class.error-row]="item.esError">
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="validacion-panel validacion-panel-wide">
-      <div class="validacion-title">Validación archivo Delitos</div>
-
-      <table class="tabla-validacion">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Total<br>Registros</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumenDelitos(); track item.codigo) {
-            <tr [class.error-row]="item.esError">
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="validacion-panel">
-      <div class="validacion-title">Validación archivo Víctimas</div>
-
-      <table class="tabla-validacion">
-        <thead>
-          <tr>
-            <th>Descripción</th>
-            <th>Total<br>Registros</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of resumenVictimas(); track item.codigo) {
-            <tr [class.error-row]="item.esError">
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <p>
+      Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+    </p>
   </div>
 
-  <div class="texto-ayuda-validacion">
-    La información que se muestra en las tablas permite identificar a detalle las inconsistencias
-    detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
-    y cargar de nuevo sus archivos.
+  <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+    <i class="fa-solid fa-rotate-left"></i>
+    Corregir archivos y volver a cargar
+  </button>
+</div>
+
+
+<div class="validacion-grid mt-4">
+  <div class="validacion-panel">
+    <div class="validacion-title">Validación. Archivo Expedientes</div>
+
+    <table class="tabla-validacion">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Total<br>Registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of resumenCarpetas(); track item.codigo) {
+        <tr [class.error-row]="item.esError">
+          <td>{{ item.descripcion }}</td>
+          <td>{{ item.totalRegistros }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
   </div>
 
-  @if (errores().length > 0) {
-    <div class="siiid-card mt-3">
-      <div class="siiid-card-header">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        Detalle de inconsistencias
-      </div>
+  <div class="validacion-panel validacion-panel-wide">
+    <div class="validacion-title">Validación archivo Delitos</div>
 
-      <div class="table-responsive">
-        <table class="table table-sm table-bordered mb-0 detalle-errores">
-          <thead>
-            <tr>
-              <th>Archivo</th>
-              <th>Fila</th>
-              <th>Columna</th>
-              <th>Valor</th>
-              <th>Mensaje</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (error of errores(); track $index) {
-              <tr>
-                <td>{{ error.archivo }}</td>
-                <td>{{ error.fila || '-' }}</td>
-                <td>{{ error.columna }}</td>
-                <td>{{ error.valor || '-' }}</td>
-                <td>{{ error.mensaje }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  }
+    <table class="tabla-validacion">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Total<br>Registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of resumenDelitos(); track item.codigo) {
+        <tr [class.error-row]="item.esError">
+          <td>{{ item.descripcion }}</td>
+          <td>{{ item.totalRegistros }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="validacion-panel">
+    <div class="validacion-title">Validación archivo Víctimas</div>
+
+    <table class="tabla-validacion">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Total<br>Registros</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of resumenVictimas(); track item.codigo) {
+        <tr [class.error-row]="item.esError">
+          <td>{{ item.descripcion }}</td>
+          <td>{{ item.totalRegistros }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="texto-ayuda-validacion">
+  La información que se muestra en las tablas permite identificar a detalle las inconsistencias
+  detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
+  y cargar de nuevo sus archivos.
+</div>
+
+@if (errores().length > 0) {
+<div class="siiid-card mt-3">
+  <div class="siiid-card-header">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    Detalle de inconsistencias
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-bordered mb-0 detalle-errores">
+      <thead>
+        <tr>
+          <th>Archivo</th>
+          <th>Fila</th>
+          <th>Columna</th>
+          <th>Valor</th>
+          <th>Mensaje</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (error of errores(); track $index) {
+        <tr>
+          <td>{{ error.archivo }}</td>
+          <td>{{ error.fila || '-' }}</td>
+          <td>{{ error.columna }}</td>
+          <td>{{ error.valor || '-' }}</td>
+          <td>{{ error.mensaje }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+}
 }
 
 @if (estadoPeriodo() === 'MOSTRANDO_ACUSE' || estadoPeriodo() === 'CONFIRMANDO' || estadoPeriodo() === 'CONFIRMADO') {
-  <div class="acuse-modal">
-    <div class="acuse-header">
-      <span>Acuse de actualización de información</span>
+<div class="acuse-modal">
+  <div class="acuse-header">
+    <span>Acuse de actualización de información</span>
 
-      @if (estadoPeriodo() === 'CONFIRMADO') {
-        <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
-      }
-    </div>
-
-    <div class="acuse-body">
-      @if (acuseConfirmadoUrl()) {
-        <iframe
-          class="acuse-frame"
-          [src]="acuseConfirmadoUrl()"
-          title="Acuse confirmado de actualización"
-        ></iframe>
-      } @else if (acusePrevioUrl()) {
-        <iframe
-          class="acuse-frame"
-          [src]="acusePrevioUrl()"
-          title="Acuse previo de actualización"
-        ></iframe>
-      }
-    </div>
-
-    <div class="acuse-actions">
-      @if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
-        <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
-          Rechazar
-        </button>
-
-        <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
-          Aceptar
-        </button>
-      }
-
-      @if (estadoPeriodo() === 'CONFIRMANDO') {
-        <button type="button" class="btn-rechazar btn-disabled" disabled>
-          Rechazar
-        </button>
-
-        <button type="button" class="btn-aceptar btn-disabled" disabled>
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Procesando...
-        </button>
-      }
-
-      @if (estadoPeriodo() === 'CONFIRMADO') {
-        <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
-          Cerrar
-        </button>
-      }
-    </div>
+    @if (estadoPeriodo() === 'CONFIRMADO') {
+    <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
+    }
   </div>
+
+  <div class="acuse-body">
+    @if (acuseConfirmadoUrl()) {
+    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado de actualización"></iframe>
+    } @else if (acusePrevioUrl()) {
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Acuse previo de actualización"></iframe>
+    }
+  </div>
+
+  <div class="acuse-actions">
+    @if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
+    <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
+      Rechazar
+    </button>
+
+    <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
+      Aceptar
+    </button>
+    }
+
+    @if (estadoPeriodo() === 'CONFIRMANDO') {
+    <button type="button" class="btn-rechazar btn-disabled" disabled>
+      Rechazar
+    </button>
+
+    <button type="button" class="btn-aceptar btn-disabled" disabled>
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Procesando...
+    </button>
+    }
+
+    @if (estadoPeriodo() === 'CONFIRMADO') {
+    <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
+      Cerrar
+    </button>
+    }
+  </div>
+</div>
 }
 
 @if (mostrarDiferencias()) {
-  <div class="diferencias-modal">
-    <div class="diferencias-header">
-      <span>Revisión de diferencias de actualización</span>
-    </div>
+<div class="diferencias-modal">
+  <div class="diferencias-header">
+    <span>Revisión de diferencias de actualización</span>
+  </div>
 
-    <div class="diferencias-body">
-      <div class="diferencias-resumen">
-        <div class="diferencia-card">
-          <div class="diferencia-numero">{{ totalDiferenciasCarpetas() }}</div>
-          <div class="diferencia-label">Carpetas con cambios</div>
-        </div>
-
-        <div class="diferencia-card">
-          <div class="diferencia-numero">{{ totalDiferenciasDelitos() }}</div>
-          <div class="diferencia-label">Delitos con cambios</div>
-        </div>
-
-        <div class="diferencia-card">
-          <div class="diferencia-numero">{{ totalDiferenciasVictimas() }}</div>
-          <div class="diferencia-label">Víctimas con cambios</div>
-        </div>
-
-        <div class="diferencia-card diferencia-total">
-          <div class="diferencia-numero">{{ totalDiferencias() }}</div>
-          <div class="diferencia-label">Total de registros con cambios</div>
-        </div>
+  <div class="diferencias-body">
+    <div class="diferencias-resumen">
+      <div class="diferencia-card">
+        <div class="diferencia-numero">{{ totalDiferenciasCarpetas() }}</div>
+        <div class="diferencia-label">Carpetas con cambios</div>
       </div>
 
-      <div class="diferencias-mensaje">
-        Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
-        <strong>OK, continuar al acuse previo</strong>.
+      <div class="diferencia-card">
+        <div class="diferencia-numero">{{ totalDiferenciasDelitos() }}</div>
+        <div class="diferencia-label">Delitos con cambios</div>
       </div>
 
-      <div class="diferencias-grid">
-        <div class="diferencias-section">
-          <div class="diferencias-title">Carpetas</div>
+      <div class="diferencia-card">
+        <div class="diferencia-numero">{{ totalDiferenciasVictimas() }}</div>
+        <div class="diferencia-label">Víctimas con cambios</div>
+      </div>
 
-          @for (item of diferencias()?.carpetas ?? []; track $index) {
-            <div
-              class="diferencia-registro"
-              [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
-              [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
-              [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
-            >
-              <div class="diferencia-registro-head">
-                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
-
-                <div class="identificadores">
-                  @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track id) {
-                    <span>{{ id }}</span>
-                  }
-                </div>
-              </div>
-
-              @if (esMovimientoNuevo(item.tipoMovimiento)) {
-                <div class="movimiento-descripcion nuevo-texto">
-                  <i class="fa-solid fa-circle-plus"></i>
-                  Este registro será agregado a la información activa.
-                </div>
-
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo</th>
-                      <th>Valor que se agregará</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
-                <div class="movimiento-descripcion eliminado-texto">
-                  <i class="fa-solid fa-trash-can"></i>
-                  Este registro será eliminado de la información activa.
-                </div>
-
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo</th>
-                      <th>Valor que se eliminará</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              } @else {
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo modificado</th>
-                      <th>Valor anterior</th>
-                      <th>Valor nuevo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              }
-            </div>
-          } @empty {
-            <div class="sin-diferencias">Sin diferencias en carpetas.</div>
-          }
-        </div>
-
-        <div class="diferencias-section">
-          <div class="diferencias-title">Delitos</div>
-
-          @for (item of diferencias()?.delitos ?? []; track $index) {
-            <div
-              class="diferencia-registro"
-              [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
-              [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
-              [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
-            >
-              <div class="diferencia-registro-head">
-                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
-
-                <div class="identificadores">
-                  @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track id) {
-                    <span>{{ id }}</span>
-                  }
-                </div>
-              </div>
-
-              @if (esMovimientoNuevo(item.tipoMovimiento)) {
-                <div class="movimiento-descripcion nuevo-texto">
-                  <i class="fa-solid fa-circle-plus"></i>
-                  Este registro será agregado a la información activa.
-                </div>
-
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo</th>
-                      <th>Valor que se agregará</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
-                <div class="movimiento-descripcion eliminado-texto">
-                  <i class="fa-solid fa-trash-can"></i>
-                  Este registro será eliminado de la información activa.
-                </div>
-
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo</th>
-                      <th>Valor que se eliminará</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              } @else {
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo modificado</th>
-                      <th>Valor anterior</th>
-                      <th>Valor nuevo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              }
-            </div>
-          } @empty {
-            <div class="sin-diferencias">Sin diferencias en delitos.</div>
-          }
-        </div>
-
-        <div class="diferencias-section">
-          <div class="diferencias-title">Víctimas</div>
-
-          @for (item of diferencias()?.victimas ?? []; track $index) {
-            <div
-              class="diferencia-registro"
-              [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
-              [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
-              [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
-            >
-              <div class="diferencia-registro-head">
-                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
-
-                <div class="identificadores">
-                  @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track id) {
-                    <span>{{ id }}</span>
-                  }
-                </div>
-              </div>
-
-              @if (esMovimientoNuevo(item.tipoMovimiento)) {
-                <div class="movimiento-descripcion nuevo-texto">
-                  <i class="fa-solid fa-circle-plus"></i>
-                  Este registro será agregado a la información activa.
-                </div>
-
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo</th>
-                      <th>Valor que se agregará</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
-                <div class="movimiento-descripcion eliminado-texto">
-                  <i class="fa-solid fa-trash-can"></i>
-                  Este registro será eliminado de la información activa.
-                </div>
-
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo</th>
-                      <th>Valor que se eliminará</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              } @else {
-                <table class="table table-sm table-bordered diferencias-campos-table">
-                  <thead>
-                    <tr>
-                      <th>Campo modificado</th>
-                      <th>Valor anterior</th>
-                      <th>Valor nuevo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (campo of item.camposModificados; track $index) {
-                      <tr>
-                        <td class="campo-nombre">{{ campo.campo }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                        <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              }
-            </div>
-          } @empty {
-            <div class="sin-diferencias">Sin diferencias en víctimas.</div>
-          }
-        </div>
+      <div class="diferencia-card diferencia-total">
+        <div class="diferencia-numero">{{ totalDiferencias() }}</div>
+        <div class="diferencia-label">Total de registros con cambios</div>
       </div>
     </div>
 
-    <div class="diferencias-actions diferencias-actions-ok">
-      <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
-        OK, continuar al acuse previo
-      </button>
+    <div class="diferencias-mensaje">
+      Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
+      <strong>OK, continuar al acuse previo</strong>.
+    </div>
+
+    <div class="diferencias-grid">
+      <div class="diferencias-section">
+        <div class="diferencias-title">Carpetas</div>
+
+        @for (item of diferencias()?.carpetas ?? []; track $index) {
+        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
+          <div class="diferencia-registro-head">
+            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+            <div class="identificadores">
+              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
+              id) {
+              <span>{{ id }}</span>
+              }
+            </div>
+          </div>
+
+          @if (esMovimientoNuevo(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion nuevo-texto">
+            <i class="fa-solid fa-circle-plus"></i>
+            Este registro será agregado a la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se agregará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion eliminado-texto">
+            <i class="fa-solid fa-trash-can"></i>
+            Este registro será eliminado de la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se eliminará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo modificado</th>
+                <th>Valor anterior</th>
+                <th>Valor nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+        } @empty {
+        <div class="sin-diferencias">Sin diferencias en carpetas.</div>
+        }
+      </div>
+
+      <div class="diferencias-section">
+        <div class="diferencias-title">Delitos</div>
+
+        @for (item of diferencias()?.delitos ?? []; track $index) {
+        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
+          <div class="diferencia-registro-head">
+            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+            <div class="identificadores">
+              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
+              id) {
+              <span>{{ id }}</span>
+              }
+            </div>
+          </div>
+
+          @if (esMovimientoNuevo(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion nuevo-texto">
+            <i class="fa-solid fa-circle-plus"></i>
+            Este registro será agregado a la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se agregará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion eliminado-texto">
+            <i class="fa-solid fa-trash-can"></i>
+            Este registro será eliminado de la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se eliminará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo modificado</th>
+                <th>Valor anterior</th>
+                <th>Valor nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+        } @empty {
+        <div class="sin-diferencias">Sin diferencias en delitos.</div>
+        }
+      </div>
+
+      <div class="diferencias-section">
+        <div class="diferencias-title">Víctimas</div>
+
+        @for (item of diferencias()?.victimas ?? []; track $index) {
+        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
+          <div class="diferencia-registro-head">
+            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+            <div class="identificadores">
+              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
+              id) {
+              <span>{{ id }}</span>
+              }
+            </div>
+          </div>
+
+          @if (esMovimientoNuevo(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion nuevo-texto">
+            <i class="fa-solid fa-circle-plus"></i>
+            Este registro será agregado a la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se agregará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion eliminado-texto">
+            <i class="fa-solid fa-trash-can"></i>
+            Este registro será eliminado de la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se eliminará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo modificado</th>
+                <th>Valor anterior</th>
+                <th>Valor nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+        } @empty {
+        <div class="sin-diferencias">Sin diferencias en víctimas.</div>
+        }
+      </div>
     </div>
   </div>
+
+  <div class="diferencias-actions diferencias-actions-ok">
+    <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
+      OK, continuar al acuse previo
+    </button>
+  </div>
+</div>
 }
 
 @if (estadoPeriodo() === 'MOSTRANDO_ACUSE' || estadoPeriodo() === 'CONFIRMANDO' || estadoPeriodo() === 'CONFIRMADO') {
-  <div class="acuse-modal">
-    <div class="acuse-header">
-      <span>Acuse de actualización de información</span>
+<div class="acuse-modal">
+  <div class="acuse-header">
+    <span>Acuse de actualización de información</span>
 
-      @if (estadoPeriodo() === 'CONFIRMADO') {
-        <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
-      }
-    </div>
-
-    <div class="acuse-body">
-      @if (acuseConfirmadoUrl()) {
-        <iframe
-          class="acuse-frame"
-          [src]="acuseConfirmadoUrl()"
-          title="Acuse confirmado de actualización"
-        ></iframe>
-      } @else if (acusePrevioUrl()) {
-        <iframe
-          class="acuse-frame"
-          [src]="acusePrevioUrl()"
-          title="Acuse previo de actualización"
-        ></iframe>
-      }
-    </div>
-
-    <div class="acuse-actions">
-@if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
-  <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
-    Rechazar
-  </button>
-
-  <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
-    Volver a diferencias
-  </button>
-
-  <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
-    Aceptar
-  </button>
-}
-
-      @if (estadoPeriodo() === 'CONFIRMANDO') {
-        <button type="button" class="btn-rechazar btn-disabled" disabled>
-          Rechazar
-        </button>
-
-        <button type="button" class="btn-aceptar btn-disabled" disabled>
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Procesando...
-        </button>
-      }
-
-      @if (estadoPeriodo() === 'CONFIRMADO') {
-        <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
-          Cerrar
-        </button>
-      }
-    </div>
+    @if (estadoPeriodo() === 'CONFIRMADO') {
+    <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
+    }
   </div>
+
+  <div class="acuse-body">
+    @if (acuseConfirmadoUrl()) {
+    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado de actualización"></iframe>
+    } @else if (acusePrevioUrl()) {
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Acuse previo de actualización"></iframe>
+    }
+  </div>
+
+  <div class="acuse-actions">
+    @if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
+    <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
+      Rechazar
+    </button>
+
+    <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
+      Volver a diferencias
+    </button>
+
+    <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
+      Aceptar
+    </button>
+    }
+
+    @if (estadoPeriodo() === 'CONFIRMANDO') {
+    <button type="button" class="btn-rechazar btn-disabled" disabled>
+      Rechazar
+    </button>
+
+    <button type="button" class="btn-aceptar btn-disabled" disabled>
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Procesando...
+    </button>
+    }
+
+    @if (estadoPeriodo() === 'CONFIRMADO') {
+    <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
+      Cerrar
+    </button>
+    }
+  </div>
+</div>
 }

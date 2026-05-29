@@ -419,6 +419,14 @@ export class Actualizacion {
     return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
   }
 
+prepararNuevaValidacion(): void {
+  this.limpiarArchivos();
+  this.respuestaValidacion.set(null);
+  this.diferencias.set(null);
+  this.errorGeneral.set('');
+  this.limpiarUrlsPdf();
+  this.estadoPeriodo.set('DISPONIBLE');
+}
   esMovimientoEliminado(tipoMovimiento: string): boolean {
     const valor = tipoMovimiento?.toUpperCase() ?? '';
     return valor === 'ELIMINADO' || valor === 'BAJA';
@@ -493,6 +501,8 @@ export class Actualizacion {
     this.acusePrevioUrl.set(null);
     this.acuseConfirmadoUrl.set(null);
   }
+
+
 
   private limpiarArchivos(): void {
     this.carpetas.set(null);

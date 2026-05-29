@@ -216,6 +216,12 @@ rechazarCarga(): void {
   });
 }
 
+prepararNuevaValidacion(): void {
+  this.reiniciarFormulario();
+  this.limpiarUrlsPdf();
+  this.estado.set('INICIAL');
+}
+
 cerrarAcuse(): void {
   this.estado.set('INICIAL');
   this.limpiarUrlsPdf();
