@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
@@ -17,11 +17,35 @@ export class Sidebar {
 
   cargaAbierta = signal(false);
   incidenciaAbierta = signal(false);
+
+  informesAbierto = signal(false);
+  informesIncidenciaAbierta = signal(false);
+
   administracionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
   habilitaCarga = this.sessionService.habilitaCarga;
   habilitaModificacion = this.sessionService.habilitaModificacion;
+
+  esSuperUsuario = computed(() => this.usuario()?.rol === 'SUPER_USUARIO');
+  esEnlaceEstatal = computed(() => this.usuario()?.rol === 'ENLACE_ESTATAL');
+  esConsulta = computed(() => this.usuario()?.rol === 'CONSULTA');
+
+  puedeVerCargaInformacion = computed(() => {
+    return !this.esConsulta() && (this.habilitaCarga() || this.habilitaModificacion());
+  });
+
+  puedeVerReporteEnvios = computed(() => {
+    return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
+  });
+
+  puedeVerReporteCargas = computed(() => {
+    return this.esSuperUsuario();
+  });
+
+  puedeVerAdministracion = computed(() => {
+    return this.esSuperUsuario();
+  });
 
   toggleCarga(): void {
     this.cargaAbierta.update(valor => !valor);
@@ -33,6 +57,18 @@ export class Sidebar {
 
   toggleIncidencia(): void {
     this.incidenciaAbierta.update(valor => !valor);
+  }
+
+  toggleInformes(): void {
+    this.informesAbierto.update(valor => !valor);
+
+    if (!this.informesAbierto()) {
+      this.informesIncidenciaAbierta.set(false);
+    }
+  }
+
+  toggleInformesIncidencia(): void {
+    this.informesIncidenciaAbierta.update(valor => !valor);
   }
 
   toggleAdministracion(): void {

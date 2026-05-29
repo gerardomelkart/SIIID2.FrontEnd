@@ -1,10 +1,18 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
-import { UsuarioListadoItem } from '../../core/models/usuarios.models';
+import {
+  EditarUsuarioRequest,
+  UsuarioDetalle,
+  UsuarioListadoItem
+} from '../../core/models/usuarios.models';
+
 import { UsuariosService } from '../../core/services/usuarios.service';
-import { RouterLink } from '@angular/router';
+
+
 
 interface ConfiguracionEntidad {
   idEntidadFederativa: number | null;
@@ -18,9 +26,22 @@ interface ConfiguracionEntidad {
   estadoModificacion: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
 }
 
+interface UsuarioPermisoEntidad {
+  idUsuario: number;
+  usuario: string;
+  nombreCompleto: string;
+  rol: string;
+  entidadFederativa: string;
+  habilitaCargaOriginal: boolean;
+  habilitaModificacionOriginal: boolean;
+  habilitaCarga: boolean;
+  habilitaModificacion: boolean;
+  bloqueado: boolean;
+}
+
 @Component({
   selector: 'app-configuracion',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   templateUrl: './configuracion.html',
   styleUrl: './configuracion.css'
 })
@@ -34,6 +55,11 @@ export class Configuracion implements OnInit {
 
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
+
+  modalEntidadAbierto = signal(false);
+guardandoEntidad = signal(false);
+entidadSeleccionada = signal<ConfiguracionEntidad | null>(null);
+usuariosEntidad = signal<UsuarioPermisoEntidad[]>([]);
 
   usuarios = signal<UsuarioListadoItem[]>([]);
 
@@ -193,6 +219,190 @@ export class Configuracion implements OnInit {
 
     return 'Mixto';
   }
+
+
+abrirPermisosEntidad(entidad: ConfiguracionEntidad): void {
+  const usuariosEntidad = this.usuarios()
+    .filter(usuario => usuario.activo)
+    .filter(usuario => usuario.idEntidadFederativa === entidad.idEntidadFederativa)
+    .map(usuario => ({
+      idUsuario: usuario.idUsuario,
+      usuario: usuario.usuario,
+      nombreCompleto: usuario.nombreCompleto,
+      rol: usuario.rol,
+      entidadFederativa: usuario.entidadFederativa || 'Nacional',
+      habilitaCargaOriginal: usuario.habilitaCarga,
+      habilitaModificacionOriginal: usuario.habilitaModificacion,
+      habilitaCarga: usuario.habilitaCarga,
+      habilitaModificacion: usuario.habilitaModificacion,
+      bloqueado: usuario.rol === 'CONSULTA'
+    }));
+
+  this.entidadSeleccionada.set(entidad);
+  this.usuariosEntidad.set(usuariosEntidad);
+  this.modalEntidadAbierto.set(true);
+}
+
+cerrarPermisosEntidad(): void {
+  if (this.guardandoEntidad()) {
+    return;
+  }
+
+  this.modalEntidadAbierto.set(false);
+  this.entidadSeleccionada.set(null);
+  this.usuariosEntidad.set([]);
+}
+
+cambiarPermisoUsuarioEntidad(
+  idUsuario: number,
+  permiso: 'habilitaCarga' | 'habilitaModificacion',
+  valor: boolean
+): void {
+  this.usuariosEntidad.update(usuarios =>
+    usuarios.map(usuario => {
+      if (usuario.idUsuario !== idUsuario || usuario.bloqueado) {
+        return usuario;
+      }
+
+      return {
+        ...usuario,
+        [permiso]: valor
+      };
+    })
+  );
+}
+
+hayCambiosEntidad(): boolean {
+  return this.usuariosEntidad().some(usuario =>
+    usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+    usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal
+  );
+}
+
+guardarPermisosEntidad(): void {
+  const usuariosModificados = this.usuariosEntidad()
+    .filter(usuario => !usuario.bloqueado)
+    .filter(usuario =>
+      usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+      usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal
+    );
+
+  if (usuariosModificados.length === 0) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin cambios',
+      text: 'No hay cambios por guardar.',
+      confirmButtonColor: '#691C32'
+    });
+
+    return;
+  }
+
+  Swal.fire({
+    icon: 'question',
+    title: 'Guardar permisos por entidad',
+    text: `Se actualizarán permisos de ${usuariosModificados.length} usuario(s).`,
+    showCancelButton: true,
+    confirmButtonText: 'Sí, guardar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#691C32'
+  }).then(result => {
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    this.guardandoEntidad.set(true);
+
+    const operaciones = usuariosModificados.map(usuarioPermiso =>
+      this.usuariosService.obtenerDetalle(usuarioPermiso.idUsuario).pipe(
+        switchMap(detalleResponse => {
+          if (!detalleResponse.esValido || !detalleResponse.usuario) {
+            throw new Error(`No fue posible obtener detalle del usuario ${usuarioPermiso.usuario}.`);
+          }
+
+          const request = this.construirRequestEditarUsuario(
+            detalleResponse.usuario,
+            usuarioPermiso.habilitaCarga,
+            usuarioPermiso.habilitaModificacion
+          );
+
+          return this.usuariosService.editarUsuario(usuarioPermiso.idUsuario, request);
+        }),
+        catchError(error => {
+          return of({
+            esValido: false,
+            codigo: 'ERROR_ACTUALIZAR_USUARIO',
+            mensaje: error?.error?.mensaje || error?.message || `No fue posible actualizar ${usuarioPermiso.usuario}.`,
+            idUsuario: usuarioPermiso.idUsuario
+          });
+        })
+      )
+    );
+
+    forkJoin(operaciones).subscribe({
+      next: resultados => {
+        this.guardandoEntidad.set(false);
+
+        const errores = resultados.filter(resultado => !resultado.esValido);
+
+        if (errores.length > 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Algunos usuarios no se actualizaron',
+            html: errores.map(error => `• ${error.mensaje}`).join('<br>'),
+            confirmButtonColor: '#691C32'
+          });
+
+          this.cargarUsuarios();
+          return;
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Permisos actualizados',
+          text: 'Los permisos de la entidad se actualizaron correctamente.',
+          confirmButtonColor: '#691C32'
+        });
+
+        this.cerrarPermisosEntidad();
+        this.cargarUsuarios();
+      },
+      error: () => {
+        this.guardandoEntidad.set(false);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible actualizar permisos',
+          text: 'Intente nuevamente.',
+          confirmButtonColor: '#691C32'
+        });
+      }
+    });
+  });
+}
+
+private construirRequestEditarUsuario(
+  usuario: UsuarioDetalle,
+  habilitaCarga: boolean,
+  habilitaModificacion: boolean
+): EditarUsuarioRequest {
+  return {
+    usuario: usuario.usuario,
+    nuevaPassword: null,
+    nombre: usuario.nombre,
+    primerApellido: usuario.primerApellido,
+    segundoApellido: usuario.segundoApellido,
+    correoElectronico: usuario.correoElectronico,
+    rfc: usuario.rfc,
+    curp: usuario.curp,
+    telefonoContacto: usuario.telefonoContacto,
+    idEntidadFederativa: usuario.idEntidadFederativa,
+    rol: usuario.rol,
+    habilitaCarga,
+    habilitaModificacion
+  };
+}
+
 
   private obtenerEstadoPermiso(totalActivos: number, totalUsuarios: number): 'ACTIVO' | 'INACTIVO' | 'MIXTO' {
     if (totalUsuarios === 0 || totalActivos === 0) {

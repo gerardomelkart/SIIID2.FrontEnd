@@ -186,3 +186,125 @@
   color: #667085;
   font-size: 11px;
 }
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, .35);
+}
+
+.permisos-entidad-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 3100;
+  height: 100vh;
+  width: min(760px, 95vw);
+  background: #fff;
+  box-shadow: -8px 0 18px rgba(0, 0, 0, .25);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-header {
+  background: var(--siiid-guinda);
+  color: #fff;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.drawer-header p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, .85);
+}
+
+.drawer-close {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow: auto;
+  padding: 22px;
+}
+
+.usuarios-permisos-list {
+  display: grid;
+  gap: 12px;
+}
+
+.usuario-permiso-card {
+  display: grid;
+  grid-template-columns: 1fr 130px 160px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #ddd;
+  border-left: 6px solid var(--siiid-guinda);
+  background: #fff;
+  padding: 12px 14px;
+}
+
+.usuario-permiso-info strong {
+  display: block;
+  color: #222;
+  font-size: 14px;
+}
+
+.usuario-permiso-info span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.usuario-bloqueado {
+  opacity: .65;
+  border-left-color: #6c757d;
+  background: #f8f8f8;
+}
+
+.permiso-mini-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.permiso-mini-switch input {
+  width: 20px;
+  height: 20px;
+}
+
+.sin-usuarios-entidad {
+  padding: 16px;
+  background: #f8f8f8;
+  color: #667085;
+  font-weight: 700;
+}
+
+.drawer-actions {
+  border-top: 1px solid #ddd;
+  padding: 14px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .usuario-permiso-card {
+    grid-template-columns: 1fr;
+  }
+}

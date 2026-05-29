@@ -61,12 +61,12 @@
 
           <div>
             <span>{{ totalEntidadesCargaActiva() }}</span>
-            Con carga activa
+            Con carga activada
           </div>
 
           <div>
             <span>{{ totalEntidadesModificacionActiva() }}</span>
-            Con actualización activa
+            Con actualización activada
           </div>
         </div>
 
@@ -134,9 +134,13 @@
             <td>{{ entidad.totalUsuarios }} usuario(s)</td>
             <td>Según permisos individuales</td>
             <td>
-              <button class="btn btn-sm btn-secondary" routerLink="/administracion/usuarios">
-                Ver usuarios
-              </button>
+<button
+  type="button"
+  class="btn btn-sm btn-secondary"
+  (click)="abrirPermisosEntidad(entidad)"
+>
+  Administrar permisos
+</button>
             </td>
           </tr>
           } @empty {
@@ -149,3 +153,82 @@
     </div>
   </section>
 </div>
+
+@if (modalEntidadAbierto()) {
+  <div class="drawer-backdrop" (click)="cerrarPermisosEntidad()"></div>
+
+  <aside class="permisos-entidad-drawer">
+    <div class="drawer-header">
+      <div>
+        <h2>Permisos por entidad</h2>
+        <p>{{ entidadSeleccionada()?.entidadFederativa }}</p>
+      </div>
+
+      <button type="button" class="drawer-close" (click)="cerrarPermisosEntidad()">×</button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="config-info">
+        <strong>Usuarios activos de la entidad</strong>
+        <p>
+          Ajusta permisos individuales de carga inicial y actualización. Los usuarios de consulta permanecen bloqueados.
+        </p>
+      </div>
+
+      <div class="usuarios-permisos-list">
+        @for (usuario of usuariosEntidad(); track usuario.idUsuario) {
+          <div class="usuario-permiso-card" [class.usuario-bloqueado]="usuario.bloqueado">
+            <div class="usuario-permiso-info">
+              <strong>{{ usuario.nombreCompleto }}</strong>
+              <span>{{ usuario.usuario }} · {{ usuario.rol }}</span>
+            </div>
+
+            <label class="permiso-mini-switch">
+              <span>Carga</span>
+              <input
+                type="checkbox"
+                [disabled]="usuario.bloqueado || guardandoEntidad()"
+                [ngModel]="usuario.habilitaCarga"
+                (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)"
+              >
+            </label>
+
+            <label class="permiso-mini-switch">
+              <span>Actualización</span>
+              <input
+                type="checkbox"
+                [disabled]="usuario.bloqueado || guardandoEntidad()"
+                [ngModel]="usuario.habilitaModificacion"
+                (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)"
+              >
+            </label>
+          </div>
+        } @empty {
+          <div class="sin-usuarios-entidad">
+            No hay usuarios activos para esta entidad.
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="drawer-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="guardandoEntidad()"
+        (click)="cerrarPermisosEntidad()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-siiid"
+        [disabled]="guardandoEntidad() || !hayCambiosEntidad()"
+        (click)="guardarPermisosEntidad()"
+      >
+        {{ guardandoEntidad() ? 'Guardando...' : 'Guardar permisos' }}
+      </button>
+    </div>
+  </aside>
+}

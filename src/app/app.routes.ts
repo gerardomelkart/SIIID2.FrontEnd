@@ -25,7 +25,9 @@ export const routes: Routes = [
       { path: 'carga-inicial', component: CargaInicial },
       { path: 'actualizacion', component: Actualizacion },
       { path: 'actualizacion/diferencias', component: DiferenciasActualizacion },
-      { path: 'informes', component: Informes },
+      { path: 'informes', redirectTo: 'informes/envios' },
+      { path: 'informes/envios', component: Informes, data: { reporte: 'ENVIOS' } },
+      { path: 'informes/cargas', component: Informes, data: { reporte: 'CARGAS' } },
 
       // Nuevas rutas de administración
       { path: 'administracion/usuarios', component: CrudRegistros },

@@ -13,7 +13,7 @@
   <div class="version">Ver. 3.0.0</div>
 
   <nav class="menu">
-    @if (habilitaCarga() || habilitaModificacion()) {
+    @if (puedeVerCargaInformacion()) {
       <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
         <span>
           <i class="fa-solid fa-upload"></i>
@@ -47,28 +47,59 @@
       }
     }
 
-    <a class="menu-link" routerLink="/informes" routerLinkActive="active">
-      <i class="fa-solid fa-bars"></i>
-      Informes
-    </a>
+    @if (puedeVerReporteEnvios() || puedeVerReporteCargas()) {
+      <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+        <span>
+          <i class="fa-solid fa-bars"></i>
+          Informes
+        </span>
+      </button>
 
-    <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
-      <span>
-        <i class="fa-solid fa-screwdriver-wrench"></i>
-        Administración
-      </span>
-    </button>
+      @if (informesAbierto()) {
+        <button type="button" class="menu-link menu-button level-2" (click)="toggleInformesIncidencia()">
+          <span>
+            <i class="fa-solid fa-folder"></i>
+            Informes de Incidencia Delictiva
+          </span>
+        </button>
 
-    @if (administracionAbierta()) {
-      <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
-        <i class="fa-solid fa-users"></i>
-        Usuarios
-      </a>
+        @if (informesIncidenciaAbierta()) {
+          @if (puedeVerReporteEnvios()) {
+            <a class="menu-link level-3" routerLink="/informes/envios" routerLinkActive="active">
+              <i class="fa-solid fa-paper-plane"></i>
+              Consultar Envíos
+            </a>
+          }
 
-      <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
-        <i class="fa-solid fa-sliders"></i>
-        Configuración de módulos
-      </a>
+          @if (puedeVerReporteCargas()) {
+            <a class="menu-link level-3" routerLink="/informes/cargas" routerLinkActive="active">
+              <i class="fa-solid fa-chart-simple"></i>
+              Reporte de Cargas
+            </a>
+          }
+        }
+      }
+    }
+
+    @if (puedeVerAdministracion()) {
+      <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+        <span>
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+          Administración
+        </span>
+      </button>
+
+      @if (administracionAbierta()) {
+        <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
+          <i class="fa-solid fa-users"></i>
+          Usuarios
+        </a>
+
+        <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
+          <i class="fa-solid fa-sliders"></i>
+          Configuración de módulos
+        </a>
+      }
     }
 
     <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">
