@@ -59,3 +59,9 @@ export interface CorteOperativo {
   anioCorte: number;
   corte: string;
 }
+
+export interface PeriodoCorteInforme {
+  mesCorte: number;
+  anioCorte: number;
+  corte: string;
+}

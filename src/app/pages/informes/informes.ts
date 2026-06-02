@@ -11,6 +11,7 @@ import {
   CorteOperativo,
   InformeEnvioItem,
   InformeReporteCargaItem,
+  PeriodoCorteInforme,
   TipoReporte
 } from '../../core/models/informes.models';
 
@@ -79,25 +80,10 @@ export class Informes implements OnInit {
 
   corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
 
-  mesesCorte = [
-    { valor: 1, nombre: 'Enero' },
-    { valor: 2, nombre: 'Febrero' },
-    { valor: 3, nombre: 'Marzo' },
-    { valor: 4, nombre: 'Abril' },
-    { valor: 5, nombre: 'Mayo' },
-    { valor: 6, nombre: 'Junio' },
-    { valor: 7, nombre: 'Julio' },
-    { valor: 8, nombre: 'Agosto' },
-    { valor: 9, nombre: 'Septiembre' },
-    { valor: 10, nombre: 'Octubre' },
-    { valor: 11, nombre: 'Noviembre' },
-    { valor: 12, nombre: 'Diciembre' }
-  ];
 
-  aniosCorte = this.obtenerAniosCorte();
 
-  mesCorteSeleccionado = signal(this.corteOperativo().mesCorte);
-  anioCorteSeleccionado = signal(this.corteOperativo().anioCorte);
+periodosCorte = signal<PeriodoCorteInforme[]>([]);
+periodoCorteSeleccionado = signal<string>('');
 
   ngOnInit(): void {
     this.route.data.subscribe(data => {
@@ -111,10 +97,10 @@ export class Informes implements OnInit {
 
       this.reporteActivo.set(reporte ?? 'ENVIOS');
 
-      if (this.reporteActivo() === 'CARGAS') {
-        this.cargarReporteCargas();
-        return;
-      }
+if (this.reporteActivo() === 'CARGAS') {
+  this.cargarPeriodosCorte();
+  return;
+}
 
       this.cargarEnvios();
     });
@@ -257,11 +243,14 @@ export class Informes implements OnInit {
       mesCorte: corte.mesCorte,
       anioCorte: corte.anioCorte
     }).subscribe({
-      next: (response) => {
-        this.cargas.set(response.registros ?? []);
-        this.paginaCargas.set(1);
-        this.cargandoCargas.set(false);
-      },
+next: (response) => {
+  const registros = response.registros ?? [];
+
+  this.cargas.set(registros);
+  this.sincronizarAniosCorte(registros, response.anioCorte);
+  this.paginaCargas.set(1);
+  this.cargandoCargas.set(false);
+},
       error: (error) => {
         this.cargandoCargas.set(false);
 
@@ -275,18 +264,123 @@ export class Informes implements OnInit {
     });
   }
 
-  cambiarCorteReporte(): void {
-    const mesCorte = Number(this.mesCorteSeleccionado());
-    const anioCorte = Number(this.anioCorteSeleccionado());
 
-    this.corteOperativo.set({
-      mesCorte,
-      anioCorte,
-      corte: `${this.obtenerNombreMes(mesCorte)} ${anioCorte}`
-    });
+cargarPeriodosCorte(): void {
+  this.cargandoCargas.set(true);
 
-    this.cargarReporteCargas();
+  this.informesService.obtenerEnvios().subscribe({
+    next: (envios) => {
+      const periodos = this.obtenerPeriodosDesdeEnvios(envios);
+
+      this.periodosCorte.set(periodos);
+
+      const corteActual = this.corteOperativo();
+      const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
+
+      const existeCorteActual = periodos.some(periodo =>
+        this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual
+      );
+
+      if (existeCorteActual) {
+        this.periodoCorteSeleccionado.set(keyActual);
+      } else if (periodos.length) {
+        const primero = periodos[0];
+        this.periodoCorteSeleccionado.set(
+          this.obtenerKeyPeriodo(primero.mesCorte, primero.anioCorte)
+        );
+      }
+
+      this.sincronizarCorteSeleccionado();
+      this.cargarReporteCargas();
+    },
+    error: (error) => {
+      this.cargandoCargas.set(false);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'No fue posible consultar los periodos',
+        text: error?.error?.mensaje || 'Intente nuevamente.',
+        confirmButtonColor: '#691C32'
+      });
+    }
+  });
+}
+
+private obtenerPeriodosDesdeEnvios(envios: InformeEnvioItem[]): PeriodoCorteInforme[] {
+  const mapa = new Map<string, PeriodoCorteInforme>();
+
+  for (const envio of envios) {
+    if (!envio.mesCorte || !envio.anioCorte) {
+      continue;
+    }
+
+    const key = this.obtenerKeyPeriodo(envio.mesCorte, envio.anioCorte);
+
+    if (!mapa.has(key)) {
+      mapa.set(key, {
+        mesCorte: envio.mesCorte,
+        anioCorte: envio.anioCorte,
+        corte: envio.corte
+      });
+    }
   }
+
+  return Array.from(mapa.values()).sort((a, b) => {
+    const valorA = (a.anioCorte * 100) + a.mesCorte;
+    const valorB = (b.anioCorte * 100) + b.mesCorte;
+
+    return valorB - valorA;
+  });
+}
+
+private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
+  return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
+}
+
+private sincronizarCorteSeleccionado(): void {
+  const key = this.periodoCorteSeleccionado();
+
+  if (!key) {
+    return;
+  }
+
+  const periodo = this.periodosCorte().find(x =>
+    this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key
+  );
+
+  if (!periodo) {
+    return;
+  }
+
+  this.corteOperativo.set({
+    mesCorte: periodo.mesCorte,
+    anioCorte: periodo.anioCorte,
+    corte: periodo.corte
+  });
+}
+  
+
+  
+cambiarCorteReporte(): void {
+  this.sincronizarCorteSeleccionado();
+  this.cargarReporteCargas();
+}
+
+  private sincronizarAniosCorte(registros: InformeReporteCargaItem[], anioActualConsulta: number): void {
+  const anios = new Set<number>();
+
+  anios.add(anioActualConsulta);
+
+  for (const registro of registros) {
+    if (registro.anioCorte) {
+      anios.add(registro.anioCorte);
+    }
+  }
+
+  this.aniosCorte.set(
+    Array.from(anios).sort((a, b) => b - a)
+  );
+}
 
 
   buscarEnvios(valor: string): void {
@@ -712,43 +806,14 @@ export class Informes implements OnInit {
       anioCorte--;
     }
 
-    return {
-      mesCorte,
-      anioCorte,
-      corte: `${this.obtenerNombreMes(mesCorte)} ${anioCorte}`
-    };
+return {
+  mesCorte,
+  anioCorte,
+  corte: `${mesCorte}/${anioCorte}`
+};
   }
 
-  private obtenerNombreMes(mes: number): string {
-    const meses = [
-      '',
-      'Enero',
-      'Febrero',
-      'Marzo',
-      'Abril',
-      'Mayo',
-      'Junio',
-      'Julio',
-      'Agosto',
-      'Septiembre',
-      'Octubre',
-      'Noviembre',
-      'Diciembre'
-    ];
 
-    return meses[mes] ?? '';
-  }
-
-  private obtenerAniosCorte(): number[] {
-    const anioActual = new Date().getFullYear();
-    const anios: number[] = [];
-
-    for (let anio = anioActual - 3; anio <= anioActual + 1; anio++) {
-      anios.push(anio);
-    }
-
-    return anios;
-  }
 
   cerrarAcuse(): void {
     this.limpiarAcuseUrl();
