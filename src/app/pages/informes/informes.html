@@ -70,13 +70,22 @@
             <td>{{ envio.usuarioEnvio }}</td>
             <td>
               <div class="acciones">
-                <button type="button" class="btn-icon btn-pdf" title="Ver acuse" (click)="verAcuse(envio)">
+                <button type="button" class="btn-icon btn-pdf" title="Ver acuse"
+                  [disabled]="descargandoAcuse() === envio.codigoReferencia" (click)="verAcuse(envio)">
+                  @if (descargandoAcuse() === envio.codigoReferencia) {
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  } @else {
                   <i class="fa-solid fa-file-pdf"></i>
+                  }
                 </button>
 
                 <button type="button" class="btn-icon btn-excel" title="Descargar archivos enviados"
-                  (click)="descargarArchivos(envio)">
+                  [disabled]="descargandoArchivos() === envio.codigoReferencia" (click)="descargarArchivos(envio)">
+                  @if (descargandoArchivos() === envio.codigoReferencia) {
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  } @else {
                   <i class="fa-solid fa-file-excel"></i>
+                  }
                 </button>
               </div>
             </td>

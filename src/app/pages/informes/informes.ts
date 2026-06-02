@@ -36,6 +36,9 @@ export class Informes implements OnInit {
   cargandoEnvios = signal(false);
   cargandoCargas = signal(false);
 
+  descargandoAcuse = signal<string | null>(null);
+  descargandoArchivos = signal<string | null>(null);
+
   envios = signal<InformeEnvioItem[]>([]);
   cargas = signal<InformeReporteCargaItem[]>([]);
 
@@ -280,13 +283,26 @@ export class Informes implements OnInit {
   }
 
   verAcuse(envio: InformeEnvioItem): void {
-    this.descargarEndpoint(envio.endpointAcuse, `ACUSE_${envio.codigoReferencia}.pdf`, true);
+    this.descargandoAcuse.set(envio.codigoReferencia);
+
+    this.descargarEndpoint(
+      envio.endpointAcuse,
+      `ACUSE_${envio.codigoReferencia}.pdf`,
+      true,
+      () => this.descargandoAcuse.set(null)
+    );
   }
 
   descargarArchivos(envio: InformeEnvioItem): void {
-    this.descargarEndpoint(envio.endpointExcel, `ARCHIVOS_${envio.codigoReferencia}.zip`, false);
-  }
+    this.descargandoArchivos.set(envio.codigoReferencia);
 
+    this.descargarEndpoint(
+      envio.endpointExcel,
+      `ARCHIVOS_${envio.codigoReferencia}.zip`,
+      false,
+      () => this.descargandoArchivos.set(null)
+    );
+  }
   exportarExcel(tipo: TipoReporte): void {
     Swal.fire({
       icon: 'info',
@@ -296,8 +312,15 @@ export class Informes implements OnInit {
     });
   }
 
-  private descargarEndpoint(endpoint: string, nombreDefault: string, abrirEnNuevaPestana: boolean): void {
+  private descargarEndpoint(
+    endpoint: string,
+    nombreDefault: string,
+    abrirEnNuevaPestana: boolean,
+    finalizar?: () => void
+  ): void {
     if (!endpoint) {
+      finalizar?.();
+
       Swal.fire({
         icon: 'warning',
         title: 'Archivo no disponible',
@@ -313,6 +336,8 @@ export class Informes implements OnInit {
         const blob = response.body;
 
         if (!blob) {
+          finalizar?.();
+
           Swal.fire({
             icon: 'warning',
             title: 'Archivo vacío',
@@ -329,6 +354,7 @@ export class Informes implements OnInit {
         if (abrirEnNuevaPestana) {
           window.open(url, '_blank');
           setTimeout(() => URL.revokeObjectURL(url), 30000);
+          finalizar?.();
           return;
         }
 
@@ -338,16 +364,35 @@ export class Informes implements OnInit {
         link.click();
 
         URL.revokeObjectURL(url);
+        finalizar?.();
       },
-      error: (error) => {
+      error: async (error) => {
+        finalizar?.();
+
         Swal.fire({
           icon: 'error',
           title: 'No fue posible descargar el archivo',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
+          text: await this.obtenerMensajeErrorBlob(error),
           confirmButtonColor: '#691C32'
         });
       }
     });
+  }
+
+  private async obtenerMensajeErrorBlob(error: any): Promise<string> {
+    const contenido = error?.error;
+
+    if (contenido instanceof Blob) {
+      try {
+        const texto = await contenido.text();
+        const json = JSON.parse(texto);
+        return json?.mensaje || 'Intente nuevamente.';
+      } catch {
+        return 'Intente nuevamente.';
+      }
+    }
+
+    return contenido?.mensaje || 'Intente nuevamente.';
   }
 
   private obtenerNombreArchivo(contentDisposition: string | null): string {
