@@ -78,29 +78,61 @@
   </div>
 
   <section class="siiid-card mt-4">
-    <div class="siiid-card-header usuarios-card-header">
-      <span>
-        <i class="fa-solid fa-table-list"></i>
-        Configuración por entidad
-      </span>
+<div class="siiid-card-header usuarios-card-header">
+  <span>
+    <i class="fa-solid fa-table-list"></i>
+    Configuración por entidad
+  </span>
 
-      <div class="buscador">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar entidad..." [ngModel]="busquedaEntidad()"
-          (ngModelChange)="busquedaEntidad.set($event)">
-      </div>
+  <div class="usuarios-tools">
+    <button
+      type="button"
+      class="btn btn-sm btn-secondary"
+      [disabled]="exportandoExcel()"
+      (click)="exportarConfiguracionExcel()"
+    >
+      @if (exportandoExcel()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      } @else {
+        <i class="fa-solid fa-file-excel"></i>
+      }
+      Excel
+    </button>
+
+    <div class="buscador">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input
+        type="text"
+        placeholder="Buscar entidad..."
+        [ngModel]="busquedaEntidad()"
+        (ngModelChange)="busquedaEntidad.set($event)"
+      >
     </div>
+  </div>
+</div>
 
     <div class="table-responsive">
       <table class="table table-sm entidad-table">
-        <thead>
-          <tr>
-            <th>Entidad federativa</th>
-            <th>Carga de archivos</th>
-            <th>Actualización</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th class="sortable" (click)="ordenarEntidadesPor('entidadFederativa')">
+      Entidad federativa
+      <i [class]="iconoOrdenEntidades('entidadFederativa')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarEntidadesPor('usuariosCarga')">
+      Carga de archivos
+      <i [class]="iconoOrdenEntidades('usuariosCarga')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarEntidadesPor('usuariosModificacion')">
+      Actualización
+      <i [class]="iconoOrdenEntidades('usuariosModificacion')"></i>
+    </th>
+
+    <th>Acciones</th>
+  </tr>
+</thead>
 
         <tbody>
           @for (entidad of entidadesFiltradas(); track entidad.idEntidadFederativa) {
@@ -136,7 +168,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="text-center p-4">No se encontraron entidades.</td>
+            <td colspan="4" class="text-center p-4">No se encontraron entidades.</td>
           </tr>
           }
         </tbody>

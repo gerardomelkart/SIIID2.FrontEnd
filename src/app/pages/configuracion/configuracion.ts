@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
+import * as XLSX from 'xlsx';
 
 import {
   EditarUsuarioRequest,
@@ -39,6 +40,16 @@ interface UsuarioPermisoEntidad {
   bloqueado: boolean;
 }
 
+type DireccionOrden = 'asc' | 'desc';
+
+type CampoOrdenConfiguracionEntidad =
+  | 'entidadFederativa'
+  | 'estadoCarga'
+  | 'estadoModificacion'
+  | 'usuariosCarga'
+  | 'usuariosModificacion'
+  | 'totalUsuarios';
+
 @Component({
   selector: 'app-configuracion',
   imports: [FormsModule],
@@ -55,6 +66,9 @@ export class Configuracion implements OnInit {
 
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
+
+  ordenEntidades = signal<{ campo: CampoOrdenConfiguracionEntidad; direccion: DireccionOrden } | null>(null);
+exportandoExcel = signal(false);
 
   modalEntidadAbierto = signal(false);
 guardandoEntidad = signal(false);
@@ -154,6 +168,112 @@ usuariosEntidad = signal<UsuarioPermisoEntidad[]>([]);
       }
     });
   }
+
+  ordenarEntidadesPor(campo: CampoOrdenConfiguracionEntidad): void {
+  const actual = this.ordenEntidades();
+
+  if (actual?.campo === campo) {
+    this.ordenEntidades.set({
+      campo,
+      direccion: actual.direccion === 'asc' ? 'desc' : 'asc'
+    });
+
+    return;
+  }
+
+  this.ordenEntidades.set({ campo, direccion: 'asc' });
+}
+
+iconoOrdenEntidades(campo: CampoOrdenConfiguracionEntidad): string {
+  const orden = this.ordenEntidades();
+
+  if (orden?.campo !== campo) {
+    return 'fa-solid fa-sort sort-icon';
+  }
+
+  return orden.direccion === 'asc'
+    ? 'fa-solid fa-sort-up sort-icon active'
+    : 'fa-solid fa-sort-down sort-icon active';
+}
+
+exportarConfiguracionExcel(): void {
+  this.exportandoExcel.set(true);
+
+  try {
+    const filas = this.entidadesFiltradas().map(entidad => ({
+      'Entidad federativa': entidad.entidadFederativa,
+      'Carga de archivos': this.etiquetaEstado(entidad.estadoCarga),
+      'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuarios}`,
+      'Actualización': this.etiquetaEstado(entidad.estadoModificacion),
+      'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuarios}`
+    }));
+
+    this.exportarFilasExcel(filas, 'configuracion_por_entidad.xlsx', 'Configuracion');
+  } finally {
+    setTimeout(() => this.exportandoExcel.set(false), 300);
+  }
+}
+
+private ordenarEntidadesConfiguracion(lista: ConfiguracionEntidad[]): ConfiguracionEntidad[] {
+  const orden = this.ordenEntidades();
+
+  if (!orden) {
+    return lista;
+  }
+
+  return [...lista].sort((a, b) => {
+    const valorA = a[orden.campo] ?? '';
+    const valorB = b[orden.campo] ?? '';
+    const resultado = this.compararValores(valorA, valorB);
+
+    return orden.direccion === 'asc' ? resultado : resultado * -1;
+  });
+}
+
+private compararValores(
+  valorA: string | number | null | undefined,
+  valorB: string | number | null | undefined
+): number {
+  if (valorA === null || valorA === undefined || valorA === '') {
+    return 1;
+  }
+
+  if (valorB === null || valorB === undefined || valorB === '') {
+    return -1;
+  }
+
+  if (typeof valorA === 'number' && typeof valorB === 'number') {
+    return valorA - valorB;
+  }
+
+  return String(valorA).localeCompare(String(valorB), 'es', {
+    numeric: true,
+    sensitivity: 'base'
+  });
+}
+
+private exportarFilasExcel(
+  filas: Record<string, string | number>[],
+  nombreArchivo: string,
+  nombreHoja: string
+): void {
+  if (!filas.length) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin registros',
+      text: 'No hay información para exportar.',
+      confirmButtonColor: '#691C32'
+    });
+
+    return;
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(filas);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
+  XLSX.writeFile(workbook, nombreArchivo);
+}
 
   guardarConfiguracionGlobal(): void {
     Swal.fire({
