@@ -247,7 +247,6 @@ next: (response) => {
   const registros = response.registros ?? [];
 
   this.cargas.set(registros);
-  this.sincronizarAniosCorte(registros, response.anioCorte);
   this.paginaCargas.set(1);
   this.cargandoCargas.set(false);
 },
@@ -366,21 +365,7 @@ cambiarCorteReporte(): void {
   this.cargarReporteCargas();
 }
 
-  private sincronizarAniosCorte(registros: InformeReporteCargaItem[], anioActualConsulta: number): void {
-  const anios = new Set<number>();
 
-  anios.add(anioActualConsulta);
-
-  for (const registro of registros) {
-    if (registro.anioCorte) {
-      anios.add(registro.anioCorte);
-    }
-  }
-
-  this.aniosCorte.set(
-    Array.from(anios).sort((a, b) => b - a)
-  );
-}
 
 
   buscarEnvios(valor: string): void {
