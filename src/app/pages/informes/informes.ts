@@ -3,6 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
 
 import { SessionService } from '../../core/services/session.service';
 import { InformesService } from '../../core/services/informes.service';
@@ -12,6 +13,24 @@ import {
   InformeReporteCargaItem,
   TipoReporte
 } from '../../core/models/informes.models';
+
+type DireccionOrden = 'asc' | 'desc';
+
+type CampoOrdenEnvios =
+  | 'entidadFederativa'
+  | 'claveEntidad'
+  | 'fechaEnvioTexto'
+  | 'corte'
+  | 'usuarioEnvio';
+
+type CampoOrdenCargas =
+  | 'entidadFederativa'
+  | 'claveEntidad'
+  | 'corte'
+  | 'intentos'
+  | 'ultimoIntento'
+  | 'estatusUltimoIntento'
+  | 'fechaUltimaCargaTexto';
 
 @Component({
   selector: 'app-informes',
@@ -41,12 +60,19 @@ export class Informes implements OnInit {
   descargandoAcuse = signal<string | null>(null);
   descargandoArchivos = signal<string | null>(null);
 
+  ordenEnvios = signal<{ campo: CampoOrdenEnvios; direccion: DireccionOrden } | null>(null);
+  ordenCargas = signal<{ campo: CampoOrdenCargas; direccion: DireccionOrden } | null>(null);
+
+  descargaEnProceso = computed(() => {
+    return this.descargandoAcuse() !== null || this.descargandoArchivos() !== null;
+  });
+
   envios = signal<InformeEnvioItem[]>([]);
   cargas = signal<InformeReporteCargaItem[]>([]);
 
   acuseUrl = signal<string | null>(null);
-acuseUrlSegura = signal<SafeResourceUrl | null>(null);
-acuseTitulo = signal('Acuse de entrega de información');
+  acuseUrlSegura = signal<SafeResourceUrl | null>(null);
+  acuseTitulo = signal('Acuse de entrega de información');
 
   corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
 
@@ -96,7 +122,7 @@ acuseTitulo = signal('Acuse de entrega de información');
   enviosFiltrados = computed(() => {
     const texto = this.busquedaEnvios().trim().toLowerCase();
 
-    return this.envios().filter(envio => {
+    const filtrados = this.envios().filter(envio => {
       if (!texto) {
         return true;
       }
@@ -109,12 +135,14 @@ acuseTitulo = signal('Acuse de entrega de información');
         envio.codigoReferencia.toLowerCase().includes(texto) ||
         envio.tipoCarga.toLowerCase().includes(texto);
     });
+
+    return this.ordenarListaEnvios(filtrados);
   });
 
   cargasFiltradas = computed(() => {
     const texto = this.busquedaCargas().trim().toLowerCase();
 
-    return this.cargas().filter(carga => {
+    const filtradas = this.cargas().filter(carga => {
       if (!texto) {
         return true;
       }
@@ -126,6 +154,8 @@ acuseTitulo = signal('Acuse de entrega de información');
         (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
     });
+
+    return this.ordenarListaCargas(filtradas);
   });
 
   enviosPaginados = computed(() => {
@@ -310,14 +340,31 @@ acuseTitulo = signal('Acuse de entrega de información');
     );
   }
   exportarExcel(tipo: TipoReporte): void {
-    Swal.fire({
-      icon: 'info',
-      title: 'Exportación pendiente',
-      text: `El endpoint de exportación general para ${tipo === 'ENVIOS' ? 'envíos' : 'cargas'} todavía no está conectado.`,
-      confirmButtonColor: '#691C32'
-    });
-  }
+    if (tipo === 'ENVIOS') {
+      const filas = this.enviosFiltrados().map(envio => ({
+        'Entidad federativa': envio.entidadFederativa,
+        'Cve. entidad': envio.claveEntidad,
+        'Fecha de envío': envio.fechaEnvioTexto,
+        'Corte': envio.corte,
+        'Usuario envío': envio.usuarioEnvio
+      }));
 
+      this.exportarFilasExcel(filas, 'consulta_envios.xlsx', 'Envios');
+      return;
+    }
+
+    const filas = this.cargasFiltradas().map(carga => ({
+      'Entidad federativa': carga.entidadFederativa,
+      'Cve. entidad': carga.claveEntidad,
+      'Periodo': carga.corte,
+      'Intentos': carga.intentos,
+      'Último intento': carga.ultimoIntento || '',
+      'Estatus': this.etiquetaEstatus(carga.estatusUltimoIntento),
+      'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || ''
+    }));
+
+    this.exportarFilasExcel(filas, 'reporte_cargas.xlsx', 'Cargas');
+  }
   private descargarEndpoint(
     endpoint: string,
     nombreDefault: string,
@@ -357,11 +404,11 @@ acuseTitulo = signal('Acuse de entrega de información');
         const nombreArchivo = this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
         const url = URL.createObjectURL(blob);
 
-if (abrirEnNuevaPestana) {
-  this.mostrarAcuse(url);
-  finalizar?.();
-  return;
-}
+        if (abrirEnNuevaPestana) {
+          this.mostrarAcuse(url);
+          finalizar?.();
+          return;
+        }
 
         const link = document.createElement('a');
         link.href = url;
@@ -383,6 +430,154 @@ if (abrirEnNuevaPestana) {
       }
     });
   }
+
+  ordenarEnviosPor(campo: CampoOrdenEnvios): void {
+  const ordenActual = this.ordenEnvios();
+
+  if (ordenActual?.campo === campo) {
+    this.ordenEnvios.set({
+      campo,
+      direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc'
+    });
+
+    this.paginaEnvios.set(1);
+    return;
+  }
+
+  this.ordenEnvios.set({ campo, direccion: 'asc' });
+  this.paginaEnvios.set(1);
+}
+
+ordenarCargasPor(campo: CampoOrdenCargas): void {
+  const ordenActual = this.ordenCargas();
+
+  if (ordenActual?.campo === campo) {
+    this.ordenCargas.set({
+      campo,
+      direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc'
+    });
+
+    this.paginaCargas.set(1);
+    return;
+  }
+
+  this.ordenCargas.set({ campo, direccion: 'asc' });
+  this.paginaCargas.set(1);
+}
+
+iconoOrdenEnvios(campo: CampoOrdenEnvios): string {
+  const orden = this.ordenEnvios();
+
+  if (orden?.campo !== campo) {
+    return 'fa-solid fa-sort sort-icon';
+  }
+
+  return orden.direccion === 'asc'
+    ? 'fa-solid fa-sort-up sort-icon active'
+    : 'fa-solid fa-sort-down sort-icon active';
+}
+
+iconoOrdenCargas(campo: CampoOrdenCargas): string {
+  const orden = this.ordenCargas();
+
+  if (orden?.campo !== campo) {
+    return 'fa-solid fa-sort sort-icon';
+  }
+
+  return orden.direccion === 'asc'
+    ? 'fa-solid fa-sort-up sort-icon active'
+    : 'fa-solid fa-sort-down sort-icon active';
+}
+
+private ordenarListaEnvios(lista: InformeEnvioItem[]): InformeEnvioItem[] {
+  const orden = this.ordenEnvios();
+
+  if (!orden) {
+    return lista;
+  }
+
+  return [...lista].sort((a, b) => {
+    const valorA = this.obtenerValorOrdenEnvio(a, orden.campo);
+    const valorB = this.obtenerValorOrdenEnvio(b, orden.campo);
+    const resultado = this.compararValores(valorA, valorB);
+
+    return orden.direccion === 'asc' ? resultado : resultado * -1;
+  });
+}
+
+private ordenarListaCargas(lista: InformeReporteCargaItem[]): InformeReporteCargaItem[] {
+  const orden = this.ordenCargas();
+
+  if (!orden) {
+    return lista;
+  }
+
+  return [...lista].sort((a, b) => {
+    const valorA = this.obtenerValorOrdenCarga(a, orden.campo);
+    const valorB = this.obtenerValorOrdenCarga(b, orden.campo);
+    const resultado = this.compararValores(valorA, valorB);
+
+    return orden.direccion === 'asc' ? resultado : resultado * -1;
+  });
+}
+
+private obtenerValorOrdenEnvio(envio: InformeEnvioItem, campo: CampoOrdenEnvios): string | number | null {
+  if (campo === 'fechaEnvioTexto') {
+    return envio.fechaEnvio;
+  }
+
+  return envio[campo] ?? '';
+}
+
+private obtenerValorOrdenCarga(carga: InformeReporteCargaItem, campo: CampoOrdenCargas): string | number | null {
+  if (campo === 'fechaUltimaCargaTexto') {
+    return carga.fechaUltimaCarga;
+  }
+
+  return carga[campo] ?? '';
+}
+
+private compararValores(valorA: string | number | null | undefined, valorB: string | number | null | undefined): number {
+  if (valorA === null || valorA === undefined || valorA === '') {
+    return 1;
+  }
+
+  if (valorB === null || valorB === undefined || valorB === '') {
+    return -1;
+  }
+
+  if (typeof valorA === 'number' && typeof valorB === 'number') {
+    return valorA - valorB;
+  }
+
+  return String(valorA).localeCompare(String(valorB), 'es', {
+    numeric: true,
+    sensitivity: 'base'
+  });
+}
+
+private exportarFilasExcel(
+  filas: Record<string, string | number>[],
+  nombreArchivo: string,
+  nombreHoja: string
+): void {
+  if (!filas.length) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin registros',
+      text: 'No hay información para exportar.',
+      confirmButtonColor: '#691C32'
+    });
+
+    return;
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(filas);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
+  XLSX.writeFile(workbook, nombreArchivo);
+}
 
   private async obtenerMensajeErrorBlob(error: any): Promise<string> {
     const contenido = error?.error;
@@ -454,25 +649,25 @@ if (abrirEnNuevaPestana) {
   }
 
   cerrarAcuse(): void {
-  this.limpiarAcuseUrl();
-}
-
-private mostrarAcuse(url: string): void {
-  this.limpiarAcuseUrl();
-
-  this.acuseUrl.set(url);
-  this.acuseUrlSegura.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-  this.acuseTitulo.set('Acuse de entrega de información');
-}
-
-private limpiarAcuseUrl(): void {
-  const urlActual = this.acuseUrl();
-
-  if (urlActual) {
-    URL.revokeObjectURL(urlActual);
+    this.limpiarAcuseUrl();
   }
 
-  this.acuseUrl.set(null);
-  this.acuseUrlSegura.set(null);
-}
+  private mostrarAcuse(url: string): void {
+    this.limpiarAcuseUrl();
+
+    this.acuseUrl.set(url);
+    this.acuseUrlSegura.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+    this.acuseTitulo.set('Acuse de entrega de información');
+  }
+
+  private limpiarAcuseUrl(): void {
+    const urlActual = this.acuseUrl();
+
+    if (urlActual) {
+      URL.revokeObjectURL(urlActual);
+    }
+
+    this.acuseUrl.set(null);
+    this.acuseUrlSegura.set(null);
+  }
 }

@@ -315,3 +315,28 @@
   font-size: 18px;
   font-weight: 700;
 }
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background: #5f172c !important;
+}
+
+.sort-icon {
+  margin-left: 6px;
+  opacity: .45;
+  font-size: 11px;
+}
+
+.sort-icon.active {
+  opacity: 1;
+}
+
+.btn-icon:disabled,
+.btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}

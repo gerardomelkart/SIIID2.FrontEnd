@@ -22,10 +22,15 @@
       </span>
 
       <div class="reporte-actions">
-        <button type="button" class="btn btn-sm btn-secondary" (click)="exportarExcel('ENVIOS')">
-          <i class="fa-solid fa-file-excel"></i>
-          Excel
-        </button>
+<button
+  type="button"
+  class="btn btn-sm btn-secondary"
+  [disabled]="descargaEnProceso()"
+  (click)="exportarExcel('ENVIOS')"
+>
+  <i class="fa-solid fa-file-excel"></i>
+  Excel
+</button>
 
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -45,56 +50,90 @@
 
     <div class="table-responsive">
       <table class="table table-sm reporte-table">
-        <thead>
-          <tr>
-            <th>Entidad federativa</th>
-            <th>Cve. entidad</th>
-            <th>Fecha de envío</th>
-            <th>Corte</th>
-            <th>Tipo</th>
-            <th>Usuario envío</th>
-            <th class="acciones-col">Acciones</th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th class="sortable" (click)="ordenarCargasPor('entidadFederativa')">
+      Entidad federativa
+      <i [class]="iconoOrdenCargas('entidadFederativa')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarCargasPor('claveEntidad')">
+      Cve. entidad
+      <i [class]="iconoOrdenCargas('claveEntidad')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarCargasPor('corte')">
+      Periodo
+      <i [class]="iconoOrdenCargas('corte')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarCargasPor('intentos')">
+      Intentos
+      <i [class]="iconoOrdenCargas('intentos')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarCargasPor('ultimoIntento')">
+      Último folio
+      <i [class]="iconoOrdenCargas('ultimoIntento')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarCargasPor('estatusUltimoIntento')">
+      Estatus
+      <i [class]="iconoOrdenCargas('estatusUltimoIntento')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarCargasPor('fechaUltimaCargaTexto')">
+      Fecha/hora último movimiento
+      <i [class]="iconoOrdenCargas('fechaUltimaCargaTexto')"></i>
+    </th>
+  </tr>
+</thead>
 
         <tbody>
-          @for (envio of enviosPaginados(); track envio.idCarga) {
-          <tr>
-            <td>{{ envio.entidadFederativa }}</td>
-            <td>{{ envio.claveEntidad }}</td>
-            <td>{{ envio.fechaEnvioTexto }}</td>
-            <td>{{ envio.corte }}</td>
-            <td>
-              <span class="folio-chip">{{ tipoCargaTexto(envio.tipoCarga) }}</span>
-            </td>
-            <td>{{ envio.usuarioEnvio }}</td>
-            <td>
-              <div class="acciones">
-                <button type="button" class="btn-icon btn-pdf" title="Ver acuse"
-                  [disabled]="descargandoAcuse() === envio.codigoReferencia" (click)="verAcuse(envio)">
-                  @if (descargandoAcuse() === envio.codigoReferencia) {
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  } @else {
-                  <i class="fa-solid fa-file-pdf"></i>
-                  }
-                </button>
-
-                <button type="button" class="btn-icon btn-excel" title="Descargar archivos enviados"
-                  [disabled]="descargandoArchivos() === envio.codigoReferencia" (click)="descargarArchivos(envio)">
-                  @if (descargandoArchivos() === envio.codigoReferencia) {
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  } @else {
-                  <i class="fa-solid fa-file-excel"></i>
-                  }
-                </button>
-              </div>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="7" class="text-center p-4">No se encontraron envíos.</td>
-          </tr>
+@for (envio of enviosPaginados(); track envio.idCarga) {
+  <tr>
+    <td>{{ envio.entidadFederativa }}</td>
+    <td>{{ envio.claveEntidad }}</td>
+    <td>{{ envio.fechaEnvioTexto }}</td>
+    <td>{{ envio.corte }}</td>
+    <td>{{ envio.usuarioEnvio }}</td>
+    <td>
+      <div class="acciones">
+        <button
+          type="button"
+          class="btn-icon btn-pdf"
+          title="Ver acuse"
+          [disabled]="descargaEnProceso()"
+          (click)="verAcuse(envio)"
+        >
+          @if (descargandoAcuse() === envio.codigoReferencia) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+            <i class="fa-solid fa-file-pdf"></i>
           }
+        </button>
+
+        <button
+          type="button"
+          class="btn-icon btn-excel"
+          title="Descargar archivos enviados"
+          [disabled]="descargaEnProceso()"
+          (click)="descargarArchivos(envio)"
+        >
+          @if (descargandoArchivos() === envio.codigoReferencia) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+            <i class="fa-solid fa-file-excel"></i>
+          }
+        </button>
+      </div>
+    </td>
+  </tr>
+} @empty {
+  <tr>
+    <td colspan="6" class="text-center p-4">No se encontraron envíos.</td>
+  </tr>
+}
         </tbody>
       </table>
     </div>
@@ -151,18 +190,36 @@
 
     <div class="table-responsive">
       <table class="table table-sm reporte-table">
-        <thead>
-          <tr>
-            <th>Entidad federativa</th>
-            <th>Cve. entidad</th>
-            <th>Periodo</th>
-            <th>Intentos</th>
-            <th>Último folio</th>
-            <th>Estatus</th>
-            <th>Fecha/hora último movimiento</th>
-            <th class="acciones-col">Acciones</th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th class="sortable" (click)="ordenarEnviosPor('entidadFederativa')">
+      Entidad federativa
+      <i [class]="iconoOrdenEnvios('entidadFederativa')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarEnviosPor('claveEntidad')">
+      Cve. entidad
+      <i [class]="iconoOrdenEnvios('claveEntidad')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarEnviosPor('fechaEnvioTexto')">
+      Fecha de envío
+      <i [class]="iconoOrdenEnvios('fechaEnvioTexto')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarEnviosPor('corte')">
+      Corte
+      <i [class]="iconoOrdenEnvios('corte')"></i>
+    </th>
+
+    <th class="sortable" (click)="ordenarEnviosPor('usuarioEnvio')">
+      Usuario envío
+      <i [class]="iconoOrdenEnvios('usuarioEnvio')"></i>
+    </th>
+
+    <th class="acciones-col">Acciones</th>
+  </tr>
+</thead>
 
         <tbody>
           @for (carga of cargasPaginadas(); track carga.idEntidadFederativa) {
