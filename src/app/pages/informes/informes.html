@@ -14,249 +14,202 @@
   </div>
 
   @if (reporteActivo() === 'ENVIOS') {
-    <section class="siiid-card">
-      <div class="siiid-card-header reporte-card-header">
-        <span>
+  <section class="siiid-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Consulta de envíos
+      </span>
+
+      <div class="reporte-actions">
+        <button type="button" class="btn btn-sm btn-secondary" (click)="exportarExcel('ENVIOS')">
+          <i class="fa-solid fa-file-excel"></i>
+          Excel
+        </button>
+
+        <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
-          Consulta de envíos
-        </span>
-
-        <div class="reporte-actions">
-          <button type="button" class="btn btn-sm btn-secondary" (click)="exportarExcel('ENVIOS')">
-            <i class="fa-solid fa-file-excel"></i>
-            Excel
-          </button>
-
-          <div class="buscador">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input
-              type="text"
-              placeholder="Buscar envío..."
-              [ngModel]="busquedaEnvios()"
-              (ngModelChange)="buscarEnvios($event)"
-            >
-          </div>
+          <input type="text" placeholder="Buscar envío..." [ngModel]="busquedaEnvios()"
+            (ngModelChange)="buscarEnvios($event)">
         </div>
       </div>
+    </div>
 
-      @if (!esSuperUsuario()) {
-        <div class="filtro-entidad-info">
-          <i class="fa-solid fa-location-dot"></i>
-          Mostrando únicamente envíos de la entidad:
-          <strong>{{ entidadUsuario() }}</strong>
-        </div>
-      }
+    @if (!esSuperUsuario()) {
+    <div class="filtro-entidad-info">
+      <i class="fa-solid fa-location-dot"></i>
+      Mostrando únicamente envíos de la entidad:
+      <strong>{{ entidadUsuario() }}</strong>
+    </div>
+    }
 
-      <div class="table-responsive">
-        <table class="table table-sm reporte-table">
-          <thead>
-            <tr>
-              <th>Entidad federativa</th>
-              <th>Cve. entidad</th>
-              <th>Fecha de envío</th>
-              <th>Corte</th>
-              <th>Usuario envío</th>
-              <th>Código referencia</th>
-              <th class="acciones-col">Acciones</th>
-            </tr>
-          </thead>
+    <div class="table-responsive">
+      <table class="table table-sm reporte-table">
+        <thead>
+          <tr>
+            <th>Entidad federativa</th>
+            <th>Cve. entidad</th>
+            <th>Fecha de envío</th>
+            <th>Corte</th>
+            <th>Tipo</th>
+            <th>Usuario envío</th>
+            <th class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
 
-          <tbody>
-            @for (envio of enviosPaginados(); track envio.id) {
-              <tr>
-                <td>{{ envio.entidadFederativa }}</td>
-                <td>{{ envio.claveEntidad }}</td>
-                <td>{{ envio.fechaEnvio }}</td>
-                <td>{{ envio.corte }}</td>
-                <td>{{ envio.usuarioEnvio }}</td>
-                <td>
-                  <span class="folio-chip">{{ envio.codigoReferencia }}</span>
-                </td>
-                <td>
-                  <div class="acciones">
-                    <button
-                      type="button"
-                      class="btn-icon btn-pdf"
-                      title="Ver acuse"
-                      (click)="verAcuse(envio.codigoReferencia)"
-                    >
-                      <i class="fa-solid fa-file-pdf"></i>
-                    </button>
+        <tbody>
+          @for (envio of enviosPaginados(); track envio.idCarga) {
+          <tr>
+            <td>{{ envio.entidadFederativa }}</td>
+            <td>{{ envio.claveEntidad }}</td>
+            <td>{{ envio.fechaEnvioTexto }}</td>
+            <td>{{ envio.corte }}</td>
+            <td>
+              <span class="folio-chip">{{ tipoCargaTexto(envio.tipoCarga) }}</span>
+            </td>
+            <td>{{ envio.usuarioEnvio }}</td>
+            <td>
+              <div class="acciones">
+                <button type="button" class="btn-icon btn-pdf" title="Ver acuse" (click)="verAcuse(envio)">
+                  <i class="fa-solid fa-file-pdf"></i>
+                </button>
 
-                    <button
-                      type="button"
-                      class="btn-icon btn-excel"
-                      title="Descargar archivos enviados"
-                      (click)="descargarArchivos(envio.codigoReferencia)"
-                    >
-                      <i class="fa-solid fa-file-excel"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="7" class="text-center p-4">No se encontraron envíos.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+                <button type="button" class="btn-icon btn-excel" title="Descargar archivos enviados"
+                  (click)="descargarArchivos(envio)">
+                  <i class="fa-solid fa-file-excel"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" class="text-center p-4">No se encontraron envíos.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <span>
+        Mostrando {{ enviosPaginados().length }} de {{ enviosFiltrados().length }} registros
+      </span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaEnvios() === 1"
+          (click)="cambiarPaginaEnvios(paginaEnvios() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaEnvios() }} / {{ totalPaginasEnvios() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaEnvios() === totalPaginasEnvios()" (click)="cambiarPaginaEnvios(paginaEnvios() + 1)">
+          Siguiente
+        </button>
       </div>
-
-      <div class="pagination-row">
-        <span>
-          Mostrando {{ enviosPaginados().length }} de {{ enviosFiltrados().length }} registros
-        </span>
-
-        <div class="pagination-actions">
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            [disabled]="paginaEnvios() === 1"
-            (click)="cambiarPaginaEnvios(paginaEnvios() - 1)"
-          >
-            Anterior
-          </button>
-
-          <span class="page-indicator">{{ paginaEnvios() }} / {{ totalPaginasEnvios() }}</span>
-
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            [disabled]="paginaEnvios() === totalPaginasEnvios()"
-            (click)="cambiarPaginaEnvios(paginaEnvios() + 1)"
-          >
-            Siguiente
-          </button>
-        </div>
-      </div>
-    </section>
+    </div>
+  </section>
   }
 
   @if (reporteActivo() === 'CARGAS' && puedeVerCargas()) {
-    <section class="siiid-card">
-      <div class="siiid-card-header reporte-card-header">
-        <span>
-          <i class="fa-solid fa-chart-simple"></i>
-          Reporte de cargas por entidad
-        </span>
+  <section class="siiid-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-chart-simple"></i>
+        Reporte de cargas por entidad
+      </span>
 
-        <div class="reporte-actions">
-          <button type="button" class="btn btn-sm btn-secondary" (click)="exportarExcel('CARGAS')">
-            <i class="fa-solid fa-file-excel"></i>
-            Excel
-          </button>
+      <div class="reporte-actions">
+        <button type="button" class="btn btn-sm btn-secondary" (click)="exportarExcel('CARGAS')">
+          <i class="fa-solid fa-file-excel"></i>
+          Excel
+        </button>
 
-          <div class="buscador">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input
-              type="text"
-              placeholder="Buscar carga..."
-              [ngModel]="busquedaCargas()"
-              (ngModelChange)="buscarCargas($event)"
-            >
-          </div>
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar carga..." [ngModel]="busquedaCargas()"
+            (ngModelChange)="buscarCargas($event)">
         </div>
       </div>
+    </div>
 
-      <div class="table-responsive">
-        <table class="table table-sm reporte-table">
-          <thead>
-            <tr>
-              <th>Entidad federativa</th>
-              <th>Cve. entidad</th>
-              <th>Periodo</th>
-              <th>Intentos</th>
-              <th>Último folio</th>
-              <th>Estatus</th>
-              <th>Fecha/hora último movimiento</th>
-              <th class="acciones-col">Acciones</th>
-            </tr>
-          </thead>
+    <div class="filtro-entidad-info">
+      <i class="fa-solid fa-calendar-days"></i>
+      Corte operativo consultado:
+      <strong>{{ corteOperativo().corte }}</strong>
+    </div>
 
-          <tbody>
-            @for (carga of cargasPaginadas(); track carga.id) {
-              <tr>
-                <td>{{ carga.entidadFederativa }}</td>
-                <td>{{ carga.claveEntidad }}</td>
-                <td>{{ carga.periodo }}</td>
-                <td>
-                  <span class="intentos-chip">{{ carga.intentos }}</span>
-                </td>
-                <td>
-                  <span class="folio-chip">{{ carga.ultimoFolio }}</span>
-                </td>
-                <td>
-                  <span
-                    class="estatus-badge"
-                    [class.estatus-confirmado]="carga.estatus === 'CONFIRMADO'"
-                    [class.estatus-pendiente]="carga.estatus === 'PENDIENTE'"
-                    [class.estatus-error]="carga.estatus === 'CON_ERRORES' || carga.estatus === 'RECHAZADO'"
-                    [class.estatus-procesando]="carga.estatus === 'PROCESANDO'"
-                  >
-                    {{ etiquetaEstatus(carga.estatus) }}
-                  </span>
-                </td>
-                <td>{{ carga.fechaUltimoMovimiento }}</td>
-                <td>
-                  <div class="acciones">
-                    <button
-                      type="button"
-                      class="btn-icon btn-view"
-                      title="Ver detalle"
-                    >
-                      <i class="fa-solid fa-eye"></i>
-                    </button>
+    <div class="table-responsive">
+      <table class="table table-sm reporte-table">
+        <thead>
+          <tr>
+            <th>Entidad federativa</th>
+            <th>Cve. entidad</th>
+            <th>Periodo</th>
+            <th>Intentos</th>
+            <th>Último folio</th>
+            <th>Estatus</th>
+            <th>Fecha/hora último movimiento</th>
+            <th class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
 
-                    @if (carga.estatus === 'CONFIRMADO') {
-                      <button
-                        type="button"
-                        class="btn-icon btn-pdf"
-                        title="Ver acuse"
-                        (click)="verAcuse(carga.ultimoFolio)"
-                      >
-                        <i class="fa-solid fa-file-pdf"></i>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="8" class="text-center p-4">No se encontraron cargas.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <tbody>
+          @for (carga of cargasPaginadas(); track carga.idEntidadFederativa) {
+          <tr>
+            <td>{{ carga.entidadFederativa }}</td>
+            <td>{{ carga.claveEntidad }}</td>
+            <td>{{ carga.corte }}</td>
+            <td>
+              <span class="intentos-chip">{{ carga.intentos }}</span>
+            </td>
+            <td>
+              <span class="folio-chip">
+                {{ carga.ultimoIntento || '-' }}
+              </span>
+            </td>
+            <td>
+              <span class="estatus-badge" [class.estatus-confirmado]="carga.estatusUltimoIntento === 'CONFIRMADO'"
+                [class.estatus-pendiente]="carga.estatusUltimoIntento?.includes('PENDIENTE')"
+                [class.estatus-error]="carga.estatusUltimoIntento === 'ERROR_VALIDACION' || carga.estatusUltimoIntento === 'RECHAZADO' || carga.estatusUltimoIntento === 'EXPIRADO'"
+                [class.estatus-procesando]="carga.estatusUltimoIntento === 'PROCESANDO'">
+                {{ etiquetaEstatus(carga.estatusUltimoIntento) }}
+              </span>
+            </td>
+            <td>{{ carga.fechaUltimaCargaTexto || '-' }}</td>
+            <td>
+              <span class="text-muted">-</span>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8" class="text-center p-4">No se encontraron cargas.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <span>
+        Mostrando {{ cargasPaginadas().length }} de {{ cargasFiltradas().length }} registros
+      </span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaCargas() === 1"
+          (click)="cambiarPaginaCargas(paginaCargas() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaCargas() }} / {{ totalPaginasCargas() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaCargas() === totalPaginasCargas()" (click)="cambiarPaginaCargas(paginaCargas() + 1)">
+          Siguiente
+        </button>
       </div>
-
-      <div class="pagination-row">
-        <span>
-          Mostrando {{ cargasPaginadas().length }} de {{ cargasFiltradas().length }} registros
-        </span>
-
-        <div class="pagination-actions">
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            [disabled]="paginaCargas() === 1"
-            (click)="cambiarPaginaCargas(paginaCargas() - 1)"
-          >
-            Anterior
-          </button>
-
-          <span class="page-indicator">{{ paginaCargas() }} / {{ totalPaginasCargas() }}</span>
-
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            [disabled]="paginaCargas() === totalPaginasCargas()"
-            (click)="cambiarPaginaCargas(paginaCargas() + 1)"
-          >
-            Siguiente
-          </button>
-        </div>
-      </div>
-    </section>
+    </div>
+  </section>
   }
 </div>

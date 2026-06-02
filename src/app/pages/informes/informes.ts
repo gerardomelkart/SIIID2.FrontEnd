@@ -1,32 +1,16 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import Swal from 'sweetalert2';
 
 import { SessionService } from '../../core/services/session.service';
-
-type TipoReporte = 'ENVIOS' | 'CARGAS';
-type EstatusCarga = 'CONFIRMADO' | 'PENDIENTE' | 'CON_ERRORES' | 'RECHAZADO' | 'PROCESANDO';
-
-interface ReporteEnvio {
-  id: number;
-  entidadFederativa: string;
-  claveEntidad: string;
-  fechaEnvio: string;
-  corte: string;
-  usuarioEnvio: string;
-  codigoReferencia: string;
-}
-
-interface ReporteCarga {
-  id: number;
-  entidadFederativa: string;
-  claveEntidad: string;
-  periodo: string;
-  intentos: number;
-  ultimoFolio: string;
-  estatus: EstatusCarga;
-  fechaUltimoMovimiento: string;
-}
+import { InformesService } from '../../core/services/informes.service';
+import {
+  CorteOperativo,
+  InformeEnvioItem,
+  InformeReporteCargaItem,
+  TipoReporte
+} from '../../core/models/informes.models';
 
 @Component({
   selector: 'app-informes',
@@ -36,6 +20,7 @@ interface ReporteCarga {
 })
 export class Informes implements OnInit {
   private readonly sessionService = inject(SessionService);
+  private readonly informesService = inject(InformesService);
   private readonly route = inject(ActivatedRoute);
 
   usuario = this.sessionService.usuario;
@@ -48,19 +33,34 @@ export class Informes implements OnInit {
   paginaCargas = signal(1);
   tamanioPagina = 10;
 
+  cargandoEnvios = signal(false);
+  cargandoCargas = signal(false);
+
+  envios = signal<InformeEnvioItem[]>([]);
+  cargas = signal<InformeReporteCargaItem[]>([]);
+
+  corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
+
   ngOnInit(): void {
     this.route.data.subscribe(data => {
       const reporte = data['reporte'] as TipoReporte | undefined;
 
       if (reporte === 'CARGAS' && !this.puedeVerCargas()) {
         this.reporteActivo.set('ENVIOS');
+        this.cargarEnvios();
         return;
       }
 
       this.reporteActivo.set(reporte ?? 'ENVIOS');
+
+      if (this.reporteActivo() === 'CARGAS') {
+        this.cargarReporteCargas();
+        return;
+      }
+
+      this.cargarEnvios();
     });
   }
-
 
   esSuperUsuario = computed(() => {
     return this.usuario()?.rol === 'SUPER_USUARIO';
@@ -84,149 +84,22 @@ export class Informes implements OnInit {
     return this.usuario()?.entidadFederativa ?? '';
   });
 
-  envios = signal<ReporteEnvio[]>([
-    {
-      id: 1,
-      entidadFederativa: 'Aguascalientes',
-      claveEntidad: '01',
-      fechaEnvio: '10-06-2025',
-      corte: 'Mayo 2025',
-      usuarioEnvio: 'AGUASCALIENTES USUARIO PRUEBA',
-      codigoReferencia: 'AGS-202505-0001'
-    },
-    {
-      id: 2,
-      entidadFederativa: 'Aguascalientes',
-      claveEntidad: '01',
-      fechaEnvio: '09-07-2025',
-      corte: 'Junio 2025',
-      usuarioEnvio: 'AGUASCALIENTES USUARIO PRUEBA',
-      codigoReferencia: 'AGS-202506-0001'
-    },
-    {
-      id: 3,
-      entidadFederativa: 'Ciudad de México',
-      claveEntidad: '09',
-      fechaEnvio: '10-06-2025',
-      corte: 'Mayo 2025',
-      usuarioEnvio: 'ENLACE CDMX',
-      codigoReferencia: 'CDMX-202505-0001'
-    },
-    {
-      id: 4,
-      entidadFederativa: 'Ciudad de México',
-      claveEntidad: '09',
-      fechaEnvio: '09-07-2025',
-      corte: 'Junio 2025',
-      usuarioEnvio: 'ENLACE CDMX',
-      codigoReferencia: 'CDMX-202506-0001'
-    },
-    {
-      id: 5,
-      entidadFederativa: 'Jalisco',
-      claveEntidad: '14',
-      fechaEnvio: '11-08-2025',
-      corte: 'Julio 2025',
-      usuarioEnvio: 'JALISCO USUARIO PRUEBA',
-      codigoReferencia: 'JAL-202507-0001'
-    },
-    {
-      id: 6,
-      entidadFederativa: 'Campeche',
-      claveEntidad: '04',
-      fechaEnvio: '12-09-2025',
-      corte: 'Agosto 2025',
-      usuarioEnvio: 'CAMPECHE USUARIO PRUEBA',
-      codigoReferencia: 'CAMP-202508-0001'
-    }
-  ]);
-
-  cargas = signal<ReporteCarga[]>([
-    {
-      id: 1,
-      entidadFederativa: 'Aguascalientes',
-      claveEntidad: '01',
-      periodo: 'Mayo 2025',
-      intentos: 2,
-      ultimoFolio: 'AGS-202505-0002',
-      estatus: 'CONFIRMADO',
-      fechaUltimoMovimiento: '10-06-2025 14:35'
-    },
-    {
-      id: 2,
-      entidadFederativa: 'Ciudad de México',
-      claveEntidad: '09',
-      periodo: 'Mayo 2025',
-      intentos: 4,
-      ultimoFolio: 'CDMX-202505-0004',
-      estatus: 'CONFIRMADO',
-      fechaUltimoMovimiento: '10-06-2025 16:12'
-    },
-    {
-      id: 3,
-      entidadFederativa: 'Jalisco',
-      claveEntidad: '14',
-      periodo: 'Junio 2025',
-      intentos: 3,
-      ultimoFolio: 'JAL-202506-0003',
-      estatus: 'CON_ERRORES',
-      fechaUltimoMovimiento: '09-07-2025 11:48'
-    },
-    {
-      id: 4,
-      entidadFederativa: 'Campeche',
-      claveEntidad: '04',
-      periodo: 'Junio 2025',
-      intentos: 1,
-      ultimoFolio: 'CAMP-202506-0001',
-      estatus: 'PENDIENTE',
-      fechaUltimoMovimiento: '09-07-2025 09:25'
-    },
-    {
-      id: 5,
-      entidadFederativa: 'Baja California',
-      claveEntidad: '02',
-      periodo: 'Julio 2025',
-      intentos: 2,
-      ultimoFolio: 'BC-202507-0002',
-      estatus: 'RECHAZADO',
-      fechaUltimoMovimiento: '11-08-2025 10:04'
-    },
-    {
-      id: 6,
-      entidadFederativa: 'Sonora',
-      claveEntidad: '26',
-      periodo: 'Agosto 2025',
-      intentos: 1,
-      ultimoFolio: 'SON-202508-0001',
-      estatus: 'PROCESANDO',
-      fechaUltimoMovimiento: '12-09-2025 13:22'
-    }
-  ]);
-
   enviosFiltrados = computed(() => {
     const texto = this.busquedaEnvios().trim().toLowerCase();
 
-    return this.envios()
-      .filter(envio => {
-        if (this.esSuperUsuario()) {
-          return true;
-        }
+    return this.envios().filter(envio => {
+      if (!texto) {
+        return true;
+      }
 
-        return envio.entidadFederativa === this.entidadUsuario();
-      })
-      .filter(envio => {
-        if (!texto) {
-          return true;
-        }
-
-        return envio.entidadFederativa.toLowerCase().includes(texto) ||
-          envio.claveEntidad.toLowerCase().includes(texto) ||
-          envio.fechaEnvio.toLowerCase().includes(texto) ||
-          envio.corte.toLowerCase().includes(texto) ||
-          envio.usuarioEnvio.toLowerCase().includes(texto) ||
-          envio.codigoReferencia.toLowerCase().includes(texto);
-      });
+      return envio.entidadFederativa.toLowerCase().includes(texto) ||
+        envio.claveEntidad.toLowerCase().includes(texto) ||
+        envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
+        envio.corte.toLowerCase().includes(texto) ||
+        envio.usuarioEnvio.toLowerCase().includes(texto) ||
+        envio.codigoReferencia.toLowerCase().includes(texto) ||
+        envio.tipoCarga.toLowerCase().includes(texto);
+    });
   });
 
   cargasFiltradas = computed(() => {
@@ -239,9 +112,10 @@ export class Informes implements OnInit {
 
       return carga.entidadFederativa.toLowerCase().includes(texto) ||
         carga.claveEntidad.toLowerCase().includes(texto) ||
-        carga.periodo.toLowerCase().includes(texto) ||
-        carga.ultimoFolio.toLowerCase().includes(texto) ||
-        carga.estatus.toLowerCase().includes(texto);
+        carga.corte.toLowerCase().includes(texto) ||
+        (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
+        (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
     });
   });
 
@@ -269,6 +143,66 @@ export class Informes implements OnInit {
     }
 
     this.reporteActivo.set(reporte);
+
+    if (reporte === 'CARGAS') {
+      this.cargarReporteCargas();
+      return;
+    }
+
+    this.cargarEnvios();
+  }
+
+  cargarEnvios(): void {
+    this.cargandoEnvios.set(true);
+
+    this.informesService.obtenerEnvios().subscribe({
+      next: (envios) => {
+        this.envios.set(envios);
+        this.paginaEnvios.set(1);
+        this.cargandoEnvios.set(false);
+      },
+      error: (error) => {
+        this.cargandoEnvios.set(false);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible consultar los envíos',
+          text: error?.error?.mensaje || 'Intente nuevamente.',
+          confirmButtonColor: '#691C32'
+        });
+      }
+    });
+  }
+
+  cargarReporteCargas(): void {
+    if (!this.puedeVerCargas()) {
+      return;
+    }
+
+    const corte = this.corteOperativo();
+
+    this.cargandoCargas.set(true);
+
+    this.informesService.obtenerReporteCargas({
+      mesCorte: corte.mesCorte,
+      anioCorte: corte.anioCorte
+    }).subscribe({
+      next: (response) => {
+        this.cargas.set(response.registros ?? []);
+        this.paginaCargas.set(1);
+        this.cargandoCargas.set(false);
+      },
+      error: (error) => {
+        this.cargandoCargas.set(false);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible consultar el reporte de cargas',
+          text: error?.error?.mensaje || 'Intente nuevamente.',
+          confirmButtonColor: '#691C32'
+        });
+      }
+    });
   }
 
   buscarEnvios(valor: string): void {
@@ -297,16 +231,24 @@ export class Informes implements OnInit {
     this.paginaCargas.set(pagina);
   }
 
-  etiquetaEstatus(estatus: EstatusCarga): string {
+  etiquetaEstatus(estatus: string | null): string {
+    if (!estatus) {
+      return 'Sin carga';
+    }
+
     if (estatus === 'CONFIRMADO') {
       return 'Confirmado';
     }
 
-    if (estatus === 'PENDIENTE') {
+    if (estatus === 'VALIDADO_PENDIENTE') {
       return 'Pendiente';
     }
 
-    if (estatus === 'CON_ERRORES') {
+    if (estatus === 'VALIDADO_PENDIENTE_CONFIRMACION') {
+      return 'Pendiente';
+    }
+
+    if (estatus === 'ERROR_VALIDACION') {
       return 'Con errores';
     }
 
@@ -314,18 +256,150 @@ export class Informes implements OnInit {
       return 'Rechazado';
     }
 
-    return 'Procesando';
+    if (estatus === 'EXPIRADO') {
+      return 'Expirado';
+    }
+
+    return estatus.replaceAll('_', ' ');
   }
 
-  verAcuse(codigoReferencia: string): void {
-    alert(`Mock visual: abrir acuse ${codigoReferencia}`);
+  tipoCargaTexto(tipoCarga: string | null): string {
+    if (!tipoCarga) {
+      return '';
+    }
+
+    if (tipoCarga === 'CARGA_INICIAL') {
+      return 'Carga inicial';
+    }
+
+    if (tipoCarga === 'ACTUALIZACION') {
+      return 'Actualización';
+    }
+
+    return tipoCarga.replaceAll('_', ' ');
   }
 
-  descargarArchivos(codigoReferencia: string): void {
-    alert(`Mock visual: descargar archivos enviados ${codigoReferencia}`);
+  verAcuse(envio: InformeEnvioItem): void {
+    this.descargarEndpoint(envio.endpointAcuse, `ACUSE_${envio.codigoReferencia}.pdf`, true);
+  }
+
+  descargarArchivos(envio: InformeEnvioItem): void {
+    this.descargarEndpoint(envio.endpointExcel, `ARCHIVOS_${envio.codigoReferencia}.zip`, false);
   }
 
   exportarExcel(tipo: TipoReporte): void {
-    alert(`Mock visual: exportar Excel ${tipo}`);
+    Swal.fire({
+      icon: 'info',
+      title: 'Exportación pendiente',
+      text: `El endpoint de exportación general para ${tipo === 'ENVIOS' ? 'envíos' : 'cargas'} todavía no está conectado.`,
+      confirmButtonColor: '#691C32'
+    });
+  }
+
+  private descargarEndpoint(endpoint: string, nombreDefault: string, abrirEnNuevaPestana: boolean): void {
+    if (!endpoint) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Archivo no disponible',
+        text: 'La API no proporcionó una ruta de descarga.',
+        confirmButtonColor: '#691C32'
+      });
+
+      return;
+    }
+
+    this.informesService.descargarDesdeEndpoint(endpoint).subscribe({
+      next: (response) => {
+        const blob = response.body;
+
+        if (!blob) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Archivo vacío',
+            text: 'La descarga no devolvió contenido.',
+            confirmButtonColor: '#691C32'
+          });
+
+          return;
+        }
+
+        const nombreArchivo = this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
+        const url = URL.createObjectURL(blob);
+
+        if (abrirEnNuevaPestana) {
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 30000);
+          return;
+        }
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = nombreArchivo;
+        link.click();
+
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible descargar el archivo',
+          text: error?.error?.mensaje || 'Intente nuevamente.',
+          confirmButtonColor: '#691C32'
+        });
+      }
+    });
+  }
+
+  private obtenerNombreArchivo(contentDisposition: string | null): string {
+    if (!contentDisposition) {
+      return '';
+    }
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+
+    const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
+    return normalMatch?.[1] ?? '';
+  }
+
+  private obtenerCorteOperativoActual(): CorteOperativo {
+    const fecha = new Date();
+    let mesCorte = fecha.getMonth(); // Enero = 0, Junio = 5, entonces Junio -> Mayo = 5
+    let anioCorte = fecha.getFullYear();
+
+    if (mesCorte === 0) {
+      mesCorte = 12;
+      anioCorte--;
+    }
+
+    return {
+      mesCorte,
+      anioCorte,
+      corte: `${this.obtenerNombreMes(mesCorte)} ${anioCorte}`
+    };
+  }
+
+  private obtenerNombreMes(mes: number): string {
+    const meses = [
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
+    ];
+
+    return meses[mes] ?? '';
   }
 }
