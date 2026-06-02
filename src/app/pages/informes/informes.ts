@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -22,6 +23,7 @@ export class Informes implements OnInit {
   private readonly sessionService = inject(SessionService);
   private readonly informesService = inject(InformesService);
   private readonly route = inject(ActivatedRoute);
+  private readonly sanitizer = inject(DomSanitizer);
 
   usuario = this.sessionService.usuario;
 
@@ -41,6 +43,10 @@ export class Informes implements OnInit {
 
   envios = signal<InformeEnvioItem[]>([]);
   cargas = signal<InformeReporteCargaItem[]>([]);
+
+  acuseUrl = signal<string | null>(null);
+acuseUrlSegura = signal<SafeResourceUrl | null>(null);
+acuseTitulo = signal('Acuse de entrega de información');
 
   corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
 
@@ -351,12 +357,11 @@ export class Informes implements OnInit {
         const nombreArchivo = this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
         const url = URL.createObjectURL(blob);
 
-        if (abrirEnNuevaPestana) {
-          window.open(url, '_blank');
-          setTimeout(() => URL.revokeObjectURL(url), 30000);
-          finalizar?.();
-          return;
-        }
+if (abrirEnNuevaPestana) {
+  this.mostrarAcuse(url);
+  finalizar?.();
+  return;
+}
 
         const link = document.createElement('a');
         link.href = url;
@@ -447,4 +452,27 @@ export class Informes implements OnInit {
 
     return meses[mes] ?? '';
   }
+
+  cerrarAcuse(): void {
+  this.limpiarAcuseUrl();
+}
+
+private mostrarAcuse(url: string): void {
+  this.limpiarAcuseUrl();
+
+  this.acuseUrl.set(url);
+  this.acuseUrlSegura.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+  this.acuseTitulo.set('Acuse de entrega de información');
+}
+
+private limpiarAcuseUrl(): void {
+  const urlActual = this.acuseUrl();
+
+  if (urlActual) {
+    URL.revokeObjectURL(urlActual);
+  }
+
+  this.acuseUrl.set(null);
+  this.acuseUrlSegura.set(null);
+}
 }

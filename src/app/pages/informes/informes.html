@@ -221,4 +221,31 @@
     </div>
   </section>
   }
+  
+@if (acuseUrlSegura()) {
+  <div class="acuse-modal-backdrop">
+    <div class="acuse-modal">
+      <div class="acuse-modal-header">
+        <h2>{{ acuseTitulo() }}</h2>
+
+        <button type="button" class="acuse-close" (click)="cerrarAcuse()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <iframe
+        class="acuse-frame"
+        [src]="acuseUrlSegura()"
+        title="Acuse de entrega de información"
+      ></iframe>
+
+      <div class="acuse-modal-footer">
+        <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 </div>
