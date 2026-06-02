@@ -10,7 +10,7 @@ import {
   EntidadFederativaCatalogoItem,
   RolCatalogoItem
 } from '../../core/models/catalogos.models';
-
+  
 import {
   CrearUsuarioRequest,
   EditarUsuarioRequest,
@@ -65,7 +65,7 @@ export class CrudRegistros implements OnInit {
   private readonly catalogosService = inject(CatalogosService);
 
   ordenUsuarios = signal<{ campo: CampoOrdenUsuarios; direccion: DireccionOrden } | null>(null);
-exportandoExcel = signal(false);
+  exportandoExcel = signal(false);
 
   busqueda = signal('');
   mostrarInactivos = signal(false);
@@ -78,25 +78,25 @@ exportandoExcel = signal(false);
 
   formulario = signal<UsuarioForm>(this.crearFormularioVacio());
 
-entidades = signal<EntidadFederativaCatalogoItem[]>([]);
-roles = signal<RolCatalogoItem[]>([]);
+  entidades = signal<EntidadFederativaCatalogoItem[]>([]);
+  roles = signal<RolCatalogoItem[]>([]);
 
-usuariosFiltrados = computed(() => {
-  const texto = this.busqueda().trim().toLowerCase();
+  usuariosFiltrados = computed(() => {
+    const texto = this.busqueda().trim().toLowerCase();
 
-  const filtrados = this.usuarios().filter(usuario => {
-    const pasaBusqueda = !texto ||
-      usuario.nombreCompleto?.toLowerCase().includes(texto) ||
-      usuario.usuario?.toLowerCase().includes(texto) ||
-      usuario.correoElectronico?.toLowerCase().includes(texto) ||
-      usuario.rol?.toLowerCase().includes(texto) ||
-      usuario.entidadFederativa?.toLowerCase().includes(texto);
+    const filtrados = this.usuarios().filter(usuario => {
+      const pasaBusqueda = !texto ||
+        usuario.nombreCompleto?.toLowerCase().includes(texto) ||
+        usuario.usuario?.toLowerCase().includes(texto) ||
+        usuario.correoElectronico?.toLowerCase().includes(texto) ||
+        usuario.rol?.toLowerCase().includes(texto) ||
+        usuario.entidadFederativa?.toLowerCase().includes(texto);
 
-    return pasaBusqueda;
+      return pasaBusqueda;
+    });
+
+    return this.ordenarListaUsuarios(filtrados);
   });
-
-  return this.ordenarUsuarios(filtrados);
-});
 
   totalUsuarios = computed(() => this.usuarios().length);
   totalActivos = computed(() => this.usuarios().filter(x => x.activo).length);
@@ -136,129 +136,134 @@ usuariosFiltrados = computed(() => {
     return true;
   });
 
+
+  private ordenarListaUsuarios(lista: UsuarioListadoItem[]): UsuarioListadoItem[] {
+    const orden = this.ordenUsuarios();
+
+    if (!orden) {
+      return lista;
+    }
+
+    return [...lista].sort((a, b) => {
+      const valorA = this.obtenerValorOrdenUsuario(a, orden.campo);
+      const valorB = this.obtenerValorOrdenUsuario(b, orden.campo);
+      const resultado = this.compararValores(valorA, valorB);
+
+      return orden.direccion === 'asc' ? resultado : resultado * -1;
+    });
+  }
+
+  private obtenerValorOrdenUsuario(
+    usuario: UsuarioListadoItem,
+    campo: CampoOrdenUsuarios
+  ): string | number | boolean | null {
+    return usuario[campo] ?? '';
+  }
+
+  private compararValores(
+    valorA: string | number | boolean | null | undefined,
+    valorB: string | number | boolean | null | undefined
+  ): number {
+    if (valorA === null || valorA === undefined || valorA === '') {
+      return 1;
+    }
+
+    if (valorB === null || valorB === undefined || valorB === '') {
+      return -1;
+    }
+
+    if (typeof valorA === 'boolean' && typeof valorB === 'boolean') {
+      return Number(valorA) - Number(valorB);
+    }
+
+    if (typeof valorA === 'number' && typeof valorB === 'number') {
+      return valorA - valorB;
+    }
+
+    return String(valorA).localeCompare(String(valorB), 'es', {
+      numeric: true,
+      sensitivity: 'base'
+    });
+  }
+
+  private exportarFilasExcel(
+    filas: Record<string, string | number>[],
+    nombreArchivo: string,
+    nombreHoja: string
+  ): void {
+    if (!filas.length) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin registros',
+        text: 'No hay información para exportar.',
+        confirmButtonColor: '#691C32'
+      });
+
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(filas);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
+    XLSX.writeFile(workbook, nombreArchivo);
+  }
+
+
+
   esUsuarioActual(usuario: UsuarioListadoItem): boolean {
     return usuario.idUsuario === this.usuarioActual()?.idUsuario;
   }
 
   ordenarUsuariosPor(campo: CampoOrdenUsuarios): void {
-  const actual = this.ordenUsuarios();
+    const actual = this.ordenUsuarios();
 
-  if (actual?.campo === campo) {
-    this.ordenUsuarios.set({
-      campo,
-      direccion: actual.direccion === 'asc' ? 'desc' : 'asc'
-    });
+    if (actual?.campo === campo) {
+      this.ordenUsuarios.set({
+        campo,
+        direccion: actual.direccion === 'asc' ? 'desc' : 'asc'
+      });
 
-    return;
+      return;
+    }
+
+    this.ordenUsuarios.set({ campo, direccion: 'asc' });
   }
 
-  this.ordenUsuarios.set({ campo, direccion: 'asc' });
-}
+  iconoOrdenUsuarios(campo: CampoOrdenUsuarios): string {
+    const orden = this.ordenUsuarios();
 
-iconoOrdenUsuarios(campo: CampoOrdenUsuarios): string {
-  const orden = this.ordenUsuarios();
+    if (orden?.campo !== campo) {
+      return 'fa-solid fa-sort sort-icon';
+    }
 
-  if (orden?.campo !== campo) {
-    return 'fa-solid fa-sort sort-icon';
+    return orden.direccion === 'asc'
+      ? 'fa-solid fa-sort-up sort-icon active'
+      : 'fa-solid fa-sort-down sort-icon active';
   }
 
-  return orden.direccion === 'asc'
-    ? 'fa-solid fa-sort-up sort-icon active'
-    : 'fa-solid fa-sort-down sort-icon active';
-}
+  exportarUsuariosExcel(): void {
+    this.exportandoExcel.set(true);
 
-exportarUsuariosExcel(): void {
-  this.exportandoExcel.set(true);
+    try {
+      const filas = this.usuariosFiltrados().map(usuario => ({
+        'Nombre': usuario.nombreCompleto,
+        'Usuario': usuario.usuario,
+        'Correo': usuario.correoElectronico,
+        'Rol': usuario.rol,
+        'Entidad': usuario.entidadFederativa || 'Nacional',
+        'Carga': usuario.habilitaCarga ? 'Sí' : 'No',
+        'Modificación': usuario.habilitaModificacion ? 'Sí' : 'No',
+        'Estado': usuario.activo ? 'ACTIVO' : 'INACTIVO'
+      }));
 
-  try {
-    const filas = this.usuariosFiltrados().map(usuario => ({
-      'Nombre': usuario.nombreCompleto,
-      'Usuario': usuario.usuario,
-      'Correo': usuario.correoElectronico,
-      'Rol': usuario.rol,
-      'Entidad': usuario.entidadFederativa || 'Nacional',
-      'Carga': usuario.habilitaCarga ? 'Sí' : 'No',
-      'Modificación': usuario.habilitaModificacion ? 'Sí' : 'No',
-      'Estado': usuario.activo ? 'ACTIVO' : 'INACTIVO'
-    }));
-
-    this.exportarFilasExcel(filas, 'usuarios_sistema.xlsx', 'Usuarios');
-  } finally {
-    setTimeout(() => this.exportandoExcel.set(false), 300);
-  }
-}
-
-private ordenarUsuarios(lista: UsuarioListadoItem[]): UsuarioListadoItem[] {
-  const orden = this.ordenUsuarios();
-
-  if (!orden) {
-    return lista;
+      this.exportarFilasExcel(filas, 'usuarios_sistema.xlsx', 'Usuarios');
+    } finally {
+      setTimeout(() => this.exportandoExcel.set(false), 300);
+    }
   }
 
-  return [...lista].sort((a, b) => {
-    const valorA = this.obtenerValorOrdenUsuario(a, orden.campo);
-    const valorB = this.obtenerValorOrdenUsuario(b, orden.campo);
-    const resultado = this.compararValores(valorA, valorB);
 
-    return orden.direccion === 'asc' ? resultado : resultado * -1;
-  });
-}
-
-private obtenerValorOrdenUsuario(
-  usuario: UsuarioListadoItem,
-  campo: CampoOrdenUsuarios
-): string | number | boolean | null {
-  return usuario[campo] ?? '';
-}
-
-private compararValores(
-  valorA: string | number | boolean | null | undefined,
-  valorB: string | number | boolean | null | undefined
-): number {
-  if (valorA === null || valorA === undefined || valorA === '') {
-    return 1;
-  }
-
-  if (valorB === null || valorB === undefined || valorB === '') {
-    return -1;
-  }
-
-  if (typeof valorA === 'boolean' && typeof valorB === 'boolean') {
-    return Number(valorA) - Number(valorB);
-  }
-
-  if (typeof valorA === 'number' && typeof valorB === 'number') {
-    return valorA - valorB;
-  }
-
-  return String(valorA).localeCompare(String(valorB), 'es', {
-    numeric: true,
-    sensitivity: 'base'
-  });
-}
-
-private exportarFilasExcel(
-  filas: Record<string, string | number>[],
-  nombreArchivo: string,
-  nombreHoja: string
-): void {
-  if (!filas.length) {
-    Swal.fire({
-      icon: 'info',
-      title: 'Sin registros',
-      text: 'No hay información para exportar.',
-      confirmButtonColor: '#691C32'
-    });
-
-    return;
-  }
-
-  const worksheet = XLSX.utils.json_to_sheet(filas);
-  const workbook = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
-  XLSX.writeFile(workbook, nombreArchivo);
-}
 
   esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
     return usuario.activo
@@ -290,36 +295,36 @@ private exportarFilasExcel(
     return usuario.activo ? 'Desactivar usuario' : 'Activar usuario';
   }
 
-ngOnInit(): void {
-  this.cargarInicial();
-}
+  ngOnInit(): void {
+    this.cargarInicial();
+  }
 
-cargarInicial(): void {
-  this.cargando.set(true);
+  cargarInicial(): void {
+    this.cargando.set(true);
 
-  forkJoin({
-    usuarios: this.usuariosService.obtenerUsuarios(this.mostrarInactivos()),
-    entidades: this.catalogosService.obtenerEntidadesFederativas(),
-    roles: this.catalogosService.obtenerRoles()
-  }).subscribe({
-    next: ({ usuarios, entidades, roles }) => {
-      this.usuarios.set(usuarios.usuarios ?? []);
-      this.entidades.set(entidades ?? []);
-      this.roles.set(roles ?? []);
-      this.cargando.set(false);
-    },
-    error: (error) => {
-      this.cargando.set(false);
+    forkJoin({
+      usuarios: this.usuariosService.obtenerUsuarios(this.mostrarInactivos()),
+      entidades: this.catalogosService.obtenerEntidadesFederativas(),
+      roles: this.catalogosService.obtenerRoles()
+    }).subscribe({
+      next: ({ usuarios, entidades, roles }) => {
+        this.usuarios.set(usuarios.usuarios ?? []);
+        this.entidades.set(entidades ?? []);
+        this.roles.set(roles ?? []);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        this.cargando.set(false);
 
-      Swal.fire({
-        icon: 'error',
-        title: 'No fue posible cargar administración',
-        text: error?.error?.mensaje || 'Revise la conexión con la API.',
-        confirmButtonColor: '#691C32'
-      });
-    }
-  });
-}
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible cargar administración',
+          text: error?.error?.mensaje || 'Revise la conexión con la API.',
+          confirmButtonColor: '#691C32'
+        });
+      }
+    });
+  }
 
 
   cargarUsuarios(): void {

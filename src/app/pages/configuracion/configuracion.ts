@@ -115,21 +115,20 @@ usuariosEntidad = signal<UsuarioPermisoEntidad[]>([]);
         estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, lista.length)
       });
     });
-
-    return resultado.sort((a, b) => a.entidadFederativa.localeCompare(b.entidadFederativa));
+return resultado;
   });
 
-  entidadesFiltradas = computed(() => {
-    const texto = this.busquedaEntidad().trim().toLowerCase();
+entidadesFiltradas = computed(() => {
+  const texto = this.busquedaEntidad().trim().toLowerCase();
 
-    if (!texto) {
-      return this.entidadesConfiguracion();
-    }
+  const filtradas = !texto
+    ? this.entidadesConfiguracion()
+    : this.entidadesConfiguracion().filter(entidad =>
+        entidad.entidadFederativa.toLowerCase().includes(texto)
+      );
 
-    return this.entidadesConfiguracion().filter(entidad =>
-      entidad.entidadFederativa.toLowerCase().includes(texto)
-    );
-  });
+  return this.ordenarEntidadesConfiguracion(filtradas);
+});
 
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
 
