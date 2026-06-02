@@ -33,20 +33,26 @@ export class InformesService {
     return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
   }
 
-  obtenerReporteCargas(filtro: InformeReporteCargasFiltro) {
-    let params = new HttpParams()
-      .set('mesCorte', filtro.mesCorte)
-      .set('anioCorte', filtro.anioCorte);
+obtenerReporteCargas(filtro: InformeReporteCargasFiltro = {}) {
+  let params = new HttpParams();
 
-    if (filtro.idEntidadFederativa) {
-      params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
-    }
-
-    return this.http.get<InformeReporteCargasResponse>(
-      `${this.apiUrl}/reporte-cargas`,
-      { params }
-    );
+  if (filtro.idEntidadFederativa) {
+    params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
   }
+
+  if (filtro.mesCorte) {
+    params = params.set('mesCorte', filtro.mesCorte);
+  }
+
+  if (filtro.anioCorte) {
+    params = params.set('anioCorte', filtro.anioCorte);
+  }
+
+  return this.http.get<InformeReporteCargasResponse>(
+    `${this.apiUrl}/reporte-cargas`,
+    { params }
+  );
+}
 
   descargarDesdeEndpoint(endpoint: string) {
     return this.http.get(endpoint, {

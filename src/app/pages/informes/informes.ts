@@ -98,7 +98,7 @@ periodoCorteSeleccionado = signal<string>('');
       this.reporteActivo.set(reporte ?? 'ENVIOS');
 
 if (this.reporteActivo() === 'CARGAS') {
-  this.cargarPeriodosCorte();
+  this.cargarReporteCargas();
   return;
 }
 
@@ -148,32 +148,37 @@ if (this.reporteActivo() === 'CARGAS') {
     return this.ordenarListaEnvios(filtrados);
   });
 
-  cargasFiltradas = computed(() => {
-    const texto = this.busquedaCargas().trim().toLowerCase();
+cargasFiltradas = computed(() => {
+  const texto = this.busquedaCargas().trim().toLowerCase();
+  const corte = this.corteOperativo();
 
-    const filtradas = this.cargas().filter(carga => {
-      if (carga.claveEntidad === '00') {
-        return false;
-      }
+  const filtradas = this.cargas().filter(carga => {
+    if (carga.claveEntidad === '00') {
+      return false;
+    }
 
-      if (!carga.intentos || carga.intentos === 0) {
-        return false;
-      }
+    if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) {
+      return false;
+    }
 
-      if (!texto) {
-        return true;
-      }
+    if (!carga.intentos || carga.intentos === 0) {
+      return false;
+    }
 
-      return carga.entidadFederativa.toLowerCase().includes(texto) ||
-        carga.claveEntidad.toLowerCase().includes(texto) ||
-        carga.corte.toLowerCase().includes(texto) ||
-        (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
-        (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
-    });
+    if (!texto) {
+      return true;
+    }
 
-    return this.ordenarListaCargas(filtradas);
+    return carga.entidadFederativa.toLowerCase().includes(texto) ||
+      carga.claveEntidad.toLowerCase().includes(texto) ||
+      carga.corte.toLowerCase().includes(texto) ||
+      (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
+      (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+      (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
   });
+
+  return this.ordenarListaCargas(filtradas);
+});
 
   enviosPaginados = computed(() => {
     const inicio = (this.paginaEnvios() - 1) * this.tamanioPagina;
@@ -230,74 +235,28 @@ if (this.reporteActivo() === 'CARGAS') {
     });
   }
 
-  cargarReporteCargas(): void {
-    if (!this.puedeVerCargas()) {
-      return;
-    }
-
-    const corte = this.corteOperativo();
-
-    this.cargandoCargas.set(true);
-
-    this.informesService.obtenerReporteCargas({
-      mesCorte: corte.mesCorte,
-      anioCorte: corte.anioCorte
-    }).subscribe({
-next: (response) => {
-  const registros = response.registros ?? [];
-
-  this.cargas.set(registros);
-  this.paginaCargas.set(1);
-  this.cargandoCargas.set(false);
-},
-      error: (error) => {
-        this.cargandoCargas.set(false);
-
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible consultar el reporte de cargas',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
-        });
-      }
-    });
+cargarReporteCargas(): void {
+  if (!this.puedeVerCargas()) {
+    return;
   }
 
-
-cargarPeriodosCorte(): void {
   this.cargandoCargas.set(true);
 
-  this.informesService.obtenerEnvios().subscribe({
-    next: (envios) => {
-      const periodos = this.obtenerPeriodosDesdeEnvios(envios);
+  this.informesService.obtenerReporteCargas().subscribe({
+    next: (response) => {
+      const registros = response.registros ?? [];
 
-      this.periodosCorte.set(periodos);
-
-      const corteActual = this.corteOperativo();
-      const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
-
-      const existeCorteActual = periodos.some(periodo =>
-        this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual
-      );
-
-      if (existeCorteActual) {
-        this.periodoCorteSeleccionado.set(keyActual);
-      } else if (periodos.length) {
-        const primero = periodos[0];
-        this.periodoCorteSeleccionado.set(
-          this.obtenerKeyPeriodo(primero.mesCorte, primero.anioCorte)
-        );
-      }
-
-      this.sincronizarCorteSeleccionado();
-      this.cargarReporteCargas();
+      this.cargas.set(registros);
+      this.sincronizarPeriodosCorte(registros);
+      this.paginaCargas.set(1);
+      this.cargandoCargas.set(false);
     },
     error: (error) => {
       this.cargandoCargas.set(false);
 
       Swal.fire({
         icon: 'error',
-        title: 'No fue posible consultar los periodos',
+        title: 'No fue posible consultar el reporte de cargas',
         text: error?.error?.mensaje || 'Intente nuevamente.',
         confirmButtonColor: '#691C32'
       });
@@ -305,32 +264,7 @@ cargarPeriodosCorte(): void {
   });
 }
 
-private obtenerPeriodosDesdeEnvios(envios: InformeEnvioItem[]): PeriodoCorteInforme[] {
-  const mapa = new Map<string, PeriodoCorteInforme>();
 
-  for (const envio of envios) {
-    if (!envio.mesCorte || !envio.anioCorte) {
-      continue;
-    }
-
-    const key = this.obtenerKeyPeriodo(envio.mesCorte, envio.anioCorte);
-
-    if (!mapa.has(key)) {
-      mapa.set(key, {
-        mesCorte: envio.mesCorte,
-        anioCorte: envio.anioCorte,
-        corte: envio.corte
-      });
-    }
-  }
-
-  return Array.from(mapa.values()).sort((a, b) => {
-    const valorA = (a.anioCorte * 100) + a.mesCorte;
-    const valorB = (b.anioCorte * 100) + b.mesCorte;
-
-    return valorB - valorA;
-  });
-}
 
 private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
   return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
@@ -362,7 +296,7 @@ private sincronizarCorteSeleccionado(): void {
   
 cambiarCorteReporte(): void {
   this.sincronizarCorteSeleccionado();
-  this.cargarReporteCargas();
+  this.paginaCargas.set(1);
 }
 
 
@@ -726,6 +660,88 @@ cambiarCorteReporte(): void {
     });
   }
 
+
+  private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void {
+  const periodos = this.obtenerPeriodosDesdeCargas(registros);
+  const corteActual = this.obtenerCorteOperativoActual();
+  const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
+
+  const existeCorteActual = periodos.some(periodo =>
+    this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual
+  );
+
+  if (!existeCorteActual) {
+    periodos.unshift({
+      mesCorte: corteActual.mesCorte,
+      anioCorte: corteActual.anioCorte,
+      corte: corteActual.corte
+    });
+  }
+
+  this.periodosCorte.set(periodos);
+
+  if (!this.periodoCorteSeleccionado()) {
+    this.periodoCorteSeleccionado.set(keyActual);
+    this.corteOperativo.set(corteActual);
+    return;
+  }
+
+  this.sincronizarCorteSeleccionado();
+}
+
+private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {
+  const mapa = new Map<string, PeriodoCorteInforme>();
+
+  for (const registro of registros) {
+    if (!registro.mesCorte || !registro.anioCorte) {
+      continue;
+    }
+
+    const key = this.obtenerKeyPeriodo(registro.mesCorte, registro.anioCorte);
+
+    if (!mapa.has(key)) {
+      mapa.set(key, {
+        mesCorte: registro.mesCorte,
+        anioCorte: registro.anioCorte,
+        corte: registro.corte
+      });
+    }
+  }
+
+  return Array.from(mapa.values()).sort((a, b) => {
+    const valorA = (a.anioCorte * 100) + a.mesCorte;
+    const valorB = (b.anioCorte * 100) + b.mesCorte;
+
+    return valorB - valorA;
+  });
+}
+
+private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
+  return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
+}
+
+private sincronizarCorteSeleccionado(): void {
+  const key = this.periodoCorteSeleccionado();
+
+  if (!key) {
+    return;
+  }
+
+  const periodo = this.periodosCorte().find(x =>
+    this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key
+  );
+
+  if (!periodo) {
+    return;
+  }
+
+  this.corteOperativo.set({
+    mesCorte: periodo.mesCorte,
+    anioCorte: periodo.anioCorte,
+    corte: periodo.corte
+  });
+}
+
   private exportarFilasExcel(
     filas: Record<string, string | number>[],
     nombreArchivo: string,
@@ -781,23 +797,32 @@ cambiarCorteReporte(): void {
     return normalMatch?.[1] ?? '';
   }
 
-  private obtenerCorteOperativoActual(): CorteOperativo {
-    const fecha = new Date();
-    let mesCorte = fecha.getMonth(); // Enero = 0, Junio = 5, entonces Junio -> Mayo = 5
-    let anioCorte = fecha.getFullYear();
+private obtenerCorteOperativoActual(): CorteOperativo {
+  const fecha = new Date();
+  let mesCorte = fecha.getMonth();
+  let anioCorte = fecha.getFullYear();
 
-    if (mesCorte === 0) {
-      mesCorte = 12;
-      anioCorte--;
-    }
-
-return {
-  mesCorte,
-  anioCorte,
-  corte: `${mesCorte}/${anioCorte}`
-};
+  if (mesCorte === 0) {
+    mesCorte = 12;
+    anioCorte--;
   }
 
+  return {
+    mesCorte,
+    anioCorte,
+    corte: this.obtenerNombreCorte(mesCorte, anioCorte)
+  };
+}
+
+private obtenerNombreCorte(mesCorte: number, anioCorte: number): string {
+  const fecha = new Date(anioCorte, mesCorte - 1, 1);
+  const texto = new Intl.DateTimeFormat('es-MX', {
+    month: 'long',
+    year: 'numeric'
+  }).format(fecha);
+
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 
   cerrarAcuse(): void {

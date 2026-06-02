@@ -36,8 +36,8 @@ export interface InformeReporteCargaItem {
 
 export interface InformeReporteCargasResponse {
   esValido: boolean;
-  mesCorte: number;
-  anioCorte: number;
+  mesCorte: number | null;
+  anioCorte: number | null;
   total: number;
   registros: InformeReporteCargaItem[];
 }
@@ -50,8 +50,8 @@ export interface InformeEnviosFiltro {
 
 export interface InformeReporteCargasFiltro {
   idEntidadFederativa?: number | null;
-  mesCorte: number;
-  anioCorte: number;
+  mesCorte?: number | null;
+  anioCorte?: number | null;
 }
 
 export interface CorteOperativo {
