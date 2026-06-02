@@ -226,6 +226,7 @@
 }
 
 @media (max-width: 900px) {
+
   .informes-header,
   .reporte-card-header,
   .pagination-row {
@@ -339,4 +340,65 @@
 .btn:disabled {
   opacity: .55;
   cursor: not-allowed;
+}
+
+.corte-selector {
+  background: #fff;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.corte-selector-title {
+  color: #333;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.corte-selector-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.corte-selector-controls select {
+  width: 150px;
+  font-weight: 700;
+}
+
+.estatus-confirmado {
+  background: #eaf7ee;
+  color: #087b36;
+}
+
+.estatus-pendiente {
+  background: #eef4ff;
+  color: #1d4ed8;
+}
+
+.estatus-error {
+  background: #fff0f0;
+  color: #b42318;
+}
+
+@media (max-width: 900px) {
+  .corte-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .corte-selector-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .corte-selector-controls select {
+    width: 100%;
+  }
 }

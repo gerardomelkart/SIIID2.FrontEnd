@@ -79,6 +79,26 @@ export class Informes implements OnInit {
 
   corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
 
+  mesesCorte = [
+    { valor: 1, nombre: 'Enero' },
+    { valor: 2, nombre: 'Febrero' },
+    { valor: 3, nombre: 'Marzo' },
+    { valor: 4, nombre: 'Abril' },
+    { valor: 5, nombre: 'Mayo' },
+    { valor: 6, nombre: 'Junio' },
+    { valor: 7, nombre: 'Julio' },
+    { valor: 8, nombre: 'Agosto' },
+    { valor: 9, nombre: 'Septiembre' },
+    { valor: 10, nombre: 'Octubre' },
+    { valor: 11, nombre: 'Noviembre' },
+    { valor: 12, nombre: 'Diciembre' }
+  ];
+
+  aniosCorte = this.obtenerAniosCorte();
+
+  mesCorteSeleccionado = signal(this.corteOperativo().mesCorte);
+  anioCorteSeleccionado = signal(this.corteOperativo().anioCorte);
+
   ngOnInit(): void {
     this.route.data.subscribe(data => {
       const reporte = data['reporte'] as TipoReporte | undefined;
@@ -146,6 +166,14 @@ export class Informes implements OnInit {
     const texto = this.busquedaCargas().trim().toLowerCase();
 
     const filtradas = this.cargas().filter(carga => {
+      if (carga.claveEntidad === '00') {
+        return false;
+      }
+
+      if (!carga.intentos || carga.intentos === 0) {
+        return false;
+      }
+
       if (!texto) {
         return true;
       }
@@ -247,6 +275,20 @@ export class Informes implements OnInit {
     });
   }
 
+  cambiarCorteReporte(): void {
+    const mesCorte = Number(this.mesCorteSeleccionado());
+    const anioCorte = Number(this.anioCorteSeleccionado());
+
+    this.corteOperativo.set({
+      mesCorte,
+      anioCorte,
+      corte: `${this.obtenerNombreMes(mesCorte)} ${anioCorte}`
+    });
+
+    this.cargarReporteCargas();
+  }
+
+
   buscarEnvios(valor: string): void {
     this.busquedaEnvios.set(valor);
     this.paginaEnvios.set(1);
@@ -273,37 +315,67 @@ export class Informes implements OnInit {
     this.paginaCargas.set(pagina);
   }
 
-  etiquetaEstatus(estatus: string | null): string {
+  etiquetaEstatusCarga(carga: InformeReporteCargaItem): string {
+    const estatus = this.normalizarTexto(carga.estatusUltimoIntento);
+    const tipoCarga = this.normalizarTexto(carga.tipoCargaUltimoIntento);
+
+    const sufijo = tipoCarga.includes('ACTUALIZACION')
+      ? 'actualización'
+      : 'carga';
+
     if (!estatus) {
       return 'Sin carga';
     }
 
-    if (estatus === 'CONFIRMADO') {
-      return 'Confirmado';
+    if (estatus.includes('CONFIRMADO')) {
+      return `Confirmado ${sufijo}`;
     }
 
-    if (estatus === 'VALIDADO_PENDIENTE') {
-      return 'Pendiente';
+    if (estatus.includes('PENDIENTE')) {
+      return `Pendiente ${sufijo}`;
     }
 
-    if (estatus === 'VALIDADO_PENDIENTE_CONFIRMACION') {
-      return 'Pendiente';
+    if (estatus.includes('RECHAZADO')) {
+      return `Rechazado ${sufijo}`;
     }
 
-    if (estatus === 'ERROR_VALIDACION') {
-      return 'Con errores';
+    if (estatus.includes('ERROR')) {
+      return `Con errores ${sufijo}`;
     }
 
-    if (estatus === 'RECHAZADO') {
-      return 'Rechazado';
-    }
-
-    if (estatus === 'EXPIRADO') {
-      return 'Expirado';
+    if (estatus.includes('EXPIRADO')) {
+      return `Expirado ${sufijo}`;
     }
 
     return estatus.replaceAll('_', ' ');
   }
+
+  esEstatusConfirmado(estatus: string | null): boolean {
+    return this.normalizarTexto(estatus).includes('CONFIRMADO');
+  }
+
+  esEstatusPendiente(estatus: string | null): boolean {
+    return this.normalizarTexto(estatus).includes('PENDIENTE');
+  }
+
+  esEstatusError(estatus: string | null): boolean {
+    const valor = this.normalizarTexto(estatus);
+
+    return valor.includes('RECHAZADO')
+      || valor.includes('ERROR')
+      || valor.includes('EXPIRADO');
+  }
+
+  private normalizarTexto(valor: string | null | undefined): string {
+    return (valor ?? '')
+      .toString()
+      .trim()
+      .toUpperCase()
+      .replaceAll('-', '_')
+      .replace(/\s+/g, '_');
+  }
+
+
 
   tipoCargaTexto(tipoCarga: string | null): string {
     if (!tipoCarga) {
@@ -365,7 +437,7 @@ export class Informes implements OnInit {
         'Periodo': carga.corte,
         'Intentos': carga.intentos,
         'Último intento': carga.ultimoIntento || '',
-        'Estatus': this.etiquetaEstatus(carga.estatusUltimoIntento),
+        'Estatus': this.etiquetaEstatusCarga(carga),
         'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || ''
       }));
 
@@ -665,6 +737,17 @@ export class Informes implements OnInit {
     ];
 
     return meses[mes] ?? '';
+  }
+
+  private obtenerAniosCorte(): number[] {
+    const anioActual = new Date().getFullYear();
+    const anios: number[] = [];
+
+    for (let anio = anioActual - 3; anio <= anioActual + 1; anio++) {
+      anios.push(anio);
+    }
+
+    return anios;
   }
 
   cerrarAcuse(): void {

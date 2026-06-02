@@ -169,10 +169,27 @@
       </div>
     </div>
 
-    <div class="filtro-entidad-info">
-      <i class="fa-solid fa-calendar-days"></i>
-      Corte operativo consultado:
-      <strong>{{ corteOperativo().corte }}</strong>
+    <div class="corte-selector">
+      <div class="corte-selector-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Corte consultado
+      </div>
+
+      <div class="corte-selector-controls">
+        <select class="form-select form-select-sm" [ngModel]="mesCorteSeleccionado()"
+          (ngModelChange)="mesCorteSeleccionado.set(+$event); cambiarCorteReporte()">
+          @for (mes of mesesCorte; track mes.valor) {
+          <option [value]="mes.valor">{{ mes.nombre }}</option>
+          }
+        </select>
+
+        <select class="form-select form-select-sm" [ngModel]="anioCorteSeleccionado()"
+          (ngModelChange)="anioCorteSeleccionado.set(+$event); cambiarCorteReporte()">
+          @for (anio of aniosCorte; track anio) {
+          <option [value]="anio">{{ anio }}</option>
+          }
+        </select>
+      </div>
     </div>
 
     <div class="table-responsive">
@@ -231,11 +248,10 @@
               </span>
             </td>
             <td>
-              <span class="estatus-badge" [class.estatus-confirmado]="carga.estatusUltimoIntento === 'CONFIRMADO'"
-                [class.estatus-pendiente]="carga.estatusUltimoIntento?.includes('PENDIENTE')"
-                [class.estatus-error]="carga.estatusUltimoIntento === 'ERROR_VALIDACION' || carga.estatusUltimoIntento === 'RECHAZADO' || carga.estatusUltimoIntento === 'EXPIRADO'"
-                [class.estatus-procesando]="carga.estatusUltimoIntento === 'PROCESANDO'">
-                {{ etiquetaEstatus(carga.estatusUltimoIntento) }}
+              <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
+                [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
+                [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
+                {{ etiquetaEstatusCarga(carga) }}
               </span>
             </td>
             <td>{{ carga.fechaUltimaCargaTexto || '-' }}</td>
@@ -292,5 +308,4 @@
     </div>
   </div>
   }
-
 </div>
