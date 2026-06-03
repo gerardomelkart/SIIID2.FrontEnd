@@ -211,9 +211,9 @@
               <i [class]="iconoOrdenCargas('intentos')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarCargasPor('ultimoIntento')">
-              Último folio
-              <i [class]="iconoOrdenCargas('ultimoIntento')"></i>
+            <th class="sortable" (click)="ordenarCargasPor('ordenCarga')">
+              Orden de carga
+              <i [class]="iconoOrdenCargas('ordenCarga')"></i>
             </th>
 
             <th class="sortable" (click)="ordenarCargasPor('estatusUltimoIntento')">
@@ -239,7 +239,7 @@
             </td>
             <td>
               <span class="folio-chip">
-                {{ carga.ultimoIntento || '-' }}
+                {{ ordenCarga(carga) }}
               </span>
             </td>
             <td>

@@ -41,7 +41,7 @@ type CampoOrdenCargas =
   | 'claveEntidad'
   | 'corte'
   | 'intentos'
-  | 'ultimoIntento'
+  | 'ordenCarga'
   | 'estatusUltimoIntento'
   | 'fechaUltimaCargaTexto';
 
@@ -187,7 +187,6 @@ export class Informes implements OnInit {
         carga.entidadFederativa.toLowerCase().includes(texto) ||
         carga.claveEntidad.toLowerCase().includes(texto) ||
         carga.corte.toLowerCase().includes(texto) ||
-        (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
       );
@@ -420,7 +419,7 @@ export class Informes implements OnInit {
         'Cve. entidad': carga.claveEntidad,
         Periodo: carga.corte,
         Intentos: carga.intentos,
-        'Último intento': carga.ultimoIntento || '',
+        'Orden de carga': this.ordenCarga(carga),
         Estatus: this.etiquetaEstatusCarga(carga),
         'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || '',
       }));
@@ -492,6 +491,47 @@ export class Informes implements OnInit {
     });
   }
 
+  ordenCarga(carga: InformeReporteCargaItem): string {
+    const orden = this.obtenerOrdenCarga(carga);
+
+    return orden ? `${orden}°` : '-';
+  }
+
+  private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
+    if (!carga.fechaUltimaCarga) {
+      return null;
+    }
+
+    const corte = this.corteOperativo();
+
+    const cargasOrdenadas = this.cargas()
+      .filter((item) => item.claveEntidad !== '00')
+      .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
+      .filter((item) => !!item.intentos && item.intentos > 0)
+      .filter((item) => !!item.fechaUltimaCarga)
+      .sort((a, b) => {
+        const fechaA = new Date(a.fechaUltimaCarga!).getTime();
+        const fechaB = new Date(b.fechaUltimaCarga!).getTime();
+
+        if (fechaA !== fechaB) {
+          return fechaA - fechaB;
+        }
+
+        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+          sensitivity: 'base',
+        });
+      });
+
+    const indice = cargasOrdenadas.findIndex(
+      (item) =>
+        item.idEntidadFederativa === carga.idEntidadFederativa &&
+        item.mesCorte === carga.mesCorte &&
+        item.anioCorte === carga.anioCorte,
+    );
+
+    return indice >= 0 ? indice + 1 : null;
+  }
+
   ordenarEnviosPor(campo: CampoOrdenEnvios): void {
     this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
   }
@@ -542,6 +582,10 @@ export class Informes implements OnInit {
 
     if (campo === 'corte') {
       return carga.anioCorte * 100 + carga.mesCorte;
+    }
+
+    if (campo === 'ordenCarga') {
+      return this.obtenerOrdenCarga(carga) ?? Number.MAX_SAFE_INTEGER;
     }
 
     return carga[campo] ?? '';
