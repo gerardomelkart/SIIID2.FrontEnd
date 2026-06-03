@@ -2,11 +2,12 @@ import { Component, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import { CargaService } from '../../core/services/carga.service';
 import {
   CargaValidacionResponse,
-  CargaValidacionResumenItem
+  CargaValidacionResumenItem,
 } from '../../core/models/carga.models';
 
 type EstadoCarga =
@@ -49,7 +50,9 @@ export class CargaInicial {
 
   codigoReferenciaPendiente = computed(() => {
     const textoErrores = this.errores()
-      .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+      .map(
+        (error) => `${error.valor ?? ''} ${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`,
+      )
       .join(' ');
 
     const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
@@ -67,18 +70,22 @@ export class CargaInicial {
 
   debeUsarActualizacion = computed(() => {
     const textoErrores = this.errores()
-      .map(error => `${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+      .map((error) => `${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
       .join(' ')
       .toLowerCase();
 
-    return textoErrores.includes('flujo de actualización')
-      || textoErrores.includes('flujo de actualizacion')
-      || textoErrores.includes('información confirmada')
-      || textoErrores.includes('informacion confirmada');
+    return (
+      textoErrores.includes('flujo de actualización') ||
+      textoErrores.includes('flujo de actualizacion') ||
+      textoErrores.includes('información confirmada') ||
+      textoErrores.includes('informacion confirmada')
+    );
   });
 
   puedeValidar = computed(() => {
-    return !!this.carpetas() && !!this.delitos() && !!this.victimas() && this.estado() !== 'VALIDANDO';
+    return (
+      !!this.carpetas() && !!this.delitos() && !!this.victimas() && this.estado() !== 'VALIDANDO'
+    );
   });
 
   mostrarTablasErrores = computed(() => {
@@ -88,8 +95,8 @@ export class CargaInicial {
   constructor(
     private cargaService: CargaService,
     private sanitizer: DomSanitizer,
-    private router: Router
-  ) { }
+    private router: Router,
+  ) {}
 
   seleccionarArchivo(event: Event, tipo: 'carpetas' | 'delitos' | 'victimas'): void {
     const input = event.target as HTMLInputElement;
@@ -149,9 +156,12 @@ export class CargaInicial {
         }
 
         this.estado.set('INICIAL');
-        this.errorGeneral.set(error?.error?.mensaje || 'No fue posible validar los archivos.');
+        this.errorGeneral.set(
+          obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
+            'No fue posible validar los archivos.',
+        );
         this.mensaje.set('');
-      }
+      },
     });
   }
 
@@ -164,47 +174,49 @@ export class CargaInicial {
 
     this.estado.set('CONFIRMANDO');
 
-    this.cargaService.confirmarCarga({
-      codigoReferencia,
-      aceptar: true
-    }).subscribe({
-      next: () => {
-        this.cargaService.descargarAcuseConfirmado(codigoReferencia).subscribe({
-          next: (blob) => {
-            this.reemplazarAcuseConfirmado(blob);
-            this.estado.set('CONFIRMADO');
+    this.cargaService
+      .confirmarCarga({
+        codigoReferencia,
+        aceptar: true,
+      })
+      .subscribe({
+        next: () => {
+          this.cargaService.descargarAcuseConfirmado(codigoReferencia).subscribe({
+            next: (blob) => {
+              this.reemplazarAcuseConfirmado(blob);
+              this.estado.set('CONFIRMADO');
 
-            Swal.fire({
-              icon: 'success',
-              title: '¡Carga completada!',
-              confirmButtonText: 'OK',
-              confirmButtonColor: '#2f80d0'
-            });
-          },
-          error: () => {
-            this.estado.set('CONFIRMADO');
+              Swal.fire({
+                icon: 'success',
+                title: '¡Carga completada!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2f80d0',
+              });
+            },
+            error: () => {
+              this.estado.set('CONFIRMADO');
 
-            Swal.fire({
-              icon: 'success',
-              title: '¡Carga completada!',
-              text: 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
-              confirmButtonText: 'OK',
-              confirmButtonColor: '#2f80d0'
-            });
-          }
-        });
-      },
-      error: (error) => {
-        this.estado.set('MOSTRANDO_ACUSE');
+              Swal.fire({
+                icon: 'success',
+                title: '¡Carga completada!',
+                text: 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2f80d0',
+              });
+            },
+          });
+        },
+        error: (error) => {
+          this.estado.set('MOSTRANDO_ACUSE');
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible confirmar la carga',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
-        });
-      }
-    });
+          Swal.fire({
+            icon: 'error',
+            title: 'No fue posible confirmar la carga',
+            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            confirmButtonColor: '#691C32',
+          });
+        },
+      });
   }
 
   rechazarCarga(): void {
@@ -216,34 +228,36 @@ export class CargaInicial {
 
     this.estado.set('CONFIRMANDO');
 
-    this.cargaService.confirmarCarga({
-      codigoReferencia,
-      aceptar: false
-    }).subscribe({
-      next: () => {
-        this.estado.set('RECHAZADO');
-        this.limpiarUrlsPdf();
+    this.cargaService
+      .confirmarCarga({
+        codigoReferencia,
+        aceptar: false,
+      })
+      .subscribe({
+        next: () => {
+          this.estado.set('RECHAZADO');
+          this.limpiarUrlsPdf();
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Carga rechazada',
-          text: 'La carga fue rechazada correctamente.',
-          confirmButtonColor: '#691C32'
-        }).then(() => {
-          this.router.navigateByUrl('/');
-        });
-      },
-      error: (error) => {
-        this.estado.set('MOSTRANDO_ACUSE');
+          Swal.fire({
+            icon: 'success',
+            title: 'Carga rechazada',
+            text: 'La carga fue rechazada correctamente.',
+            confirmButtonColor: '#691C32',
+          }).then(() => {
+            this.router.navigateByUrl('/');
+          });
+        },
+        error: (error) => {
+          this.estado.set('MOSTRANDO_ACUSE');
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible rechazar la carga',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
-        });
-      }
-    });
+          Swal.fire({
+            icon: 'error',
+            title: 'No fue posible rechazar la carga',
+            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            confirmButtonColor: '#691C32',
+          });
+        },
+      });
   }
 
   prepararNuevaValidacion(): void {
@@ -272,7 +286,7 @@ export class CargaInicial {
         icon: 'warning',
         title: 'Sin referencia pendiente',
         text: 'No fue posible identificar el código de referencia pendiente.',
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
 
       return;
@@ -285,7 +299,6 @@ export class CargaInicial {
     this.router.navigateByUrl('/actualizacion');
   }
 
-
   private abrirAcusePrevio(codigoReferencia: string): void {
     this.cargaService.descargarAcusePrevio(codigoReferencia).subscribe({
       next: (blob) => {
@@ -294,8 +307,10 @@ export class CargaInicial {
       },
       error: () => {
         this.estado.set('INICIAL');
-        this.errorGeneral.set('La validación fue correcta, pero no fue posible generar el acuse previo.');
-      }
+        this.errorGeneral.set(
+          'La validación fue correcta, pero no fue posible generar el acuse previo.',
+        );
+      },
     });
   }
 
@@ -305,7 +320,9 @@ export class CargaInicial {
     }
 
     this.acusePrevioObjectUrl = window.URL.createObjectURL(blob);
-    this.acusePrevioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl));
+    this.acusePrevioUrl.set(
+      this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl),
+    );
   }
 
   private reemplazarAcuseConfirmado(blob: Blob): void {
@@ -314,7 +331,9 @@ export class CargaInicial {
     }
 
     this.acuseConfirmadoObjectUrl = window.URL.createObjectURL(blob);
-    this.acuseConfirmadoUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl));
+    this.acuseConfirmadoUrl.set(
+      this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl),
+    );
   }
 
   private limpiarResultado(): void {
@@ -351,7 +370,8 @@ export class CargaInicial {
   }
 
   private resumenPorArchivo(archivo: string): CargaValidacionResumenItem[] {
-    return (this.respuesta()?.resumenValidacion ?? [])
-      .filter(item => item.archivo?.toLowerCase() === archivo.toLowerCase());
+    return (this.respuesta()?.resumenValidacion ?? []).filter(
+      (item) => item.archivo?.toLowerCase() === archivo.toLowerCase(),
+    );
   }
 }

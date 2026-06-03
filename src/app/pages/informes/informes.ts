@@ -7,6 +7,7 @@ import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 import { InformesService } from '../../core/services/informes.service';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import {
   CorteOperativo,
@@ -239,7 +240,7 @@ export class Informes implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible consultar los envíos',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           confirmButtonColor: '#691C32',
         });
       },
@@ -268,7 +269,7 @@ export class Informes implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible consultar el reporte de cargas',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           confirmButtonColor: '#691C32',
         });
       },

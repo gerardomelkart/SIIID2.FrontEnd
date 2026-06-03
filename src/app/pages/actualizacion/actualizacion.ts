@@ -3,15 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import {
   ActualizacionDiferenciasResponse,
-  ActualizacionPeriodoResponse
+  ActualizacionPeriodoResponse,
 } from '../../core/models/actualizacion.models';
 
 import {
   CargaValidacionResponse,
-  CargaValidacionResumenItem
+  CargaValidacionResumenItem,
 } from '../../core/models/carga.models';
 
 import { ActualizacionService } from '../../core/services/actualizacion.service';
@@ -35,7 +36,7 @@ type EstadoPeriodo =
   selector: 'app-actualizacion',
   imports: [FormsModule],
   templateUrl: './actualizacion.html',
-  styleUrl: './actualizacion.css'
+  styleUrl: './actualizacion.css',
 })
 export class Actualizacion {
   private readonly actualizacionService = inject(ActualizacionService);
@@ -91,10 +92,12 @@ export class Actualizacion {
   mostrarArchivos = computed(() => this.estadoPeriodo() === 'DISPONIBLE');
 
   puedeValidarActualizacion = computed(() => {
-    return !!this.carpetas()
-      && !!this.delitos()
-      && !!this.victimas()
-      && this.estadoPeriodo() === 'DISPONIBLE';
+    return (
+      !!this.carpetas() &&
+      !!this.delitos() &&
+      !!this.victimas() &&
+      this.estadoPeriodo() === 'DISPONIBLE'
+    );
   });
 
   mostrarTablasErrores = computed(() => {
@@ -110,7 +113,7 @@ export class Actualizacion {
 
   codigoReferenciaPendiente = computed(() => {
     const textoErrores = this.errores()
-      .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
+      .map((error) => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
       .join(' ');
 
     const textoPeriodo = this.mensajePeriodo() ?? '';
@@ -127,8 +130,7 @@ export class Actualizacion {
   });
 
   hayActualizacionPendienteEnPeriodo = computed(() => {
-    return this.estadoPeriodo() === 'NO_DISPONIBLE'
-      && this.codigoReferenciaPendiente() !== '';
+    return this.estadoPeriodo() === 'NO_DISPONIBLE' && this.codigoReferenciaPendiente() !== '';
   });
 
   codigoReferenciaOperacion = computed(() => {
@@ -140,9 +142,11 @@ export class Actualizacion {
   totalDiferenciasVictimas = computed(() => this.diferencias()?.victimas?.length ?? 0);
 
   totalDiferencias = computed(() => {
-    return this.totalDiferenciasCarpetas()
-      + this.totalDiferenciasDelitos()
-      + this.totalDiferenciasVictimas();
+    return (
+      this.totalDiferenciasCarpetas() +
+      this.totalDiferenciasDelitos() +
+      this.totalDiferenciasVictimas()
+    );
   });
 
   mostrarDiferencias = computed(() => {
@@ -168,9 +172,7 @@ export class Actualizacion {
     const mes = Number(this.mesCorte());
     const anio = Number(this.anioCorte());
 
-    const idEntidad = this.esSuperUsuario()
-      ? Number(this.idEntidadFederativa())
-      : null;
+    const idEntidad = this.esSuperUsuario() ? Number(this.idEntidadFederativa()) : null;
 
     this.estadoPeriodo.set('CONSULTANDO');
     this.respuestaPeriodo.set(null);
@@ -203,7 +205,7 @@ export class Actualizacion {
 
         this.estadoPeriodo.set('ERROR');
         this.mensajePeriodo.set('No fue posible consultar el periodo seleccionado.');
-      }
+      },
     });
   }
 
@@ -241,9 +243,7 @@ export class Actualizacion {
     const mes = Number(this.mesCorte());
     const anio = Number(this.anioCorte());
 
-    const idEntidad = this.esSuperUsuario()
-      ? Number(this.idEntidadFederativa())
-      : null;
+    const idEntidad = this.esSuperUsuario() ? Number(this.idEntidadFederativa()) : null;
 
     this.estadoPeriodo.set('VALIDANDO');
     this.errorGeneral.set('');
@@ -251,37 +251,35 @@ export class Actualizacion {
     this.diferencias.set(null);
     this.limpiarUrlsPdf();
 
-    this.actualizacionService.validarActualizacion(
-      mes,
-      anio,
-      carpetas,
-      delitos,
-      victimas,
-      idEntidad
-    ).subscribe({
-      next: (response: CargaValidacionResponse) => {
-        this.respuestaValidacion.set(response);
-
-        if (!response.esValido) {
-          this.estadoPeriodo.set('VALIDADO_ERROR');
-          return;
-        }
-
-        this.prepararRevisionDiferencias(response.codigoReferencia);
-      },
-      error: (error: any) => {
-        const response = error?.error as CargaValidacionResponse | undefined;
-
-        if (response?.resumenValidacion || response?.errores) {
+    this.actualizacionService
+      .validarActualizacion(mes, anio, carpetas, delitos, victimas, idEntidad)
+      .subscribe({
+        next: (response: CargaValidacionResponse) => {
           this.respuestaValidacion.set(response);
-          this.estadoPeriodo.set('VALIDADO_ERROR');
-          return;
-        }
 
-        this.estadoPeriodo.set('DISPONIBLE');
-        this.errorGeneral.set(error?.error?.mensaje || 'No fue posible validar la actualización.');
-      }
-    });
+          if (!response.esValido) {
+            this.estadoPeriodo.set('VALIDADO_ERROR');
+            return;
+          }
+
+          this.prepararRevisionDiferencias(response.codigoReferencia);
+        },
+        error: (error: any) => {
+          const response = error?.error as CargaValidacionResponse | undefined;
+
+          if (response?.resumenValidacion || response?.errores) {
+            this.respuestaValidacion.set(response);
+            this.estadoPeriodo.set('VALIDADO_ERROR');
+            return;
+          }
+
+          this.estadoPeriodo.set('DISPONIBLE');
+          this.errorGeneral.set(
+            obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
+              'No fue posible validar la actualización.',
+          );
+        },
+      });
   }
 
   continuarAAcusePrevio(): void {
@@ -309,47 +307,49 @@ export class Actualizacion {
 
     this.estadoPeriodo.set('CONFIRMANDO');
 
-    this.actualizacionService.confirmarActualizacion({
-      codigoReferencia,
-      aceptar: true
-    }).subscribe({
-      next: () => {
-        this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).subscribe({
-          next: (blob: Blob) => {
-            this.reemplazarAcuseConfirmado(blob);
-            this.estadoPeriodo.set('CONFIRMADO');
+    this.actualizacionService
+      .confirmarActualizacion({
+        codigoReferencia,
+        aceptar: true,
+      })
+      .subscribe({
+        next: () => {
+          this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).subscribe({
+            next: (blob: Blob) => {
+              this.reemplazarAcuseConfirmado(blob);
+              this.estadoPeriodo.set('CONFIRMADO');
 
-            Swal.fire({
-              icon: 'success',
-              title: '¡Actualización completada!',
-              confirmButtonText: 'OK',
-              confirmButtonColor: '#2f80d0'
-            });
-          },
-          error: () => {
-            this.estadoPeriodo.set('CONFIRMADO');
+              Swal.fire({
+                icon: 'success',
+                title: '¡Actualización completada!',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2f80d0',
+              });
+            },
+            error: () => {
+              this.estadoPeriodo.set('CONFIRMADO');
 
-            Swal.fire({
-              icon: 'success',
-              title: '¡Actualización completada!',
-              text: 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
-              confirmButtonText: 'OK',
-              confirmButtonColor: '#2f80d0'
-            });
-          }
-        });
-      },
-      error: (error: any) => {
-        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+              Swal.fire({
+                icon: 'success',
+                title: '¡Actualización completada!',
+                text: 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2f80d0',
+              });
+            },
+          });
+        },
+        error: (error: any) => {
+          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible confirmar la actualización',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
-        });
-      }
-    });
+          Swal.fire({
+            icon: 'error',
+            title: 'No fue posible confirmar la actualización',
+            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            confirmButtonColor: '#691C32',
+          });
+        },
+      });
   }
 
   rechazarActualizacion(): void {
@@ -361,34 +361,36 @@ export class Actualizacion {
 
     this.estadoPeriodo.set('CONFIRMANDO');
 
-    this.actualizacionService.confirmarActualizacion({
-      codigoReferencia,
-      aceptar: false
-    }).subscribe({
-      next: () => {
-        this.estadoPeriodo.set('RECHAZADO');
-        this.limpiarUrlsPdf();
+    this.actualizacionService
+      .confirmarActualizacion({
+        codigoReferencia,
+        aceptar: false,
+      })
+      .subscribe({
+        next: () => {
+          this.estadoPeriodo.set('RECHAZADO');
+          this.limpiarUrlsPdf();
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Actualización rechazada',
-          text: 'La actualización fue rechazada correctamente.',
-          confirmButtonColor: '#691C32'
-        }).then(() => {
-          this.router.navigateByUrl('/');
-        });
-      },
-      error: (error: any) => {
-        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+          Swal.fire({
+            icon: 'success',
+            title: 'Actualización rechazada',
+            text: 'La actualización fue rechazada correctamente.',
+            confirmButtonColor: '#691C32',
+          }).then(() => {
+            this.router.navigateByUrl('/');
+          });
+        },
+        error: (error: any) => {
+          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible rechazar la actualización',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
-        });
-      }
-    });
+          Swal.fire({
+            icon: 'error',
+            title: 'No fue posible rechazar la actualización',
+            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            confirmButtonColor: '#691C32',
+          });
+        },
+      });
   }
 
   resolverActualizacionPendiente(): void {
@@ -399,7 +401,7 @@ export class Actualizacion {
         icon: 'warning',
         title: 'Sin referencia pendiente',
         text: 'No fue posible identificar el código de referencia pendiente.',
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
 
       return;
@@ -415,16 +417,19 @@ export class Actualizacion {
     this.router.navigateByUrl('/');
   }
 
-  obtenerIdentificadoresDesdeBackend(campoIdentificador: string, identificadorFiscalia: string): string[] {
+  obtenerIdentificadoresDesdeBackend(
+    campoIdentificador: string,
+    identificadorFiscalia: string,
+  ): string[] {
     const campos = campoIdentificador
       .split('+')
-      .map(x => x.trim().toUpperCase())
-      .filter(x => x.length > 0);
+      .map((x) => x.trim().toUpperCase())
+      .filter((x) => x.length > 0);
 
     const valores = identificadorFiscalia
       .split('|')
-      .map(x => x.trim())
-      .filter(x => x.length > 0);
+      .map((x) => x.trim())
+      .filter((x) => x.length > 0);
 
     if (campos.length === 0) {
       return [identificadorFiscalia];
@@ -485,7 +490,9 @@ export class Actualizacion {
       next: (response: ActualizacionDiferenciasResponse) => {
         if (!response.esValido) {
           this.estadoPeriodo.set('DISPONIBLE');
-          this.errorGeneral.set(response.mensaje || 'No fue posible obtener las diferencias de la actualización.');
+          this.errorGeneral.set(
+            response.mensaje || 'No fue posible obtener las diferencias de la actualización.',
+          );
           return;
         }
 
@@ -494,8 +501,11 @@ export class Actualizacion {
       },
       error: (error: any) => {
         this.estadoPeriodo.set('DISPONIBLE');
-        this.errorGeneral.set(error?.error?.mensaje || 'No fue posible consultar las diferencias de la actualización.');
-      }
+        this.errorGeneral.set(
+          obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
+            'No fue posible consultar las diferencias de la actualización.',
+        );
+      },
     });
   }
 
@@ -507,8 +517,10 @@ export class Actualizacion {
       },
       error: () => {
         this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
-        this.errorGeneral.set('La validación fue correcta, pero no fue posible generar el acuse previo.');
-      }
+        this.errorGeneral.set(
+          'La validación fue correcta, pero no fue posible generar el acuse previo.',
+        );
+      },
     });
   }
 
@@ -518,7 +530,9 @@ export class Actualizacion {
     }
 
     this.acusePrevioObjectUrl = window.URL.createObjectURL(blob);
-    this.acusePrevioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl));
+    this.acusePrevioUrl.set(
+      this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl),
+    );
   }
 
   private reemplazarAcuseConfirmado(blob: Blob): void {
@@ -527,7 +541,9 @@ export class Actualizacion {
     }
 
     this.acuseConfirmadoObjectUrl = window.URL.createObjectURL(blob);
-    this.acuseConfirmadoUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl));
+    this.acuseConfirmadoUrl.set(
+      this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl),
+    );
   }
 
   private limpiarUrlsPdf(): void {
@@ -545,8 +561,6 @@ export class Actualizacion {
     this.acusePrevioUrl.set(null);
     this.acuseConfirmadoUrl.set(null);
   }
-
-
 
   private limpiarArchivos(): void {
     this.carpetas.set(null);
@@ -567,7 +581,8 @@ export class Actualizacion {
   }
 
   private resumenPorArchivo(archivo: string): CargaValidacionResumenItem[] {
-    return (this.respuestaValidacion()?.resumenValidacion ?? [])
-      .filter((item: CargaValidacionResumenItem) => item.archivo?.toLowerCase() === archivo.toLowerCase());
+    return (this.respuestaValidacion()?.resumenValidacion ?? []).filter(
+      (item: CargaValidacionResumenItem) => item.archivo?.toLowerCase() === archivo.toLowerCase(),
+    );
   }
 }

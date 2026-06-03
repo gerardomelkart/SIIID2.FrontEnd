@@ -5,6 +5,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { ROLES } from '../../core/constants/roles.constants';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import {
   EditarUsuarioRequest,
@@ -166,7 +167,7 @@ export class Configuracion implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible cargar configuración',
-          text: error?.error?.mensaje || 'Revise la conexión con la API.',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           confirmButtonColor: '#691C32',
         });
       },
@@ -262,7 +263,7 @@ export class Configuracion implements OnInit {
             Swal.fire({
               icon: 'error',
               title: 'No fue posible actualizar configuración global',
-              text: error?.error?.mensaje || 'Intente nuevamente.',
+              text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
               confirmButtonColor: '#691C32',
             });
           },
@@ -405,10 +406,10 @@ export class Configuracion implements OnInit {
             return of({
               esValido: false,
               codigo: 'ERROR_ACTUALIZAR_USUARIO',
-              mensaje:
-                error?.error?.mensaje ||
-                error?.message ||
-                `No fue posible actualizar ${usuarioPermiso.usuario}.`,
+              mensaje: obtenerMensajeErrorHttp(
+                error,
+                error?.message || `No fue posible actualizar ${usuarioPermiso.usuario}.`,
+              ),
               idUsuario: usuarioPermiso.idUsuario,
             });
           }),
@@ -443,13 +444,13 @@ export class Configuracion implements OnInit {
           this.cerrarPermisosEntidad();
           this.cargarUsuarios();
         },
-        error: () => {
+        error: (error) => {
           this.guardandoEntidad.set(false);
 
           Swal.fire({
             icon: 'error',
             title: 'No fue posible actualizar permisos',
-            text: 'Intente nuevamente.',
+            text: obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
             confirmButtonColor: '#691C32',
           });
         },

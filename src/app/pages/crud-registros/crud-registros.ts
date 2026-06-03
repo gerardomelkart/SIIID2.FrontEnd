@@ -8,6 +8,7 @@ import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem, RolCatalogoItem } from '../../core/models/catalogos.models';
 import { UsuariosService } from '../../core/services/usuarios.service';
 import { SessionService } from '../../core/services/session.service';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import {
   CrearUsuarioRequest,
@@ -258,7 +259,7 @@ export class CrudRegistros implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible cargar administración',
-          text: error?.error?.mensaje || 'Revise la conexión con la API.',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           confirmButtonColor: '#691C32',
         });
       },
@@ -279,7 +280,7 @@ export class CrudRegistros implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible cargar usuarios',
-          text: error?.error?.mensaje || 'Revise la conexión con la API.',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           confirmButtonColor: '#691C32',
         });
       },
@@ -324,7 +325,7 @@ export class CrudRegistros implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible obtener el usuario',
-          text: error?.error?.mensaje || 'Intente nuevamente.',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           confirmButtonColor: '#691C32',
         });
       },
@@ -529,18 +530,27 @@ export class CrudRegistros implements OnInit {
     this.cargarUsuarios();
   }
 
-  private procesarErrorOperacion(error: any, mensajeDefault: string): void {
+  private procesarErrorOperacion(error: unknown, mensajeDefault: string): void {
     this.guardando.set(false);
 
-    const errores = error?.error?.errores as { mensaje: string }[] | undefined;
+    const errores = this.obtenerErroresOperacion(error);
     const detalle = errores?.map((x) => `• ${x.mensaje}`).join('\n');
 
     Swal.fire({
       icon: 'error',
       title: mensajeDefault,
-      text: detalle || error?.error?.mensaje || 'Intente nuevamente.',
+      text: detalle || obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
       confirmButtonColor: '#691C32',
     });
+  }
+
+  private obtenerErroresOperacion(error: unknown): { mensaje: string }[] | undefined {
+    if (typeof error === 'object' && error !== null && 'error' in error) {
+      const payload = (error as { error?: { errores?: { mensaje: string }[] } }).error;
+      return payload?.errores;
+    }
+
+    return undefined;
   }
 
   private mapearDetalleAFormulario(usuario: UsuarioDetalle): UsuarioForm {
