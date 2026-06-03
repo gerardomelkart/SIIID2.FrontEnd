@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import { AuthService } from '../../core/services/auth.service';
 
@@ -48,9 +49,12 @@ export class Login {
       error: (error) => {
         this.cargando.set(false);
 
-        const mensajeApi = error?.error?.mensaje;
-
-        this.mensajeError.set(mensajeApi || 'No fue posible iniciar sesión. Verifique sus credenciales.');
+        this.mensajeError.set(
+          obtenerMensajeErrorHttp(
+            error,
+            'No fue posible iniciar sesión. Verifique sus credenciales.'
+          )
+        );
       }
     });
   }
