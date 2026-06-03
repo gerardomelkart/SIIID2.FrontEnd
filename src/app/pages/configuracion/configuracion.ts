@@ -3,18 +3,16 @@ import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import * as XLSX from 'xlsx';
 import { ROLES } from '../../core/constants/roles.constants';
+import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 
 import {
   EditarUsuarioRequest,
   UsuarioDetalle,
-  UsuarioListadoItem
+  UsuarioListadoItem,
 } from '../../core/models/usuarios.models';
 
 import { UsuariosService } from '../../core/services/usuarios.service';
-
-
 
 interface ConfiguracionEntidad {
   idEntidadFederativa: number | null;
@@ -55,7 +53,7 @@ type CampoOrdenConfiguracionEntidad =
   selector: 'app-configuracion',
   imports: [FormsModule],
   templateUrl: './configuracion.html',
-  styleUrl: './configuracion.css'
+  styleUrl: './configuracion.css',
 })
 export class Configuracion implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
@@ -68,7 +66,10 @@ export class Configuracion implements OnInit {
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
 
-  ordenEntidades = signal<{ campo: CampoOrdenConfiguracionEntidad; direccion: DireccionOrden } | null>(null);
+  ordenEntidades = signal<{
+    campo: CampoOrdenConfiguracionEntidad;
+    direccion: DireccionOrden;
+  } | null>(null);
   exportandoExcel = signal(false);
 
   modalEntidadAbierto = signal(false);
@@ -101,8 +102,8 @@ export class Configuracion implements OnInit {
     grupos.forEach((lista) => {
       const primero = lista[0];
 
-      const usuariosCarga = lista.filter(x => x.habilitaCarga).length;
-      const usuariosModificacion = lista.filter(x => x.habilitaModificacion).length;
+      const usuariosCarga = lista.filter((x) => x.habilitaCarga).length;
+      const usuariosModificacion = lista.filter((x) => x.habilitaModificacion).length;
 
       resultado.push({
         idEntidadFederativa: primero.idEntidadFederativa,
@@ -113,7 +114,7 @@ export class Configuracion implements OnInit {
         habilitaCarga: usuariosCarga === lista.length,
         habilitaModificacion: usuariosModificacion === lista.length,
         estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, lista.length),
-        estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, lista.length)
+        estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, lista.length),
       });
     });
     return resultado;
@@ -124,9 +125,9 @@ export class Configuracion implements OnInit {
 
     const filtradas = !texto
       ? this.entidadesConfiguracion()
-      : this.entidadesConfiguracion().filter(entidad =>
-        entidad.entidadFederativa.toLowerCase().includes(texto)
-      );
+      : this.entidadesConfiguracion().filter((entidad) =>
+          entidad.entidadFederativa.toLowerCase().includes(texto),
+        );
 
     return this.ordenarEntidadesConfiguracion(filtradas);
   });
@@ -134,11 +135,11 @@ export class Configuracion implements OnInit {
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
 
   totalEntidadesCargaActiva = computed(() => {
-    return this.entidadesConfiguracion().filter(x => x.estadoCarga === 'ACTIVO').length;
+    return this.entidadesConfiguracion().filter((x) => x.estadoCarga === 'ACTIVO').length;
   });
 
   totalEntidadesModificacionActiva = computed(() => {
-    return this.entidadesConfiguracion().filter(x => x.estadoModificacion === 'ACTIVO').length;
+    return this.entidadesConfiguracion().filter((x) => x.estadoModificacion === 'ACTIVO').length;
   });
 
   ngOnInit(): void {
@@ -163,9 +164,9 @@ export class Configuracion implements OnInit {
           icon: 'error',
           title: 'No fue posible cargar configuración',
           text: error?.error?.mensaje || 'Revise la conexión con la API.',
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
 
@@ -175,7 +176,7 @@ export class Configuracion implements OnInit {
     if (actual?.campo === campo) {
       this.ordenEntidades.set({
         campo,
-        direccion: actual.direccion === 'asc' ? 'desc' : 'asc'
+        direccion: actual.direccion === 'asc' ? 'desc' : 'asc',
       });
 
       return;
@@ -196,21 +197,41 @@ export class Configuracion implements OnInit {
       : 'fa-solid fa-sort-down sort-icon active';
   }
 
-  exportarConfiguracionExcel(): void {
+  async exportarConfiguracionExcel(): Promise<void> {
     this.exportandoExcel.set(true);
 
     try {
-      const filas = this.entidadesFiltradas().map(entidad => ({
+      const filas = this.entidadesFiltradas().map((entidad) => ({
         'Entidad federativa': entidad.entidadFederativa,
         'Carga de archivos': this.etiquetaEstado(entidad.estadoCarga),
         'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuarios}`,
-        'Actualización': this.etiquetaEstado(entidad.estadoModificacion),
-        'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuarios}`
+        Actualización: this.etiquetaEstado(entidad.estadoModificacion),
+        'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuarios}`,
       }));
 
-      this.exportarFilasExcel(filas, 'configuracion_por_entidad.xlsx', 'Configuracion');
+      const exportado = await exportarFilasExcel(
+        filas,
+        'configuracion_por_entidad.xlsx',
+        'Configuracion',
+      );
+
+      if (!exportado) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Sin registros',
+          text: 'No hay información para exportar.',
+          confirmButtonColor: '#691C32',
+        });
+      }
+    } catch {
+      Swal.fire({
+        icon: 'error',
+        title: 'No fue posible exportar',
+        text: 'Intente nuevamente.',
+        confirmButtonColor: '#691C32',
+      });
     } finally {
-      setTimeout(() => this.exportandoExcel.set(false), 300);
+      this.exportandoExcel.set(false);
     }
   }
 
@@ -232,7 +253,7 @@ export class Configuracion implements OnInit {
 
   private compararValores(
     valorA: string | number | null | undefined,
-    valorB: string | number | null | undefined
+    valorB: string | number | null | undefined,
   ): number {
     if (valorA === null || valorA === undefined || valorA === '') {
       return 1;
@@ -248,31 +269,8 @@ export class Configuracion implements OnInit {
 
     return String(valorA).localeCompare(String(valorB), 'es', {
       numeric: true,
-      sensitivity: 'base'
+      sensitivity: 'base',
     });
-  }
-
-  private exportarFilasExcel(
-    filas: Record<string, string | number>[],
-    nombreArchivo: string,
-    nombreHoja: string
-  ): void {
-    if (!filas.length) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Sin registros',
-        text: 'No hay información para exportar.',
-        confirmButtonColor: '#691C32'
-      });
-
-      return;
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(filas);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
-    XLSX.writeFile(workbook, nombreArchivo);
   }
 
   guardarConfiguracionGlobal(): void {
@@ -283,40 +281,42 @@ export class Configuracion implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Sí, actualizar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32'
-    }).then(result => {
+      confirmButtonColor: '#691C32',
+    }).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
 
       this.guardandoGlobal.set(true);
 
-      this.usuariosService.actualizarPermisosGlobales({
-        habilitaCarga: this.habilitaCargaGlobal(),
-        habilitaModificacion: this.habilitaModificacionGlobal()
-      }).subscribe({
-        next: (response) => {
-          this.guardandoGlobal.set(false);
+      this.usuariosService
+        .actualizarPermisosGlobales({
+          habilitaCarga: this.habilitaCargaGlobal(),
+          habilitaModificacion: this.habilitaModificacionGlobal(),
+        })
+        .subscribe({
+          next: (response) => {
+            this.guardandoGlobal.set(false);
 
-          Swal.fire({
-            icon: 'success',
-            title: response.mensaje || 'Configuración global actualizada.',
-            confirmButtonColor: '#691C32'
-          });
+            Swal.fire({
+              icon: 'success',
+              title: response.mensaje || 'Configuración global actualizada.',
+              confirmButtonColor: '#691C32',
+            });
 
-          this.cargarUsuarios();
-        },
-        error: (error) => {
-          this.guardandoGlobal.set(false);
+            this.cargarUsuarios();
+          },
+          error: (error) => {
+            this.guardandoGlobal.set(false);
 
-          Swal.fire({
-            icon: 'error',
-            title: 'No fue posible actualizar configuración global',
-            text: error?.error?.mensaje || 'Intente nuevamente.',
-            confirmButtonColor: '#691C32'
-          });
-        }
-      });
+            Swal.fire({
+              icon: 'error',
+              title: 'No fue posible actualizar configuración global',
+              text: error?.error?.mensaje || 'Intente nuevamente.',
+              confirmButtonColor: '#691C32',
+            });
+          },
+        });
     });
   }
 
@@ -340,12 +340,11 @@ export class Configuracion implements OnInit {
     return 'Mixto';
   }
 
-
   abrirPermisosEntidad(entidad: ConfiguracionEntidad): void {
     const usuariosEntidad = this.usuarios()
-      .filter(usuario => usuario.activo)
-      .filter(usuario => usuario.idEntidadFederativa === entidad.idEntidadFederativa)
-      .map(usuario => ({
+      .filter((usuario) => usuario.activo)
+      .filter((usuario) => usuario.idEntidadFederativa === entidad.idEntidadFederativa)
+      .map((usuario) => ({
         idUsuario: usuario.idUsuario,
         usuario: usuario.usuario,
         nombreCompleto: usuario.nombreCompleto,
@@ -355,7 +354,7 @@ export class Configuracion implements OnInit {
         habilitaModificacionOriginal: usuario.habilitaModificacion,
         habilitaCarga: usuario.habilitaCarga,
         habilitaModificacion: usuario.habilitaModificacion,
-        bloqueado: usuario.rol === ROLES.CONSULTA
+        bloqueado: usuario.rol === ROLES.CONSULTA,
       }));
 
     this.entidadSeleccionada.set(entidad);
@@ -376,35 +375,37 @@ export class Configuracion implements OnInit {
   cambiarPermisoUsuarioEntidad(
     idUsuario: number,
     permiso: 'habilitaCarga' | 'habilitaModificacion',
-    valor: boolean
+    valor: boolean,
   ): void {
-    this.usuariosEntidad.update(usuarios =>
-      usuarios.map(usuario => {
+    this.usuariosEntidad.update((usuarios) =>
+      usuarios.map((usuario) => {
         if (usuario.idUsuario !== idUsuario || usuario.bloqueado) {
           return usuario;
         }
 
         return {
           ...usuario,
-          [permiso]: valor
+          [permiso]: valor,
         };
-      })
+      }),
     );
   }
 
   hayCambiosEntidad(): boolean {
-    return this.usuariosEntidad().some(usuario =>
-      usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-      usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal
+    return this.usuariosEntidad().some(
+      (usuario) =>
+        usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
     );
   }
 
   guardarPermisosEntidad(): void {
     const usuariosModificados = this.usuariosEntidad()
-      .filter(usuario => !usuario.bloqueado)
-      .filter(usuario =>
-        usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal
+      .filter((usuario) => !usuario.bloqueado)
+      .filter(
+        (usuario) =>
+          usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+          usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
       );
 
     if (usuariosModificados.length === 0) {
@@ -412,7 +413,7 @@ export class Configuracion implements OnInit {
         icon: 'info',
         title: 'Sin cambios',
         text: 'No hay cambios por guardar.',
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
 
       return;
@@ -425,52 +426,57 @@ export class Configuracion implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Sí, guardar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32'
-    }).then(result => {
+      confirmButtonColor: '#691C32',
+    }).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
 
       this.guardandoEntidad.set(true);
 
-      const operaciones = usuariosModificados.map(usuarioPermiso =>
+      const operaciones = usuariosModificados.map((usuarioPermiso) =>
         this.usuariosService.obtenerDetalle(usuarioPermiso.idUsuario).pipe(
-          switchMap(detalleResponse => {
+          switchMap((detalleResponse) => {
             if (!detalleResponse.esValido || !detalleResponse.usuario) {
-              throw new Error(`No fue posible obtener detalle del usuario ${usuarioPermiso.usuario}.`);
+              throw new Error(
+                `No fue posible obtener detalle del usuario ${usuarioPermiso.usuario}.`,
+              );
             }
 
             const request = this.construirRequestEditarUsuario(
               detalleResponse.usuario,
               usuarioPermiso.habilitaCarga,
-              usuarioPermiso.habilitaModificacion
+              usuarioPermiso.habilitaModificacion,
             );
 
             return this.usuariosService.editarUsuario(usuarioPermiso.idUsuario, request);
           }),
-          catchError(error => {
+          catchError((error) => {
             return of({
               esValido: false,
               codigo: 'ERROR_ACTUALIZAR_USUARIO',
-              mensaje: error?.error?.mensaje || error?.message || `No fue posible actualizar ${usuarioPermiso.usuario}.`,
-              idUsuario: usuarioPermiso.idUsuario
+              mensaje:
+                error?.error?.mensaje ||
+                error?.message ||
+                `No fue posible actualizar ${usuarioPermiso.usuario}.`,
+              idUsuario: usuarioPermiso.idUsuario,
             });
-          })
-        )
+          }),
+        ),
       );
 
       forkJoin(operaciones).subscribe({
-        next: resultados => {
+        next: (resultados) => {
           this.guardandoEntidad.set(false);
 
-          const errores = resultados.filter(resultado => !resultado.esValido);
+          const errores = resultados.filter((resultado) => !resultado.esValido);
 
           if (errores.length > 0) {
             Swal.fire({
               icon: 'warning',
               title: 'Algunos usuarios no se actualizaron',
-              html: errores.map(error => `• ${error.mensaje}`).join('<br>'),
-              confirmButtonColor: '#691C32'
+              html: errores.map((error) => `• ${error.mensaje}`).join('<br>'),
+              confirmButtonColor: '#691C32',
             });
 
             this.cargarUsuarios();
@@ -481,7 +487,7 @@ export class Configuracion implements OnInit {
             icon: 'success',
             title: 'Permisos actualizados',
             text: 'Los permisos de la entidad se actualizaron correctamente.',
-            confirmButtonColor: '#691C32'
+            confirmButtonColor: '#691C32',
           });
 
           this.cerrarPermisosEntidad();
@@ -494,9 +500,9 @@ export class Configuracion implements OnInit {
             icon: 'error',
             title: 'No fue posible actualizar permisos',
             text: 'Intente nuevamente.',
-            confirmButtonColor: '#691C32'
+            confirmButtonColor: '#691C32',
           });
-        }
+        },
       });
     });
   }
@@ -504,7 +510,7 @@ export class Configuracion implements OnInit {
   private construirRequestEditarUsuario(
     usuario: UsuarioDetalle,
     habilitaCarga: boolean,
-    habilitaModificacion: boolean
+    habilitaModificacion: boolean,
   ): EditarUsuarioRequest {
     return {
       usuario: usuario.usuario,
@@ -519,12 +525,14 @@ export class Configuracion implements OnInit {
       idEntidadFederativa: usuario.idEntidadFederativa,
       rol: usuario.rol,
       habilitaCarga,
-      habilitaModificacion
+      habilitaModificacion,
     };
   }
 
-
-  private obtenerEstadoPermiso(totalActivos: number, totalUsuarios: number): 'ACTIVO' | 'INACTIVO' | 'MIXTO' {
+  private obtenerEstadoPermiso(
+    totalActivos: number,
+    totalUsuarios: number,
+  ): 'ACTIVO' | 'INACTIVO' | 'MIXTO' {
     if (totalUsuarios === 0 || totalActivos === 0) {
       return 'INACTIVO';
     }
@@ -537,7 +545,7 @@ export class Configuracion implements OnInit {
   }
 
   private sincronizarSwitchesGlobales(usuarios: UsuarioListadoItem[]): void {
-    const usuariosOperativos = usuarios.filter(x => x.activo && x.rol !== 'CONSULTA');
+    const usuariosOperativos = usuarios.filter((x) => x.activo && x.rol !== 'CONSULTA');
 
     if (usuariosOperativos.length === 0) {
       this.habilitaCargaGlobal.set(false);
@@ -545,7 +553,7 @@ export class Configuracion implements OnInit {
       return;
     }
 
-    this.habilitaCargaGlobal.set(usuariosOperativos.every(x => x.habilitaCarga));
-    this.habilitaModificacionGlobal.set(usuariosOperativos.every(x => x.habilitaModificacion));
+    this.habilitaCargaGlobal.set(usuariosOperativos.every((x) => x.habilitaCarga));
+    this.habilitaModificacionGlobal.set(usuariosOperativos.every((x) => x.habilitaModificacion));
   }
 }

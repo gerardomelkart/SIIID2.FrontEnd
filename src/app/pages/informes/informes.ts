@@ -3,16 +3,17 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
-import * as XLSX from 'xlsx';
+import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 import { InformesService } from '../../core/services/informes.service';
+
 import {
   CorteOperativo,
   InformeEnvioItem,
   InformeReporteCargaItem,
   PeriodoCorteInforme,
-  TipoReporte
+  TipoReporte,
 } from '../../core/models/informes.models';
 
 type DireccionOrden = 'asc' | 'desc';
@@ -37,7 +38,7 @@ type CampoOrdenCargas =
   selector: 'app-informes',
   imports: [FormsModule],
   templateUrl: './informes.html',
-  styleUrl: './informes.css'
+  styleUrl: './informes.css',
 })
 export class Informes implements OnInit {
   private readonly sessionService = inject(SessionService);
@@ -66,9 +67,11 @@ export class Informes implements OnInit {
   ordenCargas = signal<{ campo: CampoOrdenCargas; direccion: DireccionOrden } | null>(null);
 
   descargaEnProceso = computed(() => {
-    return this.descargandoAcuse() !== null
-      || this.descargandoArchivos() !== null
-      || this.exportandoExcel() !== null;
+    return (
+      this.descargandoAcuse() !== null ||
+      this.descargandoArchivos() !== null ||
+      this.exportandoExcel() !== null
+    );
   });
 
   envios = signal<InformeEnvioItem[]>([]);
@@ -80,13 +83,11 @@ export class Informes implements OnInit {
 
   corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
 
-
-
   periodosCorte = signal<PeriodoCorteInforme[]>([]);
   periodoCorteSeleccionado = signal<string>('');
 
   ngOnInit(): void {
-    this.route.data.subscribe(data => {
+    this.route.data.subscribe((data) => {
       const reporte = data['reporte'] as TipoReporte | undefined;
 
       if (reporte === 'CARGAS' && !this.puedeVerCargas()) {
@@ -131,18 +132,20 @@ export class Informes implements OnInit {
   enviosFiltrados = computed(() => {
     const texto = this.busquedaEnvios().trim().toLowerCase();
 
-    const filtrados = this.envios().filter(envio => {
+    const filtrados = this.envios().filter((envio) => {
       if (!texto) {
         return true;
       }
 
-      return envio.entidadFederativa.toLowerCase().includes(texto) ||
+      return (
+        envio.entidadFederativa.toLowerCase().includes(texto) ||
         envio.claveEntidad.toLowerCase().includes(texto) ||
         envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
         envio.corte.toLowerCase().includes(texto) ||
         envio.usuarioEnvio.toLowerCase().includes(texto) ||
         envio.codigoReferencia.toLowerCase().includes(texto) ||
-        envio.tipoCarga.toLowerCase().includes(texto);
+        envio.tipoCarga.toLowerCase().includes(texto)
+      );
     });
 
     return this.ordenarListaEnvios(filtrados);
@@ -152,7 +155,7 @@ export class Informes implements OnInit {
     const texto = this.busquedaCargas().trim().toLowerCase();
     const corte = this.corteOperativo();
 
-    const filtradas = this.cargas().filter(carga => {
+    const filtradas = this.cargas().filter((carga) => {
       if (carga.claveEntidad === '00') {
         return false;
       }
@@ -169,12 +172,14 @@ export class Informes implements OnInit {
         return true;
       }
 
-      return carga.entidadFederativa.toLowerCase().includes(texto) ||
+      return (
+        carga.entidadFederativa.toLowerCase().includes(texto) ||
         carga.claveEntidad.toLowerCase().includes(texto) ||
         carga.corte.toLowerCase().includes(texto) ||
         (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
+        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
+      );
     });
 
     return this.ordenarListaCargas(filtradas);
@@ -229,9 +234,9 @@ export class Informes implements OnInit {
           icon: 'error',
           title: 'No fue posible consultar los envíos',
           text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
 
@@ -258,21 +263,16 @@ export class Informes implements OnInit {
           icon: 'error',
           title: 'No fue posible consultar el reporte de cargas',
           text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
-
-
 
   cambiarCorteReporte(): void {
     this.sincronizarCorteSeleccionado();
     this.paginaCargas.set(1);
   }
-
-
-
 
   buscarEnvios(valor: string): void {
     this.busquedaEnvios.set(valor);
@@ -304,9 +304,7 @@ export class Informes implements OnInit {
     const estatus = this.normalizarTexto(carga.estatusUltimoIntento);
     const tipoCarga = this.normalizarTexto(carga.tipoCargaUltimoIntento);
 
-    const sufijo = tipoCarga.includes('ACTUALIZACION')
-      ? 'actualización'
-      : 'carga';
+    const sufijo = tipoCarga.includes('ACTUALIZACION') ? 'actualización' : 'carga';
 
     if (!estatus) {
       return 'Sin carga';
@@ -346,21 +344,12 @@ export class Informes implements OnInit {
   esEstatusError(estatus: string | null): boolean {
     const valor = this.normalizarTexto(estatus);
 
-    return valor.includes('RECHAZADO')
-      || valor.includes('ERROR')
-      || valor.includes('EXPIRADO');
+    return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
   }
 
   private normalizarTexto(valor: string | null | undefined): string {
-    return (valor ?? '')
-      .toString()
-      .trim()
-      .toUpperCase()
-      .replaceAll('-', '_')
-      .replace(/\s+/g, '_');
+    return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
   }
-
-
 
   tipoCargaTexto(tipoCarga: string | null): string {
     if (!tipoCarga) {
@@ -381,11 +370,8 @@ export class Informes implements OnInit {
   verAcuse(envio: InformeEnvioItem): void {
     this.descargandoAcuse.set(envio.codigoReferencia);
 
-    this.descargarEndpoint(
-      envio.endpointAcuse,
-      `ACUSE_${envio.codigoReferencia}.pdf`,
-      true,
-      () => this.descargandoAcuse.set(null)
+    this.descargarEndpoint(envio.endpointAcuse, `ACUSE_${envio.codigoReferencia}.pdf`, true, () =>
+      this.descargandoAcuse.set(null),
     );
   }
 
@@ -396,48 +382,64 @@ export class Informes implements OnInit {
       envio.endpointExcel,
       `ARCHIVOS_${envio.codigoReferencia}.zip`,
       false,
-      () => this.descargandoArchivos.set(null)
+      () => this.descargandoArchivos.set(null),
     );
   }
-  exportarExcel(tipo: TipoReporte): void {
+
+  async exportarExcel(tipo: TipoReporte): Promise<void> {
     this.exportandoExcel.set(tipo);
 
     try {
       if (tipo === 'ENVIOS') {
-        const filas = this.enviosFiltrados().map(envio => ({
+        const filas = this.enviosFiltrados().map((envio) => ({
           'Entidad federativa': envio.entidadFederativa,
           'Cve. entidad': envio.claveEntidad,
           'Fecha de envío': envio.fechaEnvioTexto,
-          'Corte': envio.corte,
-          'Usuario envío': envio.usuarioEnvio
+          Corte: envio.corte,
+          'Usuario envío': envio.usuarioEnvio,
         }));
 
-        this.exportarFilasExcel(filas, 'consulta_envios.xlsx', 'Envios');
+        const exportado = await exportarFilasExcel(filas, 'consulta_envios.xlsx', 'Envios');
+
+        if (!exportado) {
+          this.mostrarSinRegistrosExportacion();
+        }
+
         return;
       }
 
-      const filas = this.cargasFiltradas().map(carga => ({
+      const filas = this.cargasFiltradas().map((carga) => ({
         'Entidad federativa': carga.entidadFederativa,
         'Cve. entidad': carga.claveEntidad,
-        'Periodo': carga.corte,
-        'Intentos': carga.intentos,
+        Periodo: carga.corte,
+        Intentos: carga.intentos,
         'Último intento': carga.ultimoIntento || '',
-        'Estatus': this.etiquetaEstatusCarga(carga),
-        'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || ''
+        Estatus: this.etiquetaEstatusCarga(carga),
+        'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || '',
       }));
 
-      this.exportarFilasExcel(filas, 'reporte_cargas.xlsx', 'Cargas');
+      const exportado = await exportarFilasExcel(filas, 'reporte_cargas.xlsx', 'Cargas');
+
+      if (!exportado) {
+        this.mostrarSinRegistrosExportacion();
+      }
+    } catch {
+      Swal.fire({
+        icon: 'error',
+        title: 'No fue posible exportar',
+        text: 'Intente nuevamente.',
+        confirmButtonColor: '#691C32',
+      });
     } finally {
-      setTimeout(() => {
-        this.exportandoExcel.set(null);
-      }, 300);
+      this.exportandoExcel.set(null);
     }
   }
+
   private descargarEndpoint(
     endpoint: string,
     nombreDefault: string,
     abrirEnNuevaPestana: boolean,
-    finalizar?: () => void
+    finalizar?: () => void,
   ): void {
     if (!endpoint) {
       finalizar?.();
@@ -446,7 +448,7 @@ export class Informes implements OnInit {
         icon: 'warning',
         title: 'Archivo no disponible',
         text: 'La API no proporcionó una ruta de descarga.',
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
 
       return;
@@ -463,13 +465,14 @@ export class Informes implements OnInit {
             icon: 'warning',
             title: 'Archivo vacío',
             text: 'La descarga no devolvió contenido.',
-            confirmButtonColor: '#691C32'
+            confirmButtonColor: '#691C32',
           });
 
           return;
         }
 
-        const nombreArchivo = this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
+        const nombreArchivo =
+          this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
         const url = URL.createObjectURL(blob);
 
         if (abrirEnNuevaPestana) {
@@ -493,9 +496,9 @@ export class Informes implements OnInit {
           icon: 'error',
           title: 'No fue posible descargar el archivo',
           text: await this.obtenerMensajeErrorBlob(error),
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
 
@@ -505,7 +508,7 @@ export class Informes implements OnInit {
     if (ordenActual?.campo === campo) {
       this.ordenEnvios.set({
         campo,
-        direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc'
+        direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc',
       });
 
       this.paginaEnvios.set(1);
@@ -522,7 +525,7 @@ export class Informes implements OnInit {
     if (ordenActual?.campo === campo) {
       this.ordenCargas.set({
         campo,
-        direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc'
+        direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc',
       });
 
       this.paginaCargas.set(1);
@@ -589,31 +592,40 @@ export class Informes implements OnInit {
     });
   }
 
-  private obtenerValorOrdenEnvio(envio: InformeEnvioItem, campo: CampoOrdenEnvios): string | number | null {
+  private obtenerValorOrdenEnvio(
+    envio: InformeEnvioItem,
+    campo: CampoOrdenEnvios,
+  ): string | number | null {
     if (campo === 'fechaEnvioTexto') {
       return envio.fechaEnvio;
     }
 
     if (campo === 'corte') {
-      return (envio.anioCorte * 100) + envio.mesCorte;
+      return envio.anioCorte * 100 + envio.mesCorte;
     }
 
     return envio[campo] ?? '';
   }
 
-  private obtenerValorOrdenCarga(carga: InformeReporteCargaItem, campo: CampoOrdenCargas): string | number | null {
+  private obtenerValorOrdenCarga(
+    carga: InformeReporteCargaItem,
+    campo: CampoOrdenCargas,
+  ): string | number | null {
     if (campo === 'fechaUltimaCargaTexto') {
       return carga.fechaUltimaCarga;
     }
 
     if (campo === 'corte') {
-      return (carga.anioCorte * 100) + carga.mesCorte;
+      return carga.anioCorte * 100 + carga.mesCorte;
     }
 
     return carga[campo] ?? '';
   }
 
-  private compararValores(valorA: string | number | null | undefined, valorB: string | number | null | undefined): number {
+  private compararValores(
+    valorA: string | number | null | undefined,
+    valorB: string | number | null | undefined,
+  ): number {
     if (valorA === null || valorA === undefined || valorA === '') {
       return 1;
     }
@@ -628,25 +640,24 @@ export class Informes implements OnInit {
 
     return String(valorA).localeCompare(String(valorB), 'es', {
       numeric: true,
-      sensitivity: 'base'
+      sensitivity: 'base',
     });
   }
-
 
   private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void {
     const periodos = this.obtenerPeriodosDesdeCargas(registros);
     const corteActual = this.obtenerCorteOperativoActual();
     const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
 
-    const existeCorteActual = periodos.some(periodo =>
-      this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual
+    const existeCorteActual = periodos.some(
+      (periodo) => this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual,
     );
 
     if (!existeCorteActual) {
       periodos.unshift({
         mesCorte: corteActual.mesCorte,
         anioCorte: corteActual.anioCorte,
-        corte: corteActual.corte
+        corte: corteActual.corte,
       });
     }
 
@@ -675,14 +686,14 @@ export class Informes implements OnInit {
         mapa.set(key, {
           mesCorte: registro.mesCorte,
           anioCorte: registro.anioCorte,
-          corte: registro.corte
+          corte: registro.corte,
         });
       }
     }
 
     return Array.from(mapa.values()).sort((a, b) => {
-      const valorA = (a.anioCorte * 100) + a.mesCorte;
-      const valorB = (b.anioCorte * 100) + b.mesCorte;
+      const valorA = a.anioCorte * 100 + a.mesCorte;
+      const valorB = b.anioCorte * 100 + b.mesCorte;
 
       return valorB - valorA;
     });
@@ -699,8 +710,8 @@ export class Informes implements OnInit {
       return;
     }
 
-    const periodo = this.periodosCorte().find(x =>
-      this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key
+    const periodo = this.periodosCorte().find(
+      (x) => this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key,
     );
 
     if (!periodo) {
@@ -710,31 +721,17 @@ export class Informes implements OnInit {
     this.corteOperativo.set({
       mesCorte: periodo.mesCorte,
       anioCorte: periodo.anioCorte,
-      corte: periodo.corte
+      corte: periodo.corte,
     });
   }
 
-  private exportarFilasExcel(
-    filas: Record<string, string | number>[],
-    nombreArchivo: string,
-    nombreHoja: string
-  ): void {
-    if (!filas.length) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Sin registros',
-        text: 'No hay información para exportar.',
-        confirmButtonColor: '#691C32'
-      });
-
-      return;
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(filas);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
-    XLSX.writeFile(workbook, nombreArchivo);
+  private mostrarSinRegistrosExportacion(): void {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin registros',
+      text: 'No hay información para exportar.',
+      confirmButtonColor: '#691C32',
+    });
   }
 
   private async obtenerMensajeErrorBlob(error: any): Promise<string> {
@@ -782,7 +779,7 @@ export class Informes implements OnInit {
     return {
       mesCorte,
       anioCorte,
-      corte: this.obtenerNombreCorte(mesCorte, anioCorte)
+      corte: this.obtenerNombreCorte(mesCorte, anioCorte),
     };
   }
 
@@ -790,12 +787,11 @@ export class Informes implements OnInit {
     const fecha = new Date(anioCorte, mesCorte - 1, 1);
     const texto = new Intl.DateTimeFormat('es-MX', {
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
     }).format(fecha);
 
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
-
 
   cerrarAcuse(): void {
     this.limpiarAcuseUrl();

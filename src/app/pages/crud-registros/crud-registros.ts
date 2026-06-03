@@ -3,20 +3,16 @@ import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ROLES } from '../../core/constants/roles.constants';
 import { forkJoin } from 'rxjs';
-import * as XLSX from 'xlsx';
-
+import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { CatalogosService } from '../../core/services/catalogos.service';
-import {
-  EntidadFederativaCatalogoItem,
-  RolCatalogoItem
-} from '../../core/models/catalogos.models';
+import { EntidadFederativaCatalogoItem, RolCatalogoItem } from '../../core/models/catalogos.models';
 
 import {
   CrearUsuarioRequest,
   EditarUsuarioRequest,
   UsuarioDetalle,
   UsuarioListadoItem,
-  UsuarioOperacionResponse
+  UsuarioOperacionResponse,
 } from '../../core/models/usuarios.models';
 
 import { UsuariosService } from '../../core/services/usuarios.service';
@@ -57,7 +53,7 @@ type CampoOrdenUsuarios =
   selector: 'app-crud-registros',
   imports: [FormsModule],
   templateUrl: './crud-registros.html',
-  styleUrl: './crud-registros.css'
+  styleUrl: './crud-registros.css',
 })
 export class CrudRegistros implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
@@ -84,8 +80,9 @@ export class CrudRegistros implements OnInit {
   usuariosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
 
-    const filtrados = this.usuarios().filter(usuario => {
-      const pasaBusqueda = !texto ||
+    const filtrados = this.usuarios().filter((usuario) => {
+      const pasaBusqueda =
+        !texto ||
         usuario.nombreCompleto?.toLowerCase().includes(texto) ||
         usuario.usuario?.toLowerCase().includes(texto) ||
         usuario.correoElectronico?.toLowerCase().includes(texto) ||
@@ -99,14 +96,16 @@ export class CrudRegistros implements OnInit {
   });
 
   totalUsuarios = computed(() => this.usuarios().length);
-  totalActivos = computed(() => this.usuarios().filter(x => x.activo).length);
-  totalInactivos = computed(() => this.usuarios().filter(x => !x.activo).length);
-  totalSuperUsuarios = computed(() => this.usuarios().filter(x => x.rol === ROLES.SUPER_USUARIO).length);
+  totalActivos = computed(() => this.usuarios().filter((x) => x.activo).length);
+  totalInactivos = computed(() => this.usuarios().filter((x) => !x.activo).length);
+  totalSuperUsuarios = computed(
+    () => this.usuarios().filter((x) => x.rol === ROLES.SUPER_USUARIO).length,
+  );
 
   usuarioActual = this.sessionService.usuario;
 
   totalSuperUsuariosActivos = computed(() => {
-    return this.usuarios().filter(x => x.activo && x.rol === ROLES.SUPER_USUARIO).length;
+    return this.usuarios().filter((x) => x.activo && x.rol === ROLES.SUPER_USUARIO).length;
   });
 
   formularioValido = computed(() => {
@@ -136,7 +135,6 @@ export class CrudRegistros implements OnInit {
     return true;
   });
 
-
   private ordenarListaUsuarios(lista: UsuarioListadoItem[]): UsuarioListadoItem[] {
     const orden = this.ordenUsuarios();
 
@@ -155,14 +153,14 @@ export class CrudRegistros implements OnInit {
 
   private obtenerValorOrdenUsuario(
     usuario: UsuarioListadoItem,
-    campo: CampoOrdenUsuarios
+    campo: CampoOrdenUsuarios,
   ): string | number | boolean | null {
     return usuario[campo] ?? '';
   }
 
   private compararValores(
     valorA: string | number | boolean | null | undefined,
-    valorB: string | number | boolean | null | undefined
+    valorB: string | number | boolean | null | undefined,
   ): number {
     if (valorA === null || valorA === undefined || valorA === '') {
       return 1;
@@ -182,35 +180,11 @@ export class CrudRegistros implements OnInit {
 
     return String(valorA).localeCompare(String(valorB), 'es', {
       numeric: true,
-      sensitivity: 'base'
+      sensitivity: 'base',
     });
   }
 
-  private exportarFilasExcel(
-    filas: Record<string, string | number>[],
-    nombreArchivo: string,
-    nombreHoja: string
-  ): void {
-    if (!filas.length) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Sin registros',
-        text: 'No hay información para exportar.',
-        confirmButtonColor: '#691C32'
-      });
-
-      return;
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(filas);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, nombreHoja);
-    XLSX.writeFile(workbook, nombreArchivo);
-  }
-
-
-
+ 
   esUsuarioActual(usuario: UsuarioListadoItem): boolean {
     return usuario.idUsuario === this.usuarioActual()?.idUsuario;
   }
@@ -221,7 +195,7 @@ export class CrudRegistros implements OnInit {
     if (actual?.campo === campo) {
       this.ordenUsuarios.set({
         campo,
-        direccion: actual.direccion === 'asc' ? 'desc' : 'asc'
+        direccion: actual.direccion === 'asc' ? 'desc' : 'asc',
       });
 
       return;
@@ -242,33 +216,49 @@ export class CrudRegistros implements OnInit {
       : 'fa-solid fa-sort-down sort-icon active';
   }
 
-  exportarUsuariosExcel(): void {
+  async exportarUsuariosExcel(): Promise<void> {
     this.exportandoExcel.set(true);
 
     try {
-      const filas = this.usuariosFiltrados().map(usuario => ({
-        'Nombre': usuario.nombreCompleto,
-        'Usuario': usuario.usuario,
-        'Correo': usuario.correoElectronico,
-        'Rol': usuario.rol,
-        'Entidad': usuario.entidadFederativa || 'Nacional',
-        'Carga': usuario.habilitaCarga ? 'Sí' : 'No',
-        'Modificación': usuario.habilitaModificacion ? 'Sí' : 'No',
-        'Estado': usuario.activo ? 'ACTIVO' : 'INACTIVO'
+      const filas = this.usuariosFiltrados().map((usuario) => ({
+        Nombre: usuario.nombreCompleto,
+        Usuario: usuario.usuario,
+        Correo: usuario.correoElectronico,
+        Rol: usuario.rol,
+        Entidad: usuario.entidadFederativa || 'Nacional',
+        Carga: usuario.habilitaCarga ? 'Sí' : 'No',
+        Modificación: usuario.habilitaModificacion ? 'Sí' : 'No',
+        Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
 
-      this.exportarFilasExcel(filas, 'usuarios_sistema.xlsx', 'Usuarios');
+      const exportado = await exportarFilasExcel(filas, 'usuarios_sistema.xlsx', 'Usuarios');
+
+      if (!exportado) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Sin registros',
+          text: 'No hay información para exportar.',
+          confirmButtonColor: '#691C32',
+        });
+      }
+    } catch {
+      Swal.fire({
+        icon: 'error',
+        title: 'No fue posible exportar',
+        text: 'Intente nuevamente.',
+        confirmButtonColor: '#691C32',
+      });
     } finally {
-      setTimeout(() => this.exportandoExcel.set(false), 300);
+      this.exportandoExcel.set(false);
     }
   }
 
-
-
   esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
-    return usuario.activo
-      && usuario.rol === ROLES.SUPER_USUARIO
-      && this.totalSuperUsuariosActivos() === 1;
+    return (
+      usuario.activo &&
+      usuario.rol === ROLES.SUPER_USUARIO &&
+      this.totalSuperUsuariosActivos() === 1
+    );
   }
 
   puedeCambiarEstado(usuario: UsuarioListadoItem): boolean {
@@ -305,7 +295,7 @@ export class CrudRegistros implements OnInit {
     forkJoin({
       usuarios: this.usuariosService.obtenerUsuarios(this.mostrarInactivos()),
       entidades: this.catalogosService.obtenerEntidadesFederativas(),
-      roles: this.catalogosService.obtenerRoles()
+      roles: this.catalogosService.obtenerRoles(),
     }).subscribe({
       next: ({ usuarios, entidades, roles }) => {
         this.usuarios.set(usuarios.usuarios ?? []);
@@ -320,12 +310,11 @@ export class CrudRegistros implements OnInit {
           icon: 'error',
           title: 'No fue posible cargar administración',
           text: error?.error?.mensaje || 'Revise la conexión con la API.',
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
-
 
   cargarUsuarios(): void {
     this.cargando.set(true);
@@ -342,9 +331,9 @@ export class CrudRegistros implements OnInit {
           icon: 'error',
           title: 'No fue posible cargar usuarios',
           text: error?.error?.mensaje || 'Revise la conexión con la API.',
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
 
@@ -371,7 +360,7 @@ export class CrudRegistros implements OnInit {
             icon: 'warning',
             title: 'Usuario no encontrado',
             text: response.mensaje || 'No fue posible obtener el detalle.',
-            confirmButtonColor: '#691C32'
+            confirmButtonColor: '#691C32',
           });
           return;
         }
@@ -387,9 +376,9 @@ export class CrudRegistros implements OnInit {
           icon: 'error',
           title: 'No fue posible obtener el usuario',
           text: error?.error?.mensaje || 'Intente nuevamente.',
-          confirmButtonColor: '#691C32'
+          confirmButtonColor: '#691C32',
         });
-      }
+      },
     });
   }
 
@@ -408,7 +397,7 @@ export class CrudRegistros implements OnInit {
         icon: 'warning',
         title: 'Formulario incompleto',
         text: 'Revise los campos obligatorios antes de guardar.',
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
 
       return;
@@ -430,7 +419,7 @@ export class CrudRegistros implements OnInit {
         icon: 'warning',
         title: 'Operación no permitida',
         text: this.motivoBloqueoEstado(usuario),
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
 
       return;
@@ -445,9 +434,9 @@ export class CrudRegistros implements OnInit {
   }
 
   actualizarCampo<K extends keyof UsuarioForm>(campo: K, valor: UsuarioForm[K]): void {
-    this.formulario.update(actual => ({
+    this.formulario.update((actual) => ({
       ...actual,
-      [campo]: valor
+      [campo]: valor,
     }));
 
     if (campo === 'rol') {
@@ -469,14 +458,14 @@ export class CrudRegistros implements OnInit {
       idEntidadFederativa: this.obtenerEntidadParaRequest(form),
       rol: form.rol,
       habilitaCarga: form.habilitaCarga,
-      habilitaModificacion: form.habilitaModificacion
+      habilitaModificacion: form.habilitaModificacion,
     };
 
     this.guardando.set(true);
 
     this.usuariosService.crearUsuario(request).subscribe({
       next: (response) => this.procesarGuardadoCorrecto(response, 'Usuario creado correctamente.'),
-      error: (error) => this.procesarErrorOperacion(error, 'No fue posible crear el usuario.')
+      error: (error) => this.procesarErrorOperacion(error, 'No fue posible crear el usuario.'),
     });
   }
 
@@ -498,14 +487,15 @@ export class CrudRegistros implements OnInit {
       idEntidadFederativa: this.obtenerEntidadParaRequest(form),
       rol: form.rol,
       habilitaCarga: form.habilitaCarga,
-      habilitaModificacion: form.habilitaModificacion
+      habilitaModificacion: form.habilitaModificacion,
     };
 
     this.guardando.set(true);
 
     this.usuariosService.editarUsuario(form.idUsuario, request).subscribe({
-      next: (response) => this.procesarGuardadoCorrecto(response, 'Usuario actualizado correctamente.'),
-      error: (error) => this.procesarErrorOperacion(error, 'No fue posible editar el usuario.')
+      next: (response) =>
+        this.procesarGuardadoCorrecto(response, 'Usuario actualizado correctamente.'),
+      error: (error) => this.procesarErrorOperacion(error, 'No fue posible editar el usuario.'),
     });
   }
 
@@ -517,8 +507,8 @@ export class CrudRegistros implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Sí, desactivar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32'
-    }).then(result => {
+      confirmButtonColor: '#691C32',
+    }).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
@@ -528,12 +518,13 @@ export class CrudRegistros implements OnInit {
           Swal.fire({
             icon: 'success',
             title: 'Usuario desactivado',
-            confirmButtonColor: '#691C32'
+            confirmButtonColor: '#691C32',
           });
 
           this.cargarUsuarios();
         },
-        error: (error) => this.procesarErrorOperacion(error, 'No fue posible desactivar el usuario.')
+        error: (error) =>
+          this.procesarErrorOperacion(error, 'No fue posible desactivar el usuario.'),
       });
     });
   }
@@ -546,37 +537,43 @@ export class CrudRegistros implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Sí, reactivar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32'
-    }).then(result => {
+      confirmButtonColor: '#691C32',
+    }).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
 
-      this.usuariosService.reactivarUsuario(usuario.idUsuario, {
-        habilitaCarga: usuario.habilitaCarga,
-        habilitaModificacion: usuario.habilitaModificacion
-      }).subscribe({
-        next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Usuario reactivado',
-            confirmButtonColor: '#691C32'
-          });
+      this.usuariosService
+        .reactivarUsuario(usuario.idUsuario, {
+          habilitaCarga: usuario.habilitaCarga,
+          habilitaModificacion: usuario.habilitaModificacion,
+        })
+        .subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Usuario reactivado',
+              confirmButtonColor: '#691C32',
+            });
 
-          this.cargarUsuarios();
-        },
-        error: (error) => this.procesarErrorOperacion(error, 'No fue posible reactivar el usuario.')
-      });
+            this.cargarUsuarios();
+          },
+          error: (error) =>
+            this.procesarErrorOperacion(error, 'No fue posible reactivar el usuario.'),
+        });
     });
   }
 
-  private procesarGuardadoCorrecto(response: UsuarioOperacionResponse, mensajeDefault: string): void {
+  private procesarGuardadoCorrecto(
+    response: UsuarioOperacionResponse,
+    mensajeDefault: string,
+  ): void {
     this.guardando.set(false);
 
     Swal.fire({
       icon: 'success',
       title: response.mensaje || mensajeDefault,
-      confirmButtonColor: '#691C32'
+      confirmButtonColor: '#691C32',
     });
 
     this.cerrarModal();
@@ -587,13 +584,13 @@ export class CrudRegistros implements OnInit {
     this.guardando.set(false);
 
     const errores = error?.error?.errores as { mensaje: string }[] | undefined;
-    const detalle = errores?.map(x => `• ${x.mensaje}`).join('\n');
+    const detalle = errores?.map((x) => `• ${x.mensaje}`).join('\n');
 
     Swal.fire({
       icon: 'error',
       title: mensajeDefault,
       text: detalle || error?.error?.mensaje || 'Intente nuevamente.',
-      confirmButtonColor: '#691C32'
+      confirmButtonColor: '#691C32',
     });
   }
 
@@ -612,7 +609,7 @@ export class CrudRegistros implements OnInit {
       rol: usuario.rol ?? '',
       idEntidadFederativa: usuario.idEntidadFederativa?.toString() ?? '',
       habilitaCarga: usuario.habilitaCarga,
-      habilitaModificacion: usuario.habilitaModificacion
+      habilitaModificacion: usuario.habilitaModificacion,
     };
   }
 
@@ -631,7 +628,7 @@ export class CrudRegistros implements OnInit {
       rol: '',
       idEntidadFederativa: '',
       habilitaCarga: true,
-      habilitaModificacion: true
+      habilitaModificacion: true,
     };
   }
 
@@ -654,10 +651,10 @@ export class CrudRegistros implements OnInit {
       return;
     }
 
-    this.formulario.update(actual => ({
+    this.formulario.update((actual) => ({
       ...actual,
       habilitaCarga: false,
-      habilitaModificacion: false
+      habilitaModificacion: false,
     }));
   }
 }
