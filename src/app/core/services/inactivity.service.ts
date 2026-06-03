@@ -7,7 +7,7 @@ import { SessionService } from './session.service';
 const TIEMPO_INACTIVIDAD_MS = 10 * 60 * 1000;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InactivityService {
   private readonly sessionService = inject(SessionService);
@@ -23,7 +23,7 @@ export class InactivityService {
     'keydown',
     'scroll',
     'touchstart',
-    'wheel'
+    'wheel',
   ];
 
   private readonly manejarActividad = () => {
@@ -53,7 +53,7 @@ export class InactivityService {
     this.ngZone.runOutsideAngular(() => {
       for (const evento of this.eventosActividad) {
         window.addEventListener(evento, this.manejarActividad, {
-          passive: true
+          passive: true,
         });
       }
     });
@@ -108,7 +108,7 @@ export class InactivityService {
         icon: 'info',
         title: 'Sesión cerrada',
         text: 'La sesión se cerró por 10 minutos de inactividad.',
-        confirmButtonColor: '#691C32'
+        confirmButtonColor: '#691C32',
       });
     });
   }

@@ -1,19 +1,20 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
   CargaValidacionResponse,
   ConfirmarCargaRequest,
-  ConfirmarCargaResponse
+  ConfirmarCargaResponse,
 } from '../models/carga.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CargaService {
-  private readonly apiUrl = '/api/cargas';
+  private readonly apiUrl = API_ENDPOINTS.cargas;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   validarArchivos(carpetas: File, delitos: File, victimas: File) {
     const formData = new FormData();
@@ -31,13 +32,13 @@ export class CargaService {
 
   descargarAcusePrevio(codigoReferencia: string) {
     return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
   }
 
   descargarAcuseConfirmado(codigoReferencia: string) {
     return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse-confirmado`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
   }
 }

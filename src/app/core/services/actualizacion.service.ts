@@ -1,29 +1,28 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
   ActualizacionDiferenciasResponse,
-  ActualizacionPeriodoResponse
+  ActualizacionPeriodoResponse,
 } from '../models/actualizacion.models';
 
 import {
   CargaValidacionResponse,
   ConfirmarCargaRequest,
-  ConfirmarCargaResponse
+  ConfirmarCargaResponse,
 } from '../models/carga.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ActualizacionService {
-  private readonly apiUrl = '/api/actualizaciones';
+  private readonly apiUrl = API_ENDPOINTS.actualizaciones;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   consultarPeriodo(mesCorte: number, anioCorte: number, idEntidadFederativa?: number | null) {
-    let params = new HttpParams()
-      .set('mesCorte', mesCorte)
-      .set('anioCorte', anioCorte);
+    let params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
 
     if (idEntidadFederativa) {
       params = params.set('idEntidadFederativa', idEntidadFederativa);
@@ -38,7 +37,7 @@ export class ActualizacionService {
     carpetas: File,
     delitos: File,
     victimas: File,
-    idEntidadFederativa?: number | null
+    idEntidadFederativa?: number | null,
   ) {
     const formData = new FormData();
 
@@ -58,7 +57,7 @@ export class ActualizacionService {
 
   obtenerDiferencias(codigoReferencia: string) {
     return this.http.get<ActualizacionDiferenciasResponse>(
-      `${this.apiUrl}/diferencias/${codigoReferencia}`
+      `${this.apiUrl}/diferencias/${codigoReferencia}`,
     );
   }
 
@@ -68,13 +67,13 @@ export class ActualizacionService {
 
   descargarAcusePrevio(codigoReferencia: string) {
     return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
   }
 
   descargarAcuseConfirmado(codigoReferencia: string) {
     return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse-confirmado`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
   }
 }

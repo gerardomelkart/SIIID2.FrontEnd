@@ -1,19 +1,20 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
   InformeEnvioItem,
   InformeEnviosFiltro,
   InformeReporteCargasFiltro,
-  InformeReporteCargasResponse
+  InformeReporteCargasResponse,
 } from '../models/informes.models';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InformesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/informes';
+  private readonly apiUrl = API_ENDPOINTS.informes;
 
   obtenerEnvios(filtro: InformeEnviosFiltro = {}) {
     let params = new HttpParams();
@@ -48,16 +49,13 @@ export class InformesService {
       params = params.set('anioCorte', filtro.anioCorte);
     }
 
-    return this.http.get<InformeReporteCargasResponse>(
-      `${this.apiUrl}/reporte-cargas`,
-      { params }
-    );
+    return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
   descargarDesdeEndpoint(endpoint: string) {
     return this.http.get(endpoint, {
       responseType: 'blob',
-      observe: 'response'
+      observe: 'response',
     });
   }
 }

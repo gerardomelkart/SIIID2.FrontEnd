@@ -6,7 +6,7 @@ const USER_KEY = 'siiid_usuario';
 const EXPIRES_AT_KEY = 'siiid_token_expira_en';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SessionService {
   private usuarioSignal = signal<UsuarioLoginInfo | null>(this.cargarUsuarioDesdeStorage());
