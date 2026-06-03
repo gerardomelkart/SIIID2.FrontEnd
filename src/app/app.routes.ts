@@ -1,93 +1,103 @@
 import { Routes } from '@angular/router';
+
 import { ROLES } from './core/constants/roles.constants';
-import { MainLayout } from './layout/main-layout/main-layout';
-import { Login } from './pages/login/login';
-import { Dashboard } from './pages/dashboard/dashboard';
-import { CargaInicial } from './pages/carga-inicial/carga-inicial';
-import { Actualizacion } from './pages/actualizacion/actualizacion';
-import { Informes } from './pages/informes/informes';
-import { CrudRegistros } from './pages/crud-registros/crud-registros';
-import { Configuracion } from './pages/configuracion/configuracion';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
-    component: Login
+    loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
     path: '',
-    component: MainLayout,
+    loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
     canActivate: [authGuard],
     children: [
-      { path: '', component: Dashboard },
+      {
+        path: '',
+        loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+      },
 
       {
         path: 'carga-inicial',
-        component: CargaInicial,
+        loadComponent: () =>
+          import('./pages/carga-inicial/carga-inicial').then((m) => m.CargaInicial),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'CARGA'
-        }
+          permiso: 'CARGA',
+        },
       },
 
       {
         path: 'actualizacion',
-        component: Actualizacion,
+        loadComponent: () =>
+          import('./pages/actualizacion/actualizacion').then((m) => m.Actualizacion),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'MODIFICACION'
-        }
+          permiso: 'MODIFICACION',
+        },
       },
-      { path: 'informes', redirectTo: 'informes/envios' },
+
+      {
+        path: 'informes',
+        redirectTo: 'informes/envios',
+      },
 
       {
         path: 'informes/envios',
-        component: Informes,
+        loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-          reporte: 'ENVIOS'
-        }
+          reporte: 'ENVIOS',
+        },
       },
 
       {
         path: 'informes/cargas',
-        component: Informes,
+        loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO],
-          reporte: 'CARGAS'
-        }
+          reporte: 'CARGAS',
+        },
       },
 
       {
         path: 'administracion/usuarios',
-        component: CrudRegistros,
+        loadComponent: () =>
+          import('./pages/crud-registros/crud-registros').then((m) => m.CrudRegistros),
         canActivate: [permissionGuard],
         data: {
-          roles: [ROLES.SUPER_USUARIO]
-        }
+          roles: [ROLES.SUPER_USUARIO],
+        },
       },
 
       {
         path: 'administracion/configuracion',
-        component: Configuracion,
+        loadComponent: () =>
+          import('./pages/configuracion/configuracion').then((m) => m.Configuracion),
         canActivate: [permissionGuard],
         data: {
-          roles: [ROLES.SUPER_USUARIO]
-        }
+          roles: [ROLES.SUPER_USUARIO],
+        },
       },
 
-      { path: 'crud-registros', redirectTo: 'administracion/usuarios' },
-      { path: 'configuracion', redirectTo: 'administracion/configuracion' }
-    ]
+      {
+        path: 'crud-registros',
+        redirectTo: 'administracion/usuarios',
+      },
+      {
+        path: 'configuracion',
+        redirectTo: 'administracion/configuracion',
+      },
+    ],
   },
   {
     path: '**',
-    redirectTo: ''
-  }
+    redirectTo: '',
+  },
 ];
