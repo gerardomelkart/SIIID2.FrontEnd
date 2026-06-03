@@ -17,6 +17,16 @@ import {
   CargaValidacionResumenItem,
 } from '../../core/models/carga.models';
 
+import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/archivo-carga.types';
+
+import {
+  actualizarArchivoSeleccionado,
+  crearArchivosCargaVacios,
+  obtenerArchivoDesdeEvento,
+  obtenerResumenPorArchivo,
+  tieneTresArchivosSeleccionados,
+} from '../../core/utils/archivo-carga.utils';
+
 import { ActualizacionService } from '../../core/services/actualizacion.service';
 import { SessionService } from '../../core/services/session.service';
 
@@ -58,9 +68,7 @@ export class Actualizacion {
   mensajePeriodo = signal('');
   errorGeneral = signal('');
 
-  carpetas = signal<File | null>(null);
-  delitos = signal<File | null>(null);
-  victimas = signal<File | null>(null);
+  archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
 
   private acusePrevioObjectUrl: string | null = null;
   private acuseConfirmadoObjectUrl: string | null = null;
@@ -93,12 +101,7 @@ export class Actualizacion {
   mostrarArchivos = computed(() => this.estadoPeriodo() === 'DISPONIBLE');
 
   puedeValidarActualizacion = computed(() => {
-    return (
-      !!this.carpetas() &&
-      !!this.delitos() &&
-      !!this.victimas() &&
-      this.estadoPeriodo() === 'DISPONIBLE'
-    );
+    return tieneTresArchivosSeleccionados(this.archivos()) && this.estadoPeriodo() === 'DISPONIBLE';
   });
 
   mostrarTablasErrores = computed(() => {
@@ -212,21 +215,10 @@ export class Actualizacion {
     });
   }
 
-  seleccionarArchivo(event: Event, tipo: 'carpetas' | 'delitos' | 'victimas'): void {
-    const input = event.target as HTMLInputElement;
-    const archivo = input.files?.[0] ?? null;
+  seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
+    const archivo = obtenerArchivoDesdeEvento(event);
 
-    if (tipo === 'carpetas') {
-      this.carpetas.set(archivo);
-    }
-
-    if (tipo === 'delitos') {
-      this.delitos.set(archivo);
-    }
-
-    if (tipo === 'victimas') {
-      this.victimas.set(archivo);
-    }
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
 
     this.respuestaValidacion.set(null);
     this.diferencias.set(null);
@@ -234,11 +226,9 @@ export class Actualizacion {
   }
 
   validarActualizacion(): void {
-    const carpetas = this.carpetas();
-    const delitos = this.delitos();
-    const victimas = this.victimas();
+    const archivos = this.archivos();
 
-    if (!carpetas || !delitos || !victimas) {
+    if (!tieneTresArchivosSeleccionados(archivos)) {
       this.errorGeneral.set('Debe seleccionar los tres archivos: expedientes, delitos y víctimas.');
       return;
     }
@@ -255,7 +245,14 @@ export class Actualizacion {
     this.limpiarUrlsPdf();
 
     this.actualizacionService
-      .validarActualizacion(mes, anio, carpetas, delitos, victimas, idEntidad)
+      .validarActualizacion(
+        mes,
+        anio,
+        archivos.carpetas!,
+        archivos.delitos!,
+        archivos.victimas!,
+        idEntidad,
+      )
       .subscribe({
         next: (response: CargaValidacionResponse) => {
           this.respuestaValidacion.set(response);
@@ -553,11 +550,8 @@ export class Actualizacion {
   }
 
   private limpiarArchivos(): void {
-    this.carpetas.set(null);
-    this.delitos.set(null);
-    this.victimas.set(null);
+    this.archivos.set(crearArchivosCargaVacios());
   }
-
   private reiniciarFormulario(): void {
     this.anioCorte.set('');
     this.mesCorte.set('');
@@ -570,9 +564,7 @@ export class Actualizacion {
     this.errorGeneral.set('');
   }
 
-  private resumenPorArchivo(archivo: string): CargaValidacionResumenItem[] {
-    return (this.respuestaValidacion()?.resumenValidacion ?? []).filter(
-      (item: CargaValidacionResumenItem) => item.archivo?.toLowerCase() === archivo.toLowerCase(),
-    );
+  private resumenPorArchivo(archivo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
+    return obtenerResumenPorArchivo(this.respuestaValidacion()?.resumenValidacion ?? [], archivo);
   }
 }

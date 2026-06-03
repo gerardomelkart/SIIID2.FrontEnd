@@ -10,6 +10,16 @@ import {
   CargaValidacionResumenItem,
 } from '../../core/models/carga.models';
 
+import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/archivo-carga.types';
+
+import {
+  actualizarArchivoSeleccionado,
+  crearArchivosCargaVacios,
+  obtenerArchivoDesdeEvento,
+  obtenerResumenPorArchivo,
+  tieneTresArchivosSeleccionados,
+} from '../../core/utils/archivo-carga.utils';
+
 type EstadoCarga =
   | 'INICIAL'
   | 'VALIDANDO'
@@ -26,9 +36,7 @@ type EstadoCarga =
   styleUrl: './carga-inicial.css',
 })
 export class CargaInicial {
-  carpetas = signal<File | null>(null);
-  delitos = signal<File | null>(null);
-  victimas = signal<File | null>(null);
+  archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
 
   estado = signal<EstadoCarga>('INICIAL');
   respuesta = signal<CargaValidacionResponse | null>(null);
@@ -83,9 +91,7 @@ export class CargaInicial {
   });
 
   puedeValidar = computed(() => {
-    return (
-      !!this.carpetas() && !!this.delitos() && !!this.victimas() && this.estado() !== 'VALIDANDO'
-    );
+    return tieneTresArchivosSeleccionados(this.archivos()) && this.estado() !== 'VALIDANDO';
   });
 
   mostrarTablasErrores = computed(() => {
@@ -98,31 +104,18 @@ export class CargaInicial {
     private router: Router,
   ) {}
 
-  seleccionarArchivo(event: Event, tipo: 'carpetas' | 'delitos' | 'victimas'): void {
-    const input = event.target as HTMLInputElement;
-    const archivo = input.files?.[0] ?? null;
+  seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
+    const archivo = obtenerArchivoDesdeEvento(event);
 
-    if (tipo === 'carpetas') {
-      this.carpetas.set(archivo);
-    }
-
-    if (tipo === 'delitos') {
-      this.delitos.set(archivo);
-    }
-
-    if (tipo === 'victimas') {
-      this.victimas.set(archivo);
-    }
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
 
     this.limpiarResultado();
   }
 
   validarArchivos(): void {
-    const carpetas = this.carpetas();
-    const delitos = this.delitos();
-    const victimas = this.victimas();
+    const archivos = this.archivos();
 
-    if (!carpetas || !delitos || !victimas) {
+    if (!tieneTresArchivosSeleccionados(archivos)) {
       this.errorGeneral.set('Debe seleccionar los tres archivos: expedientes, delitos y víctimas.');
       return;
     }
@@ -133,36 +126,38 @@ export class CargaInicial {
     this.respuesta.set(null);
     this.limpiarUrlsPdf();
 
-    this.cargaService.validarArchivos(carpetas, delitos, victimas).subscribe({
-      next: (response) => {
-        this.respuesta.set(response);
-        this.mensaje.set(response.mensaje || '');
-
-        if (!response.esValido) {
-          this.estado.set('VALIDADO_ERROR');
-          return;
-        }
-
-        this.abrirAcusePrevio(response.codigoReferencia);
-      },
-      error: (error: unknown) => {
-        const response = obtenerErrorPayload<CargaValidacionResponse>(error);
-
-        if (response?.resumenValidacion || response?.errores) {
+    this.cargaService
+      .validarArchivos(archivos.carpetas!, archivos.delitos!, archivos.victimas!)
+      .subscribe({
+        next: (response) => {
           this.respuesta.set(response);
-          this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
-          this.estado.set('VALIDADO_ERROR');
-          return;
-        }
+          this.mensaje.set(response.mensaje || '');
 
-        this.estado.set('INICIAL');
-        this.errorGeneral.set(
-          obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
-            'No fue posible validar los archivos.',
-        );
-        this.mensaje.set('');
-      },
-    });
+          if (!response.esValido) {
+            this.estado.set('VALIDADO_ERROR');
+            return;
+          }
+
+          this.abrirAcusePrevio(response.codigoReferencia);
+        },
+        error: (error: unknown) => {
+          const response = obtenerErrorPayload<CargaValidacionResponse>(error);
+
+          if (response?.resumenValidacion || response?.errores) {
+            this.respuesta.set(response);
+            this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
+            this.estado.set('VALIDADO_ERROR');
+            return;
+          }
+
+          this.estado.set('INICIAL');
+          this.errorGeneral.set(
+            obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
+              'No fue posible validar los archivos.',
+          );
+          this.mensaje.set('');
+        },
+      });
   }
 
   aceptarCarga(): void {
@@ -337,9 +332,7 @@ export class CargaInicial {
   }
 
   private reiniciarFormulario(): void {
-    this.carpetas.set(null);
-    this.delitos.set(null);
-    this.victimas.set(null);
+    this.archivos.set(crearArchivosCargaVacios());
     this.respuesta.set(null);
     this.mensaje.set('');
     this.errorGeneral.set('');
@@ -356,9 +349,7 @@ export class CargaInicial {
     this.acuseConfirmadoUrl.set(null);
   }
 
-  private resumenPorArchivo(archivo: string): CargaValidacionResumenItem[] {
-    return (this.respuesta()?.resumenValidacion ?? []).filter(
-      (item) => item.archivo?.toLowerCase() === archivo.toLowerCase(),
-    );
+  private resumenPorArchivo(archivo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
+    return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], archivo);
   }
 }
