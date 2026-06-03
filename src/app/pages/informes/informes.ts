@@ -8,6 +8,7 @@ import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 import { InformesService } from '../../core/services/informes.service';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 import {
   CorteOperativo,
@@ -502,7 +503,7 @@ export class Informes implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'No fue posible descargar el archivo',
-          text: await this.obtenerMensajeErrorBlob(error),
+          text: await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
           confirmButtonColor: '#691C32',
         });
       },
@@ -652,22 +653,6 @@ export class Informes implements OnInit {
       text: 'No hay información para exportar.',
       confirmButtonColor: '#691C32',
     });
-  }
-
-  private async obtenerMensajeErrorBlob(error: any): Promise<string> {
-    const contenido = error?.error;
-
-    if (contenido instanceof Blob) {
-      try {
-        const texto = await contenido.text();
-        const json = JSON.parse(texto);
-        return json?.mensaje || 'Intente nuevamente.';
-      } catch {
-        return 'Intente nuevamente.';
-      }
-    }
-
-    return contenido?.mensaje || 'Intente nuevamente.';
   }
 
   private obtenerNombreArchivo(contentDisposition: string | null): string {

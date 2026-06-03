@@ -2,7 +2,7 @@ import { Component, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import { CargaService } from '../../core/services/carga.service';
 import {
@@ -145,8 +145,8 @@ export class CargaInicial {
 
         this.abrirAcusePrevio(response.codigoReferencia);
       },
-      error: (error) => {
-        const response = error?.error as CargaValidacionResponse | undefined;
+      error: (error: unknown) => {
+        const response = obtenerErrorPayload<CargaValidacionResponse>(error);
 
         if (response?.resumenValidacion || response?.errores) {
           this.respuesta.set(response);

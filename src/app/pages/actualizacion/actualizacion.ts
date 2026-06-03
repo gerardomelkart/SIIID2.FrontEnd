@@ -3,7 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+
+import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import {
   ActualizacionDiferenciasResponse,
@@ -193,8 +194,8 @@ export class Actualizacion {
 
         this.estadoPeriodo.set('NO_DISPONIBLE');
       },
-      error: (error: any) => {
-        const response = error?.error as ActualizacionPeriodoResponse | undefined;
+      error: (error: unknown) => {
+        const response = obtenerErrorPayload<ActualizacionPeriodoResponse>(error);
 
         if (response?.mensaje) {
           this.respuestaPeriodo.set(response);
@@ -204,7 +205,9 @@ export class Actualizacion {
         }
 
         this.estadoPeriodo.set('ERROR');
-        this.mensajePeriodo.set('No fue posible consultar el periodo seleccionado.');
+        this.mensajePeriodo.set(
+          obtenerMensajeErrorHttp(error, 'No fue posible consultar el periodo seleccionado.'),
+        );
       },
     });
   }
@@ -264,8 +267,8 @@ export class Actualizacion {
 
           this.prepararRevisionDiferencias(response.codigoReferencia);
         },
-        error: (error: any) => {
-          const response = error?.error as CargaValidacionResponse | undefined;
+        error: (error: unknown) => {
+          const response = obtenerErrorPayload<CargaValidacionResponse>(error);
 
           if (response?.resumenValidacion || response?.errores) {
             this.respuestaValidacion.set(response);
@@ -339,7 +342,7 @@ export class Actualizacion {
             },
           });
         },
-        error: (error: any) => {
+        error: (error: unknown) => {
           this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
           Swal.fire({
@@ -380,7 +383,7 @@ export class Actualizacion {
             this.router.navigateByUrl('/');
           });
         },
-        error: (error: any) => {
+        error: (error: unknown) => {
           this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
           Swal.fire({
@@ -499,7 +502,7 @@ export class Actualizacion {
         this.diferencias.set(response);
         this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         this.estadoPeriodo.set('DISPONIBLE');
         this.errorGeneral.set(
           obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
