@@ -1,7 +1,14 @@
 import { Component, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
+
+import {
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExito,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
+
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { CargaService } from '../../core/services/carga.service';
@@ -191,25 +198,20 @@ export class CargaInicial {
 
           this.estado.set('CONFIRMADO');
 
-          Swal.fire({
-            icon: 'success',
-            title: '¡Carga completada!',
-            text: resultado.acuseDescargado
+          mostrarExito(
+            '¡Carga completada!',
+            resultado.acuseDescargado
               ? undefined
               : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#2f80d0',
-          });
+          );
         },
         error: (error: unknown) => {
           this.estado.set('MOSTRANDO_ACUSE');
 
-          Swal.fire({
-            icon: 'error',
-            title: 'No fue posible confirmar la carga',
-            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-            confirmButtonColor: '#691C32',
-          });
+          mostrarError(
+            'No fue posible confirmar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
         },
       });
   }
@@ -233,24 +235,20 @@ export class CargaInicial {
           this.estado.set('RECHAZADO');
           this.limpiarUrlsPdf();
 
-          Swal.fire({
-            icon: 'success',
-            title: 'Carga rechazada',
-            text: 'La carga fue rechazada correctamente.',
-            confirmButtonColor: '#691C32',
-          }).then(() => {
+          mostrarExitoInstitucional(
+            'Carga rechazada',
+            'La carga fue rechazada correctamente.',
+          ).then(() => {
             this.router.navigateByUrl('/');
           });
         },
         error: (error) => {
           this.estado.set('MOSTRANDO_ACUSE');
 
-          Swal.fire({
-            icon: 'error',
-            title: 'No fue posible rechazar la carga',
-            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-            confirmButtonColor: '#691C32',
-          });
+          mostrarError(
+            'No fue posible rechazar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
         },
       });
   }
@@ -277,12 +275,10 @@ export class CargaInicial {
     const codigoReferencia = this.codigoReferenciaPendiente();
 
     if (!codigoReferencia) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Sin referencia pendiente',
-        text: 'No fue posible identificar el código de referencia pendiente.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarAdvertencia(
+        'Sin referencia pendiente',
+        'No fue posible identificar el código de referencia pendiente.',
+      );
 
       return;
     }

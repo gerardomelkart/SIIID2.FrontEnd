@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import Swal from 'sweetalert2';
+import { mostrarAdvertencia, mostrarError, mostrarInfo } from '../../core/utils/alert.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
@@ -10,7 +10,7 @@ import { InformesService } from '../../core/services/informes.service';
 
 import {
   obtenerMensajeErrorHttp,
-  obtenerMensajeErrorHttpAsync
+  obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
 
 import {
@@ -241,12 +241,10 @@ export class Informes implements OnInit {
       error: (error) => {
         this.cargandoEnvios.set(false);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible consultar los envíos',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible consultar los envíos',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -270,12 +268,10 @@ export class Informes implements OnInit {
       error: (error) => {
         this.cargandoCargas.set(false);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible consultar el reporte de cargas',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible consultar el reporte de cargas',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -435,12 +431,7 @@ export class Informes implements OnInit {
         this.mostrarSinRegistrosExportacion();
       }
     } catch {
-      Swal.fire({
-        icon: 'error',
-        title: 'No fue posible exportar',
-        text: 'Intente nuevamente.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarError('No fue posible exportar', 'Intente nuevamente.');
     } finally {
       this.exportandoExcel.set(null);
     }
@@ -455,12 +446,7 @@ export class Informes implements OnInit {
     if (!endpoint) {
       finalizar?.();
 
-      Swal.fire({
-        icon: 'warning',
-        title: 'Archivo no disponible',
-        text: 'La API no proporcionó una ruta de descarga.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarAdvertencia('Archivo no disponible', 'La API no proporcionó una ruta de descarga.');
 
       return;
     }
@@ -472,12 +458,7 @@ export class Informes implements OnInit {
         if (!blob) {
           finalizar?.();
 
-          Swal.fire({
-            icon: 'warning',
-            title: 'Archivo vacío',
-            text: 'La descarga no devolvió contenido.',
-            confirmButtonColor: '#691C32',
-          });
+          mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
 
           return;
         }
@@ -503,12 +484,10 @@ export class Informes implements OnInit {
       error: async (error) => {
         finalizar?.();
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible descargar el archivo',
-          text: await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible descargar el archivo',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+        );
       },
     });
   }
@@ -650,12 +629,10 @@ export class Informes implements OnInit {
   }
 
   private mostrarSinRegistrosExportacion(): void {
-    Swal.fire({
-      icon: 'info',
-      title: 'Sin registros',
-      text: 'No hay información para exportar.',
-      confirmButtonColor: '#691C32',
-    });
+    mostrarAdvertencia(
+      'Sin registros para exportar',
+      'La API no proporcionó registros para exportar.',
+    );
   }
 
   private obtenerNombreArchivo(contentDisposition: string | null): string {
