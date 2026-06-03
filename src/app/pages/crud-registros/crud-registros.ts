@@ -129,7 +129,7 @@ export class CrudRegistros implements OnInit {
       return false;
     }
 
-    if (form.rol !== 'SUPER_USUARIO' && form.idEntidadFederativa === '') {
+    if (form.rol !== ROLES.SUPER_USUARIO && form.idEntidadFederativa === '') {
       return false;
     }
 
@@ -267,7 +267,7 @@ export class CrudRegistros implements OnInit {
 
   esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
     return usuario.activo
-      && usuario.rol === 'SUPER_USUARIO'
+      && usuario.rol === ROLES.SUPER_USUARIO
       && this.totalSuperUsuariosActivos() === 1;
   }
 

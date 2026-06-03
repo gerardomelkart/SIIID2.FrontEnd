@@ -4,10 +4,8 @@ import Swal from 'sweetalert2';
 import { RolSistema } from '../constants/roles.constants';
 import { SessionService } from '../services/session.service';
 
-type RolUsuario = 'SUPER_USUARIO' | 'ENLACE_ESTATAL' | 'CONSULTA';
-
 interface PermissionRouteData {
-  roles?: RolUsuario[];
+  roles?: RolSistema[];
   permiso?: 'CARGA' | 'MODIFICACION';
 }
 
@@ -24,7 +22,7 @@ export const permissionGuard: CanActivateFn = (route) => {
 
   const data = route.data as PermissionRouteData;
 
-  if (data.roles?.length && !data.roles.includes(usuario.rol as RolUsuario)) {
+  if (data.roles?.length && !data.roles.includes(usuario.rol as RolSistema)) {
     mostrarAccesoDenegado(
       router,
       'No cuenta con el perfil necesario para acceder a este módulo.'

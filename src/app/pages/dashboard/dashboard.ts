@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
+import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 
 @Component({
@@ -16,9 +16,9 @@ export class Dashboard {
   habilitaCarga = this.sessionService.habilitaCarga;
   habilitaModificacion = this.sessionService.habilitaModificacion;
 
-  esSuperUsuario = computed(() => this.usuario()?.rol === 'SUPER_USUARIO');
-  esEnlaceEstatal = computed(() => this.usuario()?.rol === 'ENLACE_ESTATAL');
-  esConsulta = computed(() => this.usuario()?.rol === 'CONSULTA');
+  esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+  esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
+  esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
 
   nombreUsuario = computed(() => {
     return this.usuario()?.nombreCompleto || this.usuario()?.usuario || 'Usuario';
