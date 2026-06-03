@@ -3,7 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
-
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { CargaService } from '../../core/services/carga.service';
 import {
   CargaValidacionResponse,
@@ -315,25 +315,17 @@ export class CargaInicial {
   }
 
   private reemplazarAcusePrevio(blob: Blob): void {
-    if (this.acusePrevioObjectUrl) {
-      window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
-    }
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
 
-    this.acusePrevioObjectUrl = window.URL.createObjectURL(blob);
-    this.acusePrevioUrl.set(
-      this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl),
-    );
+    this.acusePrevioObjectUrl = pdf.objectUrl;
+    this.acusePrevioUrl.set(pdf.safeUrl);
   }
 
   private reemplazarAcuseConfirmado(blob: Blob): void {
-    if (this.acuseConfirmadoObjectUrl) {
-      window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
-    }
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
 
-    this.acuseConfirmadoObjectUrl = window.URL.createObjectURL(blob);
-    this.acuseConfirmadoUrl.set(
-      this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl),
-    );
+    this.acuseConfirmadoObjectUrl = pdf.objectUrl;
+    this.acuseConfirmadoUrl.set(pdf.safeUrl);
   }
 
   private limpiarResultado(): void {
@@ -354,13 +346,8 @@ export class CargaInicial {
   }
 
   private limpiarUrlsPdf(): void {
-    if (this.acusePrevioObjectUrl) {
-      window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
-    }
-
-    if (this.acuseConfirmadoObjectUrl) {
-      window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
-    }
+    revocarObjectUrl(this.acusePrevioObjectUrl);
+    revocarObjectUrl(this.acuseConfirmadoObjectUrl);
 
     this.acusePrevioObjectUrl = null;
     this.acuseConfirmadoObjectUrl = null;

@@ -4,7 +4,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ROLES } from '../../core/constants/roles.constants';
-
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 import {
@@ -70,9 +70,9 @@ export class Actualizacion {
 
   usuario = this.sessionService.usuario;
 
-esSuperUsuario = computed(() => {
-  return this.usuario()?.rol === ROLES.SUPER_USUARIO;
-});
+  esSuperUsuario = computed(() => {
+    return this.usuario()?.rol === ROLES.SUPER_USUARIO;
+  });
 
   puedeConsultar = computed(() => {
     const tienePeriodo = this.anioCorte() !== '' && this.mesCorte() !== '';
@@ -528,35 +528,22 @@ esSuperUsuario = computed(() => {
   }
 
   private reemplazarAcusePrevio(blob: Blob): void {
-    if (this.acusePrevioObjectUrl) {
-      window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
-    }
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
 
-    this.acusePrevioObjectUrl = window.URL.createObjectURL(blob);
-    this.acusePrevioUrl.set(
-      this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl),
-    );
+    this.acusePrevioObjectUrl = pdf.objectUrl;
+    this.acusePrevioUrl.set(pdf.safeUrl);
   }
 
   private reemplazarAcuseConfirmado(blob: Blob): void {
-    if (this.acuseConfirmadoObjectUrl) {
-      window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
-    }
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
 
-    this.acuseConfirmadoObjectUrl = window.URL.createObjectURL(blob);
-    this.acuseConfirmadoUrl.set(
-      this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl),
-    );
+    this.acuseConfirmadoObjectUrl = pdf.objectUrl;
+    this.acuseConfirmadoUrl.set(pdf.safeUrl);
   }
 
   private limpiarUrlsPdf(): void {
-    if (this.acusePrevioObjectUrl) {
-      window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
-    }
-
-    if (this.acuseConfirmadoObjectUrl) {
-      window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
-    }
+    revocarObjectUrl(this.acusePrevioObjectUrl);
+    revocarObjectUrl(this.acuseConfirmadoObjectUrl);
 
     this.acusePrevioObjectUrl = null;
     this.acuseConfirmadoObjectUrl = null;
