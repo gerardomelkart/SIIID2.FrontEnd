@@ -16,7 +16,13 @@ import {
   TipoReporte,
 } from '../../core/models/informes.models';
 
-type DireccionOrden = 'asc' | 'desc';
+import {
+  EstadoOrden,
+  ValorOrden,
+  alternarOrden,
+  obtenerIconoOrden,
+  ordenarPorEstado,
+} from '../../core/utils/sort.utils';
 
 type CampoOrdenEnvios =
   | 'entidadFederativa'
@@ -63,8 +69,8 @@ export class Informes implements OnInit {
   descargandoArchivos = signal<string | null>(null);
   exportandoExcel = signal<TipoReporte | null>(null);
 
-  ordenEnvios = signal<{ campo: CampoOrdenEnvios; direccion: DireccionOrden } | null>(null);
-  ordenCargas = signal<{ campo: CampoOrdenCargas; direccion: DireccionOrden } | null>(null);
+  ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
+  ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>(null);
 
   descargaEnProceso = computed(() => {
     return (
@@ -503,99 +509,34 @@ export class Informes implements OnInit {
   }
 
   ordenarEnviosPor(campo: CampoOrdenEnvios): void {
-    const ordenActual = this.ordenEnvios();
-
-    if (ordenActual?.campo === campo) {
-      this.ordenEnvios.set({
-        campo,
-        direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc',
-      });
-
-      this.paginaEnvios.set(1);
-      return;
-    }
-
-    this.ordenEnvios.set({ campo, direccion: 'asc' });
-    this.paginaEnvios.set(1);
+    this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
   }
 
   ordenarCargasPor(campo: CampoOrdenCargas): void {
-    const ordenActual = this.ordenCargas();
-
-    if (ordenActual?.campo === campo) {
-      this.ordenCargas.set({
-        campo,
-        direccion: ordenActual.direccion === 'asc' ? 'desc' : 'asc',
-      });
-
-      this.paginaCargas.set(1);
-      return;
-    }
-
-    this.ordenCargas.set({ campo, direccion: 'asc' });
-    this.paginaCargas.set(1);
+    this.ordenCargas.set(alternarOrden(this.ordenCargas(), campo));
   }
 
   iconoOrdenEnvios(campo: CampoOrdenEnvios): string {
-    const orden = this.ordenEnvios();
-
-    if (orden?.campo !== campo) {
-      return 'fa-solid fa-sort sort-icon';
-    }
-
-    return orden.direccion === 'asc'
-      ? 'fa-solid fa-sort-up sort-icon active'
-      : 'fa-solid fa-sort-down sort-icon active';
+    return obtenerIconoOrden(this.ordenEnvios(), campo);
   }
 
   iconoOrdenCargas(campo: CampoOrdenCargas): string {
-    const orden = this.ordenCargas();
-
-    if (orden?.campo !== campo) {
-      return 'fa-solid fa-sort sort-icon';
-    }
-
-    return orden.direccion === 'asc'
-      ? 'fa-solid fa-sort-up sort-icon active'
-      : 'fa-solid fa-sort-down sort-icon active';
+    return obtenerIconoOrden(this.ordenCargas(), campo);
   }
 
   private ordenarListaEnvios(lista: InformeEnvioItem[]): InformeEnvioItem[] {
-    const orden = this.ordenEnvios();
-
-    if (!orden) {
-      return lista;
-    }
-
-    return [...lista].sort((a, b) => {
-      const valorA = this.obtenerValorOrdenEnvio(a, orden.campo);
-      const valorB = this.obtenerValorOrdenEnvio(b, orden.campo);
-      const resultado = this.compararValores(valorA, valorB);
-
-      return orden.direccion === 'asc' ? resultado : resultado * -1;
-    });
+    return ordenarPorEstado(lista, this.ordenEnvios(), (envio, campo) =>
+      this.obtenerValorOrdenEnvio(envio, campo),
+    );
   }
 
   private ordenarListaCargas(lista: InformeReporteCargaItem[]): InformeReporteCargaItem[] {
-    const orden = this.ordenCargas();
-
-    if (!orden) {
-      return lista;
-    }
-
-    return [...lista].sort((a, b) => {
-      const valorA = this.obtenerValorOrdenCarga(a, orden.campo);
-      const valorB = this.obtenerValorOrdenCarga(b, orden.campo);
-      const resultado = this.compararValores(valorA, valorB);
-
-      return orden.direccion === 'asc' ? resultado : resultado * -1;
-    });
+    return ordenarPorEstado(lista, this.ordenCargas(), (carga, campo) =>
+      this.obtenerValorOrdenCarga(carga, campo),
+    );
   }
 
-  private obtenerValorOrdenEnvio(
-    envio: InformeEnvioItem,
-    campo: CampoOrdenEnvios,
-  ): string | number | null {
+  private obtenerValorOrdenEnvio(envio: InformeEnvioItem, campo: CampoOrdenEnvios): ValorOrden {
     if (campo === 'fechaEnvioTexto') {
       return envio.fechaEnvio;
     }
@@ -610,7 +551,7 @@ export class Informes implements OnInit {
   private obtenerValorOrdenCarga(
     carga: InformeReporteCargaItem,
     campo: CampoOrdenCargas,
-  ): string | number | null {
+  ): ValorOrden {
     if (campo === 'fechaUltimaCargaTexto') {
       return carga.fechaUltimaCarga;
     }
@@ -620,28 +561,6 @@ export class Informes implements OnInit {
     }
 
     return carga[campo] ?? '';
-  }
-
-  private compararValores(
-    valorA: string | number | null | undefined,
-    valorB: string | number | null | undefined,
-  ): number {
-    if (valorA === null || valorA === undefined || valorA === '') {
-      return 1;
-    }
-
-    if (valorB === null || valorB === undefined || valorB === '') {
-      return -1;
-    }
-
-    if (typeof valorA === 'number' && typeof valorB === 'number') {
-      return valorA - valorB;
-    }
-
-    return String(valorA).localeCompare(String(valorB), 'es', {
-      numeric: true,
-      sensitivity: 'base',
-    });
   }
 
   private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void {

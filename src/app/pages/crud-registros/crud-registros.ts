@@ -6,6 +6,8 @@ import { forkJoin } from 'rxjs';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem, RolCatalogoItem } from '../../core/models/catalogos.models';
+import { UsuariosService } from '../../core/services/usuarios.service';
+import { SessionService } from '../../core/services/session.service';
 
 import {
   CrearUsuarioRequest,
@@ -15,8 +17,13 @@ import {
   UsuarioOperacionResponse,
 } from '../../core/models/usuarios.models';
 
-import { UsuariosService } from '../../core/services/usuarios.service';
-import { SessionService } from '../../core/services/session.service';
+import {
+  EstadoOrden,
+  ValorOrden,
+  alternarOrden,
+  obtenerIconoOrden,
+  ordenarPorEstado,
+} from '../../core/utils/sort.utils';
 
 type ModoFormulario = 'NUEVO' | 'EDITAR';
 
@@ -36,8 +43,6 @@ interface UsuarioForm {
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
 }
-
-type DireccionOrden = 'asc' | 'desc';
 
 type CampoOrdenUsuarios =
   | 'nombreCompleto'
@@ -60,7 +65,7 @@ export class CrudRegistros implements OnInit {
   private readonly sessionService = inject(SessionService);
   private readonly catalogosService = inject(CatalogosService);
 
-  ordenUsuarios = signal<{ campo: CampoOrdenUsuarios; direccion: DireccionOrden } | null>(null);
+  ordenUsuarios = signal<EstadoOrden<CampoOrdenUsuarios> | null>(null);
   exportandoExcel = signal(false);
 
   busqueda = signal('');
@@ -136,84 +141,28 @@ export class CrudRegistros implements OnInit {
   });
 
   private ordenarListaUsuarios(lista: UsuarioListadoItem[]): UsuarioListadoItem[] {
-    const orden = this.ordenUsuarios();
-
-    if (!orden) {
-      return lista;
-    }
-
-    return [...lista].sort((a, b) => {
-      const valorA = this.obtenerValorOrdenUsuario(a, orden.campo);
-      const valorB = this.obtenerValorOrdenUsuario(b, orden.campo);
-      const resultado = this.compararValores(valorA, valorB);
-
-      return orden.direccion === 'asc' ? resultado : resultado * -1;
-    });
+    return ordenarPorEstado(lista, this.ordenUsuarios(), (usuario, campo) =>
+      this.obtenerValorOrdenUsuario(usuario, campo),
+    );
   }
 
   private obtenerValorOrdenUsuario(
     usuario: UsuarioListadoItem,
     campo: CampoOrdenUsuarios,
-  ): string | number | boolean | null {
+  ): ValorOrden {
     return usuario[campo] ?? '';
   }
 
-  private compararValores(
-    valorA: string | number | boolean | null | undefined,
-    valorB: string | number | boolean | null | undefined,
-  ): number {
-    if (valorA === null || valorA === undefined || valorA === '') {
-      return 1;
-    }
-
-    if (valorB === null || valorB === undefined || valorB === '') {
-      return -1;
-    }
-
-    if (typeof valorA === 'boolean' && typeof valorB === 'boolean') {
-      return Number(valorA) - Number(valorB);
-    }
-
-    if (typeof valorA === 'number' && typeof valorB === 'number') {
-      return valorA - valorB;
-    }
-
-    return String(valorA).localeCompare(String(valorB), 'es', {
-      numeric: true,
-      sensitivity: 'base',
-    });
-  }
-
- 
   esUsuarioActual(usuario: UsuarioListadoItem): boolean {
     return usuario.idUsuario === this.usuarioActual()?.idUsuario;
   }
 
   ordenarUsuariosPor(campo: CampoOrdenUsuarios): void {
-    const actual = this.ordenUsuarios();
-
-    if (actual?.campo === campo) {
-      this.ordenUsuarios.set({
-        campo,
-        direccion: actual.direccion === 'asc' ? 'desc' : 'asc',
-      });
-
-      return;
-    }
-
-    this.ordenUsuarios.set({ campo, direccion: 'asc' });
+    this.ordenUsuarios.set(alternarOrden(this.ordenUsuarios(), campo));
   }
 
   iconoOrdenUsuarios(campo: CampoOrdenUsuarios): string {
-    const orden = this.ordenUsuarios();
-
-    if (orden?.campo !== campo) {
-      return 'fa-solid fa-sort sort-icon';
-    }
-
-    return orden.direccion === 'asc'
-      ? 'fa-solid fa-sort-up sort-icon active'
-      : 'fa-solid fa-sort-down sort-icon active';
+    return obtenerIconoOrden(this.ordenUsuarios(), campo);
   }
 
   async exportarUsuariosExcel(): Promise<void> {
