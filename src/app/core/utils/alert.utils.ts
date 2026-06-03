@@ -18,7 +18,7 @@ function mostrarAlerta(
     icon,
     title: options.title,
     text: options.text,
-    confirmButtonText: options.confirmButtonText,
+    confirmButtonText: options.confirmButtonText ?? 'OK',
     confirmButtonColor,
   });
 }
@@ -71,6 +71,7 @@ export function mostrarAdvertenciaHtml(title: string, html: string): Promise<Swe
     icon: 'warning',
     title,
     html,
+    confirmButtonText: 'OK',
     confirmButtonColor: COLOR_PRIMARIO,
   });
 }
