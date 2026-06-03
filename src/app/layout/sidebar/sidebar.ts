@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-
+import { ROLES } from '../../core/constants/roles.constants';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionService } from '../../core/services/session.service';
 
@@ -27,9 +27,9 @@ export class Sidebar {
   habilitaCarga = this.sessionService.habilitaCarga;
   habilitaModificacion = this.sessionService.habilitaModificacion;
 
-  esSuperUsuario = computed(() => this.usuario()?.rol === 'SUPER_USUARIO');
-  esEnlaceEstatal = computed(() => this.usuario()?.rol === 'ENLACE_ESTATAL');
-  esConsulta = computed(() => this.usuario()?.rol === 'CONSULTA');
+  esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+  esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
+  esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
 
   puedeVerCargaInformacion = computed(() => {
     return !this.esConsulta() && (this.habilitaCarga() || this.habilitaModificacion());

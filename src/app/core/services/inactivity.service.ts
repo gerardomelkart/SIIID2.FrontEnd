@@ -5,7 +5,6 @@ import Swal from 'sweetalert2';
 import { SessionService } from './session.service';
 
 const TIEMPO_INACTIVIDAD_MS = 10 * 60 * 1000;
-//const TIEMPO_INACTIVIDAD_MS = 30 * 1000;
 
 @Injectable({
   providedIn: 'root'

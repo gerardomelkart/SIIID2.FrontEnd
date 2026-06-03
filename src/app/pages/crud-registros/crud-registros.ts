@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
-
+import { ROLES } from '../../core/constants/roles.constants';
 import { forkJoin } from 'rxjs';
 import * as XLSX from 'xlsx';
 
@@ -101,12 +101,12 @@ export class CrudRegistros implements OnInit {
   totalUsuarios = computed(() => this.usuarios().length);
   totalActivos = computed(() => this.usuarios().filter(x => x.activo).length);
   totalInactivos = computed(() => this.usuarios().filter(x => !x.activo).length);
-  totalSuperUsuarios = computed(() => this.usuarios().filter(x => x.rol === 'SUPER_USUARIO').length);
+  totalSuperUsuarios = computed(() => this.usuarios().filter(x => x.rol === ROLES.SUPER_USUARIO).length);
 
   usuarioActual = this.sessionService.usuario;
 
   totalSuperUsuariosActivos = computed(() => {
-    return this.usuarios().filter(x => x.activo && x.rol === 'SUPER_USUARIO').length;
+    return this.usuarios().filter(x => x.activo && x.rol === ROLES.SUPER_USUARIO).length;
   });
 
   formularioValido = computed(() => {
@@ -636,7 +636,7 @@ export class CrudRegistros implements OnInit {
   }
 
   private obtenerEntidadParaRequest(form: UsuarioForm): number | null {
-    if (form.rol === 'SUPER_USUARIO') {
+    if (form.rol === ROLES.SUPER_USUARIO) {
       return null;
     }
 
@@ -650,7 +650,7 @@ export class CrudRegistros implements OnInit {
   }
 
   private normalizarPermisosPorRol(rol: string): void {
-    if (rol !== 'CONSULTA') {
+    if (rol !== ROLES.CONSULTA) {
       return;
     }
 

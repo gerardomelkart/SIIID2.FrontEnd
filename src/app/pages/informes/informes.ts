@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-
+import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 import { InformesService } from '../../core/services/informes.service';
 import {
@@ -107,15 +107,15 @@ export class Informes implements OnInit {
   }
 
   esSuperUsuario = computed(() => {
-    return this.usuario()?.rol === 'SUPER_USUARIO';
+    return this.usuario()?.rol === ROLES.SUPER_USUARIO;
   });
 
   esConsulta = computed(() => {
-    return this.usuario()?.rol === 'CONSULTA';
+    return this.usuario()?.rol === ROLES.CONSULTA;
   });
 
   esEnlaceEstatal = computed(() => {
-    return this.usuario()?.rol === 'ENLACE_ESTATAL';
+    return this.usuario()?.rol === ROLES.ENLACE_ESTATAL;
   });
 
   puedeVerCargas = computed(() => this.esSuperUsuario());

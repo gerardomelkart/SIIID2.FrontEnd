@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import Swal from 'sweetalert2';
-
+import { RolSistema } from '../constants/roles.constants';
 import { SessionService } from '../services/session.service';
 
 type RolUsuario = 'SUPER_USUARIO' | 'ENLACE_ESTATAL' | 'CONSULTA';

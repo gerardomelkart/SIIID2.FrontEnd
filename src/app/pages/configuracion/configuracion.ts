@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import * as XLSX from 'xlsx';
+import { ROLES } from '../../core/constants/roles.constants';
 
 import {
   EditarUsuarioRequest,
@@ -85,7 +86,7 @@ export class Configuracion implements OnInit {
         continue;
       }
 
-      if (usuario.rol === 'CONSULTA') {
+      if (usuario.rol === ROLES.CONSULTA) {
         continue;
       }
 
@@ -354,7 +355,7 @@ export class Configuracion implements OnInit {
         habilitaModificacionOriginal: usuario.habilitaModificacion,
         habilitaCarga: usuario.habilitaCarga,
         habilitaModificacion: usuario.habilitaModificacion,
-        bloqueado: usuario.rol === 'CONSULTA'
+        bloqueado: usuario.rol === ROLES.CONSULTA
       }));
 
     this.entidadSeleccionada.set(entidad);

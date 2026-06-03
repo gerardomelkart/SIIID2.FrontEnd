@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-
+import { ROLES } from './core/constants/roles.constants';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { Login } from './pages/login/login';
 import { Dashboard } from './pages/dashboard/dashboard';
@@ -28,7 +28,7 @@ export const routes: Routes = [
         component: CargaInicial,
         canActivate: [permissionGuard],
         data: {
-          roles: ['SUPER_USUARIO', 'ENLACE_ESTATAL'],
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
           permiso: 'CARGA'
         }
       },
@@ -38,7 +38,7 @@ export const routes: Routes = [
         component: Actualizacion,
         canActivate: [permissionGuard],
         data: {
-          roles: ['SUPER_USUARIO', 'ENLACE_ESTATAL'],
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
           permiso: 'MODIFICACION'
         }
       },
@@ -49,7 +49,7 @@ export const routes: Routes = [
         component: Informes,
         canActivate: [permissionGuard],
         data: {
-          roles: ['SUPER_USUARIO', 'ENLACE_ESTATAL', 'CONSULTA'],
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
           reporte: 'ENVIOS'
         }
       },
@@ -59,7 +59,7 @@ export const routes: Routes = [
         component: Informes,
         canActivate: [permissionGuard],
         data: {
-          roles: ['SUPER_USUARIO'],
+          roles: [ROLES.SUPER_USUARIO],
           reporte: 'CARGAS'
         }
       },
@@ -69,7 +69,7 @@ export const routes: Routes = [
         component: CrudRegistros,
         canActivate: [permissionGuard],
         data: {
-          roles: ['SUPER_USUARIO']
+          roles: [ROLES.SUPER_USUARIO]
         }
       },
 
@@ -78,7 +78,7 @@ export const routes: Routes = [
         component: Configuracion,
         canActivate: [permissionGuard],
         data: {
-          roles: ['SUPER_USUARIO']
+          roles: [ROLES.SUPER_USUARIO]
         }
       },
 
