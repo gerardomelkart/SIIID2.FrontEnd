@@ -2,7 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
+import {
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExito,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
@@ -299,58 +304,53 @@ export class Actualizacion {
     }
   }
 
-aceptarActualizacion(): void {
-  const codigoReferencia = this.codigoReferenciaOperacion();
+  aceptarActualizacion(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
-  if (!codigoReferencia) {
-    return;
-  }
+    if (!codigoReferencia) {
+      return;
+    }
 
-  this.estadoPeriodo.set('CONFIRMANDO');
+    this.estadoPeriodo.set('CONFIRMANDO');
 
-  this.actualizacionService
-    .confirmarActualizacion({
-      codigoReferencia,
-      aceptar: true,
-    })
-    .pipe(
-      switchMap(() =>
-        this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
-          map((blob: Blob) => ({ acuseDescargado: true, blob })),
-          catchError(() => of({ acuseDescargado: false, blob: null as Blob | null }))
-        )
+    this.actualizacionService
+      .confirmarActualizacion({
+        codigoReferencia,
+        aceptar: true,
+      })
+      .pipe(
+        switchMap(() =>
+          this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
+            map((blob: Blob) => ({ acuseDescargado: true, blob })),
+            catchError(() => of({ acuseDescargado: false, blob: null as Blob | null })),
+          ),
+        ),
       )
-    )
-    .subscribe({
-      next: (resultado) => {
-        if (resultado.blob) {
-          this.reemplazarAcuseConfirmado(resultado.blob);
-        }
+      .subscribe({
+        next: (resultado) => {
+          if (resultado.blob) {
+            this.reemplazarAcuseConfirmado(resultado.blob);
+          }
 
-        this.estadoPeriodo.set('CONFIRMADO');
+          this.estadoPeriodo.set('CONFIRMADO');
 
-        Swal.fire({
-          icon: 'success',
-          title: '¡Actualización completada!',
-          text: resultado.acuseDescargado
-            ? undefined
-            : 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
-          confirmButtonText: 'OK',
-          confirmButtonColor: '#2f80d0',
-        });
-      },
-      error: (error: unknown) => {
-        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+          mostrarExito(
+            '¡Actualización completada!',
+            resultado.acuseDescargado
+              ? undefined
+              : 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
+          );
+        },
+        error: (error: unknown) => {
+          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible confirmar la actualización',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
-      },
-    });
-}
+          mostrarError(
+            'No fue posible confirmar la actualización',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
+        },
+      });
+  }
 
   rechazarActualizacion(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
@@ -371,24 +371,20 @@ aceptarActualizacion(): void {
           this.estadoPeriodo.set('RECHAZADO');
           this.limpiarUrlsPdf();
 
-          Swal.fire({
-            icon: 'success',
-            title: 'Actualización rechazada',
-            text: 'La actualización fue rechazada correctamente.',
-            confirmButtonColor: '#691C32',
-          }).then(() => {
+          mostrarExitoInstitucional(
+            'Actualización rechazada',
+            'La actualización fue rechazada correctamente.',
+          ).then(() => {
             this.router.navigateByUrl('/');
           });
         },
         error: (error: unknown) => {
           this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
-          Swal.fire({
-            icon: 'error',
-            title: 'No fue posible rechazar la actualización',
-            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-            confirmButtonColor: '#691C32',
-          });
+          mostrarError(
+            'No fue posible rechazar la actualización',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
         },
       });
   }
@@ -397,12 +393,10 @@ aceptarActualizacion(): void {
     const codigoReferencia = this.codigoReferenciaPendiente();
 
     if (!codigoReferencia) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Sin referencia pendiente',
-        text: 'No fue posible identificar el código de referencia pendiente.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarAdvertencia(
+        'Sin referencia pendiente',
+        'No fue posible identificar el código de referencia pendiente.',
+      );
 
       return;
     }
