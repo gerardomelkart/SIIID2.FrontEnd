@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { ROLES } from '../../core/constants/roles.constants';
 
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
@@ -69,10 +70,9 @@ export class Actualizacion {
 
   usuario = this.sessionService.usuario;
 
-  esSuperUsuario = computed(() => {
-    const rol = this.usuario()?.rol?.toLowerCase() ?? '';
-    return rol.includes('super');
-  });
+esSuperUsuario = computed(() => {
+  return this.usuario()?.rol === ROLES.SUPER_USUARIO;
+});
 
   puedeConsultar = computed(() => {
     const tienePeriodo = this.anioCorte() !== '' && this.mesCorte() !== '';
