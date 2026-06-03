@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
   ActualizacionDiferenciasResponse,
@@ -298,59 +299,58 @@ export class Actualizacion {
     }
   }
 
-  aceptarActualizacion(): void {
-    const codigoReferencia = this.codigoReferenciaOperacion();
+aceptarActualizacion(): void {
+  const codigoReferencia = this.codigoReferenciaOperacion();
 
-    if (!codigoReferencia) {
-      return;
-    }
-
-    this.estadoPeriodo.set('CONFIRMANDO');
-
-    this.actualizacionService
-      .confirmarActualizacion({
-        codigoReferencia,
-        aceptar: true,
-      })
-      .subscribe({
-        next: () => {
-          this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).subscribe({
-            next: (blob: Blob) => {
-              this.reemplazarAcuseConfirmado(blob);
-              this.estadoPeriodo.set('CONFIRMADO');
-
-              Swal.fire({
-                icon: 'success',
-                title: '¡Actualización completada!',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#2f80d0',
-              });
-            },
-            error: () => {
-              this.estadoPeriodo.set('CONFIRMADO');
-
-              Swal.fire({
-                icon: 'success',
-                title: '¡Actualización completada!',
-                text: 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#2f80d0',
-              });
-            },
-          });
-        },
-        error: (error: unknown) => {
-          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
-
-          Swal.fire({
-            icon: 'error',
-            title: 'No fue posible confirmar la actualización',
-            text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-            confirmButtonColor: '#691C32',
-          });
-        },
-      });
+  if (!codigoReferencia) {
+    return;
   }
+
+  this.estadoPeriodo.set('CONFIRMANDO');
+
+  this.actualizacionService
+    .confirmarActualizacion({
+      codigoReferencia,
+      aceptar: true,
+    })
+    .pipe(
+      switchMap(() =>
+        this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
+          map((blob: Blob) => ({ acuseDescargado: true, blob })),
+          catchError(() => of({ acuseDescargado: false, blob: null as Blob | null }))
+        )
+      )
+    )
+    .subscribe({
+      next: (resultado) => {
+        if (resultado.blob) {
+          this.reemplazarAcuseConfirmado(resultado.blob);
+        }
+
+        this.estadoPeriodo.set('CONFIRMADO');
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Actualización completada!',
+          text: resultado.acuseDescargado
+            ? undefined
+            : 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#2f80d0',
+        });
+      },
+      error: (error: unknown) => {
+        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible confirmar la actualización',
+          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          confirmButtonColor: '#691C32',
+        });
+      },
+    });
+}
 
   rechazarActualizacion(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
