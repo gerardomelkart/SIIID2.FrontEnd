@@ -108,32 +108,32 @@ export class Actualizacion {
   errores = computed(() => this.respuestaValidacion()?.errores ?? []);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
-codigoReferenciaPendiente = computed(() => {
-  const textoErrores = this.errores()
-    .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
-    .join(' ');
+  codigoReferenciaPendiente = computed(() => {
+    const textoErrores = this.errores()
+      .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
+      .join(' ');
 
-  const textoPeriodo = this.mensajePeriodo() ?? '';
+    const textoPeriodo = this.mensajePeriodo() ?? '';
 
-  const textoCompleto = `${textoPeriodo} ${textoErrores}`;
+    const textoCompleto = `${textoPeriodo} ${textoErrores}`;
 
-  const match = textoCompleto.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
+    const match = textoCompleto.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
 
-  return match?.[1] ?? '';
-});
+    return match?.[1] ?? '';
+  });
 
-hayActualizacionPendiente = computed(() => {
-  return this.codigoReferenciaPendiente() !== '';
-});
+  hayActualizacionPendiente = computed(() => {
+    return this.codigoReferenciaPendiente() !== '';
+  });
 
-hayActualizacionPendienteEnPeriodo = computed(() => {
-  return this.estadoPeriodo() === 'NO_DISPONIBLE'
-    && this.codigoReferenciaPendiente() !== '';
-});
+  hayActualizacionPendienteEnPeriodo = computed(() => {
+    return this.estadoPeriodo() === 'NO_DISPONIBLE'
+      && this.codigoReferenciaPendiente() !== '';
+  });
 
-codigoReferenciaOperacion = computed(() => {
-  return this.codigoReferenciaPendiente() || this.codigoReferencia();
-});
+  codigoReferenciaOperacion = computed(() => {
+    return this.codigoReferenciaPendiente() || this.codigoReferencia();
+  });
 
   totalDiferenciasCarpetas = computed(() => this.diferencias()?.carpetas?.length ?? 0);
   totalDiferenciasDelitos = computed(() => this.diferencias()?.delitos?.length ?? 0);
@@ -285,7 +285,7 @@ codigoReferenciaOperacion = computed(() => {
   }
 
   continuarAAcusePrevio(): void {
-const codigoReferencia = this.codigoReferenciaOperacion();
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
       return;
@@ -301,7 +301,7 @@ const codigoReferencia = this.codigoReferenciaOperacion();
   }
 
   aceptarActualizacion(): void {
-const codigoReferencia = this.codigoReferenciaOperacion();
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
       return;
@@ -392,21 +392,21 @@ const codigoReferencia = this.codigoReferenciaOperacion();
   }
 
   resolverActualizacionPendiente(): void {
-  const codigoReferencia = this.codigoReferenciaPendiente();
+    const codigoReferencia = this.codigoReferenciaPendiente();
 
-  if (!codigoReferencia) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Sin referencia pendiente',
-      text: 'No fue posible identificar el código de referencia pendiente.',
-      confirmButtonColor: '#691C32'
-    });
+    if (!codigoReferencia) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin referencia pendiente',
+        text: 'No fue posible identificar el código de referencia pendiente.',
+        confirmButtonColor: '#691C32'
+      });
 
-    return;
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
   }
-
-  this.abrirAcusePrevio(codigoReferencia);
-}
 
   cerrarProcesoConfirmado(): void {
     this.limpiarUrlsPdf();
@@ -463,14 +463,14 @@ const codigoReferencia = this.codigoReferenciaOperacion();
     return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
   }
 
-prepararNuevaValidacion(): void {
-  this.limpiarArchivos();
-  this.respuestaValidacion.set(null);
-  this.diferencias.set(null);
-  this.errorGeneral.set('');
-  this.limpiarUrlsPdf();
-  this.estadoPeriodo.set('DISPONIBLE');
-}
+  prepararNuevaValidacion(): void {
+    this.limpiarArchivos();
+    this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
+    this.errorGeneral.set('');
+    this.limpiarUrlsPdf();
+    this.estadoPeriodo.set('DISPONIBLE');
+  }
   esMovimientoEliminado(tipoMovimiento: string): boolean {
     const valor = tipoMovimiento?.toUpperCase() ?? '';
     return valor === 'ELIMINADO' || valor === 'BAJA';

@@ -1,114 +1,114 @@
 <aside class="sidebar">
-<div class="user-card">
-  <div class="user-main">
-    <div class="avatar">
-      <img src="/img/logoMujBandera.png" alt="Usuario en línea">
-    </div>
+  <div class="user-card">
+    <div class="user-main">
+      <div class="avatar">
+        <img src="/img/logoMujBandera.png" alt="Usuario en línea">
+      </div>
 
-    <div class="user-info">
-      <div class="user-name">{{ usuario()?.nombreCompleto || usuario()?.usuario || 'usuario' }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ usuario()?.nombreCompleto || usuario()?.usuario || 'usuario' }}</div>
 
-      <div class="user-status">
-        <span class="status-dot"></span>
-        EN LÍNEA
+        <div class="user-status">
+          <span class="status-dot"></span>
+          EN LÍNEA
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="system-info">
-    <span>Sistema SIIID2</span>
-    <strong>Version. 3.0.0</strong>
+    <div class="system-info">
+      <span>Sistema SIIID2</span>
+      <strong>Version. 3.0.0</strong>
+    </div>
   </div>
-</div>
 
   <nav class="menu">
     @if (puedeVerCargaInformacion()) {
-      <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
-        <span>
-          <i class="fa-solid fa-upload"></i>
-          Carga de Información
-        </span>
-      </button>
+    <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
+      <span>
+        <i class="fa-solid fa-upload"></i>
+        Carga de Información
+      </span>
+    </button>
 
-      @if (cargaAbierta()) {
-        <button type="button" class="menu-link menu-button level-2" (click)="toggleIncidencia()">
-          <span>
-            <i class="fa-solid fa-folder"></i>
-            Incidencia Delictiva
-          </span>
-        </button>
+    @if (cargaAbierta()) {
+    <button type="button" class="menu-link menu-button level-2" (click)="toggleIncidencia()">
+      <span>
+        <i class="fa-solid fa-folder"></i>
+        Incidencia Delictiva
+      </span>
+    </button>
 
-        @if (incidenciaAbierta()) {
-          @if (habilitaCarga()) {
-            <a class="menu-link level-3" routerLink="/carga-inicial" routerLinkActive="active">
-              <i class="fa-solid fa-upload"></i>
-              Integrar Información
-            </a>
-          }
+    @if (incidenciaAbierta()) {
+    @if (habilitaCarga()) {
+    <a class="menu-link level-3" routerLink="/carga-inicial" routerLinkActive="active">
+      <i class="fa-solid fa-upload"></i>
+      Integrar Información
+    </a>
+    }
 
-          @if (habilitaModificacion()) {
-            <a class="menu-link level-3" routerLink="/actualizacion" routerLinkActive="active">
-              <i class="fa-solid fa-arrows-rotate"></i>
-              Actualizar Información
-            </a>
-          }
-        }
-      }
+    @if (habilitaModificacion()) {
+    <a class="menu-link level-3" routerLink="/actualizacion" routerLinkActive="active">
+      <i class="fa-solid fa-arrows-rotate"></i>
+      Actualizar Información
+    </a>
+    }
+    }
+    }
     }
 
     @if (puedeVerReporteEnvios() || puedeVerReporteCargas()) {
-      <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
-        <span>
-          <i class="fa-solid fa-bars"></i>
-          Informes
-        </span>
-      </button>
+    <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+      <span>
+        <i class="fa-solid fa-bars"></i>
+        Informes
+      </span>
+    </button>
 
-      @if (informesAbierto()) {
-        <button type="button" class="menu-link menu-button level-2" (click)="toggleInformesIncidencia()">
-          <span>
-            <i class="fa-solid fa-folder"></i>
-            Informes de Incidencia Delictiva
-          </span>
-        </button>
+    @if (informesAbierto()) {
+    <button type="button" class="menu-link menu-button level-2" (click)="toggleInformesIncidencia()">
+      <span>
+        <i class="fa-solid fa-folder"></i>
+        Informes de Incidencia Delictiva
+      </span>
+    </button>
 
-        @if (informesIncidenciaAbierta()) {
-          @if (puedeVerReporteEnvios()) {
-            <a class="menu-link level-3" routerLink="/informes/envios" routerLinkActive="active">
-              <i class="fa-solid fa-paper-plane"></i>
-              Consultar Envíos
-            </a>
-          }
+    @if (informesIncidenciaAbierta()) {
+    @if (puedeVerReporteEnvios()) {
+    <a class="menu-link level-3" routerLink="/informes/envios" routerLinkActive="active">
+      <i class="fa-solid fa-paper-plane"></i>
+      Consultar Envíos
+    </a>
+    }
 
-          @if (puedeVerReporteCargas()) {
-            <a class="menu-link level-3" routerLink="/informes/cargas" routerLinkActive="active">
-              <i class="fa-solid fa-chart-simple"></i>
-              Reporte de Cargas
-            </a>
-          }
-        }
-      }
+    @if (puedeVerReporteCargas()) {
+    <a class="menu-link level-3" routerLink="/informes/cargas" routerLinkActive="active">
+      <i class="fa-solid fa-chart-simple"></i>
+      Reporte de Cargas
+    </a>
+    }
+    }
+    }
     }
 
     @if (puedeVerAdministracion()) {
-      <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
-        <span>
-          <i class="fa-solid fa-screwdriver-wrench"></i>
-          Administración
-        </span>
-      </button>
+    <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+      <span>
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        Administración
+      </span>
+    </button>
 
-      @if (administracionAbierta()) {
-        <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
-          <i class="fa-solid fa-users"></i>
-          Usuarios
-        </a>
+    @if (administracionAbierta()) {
+    <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
+      <i class="fa-solid fa-users"></i>
+      Usuarios
+    </a>
 
-        <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
-          <i class="fa-solid fa-sliders"></i>
-          Configuración de módulos
-        </a>
-      }
+    <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
+      <i class="fa-solid fa-sliders"></i>
+      Configuración de módulos
+    </a>
+    }
     }
 
     <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">

@@ -82,8 +82,8 @@ export class Informes implements OnInit {
 
 
 
-periodosCorte = signal<PeriodoCorteInforme[]>([]);
-periodoCorteSeleccionado = signal<string>('');
+  periodosCorte = signal<PeriodoCorteInforme[]>([]);
+  periodoCorteSeleccionado = signal<string>('');
 
   ngOnInit(): void {
     this.route.data.subscribe(data => {
@@ -97,10 +97,10 @@ periodoCorteSeleccionado = signal<string>('');
 
       this.reporteActivo.set(reporte ?? 'ENVIOS');
 
-if (this.reporteActivo() === 'CARGAS') {
-  this.cargarReporteCargas();
-  return;
-}
+      if (this.reporteActivo() === 'CARGAS') {
+        this.cargarReporteCargas();
+        return;
+      }
 
       this.cargarEnvios();
     });
@@ -148,37 +148,37 @@ if (this.reporteActivo() === 'CARGAS') {
     return this.ordenarListaEnvios(filtrados);
   });
 
-cargasFiltradas = computed(() => {
-  const texto = this.busquedaCargas().trim().toLowerCase();
-  const corte = this.corteOperativo();
+  cargasFiltradas = computed(() => {
+    const texto = this.busquedaCargas().trim().toLowerCase();
+    const corte = this.corteOperativo();
 
-  const filtradas = this.cargas().filter(carga => {
-    if (carga.claveEntidad === '00') {
-      return false;
-    }
+    const filtradas = this.cargas().filter(carga => {
+      if (carga.claveEntidad === '00') {
+        return false;
+      }
 
-    if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) {
-      return false;
-    }
+      if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) {
+        return false;
+      }
 
-    if (!carga.intentos || carga.intentos === 0) {
-      return false;
-    }
+      if (!carga.intentos || carga.intentos === 0) {
+        return false;
+      }
 
-    if (!texto) {
-      return true;
-    }
+      if (!texto) {
+        return true;
+      }
 
-    return carga.entidadFederativa.toLowerCase().includes(texto) ||
-      carga.claveEntidad.toLowerCase().includes(texto) ||
-      carga.corte.toLowerCase().includes(texto) ||
-      (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
-      (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-      (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
+      return carga.entidadFederativa.toLowerCase().includes(texto) ||
+        carga.claveEntidad.toLowerCase().includes(texto) ||
+        carga.corte.toLowerCase().includes(texto) ||
+        (carga.ultimoIntento ?? '').toLowerCase().includes(texto) ||
+        (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto);
+    });
+
+    return this.ordenarListaCargas(filtradas);
   });
-
-  return this.ordenarListaCargas(filtradas);
-});
 
   enviosPaginados = computed(() => {
     const inicio = (this.paginaEnvios() - 1) * this.tamanioPagina;
@@ -235,69 +235,41 @@ cargasFiltradas = computed(() => {
     });
   }
 
-cargarReporteCargas(): void {
-  if (!this.puedeVerCargas()) {
-    return;
-  }
-
-  this.cargandoCargas.set(true);
-
-  this.informesService.obtenerReporteCargas().subscribe({
-    next: (response) => {
-      const registros = response.registros ?? [];
-
-      this.cargas.set(registros);
-      this.sincronizarPeriodosCorte(registros);
-      this.paginaCargas.set(1);
-      this.cargandoCargas.set(false);
-    },
-    error: (error) => {
-      this.cargandoCargas.set(false);
-
-      Swal.fire({
-        icon: 'error',
-        title: 'No fue posible consultar el reporte de cargas',
-        text: error?.error?.mensaje || 'Intente nuevamente.',
-        confirmButtonColor: '#691C32'
-      });
+  cargarReporteCargas(): void {
+    if (!this.puedeVerCargas()) {
+      return;
     }
-  });
-}
 
+    this.cargandoCargas.set(true);
 
+    this.informesService.obtenerReporteCargas().subscribe({
+      next: (response) => {
+        const registros = response.registros ?? [];
 
-private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
-  return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
-}
+        this.cargas.set(registros);
+        this.sincronizarPeriodosCorte(registros);
+        this.paginaCargas.set(1);
+        this.cargandoCargas.set(false);
+      },
+      error: (error) => {
+        this.cargandoCargas.set(false);
 
-private sincronizarCorteSeleccionado(): void {
-  const key = this.periodoCorteSeleccionado();
-
-  if (!key) {
-    return;
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible consultar el reporte de cargas',
+          text: error?.error?.mensaje || 'Intente nuevamente.',
+          confirmButtonColor: '#691C32'
+        });
+      }
+    });
   }
 
-  const periodo = this.periodosCorte().find(x =>
-    this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key
-  );
 
-  if (!periodo) {
-    return;
+
+  cambiarCorteReporte(): void {
+    this.sincronizarCorteSeleccionado();
+    this.paginaCargas.set(1);
   }
-
-  this.corteOperativo.set({
-    mesCorte: periodo.mesCorte,
-    anioCorte: periodo.anioCorte,
-    corte: periodo.corte
-  });
-}
-  
-
-  
-cambiarCorteReporte(): void {
-  this.sincronizarCorteSeleccionado();
-  this.paginaCargas.set(1);
-}
 
 
 
@@ -662,85 +634,85 @@ cambiarCorteReporte(): void {
 
 
   private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void {
-  const periodos = this.obtenerPeriodosDesdeCargas(registros);
-  const corteActual = this.obtenerCorteOperativoActual();
-  const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
+    const periodos = this.obtenerPeriodosDesdeCargas(registros);
+    const corteActual = this.obtenerCorteOperativoActual();
+    const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
 
-  const existeCorteActual = periodos.some(periodo =>
-    this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual
-  );
+    const existeCorteActual = periodos.some(periodo =>
+      this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual
+    );
 
-  if (!existeCorteActual) {
-    periodos.unshift({
-      mesCorte: corteActual.mesCorte,
-      anioCorte: corteActual.anioCorte,
-      corte: corteActual.corte
+    if (!existeCorteActual) {
+      periodos.unshift({
+        mesCorte: corteActual.mesCorte,
+        anioCorte: corteActual.anioCorte,
+        corte: corteActual.corte
+      });
+    }
+
+    this.periodosCorte.set(periodos);
+
+    if (!this.periodoCorteSeleccionado()) {
+      this.periodoCorteSeleccionado.set(keyActual);
+      this.corteOperativo.set(corteActual);
+      return;
+    }
+
+    this.sincronizarCorteSeleccionado();
+  }
+
+  private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {
+    const mapa = new Map<string, PeriodoCorteInforme>();
+
+    for (const registro of registros) {
+      if (!registro.mesCorte || !registro.anioCorte) {
+        continue;
+      }
+
+      const key = this.obtenerKeyPeriodo(registro.mesCorte, registro.anioCorte);
+
+      if (!mapa.has(key)) {
+        mapa.set(key, {
+          mesCorte: registro.mesCorte,
+          anioCorte: registro.anioCorte,
+          corte: registro.corte
+        });
+      }
+    }
+
+    return Array.from(mapa.values()).sort((a, b) => {
+      const valorA = (a.anioCorte * 100) + a.mesCorte;
+      const valorB = (b.anioCorte * 100) + b.mesCorte;
+
+      return valorB - valorA;
     });
   }
 
-  this.periodosCorte.set(periodos);
-
-  if (!this.periodoCorteSeleccionado()) {
-    this.periodoCorteSeleccionado.set(keyActual);
-    this.corteOperativo.set(corteActual);
-    return;
+  private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
+    return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
   }
 
-  this.sincronizarCorteSeleccionado();
-}
+  private sincronizarCorteSeleccionado(): void {
+    const key = this.periodoCorteSeleccionado();
 
-private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {
-  const mapa = new Map<string, PeriodoCorteInforme>();
-
-  for (const registro of registros) {
-    if (!registro.mesCorte || !registro.anioCorte) {
-      continue;
+    if (!key) {
+      return;
     }
 
-    const key = this.obtenerKeyPeriodo(registro.mesCorte, registro.anioCorte);
+    const periodo = this.periodosCorte().find(x =>
+      this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key
+    );
 
-    if (!mapa.has(key)) {
-      mapa.set(key, {
-        mesCorte: registro.mesCorte,
-        anioCorte: registro.anioCorte,
-        corte: registro.corte
-      });
+    if (!periodo) {
+      return;
     }
+
+    this.corteOperativo.set({
+      mesCorte: periodo.mesCorte,
+      anioCorte: periodo.anioCorte,
+      corte: periodo.corte
+    });
   }
-
-  return Array.from(mapa.values()).sort((a, b) => {
-    const valorA = (a.anioCorte * 100) + a.mesCorte;
-    const valorB = (b.anioCorte * 100) + b.mesCorte;
-
-    return valorB - valorA;
-  });
-}
-
-private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
-  return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
-}
-
-private sincronizarCorteSeleccionado(): void {
-  const key = this.periodoCorteSeleccionado();
-
-  if (!key) {
-    return;
-  }
-
-  const periodo = this.periodosCorte().find(x =>
-    this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key
-  );
-
-  if (!periodo) {
-    return;
-  }
-
-  this.corteOperativo.set({
-    mesCorte: periodo.mesCorte,
-    anioCorte: periodo.anioCorte,
-    corte: periodo.corte
-  });
-}
 
   private exportarFilasExcel(
     filas: Record<string, string | number>[],
@@ -797,32 +769,32 @@ private sincronizarCorteSeleccionado(): void {
     return normalMatch?.[1] ?? '';
   }
 
-private obtenerCorteOperativoActual(): CorteOperativo {
-  const fecha = new Date();
-  let mesCorte = fecha.getMonth();
-  let anioCorte = fecha.getFullYear();
+  private obtenerCorteOperativoActual(): CorteOperativo {
+    const fecha = new Date();
+    let mesCorte = fecha.getMonth();
+    let anioCorte = fecha.getFullYear();
 
-  if (mesCorte === 0) {
-    mesCorte = 12;
-    anioCorte--;
+    if (mesCorte === 0) {
+      mesCorte = 12;
+      anioCorte--;
+    }
+
+    return {
+      mesCorte,
+      anioCorte,
+      corte: this.obtenerNombreCorte(mesCorte, anioCorte)
+    };
   }
 
-  return {
-    mesCorte,
-    anioCorte,
-    corte: this.obtenerNombreCorte(mesCorte, anioCorte)
-  };
-}
+  private obtenerNombreCorte(mesCorte: number, anioCorte: number): string {
+    const fecha = new Date(anioCorte, mesCorte - 1, 1);
+    const texto = new Intl.DateTimeFormat('es-MX', {
+      month: 'long',
+      year: 'numeric'
+    }).format(fecha);
 
-private obtenerNombreCorte(mesCorte: number, anioCorte: number): string {
-  const fecha = new Date(anioCorte, mesCorte - 1, 1);
-  const texto = new Intl.DateTimeFormat('es-MX', {
-    month: 'long',
-    year: 'numeric'
-  }).format(fecha);
-
-  return texto.charAt(0).toUpperCase() + texto.slice(1);
-}
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
 
 
   cerrarAcuse(): void {

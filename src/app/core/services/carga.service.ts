@@ -13,7 +13,7 @@ import {
 export class CargaService {
   private readonly apiUrl = '/api/cargas';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   validarArchivos(carpetas: File, delitos: File, victimas: File) {
     const formData = new FormData();

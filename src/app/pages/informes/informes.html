@@ -176,17 +176,14 @@
       </div>
 
       <div class="corte-selector-controls">
-<select
-  class="form-select form-select-sm"
-  [ngModel]="periodoCorteSeleccionado()"
-  (ngModelChange)="periodoCorteSeleccionado.set($event); cambiarCorteReporte()"
->
-  @for (periodo of periodosCorte(); track periodo.mesCorte + '-' + periodo.anioCorte) {
-    <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
-      {{ periodo.corte }}
-    </option>
-  }
-</select>
+        <select class="form-select form-select-sm" [ngModel]="periodoCorteSeleccionado()"
+          (ngModelChange)="periodoCorteSeleccionado.set($event); cambiarCorteReporte()">
+          @for (periodo of periodosCorte(); track periodo.mesCorte + '-' + periodo.anioCorte) {
+          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
+            {{ periodo.corte }}
+          </option>
+          }
+        </select>
       </div>
     </div>
 

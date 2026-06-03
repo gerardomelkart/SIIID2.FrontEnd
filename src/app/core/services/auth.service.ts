@@ -14,7 +14,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private sessionService: SessionService
-  ) {}
+  ) { }
 
   login(request: LoginRequest) {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, request).pipe(

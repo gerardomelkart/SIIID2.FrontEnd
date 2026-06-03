@@ -19,7 +19,7 @@ export class Login {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   entrar(): void {
     this.mensajeError.set('');

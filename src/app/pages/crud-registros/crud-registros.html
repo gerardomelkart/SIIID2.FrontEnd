@@ -41,19 +41,15 @@
       </span>
 
       <div class="usuarios-tools">
-        <button
-  type="button"
-  class="btn btn-sm btn-secondary"
-  [disabled]="exportandoExcel()"
-  (click)="exportarUsuariosExcel()"
->
-  @if (exportandoExcel()) {
-    <i class="fa-solid fa-spinner fa-spin"></i>
-  } @else {
-    <i class="fa-solid fa-file-excel"></i>
-  }
-  Excel
-</button>
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()"
+          (click)="exportarUsuariosExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
         <label class="ver-inactivos">
           <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)">
           Ver inactivos
@@ -69,51 +65,51 @@
 
     <div class="table-responsive">
       <table class="table table-sm usuarios-table">
-<thead>
-  <tr>
-    <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
-      Nombre
-      <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
-    </th>
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
+              Nombre
+              <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
-      Usuario
-      <i [class]="iconoOrdenUsuarios('usuario')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
+              Usuario
+              <i [class]="iconoOrdenUsuarios('usuario')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('correoElectronico')">
-      Correo
-      <i [class]="iconoOrdenUsuarios('correoElectronico')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('correoElectronico')">
+              Correo
+              <i [class]="iconoOrdenUsuarios('correoElectronico')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('rol')">
-      Rol
-      <i [class]="iconoOrdenUsuarios('rol')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('rol')">
+              Rol
+              <i [class]="iconoOrdenUsuarios('rol')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
-      Entidad
-      <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
+              Entidad
+              <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('habilitaCarga')">
-      Carga
-      <i [class]="iconoOrdenUsuarios('habilitaCarga')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaCarga')">
+              Carga
+              <i [class]="iconoOrdenUsuarios('habilitaCarga')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('habilitaModificacion')">
-      Modificación
-      <i [class]="iconoOrdenUsuarios('habilitaModificacion')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaModificacion')">
+              Modificación
+              <i [class]="iconoOrdenUsuarios('habilitaModificacion')"></i>
+            </th>
 
-    <th class="sortable" (click)="ordenarUsuariosPor('activo')">
-      Estado
-      <i [class]="iconoOrdenUsuarios('activo')"></i>
-    </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('activo')">
+              Estado
+              <i [class]="iconoOrdenUsuarios('activo')"></i>
+            </th>
 
-    <th class="acciones-col">Acciones</th>
-  </tr>
-</thead>
+            <th class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
 
         <tbody>
           @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {
@@ -238,9 +234,9 @@
         <select class="form-select form-select-sm" [ngModel]="formulario().rol"
           (ngModelChange)="actualizarCampo('rol', $event)">
           <option value="">Seleccione rol...</option>
-@for (rol of roles(); track rol.idRol) {
-  <option [value]="rol.rol">{{ rol.rol }}</option>
-}
+          @for (rol of roles(); track rol.idRol) {
+          <option [value]="rol.rol">{{ rol.rol }}</option>
+          }
         </select>
       </div>
 
@@ -249,9 +245,9 @@
         <select class="form-select form-select-sm" [disabled]="formulario().rol === 'SUPER_USUARIO'"
           [ngModel]="formulario().idEntidadFederativa" (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
           <option value="">Seleccione entidad...</option>
-@for (entidad of entidades(); track entidad.idEntidadFederativa) {
-  <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
-}
+          @for (entidad of entidades(); track entidad.idEntidadFederativa) {
+          <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
+          }
         </select>
       </div>
 

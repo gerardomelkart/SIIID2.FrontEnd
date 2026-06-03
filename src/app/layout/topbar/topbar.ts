@@ -6,4 +6,4 @@ import { Component } from '@angular/core';
   templateUrl: './topbar.html',
   styleUrl: './topbar.css',
 })
-export class Topbar {}
+export class Topbar { }

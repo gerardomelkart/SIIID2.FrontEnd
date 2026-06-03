@@ -244,6 +244,7 @@
 }
 
 @media (max-width: 900px) {
+
   .update-steps,
   .periodo-grid,
   .plantillas-grid {
@@ -290,6 +291,7 @@
   margin-bottom: 8px;
   transition: transform .12s ease-in-out;
 }
+
 .periodo-alert {
   max-width: 720px;
   padding: 10px 12px;

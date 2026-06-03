@@ -9,4 +9,4 @@ import { Topbar } from '../topbar/topbar';
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css',
 })
-export class MainLayout {}
+export class MainLayout { }

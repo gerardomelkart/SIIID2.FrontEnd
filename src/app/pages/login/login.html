@@ -1,9 +1,6 @@
 <div class="login-page">
   <div class="login-logo">
-    <img
-      src="/img/LogoSEGURIDAD.png"
-      alt="Gobierno de México - Seguridad - Secretariado Ejecutivo"
-    >
+    <img src="/img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
   </div>
 
   <div class="login-card">
@@ -19,36 +16,26 @@
       <form (ngSubmit)="entrar()">
         <div class="field-group">
           <label>Nombre de Usuario</label>
-          <input
-            type="text"
-            name="usuario"
-            autocomplete="username"
-            [ngModel]="usuario()"
-            (ngModelChange)="usuario.set($event)"
-          >
+          <input type="text" name="usuario" autocomplete="username" [ngModel]="usuario()"
+            (ngModelChange)="usuario.set($event)">
         </div>
 
         <div class="field-group">
           <label>Contraseña</label>
-          <input
-            type="password"
-            name="password"
-            autocomplete="current-password"
-            [ngModel]="password()"
-            (ngModelChange)="password.set($event)"
-          >
+          <input type="password" name="password" autocomplete="current-password" [ngModel]="password()"
+            (ngModelChange)="password.set($event)">
         </div>
         @if (mensajeError()) {
-          <div class="login-error">
-            {{ mensajeError() }}
-          </div>
+        <div class="login-error">
+          {{ mensajeError() }}
+        </div>
         }
 
         <button type="submit" class="btn-login" [disabled]="cargando()">
           @if (cargando()) {
-            Entrando...
+          Entrando...
           } @else {
-            Entrar
+          Entrar
           }
         </button>
       </form>

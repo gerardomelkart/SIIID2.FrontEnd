@@ -10,7 +10,7 @@ import {
   EntidadFederativaCatalogoItem,
   RolCatalogoItem
 } from '../../core/models/catalogos.models';
-  
+
 import {
   CrearUsuarioRequest,
   EditarUsuarioRequest,

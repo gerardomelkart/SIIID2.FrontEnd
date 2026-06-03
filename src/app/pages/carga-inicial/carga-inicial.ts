@@ -34,11 +34,11 @@ export class CargaInicial {
   mensaje = signal('');
   errorGeneral = signal('');
 
-private acusePrevioObjectUrl: string | null = null;
-private acuseConfirmadoObjectUrl: string | null = null;
+  private acusePrevioObjectUrl: string | null = null;
+  private acuseConfirmadoObjectUrl: string | null = null;
 
-acusePrevioUrl = signal<SafeResourceUrl | null>(null);
-acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
+  acusePrevioUrl = signal<SafeResourceUrl | null>(null);
+  acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
 
   resumenCarpetas = computed(() => this.resumenPorArchivo('carpetas'));
   resumenDelitos = computed(() => this.resumenPorArchivo('delitos'));
@@ -48,34 +48,34 @@ acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
   codigoReferencia = computed(() => this.respuesta()?.codigoReferencia ?? '');
 
   codigoReferenciaPendiente = computed(() => {
-  const textoErrores = this.errores()
-    .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
-    .join(' ');
+    const textoErrores = this.errores()
+      .map(error => `${error.valor ?? ''} ${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+      .join(' ');
 
-  const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
+    const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
 
-  return match?.[1] ?? '';
-});
+    return match?.[1] ?? '';
+  });
 
-hayCargaPendiente = computed(() => {
-  return this.codigoReferenciaPendiente() !== '';
-});
+  hayCargaPendiente = computed(() => {
+    return this.codigoReferenciaPendiente() !== '';
+  });
 
-codigoReferenciaOperacion = computed(() => {
-  return this.codigoReferenciaPendiente() || this.codigoReferencia();
-});
+  codigoReferenciaOperacion = computed(() => {
+    return this.codigoReferenciaPendiente() || this.codigoReferencia();
+  });
 
   debeUsarActualizacion = computed(() => {
-  const textoErrores = this.errores()
-    .map(error => `${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
-    .join(' ')
-    .toLowerCase();
+    const textoErrores = this.errores()
+      .map(error => `${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+      .join(' ')
+      .toLowerCase();
 
-  return textoErrores.includes('flujo de actualización')
-    || textoErrores.includes('flujo de actualizacion')
-    || textoErrores.includes('información confirmada')
-    || textoErrores.includes('informacion confirmada');
-});
+    return textoErrores.includes('flujo de actualización')
+      || textoErrores.includes('flujo de actualizacion')
+      || textoErrores.includes('información confirmada')
+      || textoErrores.includes('informacion confirmada');
+  });
 
   puedeValidar = computed(() => {
     return !!this.carpetas() && !!this.delitos() && !!this.victimas() && this.estado() !== 'VALIDANDO';
@@ -85,11 +85,11 @@ codigoReferenciaOperacion = computed(() => {
     return this.estado() === 'VALIDADO_ERROR' && !!this.respuesta();
   });
 
-constructor(
-  private cargaService: CargaService,
-  private sanitizer: DomSanitizer,
-  private router: Router
-) {}
+  constructor(
+    private cargaService: CargaService,
+    private sanitizer: DomSanitizer,
+    private router: Router
+  ) { }
 
   seleccionarArchivo(event: Event, tipo: 'carpetas' | 'delitos' | 'victimas'): void {
     const input = event.target as HTMLInputElement;
@@ -207,83 +207,83 @@ constructor(
     });
   }
 
-rechazarCarga(): void {
-  const codigoReferencia = this.codigoReferenciaOperacion();
+  rechazarCarga(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
-  if (!codigoReferencia) {
-    return;
-  }
-
-  this.estado.set('CONFIRMANDO');
-
-  this.cargaService.confirmarCarga({
-    codigoReferencia,
-    aceptar: false
-  }).subscribe({
-    next: () => {
-      this.estado.set('RECHAZADO');
-      this.limpiarUrlsPdf();
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Carga rechazada',
-        text: 'La carga fue rechazada correctamente.',
-        confirmButtonColor: '#691C32'
-      }).then(() => {
-        this.router.navigateByUrl('/');
-      });
-    },
-    error: (error) => {
-      this.estado.set('MOSTRANDO_ACUSE');
-
-      Swal.fire({
-        icon: 'error',
-        title: 'No fue posible rechazar la carga',
-        text: error?.error?.mensaje || 'Intente nuevamente.',
-        confirmButtonColor: '#691C32'
-      });
+    if (!codigoReferencia) {
+      return;
     }
-  });
-}
 
-prepararNuevaValidacion(): void {
-  this.reiniciarFormulario();
-  this.limpiarUrlsPdf();
-  this.estado.set('INICIAL');
-}
+    this.estado.set('CONFIRMANDO');
 
-cerrarAcuse(): void {
-  this.estado.set('INICIAL');
-  this.limpiarUrlsPdf();
-}
+    this.cargaService.confirmarCarga({
+      codigoReferencia,
+      aceptar: false
+    }).subscribe({
+      next: () => {
+        this.estado.set('RECHAZADO');
+        this.limpiarUrlsPdf();
 
-cerrarProcesoConfirmado(): void {
-  this.limpiarUrlsPdf();
-  this.reiniciarFormulario();
-  this.estado.set('INICIAL');
-  this.router.navigateByUrl('/');
-}
+        Swal.fire({
+          icon: 'success',
+          title: 'Carga rechazada',
+          text: 'La carga fue rechazada correctamente.',
+          confirmButtonColor: '#691C32'
+        }).then(() => {
+          this.router.navigateByUrl('/');
+        });
+      },
+      error: (error) => {
+        this.estado.set('MOSTRANDO_ACUSE');
 
-resolverCargaPendiente(): void {
-  const codigoReferencia = this.codigoReferenciaPendiente();
-
-  if (!codigoReferencia) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Sin referencia pendiente',
-      text: 'No fue posible identificar el código de referencia pendiente.',
-      confirmButtonColor: '#691C32'
+        Swal.fire({
+          icon: 'error',
+          title: 'No fue posible rechazar la carga',
+          text: error?.error?.mensaje || 'Intente nuevamente.',
+          confirmButtonColor: '#691C32'
+        });
+      }
     });
-
-    return;
   }
 
-  this.abrirAcusePrevio(codigoReferencia);
-}
+  prepararNuevaValidacion(): void {
+    this.reiniciarFormulario();
+    this.limpiarUrlsPdf();
+    this.estado.set('INICIAL');
+  }
 
-irAActualizacion(): void {
-  this.router.navigateByUrl('/actualizacion');
-}
+  cerrarAcuse(): void {
+    this.estado.set('INICIAL');
+    this.limpiarUrlsPdf();
+  }
+
+  cerrarProcesoConfirmado(): void {
+    this.limpiarUrlsPdf();
+    this.reiniciarFormulario();
+    this.estado.set('INICIAL');
+    this.router.navigateByUrl('/');
+  }
+
+  resolverCargaPendiente(): void {
+    const codigoReferencia = this.codigoReferenciaPendiente();
+
+    if (!codigoReferencia) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin referencia pendiente',
+        text: 'No fue posible identificar el código de referencia pendiente.',
+        confirmButtonColor: '#691C32'
+      });
+
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
+  }
+
+  irAActualizacion(): void {
+    this.router.navigateByUrl('/actualizacion');
+  }
 
 
   private abrirAcusePrevio(codigoReferencia: string): void {
@@ -299,23 +299,23 @@ irAActualizacion(): void {
     });
   }
 
-private reemplazarAcusePrevio(blob: Blob): void {
-  if (this.acusePrevioObjectUrl) {
-    window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
+  private reemplazarAcusePrevio(blob: Blob): void {
+    if (this.acusePrevioObjectUrl) {
+      window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
+    }
+
+    this.acusePrevioObjectUrl = window.URL.createObjectURL(blob);
+    this.acusePrevioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl));
   }
 
-  this.acusePrevioObjectUrl = window.URL.createObjectURL(blob);
-  this.acusePrevioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acusePrevioObjectUrl));
-}
+  private reemplazarAcuseConfirmado(blob: Blob): void {
+    if (this.acuseConfirmadoObjectUrl) {
+      window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
+    }
 
-private reemplazarAcuseConfirmado(blob: Blob): void {
-  if (this.acuseConfirmadoObjectUrl) {
-    window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
+    this.acuseConfirmadoObjectUrl = window.URL.createObjectURL(blob);
+    this.acuseConfirmadoUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl));
   }
-
-  this.acuseConfirmadoObjectUrl = window.URL.createObjectURL(blob);
-  this.acuseConfirmadoUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseConfirmadoObjectUrl));
-}
 
   private limpiarResultado(): void {
     this.estado.set('INICIAL');
@@ -334,21 +334,21 @@ private reemplazarAcuseConfirmado(blob: Blob): void {
     this.errorGeneral.set('');
   }
 
-private limpiarUrlsPdf(): void {
-  if (this.acusePrevioObjectUrl) {
-    window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
+  private limpiarUrlsPdf(): void {
+    if (this.acusePrevioObjectUrl) {
+      window.URL.revokeObjectURL(this.acusePrevioObjectUrl);
+    }
+
+    if (this.acuseConfirmadoObjectUrl) {
+      window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
+    }
+
+    this.acusePrevioObjectUrl = null;
+    this.acuseConfirmadoObjectUrl = null;
+
+    this.acusePrevioUrl.set(null);
+    this.acuseConfirmadoUrl.set(null);
   }
-
-  if (this.acuseConfirmadoObjectUrl) {
-    window.URL.revokeObjectURL(this.acuseConfirmadoObjectUrl);
-  }
-
-  this.acusePrevioObjectUrl = null;
-  this.acuseConfirmadoObjectUrl = null;
-
-  this.acusePrevioUrl.set(null);
-  this.acuseConfirmadoUrl.set(null);
-}
 
   private resumenPorArchivo(archivo: string): CargaValidacionResumenItem[] {
     return (this.respuesta()?.resumenValidacion ?? [])

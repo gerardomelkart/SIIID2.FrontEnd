@@ -11,10 +11,10 @@ import { InactivityService } from './core/services/inactivity.service';
 export class App implements OnInit {
   protected readonly title = signal('SIIID2.FrontEnd');
 
-constructor(
-  private router: Router,
-  private inactivityService: InactivityService
-) {}
+  constructor(
+    private router: Router,
+    private inactivityService: InactivityService
+  ) { }
 
   ngOnInit(): void {
     this.inactivityService.iniciar();

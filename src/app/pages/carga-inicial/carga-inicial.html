@@ -156,71 +156,70 @@
 }
 
 @if (mostrarTablasErrores()) {
-<div
-  class="validation-result-header"
-  [class.validation-result-pending]="hayCargaPendiente() || debeUsarActualizacion()"
->
+<div class="validation-result-header"
+  [class.validation-result-pending]="hayCargaPendiente() || debeUsarActualizacion()">
   <div>
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
       @if (hayCargaPendiente()) {
-        Carga pendiente por resolver
+      Carga pendiente por resolver
       } @else if (debeUsarActualizacion()) {
-        Información confirmada previamente
+      Información confirmada previamente
       } @else {
-        Validación con inconsistencias
+      Validación con inconsistencias
       }
     </h2>
 
     <p>
       @if (hayCargaPendiente()) {
-        Existe una carga validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+      Existe una carga validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
       } @else if (debeUsarActualizacion()) {
-        Ya existe información confirmada para el periodo seleccionado. Para realizar cambios debe utilizar el flujo de actualización.
+      Ya existe información confirmada para el periodo seleccionado. Para realizar cambios debe utilizar el flujo de
+      actualización.
       } @else {
-        Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+      Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
       }
     </p>
 
     @if (hayCargaPendiente()) {
-      <div class="pending-reference">
-        Código pendiente:
-        <strong>{{ codigoReferenciaPendiente() }}</strong>
-      </div>
+    <div class="pending-reference">
+      Código pendiente:
+      <strong>{{ codigoReferenciaPendiente() }}</strong>
+    </div>
     }
   </div>
 
   <div class="validation-actions">
     @if (hayCargaPendiente()) {
-      <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-        <i class="fa-solid fa-arrow-left"></i>
-        Volver
-      </button>
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
 
-      <button type="button" class="btn btn-siiid" (click)="resolverCargaPendiente()">
-        <i class="fa-solid fa-file-signature"></i>
-        Resolver pendiente
-      </button>
+    <button type="button" class="btn btn-siiid" (click)="resolverCargaPendiente()">
+      <i class="fa-solid fa-file-signature"></i>
+      Resolver pendiente
+    </button>
     } @else if (debeUsarActualizacion()) {
-      <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-        <i class="fa-solid fa-arrow-left"></i>
-        Volver
-      </button>
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
 
-      <button type="button" class="btn btn-siiid" (click)="irAActualizacion()">
-        <i class="fa-solid fa-arrows-rotate"></i>
-        Ir a actualización
-      </button>
+    <button type="button" class="btn btn-siiid" (click)="irAActualizacion()">
+      <i class="fa-solid fa-arrows-rotate"></i>
+      Ir a actualización
+    </button>
     } @else {
-      <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
-        <i class="fa-solid fa-rotate-left"></i>
-        Corregir archivos y volver a cargar
-      </button>
+    <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-rotate-left"></i>
+      Corregir archivos y volver a cargar
+    </button>
     }
   </div>
 </div>
-  
+
 <div class="validacion-grid mt-4">
   <div class="validacion-panel">
     <div class="validacion-title">Validación. Archivo Expedientes</div>
@@ -288,13 +287,13 @@
 
 <div class="texto-ayuda-validacion">
   @if (hayCargaPendiente()) {
-    Existe una carga validada pendiente. Debe aceptar o rechazar dicha carga antes de enviar una nueva.
+  Existe una carga validada pendiente. Debe aceptar o rechazar dicha carga antes de enviar una nueva.
   } @else if (debeUsarActualizacion()) {
-    La información del periodo ya fue confirmada. Para modificarla, utilice el módulo de actualización.
+  La información del periodo ya fue confirmada. Para modificarla, utilice el módulo de actualización.
   } @else {
-    La información que se muestra en las tablas permite identificar a detalle las inconsistencias
-    detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
-    y cargar de nuevo sus archivos.
+  La información que se muestra en las tablas permite identificar a detalle las inconsistencias
+  detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
+  y cargar de nuevo sus archivos.
   }
 </div>
 

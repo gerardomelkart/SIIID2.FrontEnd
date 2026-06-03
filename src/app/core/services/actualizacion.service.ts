@@ -18,7 +18,7 @@ import {
 export class ActualizacionService {
   private readonly apiUrl = '/api/actualizaciones';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   consultarPeriodo(mesCorte: number, anioCorte: number, idEntidadFederativa?: number | null) {
     let params = new HttpParams()

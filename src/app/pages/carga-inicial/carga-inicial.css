@@ -521,6 +521,7 @@
 }
 
 @media (max-width: 900px) {
+
   .upload-steps,
   .plantillas-grid {
     grid-template-columns: 1fr;

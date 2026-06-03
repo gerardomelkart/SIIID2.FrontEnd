@@ -156,40 +156,37 @@
             </button>
           </div>
 
-@if (mensajePeriodo()) {
-<div
-  class="periodo-alert"
-  [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-  [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
-  [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
-  [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()"
->
-  <div class="periodo-alert-content">
-    <div>
-      @if (hayActualizacionPendienteEnPeriodo()) {
-        <strong>Actualización pendiente por resolver.</strong>
-        <span>
-          Existe una actualización validada pendiente de aceptar o rechazar.
-        </span>
+          @if (mensajePeriodo()) {
+          <div class="periodo-alert" [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+            [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
+            [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()">
+            <div class="periodo-alert-content">
+              <div>
+                @if (hayActualizacionPendienteEnPeriodo()) {
+                <strong>Actualización pendiente por resolver.</strong>
+                <span>
+                  Existe una actualización validada pendiente de aceptar o rechazar.
+                </span>
 
-        <div class="pending-reference mt-2">
-          Código pendiente:
-          <strong>{{ codigoReferenciaPendiente() }}</strong>
-        </div>
-      } @else {
-        {{ mensajePeriodo() }}
-      }
-    </div>
+                <div class="pending-reference mt-2">
+                  Código pendiente:
+                  <strong>{{ codigoReferenciaPendiente() }}</strong>
+                </div>
+                } @else {
+                {{ mensajePeriodo() }}
+                }
+              </div>
 
-    @if (hayActualizacionPendienteEnPeriodo()) {
-      <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
-        <i class="fa-solid fa-file-signature"></i>
-        Resolver pendiente
-      </button>
-    }
-  </div>
-</div>
-}
+              @if (hayActualizacionPendienteEnPeriodo()) {
+              <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
+                <i class="fa-solid fa-file-signature"></i>
+                Resolver pendiente
+              </button>
+              }
+            </div>
+          </div>
+          }
         </div>
 
         @if (mostrarArchivos()) {
@@ -312,53 +309,50 @@
 }
 
 @if (mostrarTablasErrores()) {
-<div
-  class="validation-result-header"
-  [class.validation-result-pending]="hayActualizacionPendiente()"
->
+<div class="validation-result-header" [class.validation-result-pending]="hayActualizacionPendiente()">
   <div>
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
       @if (hayActualizacionPendiente()) {
-        Actualización pendiente por resolver
+      Actualización pendiente por resolver
       } @else {
-        Validación con inconsistencias
+      Validación con inconsistencias
       }
     </h2>
 
     <p>
       @if (hayActualizacionPendiente()) {
-        Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+      Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
       } @else {
-        Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+      Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
       }
     </p>
 
     @if (hayActualizacionPendiente()) {
-      <div class="pending-reference">
-        Código pendiente:
-        <strong>{{ codigoReferenciaPendiente() }}</strong>
-      </div>
+    <div class="pending-reference">
+      Código pendiente:
+      <strong>{{ codigoReferenciaPendiente() }}</strong>
+    </div>
     }
   </div>
 
   <div class="validation-actions">
     @if (hayActualizacionPendiente()) {
-      <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-        <i class="fa-solid fa-arrow-left"></i>
-        Volver
-      </button>
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
 
-      <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
-        <i class="fa-solid fa-file-signature"></i>
-        Resolver pendiente
-      </button>
+    <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
+      <i class="fa-solid fa-file-signature"></i>
+      Resolver pendiente
+    </button>
     } @else {
-      <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
-        <i class="fa-solid fa-rotate-left"></i>
-        Corregir archivos y volver a cargar
-      </button>
+    <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-rotate-left"></i>
+      Corregir archivos y volver a cargar
+    </button>
     }
   </div>
 </div>

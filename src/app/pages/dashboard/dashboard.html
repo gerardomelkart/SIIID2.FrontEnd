@@ -30,9 +30,9 @@
     <div class="status-card">
       <div class="status-number">
         @if (habilitaCarga()) {
-          Activo
+        Activo
         } @else {
-          Inactivo
+        Inactivo
         }
       </div>
       <div class="status-label">Carga inicial</div>
@@ -41,9 +41,9 @@
     <div class="status-card">
       <div class="status-number">
         @if (habilitaModificacion()) {
-          Activo
+        Activo
         } @else {
-          Inactivo
+        Inactivo
         }
       </div>
       <div class="status-label">Actualización</div>
@@ -65,79 +65,79 @@
 
     <div class="quick-access-grid">
       @if (puedeVerCarga()) {
-        <a class="quick-link" routerLink="/carga-inicial">
-          <div class="quick-icon">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-          </div>
+      <a class="quick-link" routerLink="/carga-inicial">
+        <div class="quick-icon">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
 
-          <div>
-            <strong>Integrar información</strong>
-            <span>Carga inicial de incidencia delictiva.</span>
-          </div>
-        </a>
+        <div>
+          <strong>Integrar información</strong>
+          <span>Carga inicial de incidencia delictiva.</span>
+        </div>
+      </a>
       }
 
       @if (puedeVerActualizacion()) {
-        <a class="quick-link" routerLink="/actualizacion">
-          <div class="quick-icon">
-            <i class="fa-solid fa-arrows-rotate"></i>
-          </div>
+      <a class="quick-link" routerLink="/actualizacion">
+        <div class="quick-icon">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </div>
 
-          <div>
-            <strong>Actualizar información</strong>
-            <span>Modificación de periodos previamente confirmados.</span>
-          </div>
-        </a>
+        <div>
+          <strong>Actualizar información</strong>
+          <span>Modificación de periodos previamente confirmados.</span>
+        </div>
+      </a>
       }
 
       @if (puedeVerEnvios()) {
-        <a class="quick-link" routerLink="/informes/envios">
-          <div class="quick-icon">
-            <i class="fa-solid fa-paper-plane"></i>
-          </div>
+      <a class="quick-link" routerLink="/informes/envios">
+        <div class="quick-icon">
+          <i class="fa-solid fa-paper-plane"></i>
+        </div>
 
-          <div>
-            <strong>Consultar envíos</strong>
-            <span>Histórico de envíos confirmados.</span>
-          </div>
-        </a>
+        <div>
+          <strong>Consultar envíos</strong>
+          <span>Histórico de envíos confirmados.</span>
+        </div>
+      </a>
       }
 
       @if (puedeVerCargas()) {
-        <a class="quick-link" routerLink="/informes/cargas">
-          <div class="quick-icon">
-            <i class="fa-solid fa-chart-simple"></i>
-          </div>
+      <a class="quick-link" routerLink="/informes/cargas">
+        <div class="quick-icon">
+          <i class="fa-solid fa-chart-simple"></i>
+        </div>
 
-          <div>
-            <strong>Reporte de cargas</strong>
-            <span>Monitoreo de intentos y estatus por entidad.</span>
-          </div>
-        </a>
+        <div>
+          <strong>Reporte de cargas</strong>
+          <span>Monitoreo de intentos y estatus por entidad.</span>
+        </div>
+      </a>
       }
 
       @if (puedeVerAdministracion()) {
-        <a class="quick-link" routerLink="/administracion/usuarios">
-          <div class="quick-icon">
-            <i class="fa-solid fa-users"></i>
-          </div>
+      <a class="quick-link" routerLink="/administracion/usuarios">
+        <div class="quick-icon">
+          <i class="fa-solid fa-users"></i>
+        </div>
 
-          <div>
-            <strong>Administración de usuarios</strong>
-            <span>Gestión de cuentas, roles y permisos.</span>
-          </div>
-        </a>
+        <div>
+          <strong>Administración de usuarios</strong>
+          <span>Gestión de cuentas, roles y permisos.</span>
+        </div>
+      </a>
 
-        <a class="quick-link" routerLink="/administracion/configuracion">
-          <div class="quick-icon">
-            <i class="fa-solid fa-sliders"></i>
-          </div>
+      <a class="quick-link" routerLink="/administracion/configuracion">
+        <div class="quick-icon">
+          <i class="fa-solid fa-sliders"></i>
+        </div>
 
-          <div>
-            <strong>Configuración de módulos</strong>
-            <span>Control global y por entidad de permisos operativos.</span>
-          </div>
-        </a>
+        <div>
+          <strong>Configuración de módulos</strong>
+          <span>Control global y por entidad de permisos operativos.</span>
+        </div>
+      </a>
       }
     </div>
   </section>
