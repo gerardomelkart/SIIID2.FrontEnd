@@ -49,3 +49,28 @@ export function mostrarExito(
 export function mostrarExitoInstitucional(title: string, text?: string): Promise<SweetAlertResult> {
   return mostrarAlerta('success', { title, text });
 }
+
+export function confirmarAccion(
+  title: string,
+  text: string,
+  confirmButtonText: string,
+): Promise<SweetAlertResult> {
+  return Swal.fire({
+    icon: 'warning',
+    title,
+    text,
+    showCancelButton: true,
+    confirmButtonText,
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: COLOR_PRIMARIO,
+  });
+}
+
+export function mostrarAdvertenciaHtml(title: string, html: string): Promise<SweetAlertResult> {
+  return Swal.fire({
+    icon: 'warning',
+    title,
+    html,
+    confirmButtonColor: COLOR_PRIMARIO,
+  });
+}

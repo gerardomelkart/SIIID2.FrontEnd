@@ -1,6 +1,6 @@
 import { Injectable, NgZone, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
+import { mostrarInfo } from '../utils/alert.utils';
 
 import { SessionService } from './session.service';
 
@@ -104,12 +104,7 @@ export class InactivityService {
     this.sessionService.limpiarSesion();
 
     this.router.navigateByUrl('/login').then(() => {
-      Swal.fire({
-        icon: 'info',
-        title: 'Sesión cerrada',
-        text: 'La sesión se cerró por 10 minutos de inactividad.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarInfo('Sesión cerrada', 'La sesión se cerró por 10 minutos de inactividad.');
     });
   }
 }

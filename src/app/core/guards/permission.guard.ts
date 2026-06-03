@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import Swal from 'sweetalert2';
+import { mostrarAdvertencia } from '../utils/alert.utils';
 import { RolSistema } from '../constants/roles.constants';
 import { SessionService } from '../services/session.service';
 
@@ -54,11 +54,9 @@ export const permissionGuard: CanActivateFn = (route) => {
 
 function mostrarAccesoDenegado(router: Router, mensaje: string): void {
   router.navigateByUrl('/').then(() => {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Acceso no permitido',
-      text: mensaje,
-      confirmButtonColor: '#691C32'
-    });
+    mostrarAdvertencia(
+      'Acceso no permitido',
+      mensaje
+    );
   });
 }

@@ -1,6 +1,14 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import Swal from 'sweetalert2';
+
+import {
+  confirmarAccion,
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExitoInstitucional,
+  mostrarInfo,
+} from '../../core/utils/alert.utils';
+
 import { ROLES } from '../../core/constants/roles.constants';
 import { forkJoin } from 'rxjs';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
@@ -184,20 +192,10 @@ export class CrudRegistros implements OnInit {
       const exportado = await exportarFilasExcel(filas, 'usuarios_sistema.xlsx', 'Usuarios');
 
       if (!exportado) {
-        Swal.fire({
-          icon: 'info',
-          title: 'Sin registros',
-          text: 'No hay información para exportar.',
-          confirmButtonColor: '#691C32',
-        });
+        mostrarInfo('Sin registros', 'No hay información para exportar.');
       }
     } catch {
-      Swal.fire({
-        icon: 'error',
-        title: 'No fue posible exportar',
-        text: 'Intente nuevamente.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarError('No fue posible exportar', 'Intente nuevamente.');
     } finally {
       this.exportandoExcel.set(false);
     }
@@ -256,12 +254,10 @@ export class CrudRegistros implements OnInit {
       error: (error) => {
         this.cargando.set(false);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible cargar administración',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible cargar administración',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -277,12 +273,10 @@ export class CrudRegistros implements OnInit {
       error: (error) => {
         this.cargando.set(false);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible cargar usuarios',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible cargar usuarios',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -306,12 +300,10 @@ export class CrudRegistros implements OnInit {
         this.cargando.set(false);
 
         if (!response.esValido || !response.usuario) {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Usuario no encontrado',
-            text: response.mensaje || 'No fue posible obtener el detalle.',
-            confirmButtonColor: '#691C32',
-          });
+          mostrarAdvertencia(
+            'Usuario no encontrado',
+            response.mensaje || 'No fue posible obtener el detalle.',
+          );
           return;
         }
 
@@ -322,12 +314,10 @@ export class CrudRegistros implements OnInit {
       error: (error) => {
         this.cargando.set(false);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible obtener el usuario',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible obtener el usuario',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -343,12 +333,10 @@ export class CrudRegistros implements OnInit {
 
   guardarUsuario(): void {
     if (!this.formularioValido()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formulario incompleto',
-        text: 'Revise los campos obligatorios antes de guardar.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarAdvertencia(
+        'Formulario incompleto',
+        'Revise los campos obligatorios antes de guardar.',
+      );
 
       return;
     }
@@ -365,12 +353,7 @@ export class CrudRegistros implements OnInit {
 
   cambiarEstado(usuario: UsuarioListadoItem): void {
     if (!this.puedeCambiarEstado(usuario)) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Operación no permitida',
-        text: this.motivoBloqueoEstado(usuario),
-        confirmButtonColor: '#691C32',
-      });
+      mostrarAdvertencia('Operación no permitida', this.motivoBloqueoEstado(usuario));
 
       return;
     }
@@ -450,27 +433,18 @@ export class CrudRegistros implements OnInit {
   }
 
   private confirmarDesactivacion(usuario: UsuarioListadoItem): void {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Desactivar usuario',
-      text: `El usuario ${usuario.usuario} ya no podrá iniciar sesión ni operar módulos.`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, desactivar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32',
-    }).then((result) => {
+    confirmarAccion(
+      'Desactivar usuario',
+      `El usuario ${usuario.usuario} ya no podrá iniciar sesión ni operar módulos.`,
+      'Sí, desactivar',
+    ).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
 
       this.usuariosService.desactivarUsuario(usuario.idUsuario).subscribe({
         next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Usuario desactivado',
-            confirmButtonColor: '#691C32',
-          });
-
+          mostrarExitoInstitucional('Usuario desactivado');
           this.cargarUsuarios();
         },
         error: (error) =>
@@ -480,15 +454,11 @@ export class CrudRegistros implements OnInit {
   }
 
   private confirmarReactivacion(usuario: UsuarioListadoItem): void {
-    Swal.fire({
-      icon: 'question',
-      title: 'Reactivar usuario',
-      text: `El usuario ${usuario.usuario} volverá a estar activo.`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, reactivar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32',
-    }).then((result) => {
+    confirmarAccion(
+      'Reactivar usuario',
+      `El usuario ${usuario.usuario} volverá a estar activo.`,
+      'Sí, reactivar',
+    ).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
@@ -500,12 +470,7 @@ export class CrudRegistros implements OnInit {
         })
         .subscribe({
           next: () => {
-            Swal.fire({
-              icon: 'success',
-              title: 'Usuario reactivado',
-              confirmButtonColor: '#691C32',
-            });
-
+            mostrarExitoInstitucional('Usuario reactivado');
             this.cargarUsuarios();
           },
           error: (error) =>
@@ -520,11 +485,7 @@ export class CrudRegistros implements OnInit {
   ): void {
     this.guardando.set(false);
 
-    Swal.fire({
-      icon: 'success',
-      title: response.mensaje || mensajeDefault,
-      confirmButtonColor: '#691C32',
-    });
+    mostrarExitoInstitucional(response.mensaje || mensajeDefault);
 
     this.cerrarModal();
     this.cargarUsuarios();
@@ -536,12 +497,7 @@ export class CrudRegistros implements OnInit {
     const errores = this.obtenerErroresOperacion(error);
     const detalle = errores?.map((x) => `• ${x.mensaje}`).join('\n');
 
-    Swal.fire({
-      icon: 'error',
-      title: mensajeDefault,
-      text: detalle || obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
-      confirmButtonColor: '#691C32',
-    });
+    mostrarError(mensajeDefault, detalle || obtenerMensajeErrorHttp(error, 'Intente nuevamente.'));
   }
 
   private obtenerErroresOperacion(error: unknown): { mensaje: string }[] | undefined {

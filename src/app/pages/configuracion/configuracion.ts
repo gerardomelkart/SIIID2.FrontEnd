@@ -1,6 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import Swal from 'sweetalert2';
+import {
+  confirmarAccion,
+  mostrarAdvertencia,
+  mostrarAdvertenciaHtml,
+  mostrarError,
+  mostrarExitoInstitucional,
+  mostrarInfo,
+} from '../../core/utils/alert.utils';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { ROLES } from '../../core/constants/roles.constants';
@@ -164,12 +171,10 @@ export class Configuracion implements OnInit {
       error: (error) => {
         this.cargando.set(false);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'No fue posible cargar configuración',
-          text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          confirmButtonColor: '#691C32',
-        });
+        mostrarError(
+          'No fue posible cargar configuración',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -201,20 +206,10 @@ export class Configuracion implements OnInit {
       );
 
       if (!exportado) {
-        Swal.fire({
-          icon: 'info',
-          title: 'Sin registros',
-          text: 'No hay información para exportar.',
-          confirmButtonColor: '#691C32',
-        });
+        mostrarInfo('Sin registros', 'No hay información para exportar.');
       }
     } catch {
-      Swal.fire({
-        icon: 'error',
-        title: 'No fue posible exportar',
-        text: 'Intente nuevamente.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarError('No fue posible exportar', 'Intente nuevamente.');
     } finally {
       this.exportandoExcel.set(false);
     }
@@ -225,15 +220,11 @@ export class Configuracion implements OnInit {
   }
 
   guardarConfiguracionGlobal(): void {
-    Swal.fire({
-      icon: 'question',
-      title: 'Actualizar permisos globales',
-      text: 'Esta acción actualizará carga y modificación para todos los usuarios activos permitidos.',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, actualizar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32',
-    }).then((result) => {
+    confirmarAccion(
+      'Actualizar permisos globales',
+      'Esta acción actualizará carga y modificación para todos los usuarios activos permitidos.',
+      'Sí, actualizar',
+    ).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
@@ -249,23 +240,17 @@ export class Configuracion implements OnInit {
           next: (response) => {
             this.guardandoGlobal.set(false);
 
-            Swal.fire({
-              icon: 'success',
-              title: response.mensaje || 'Configuración global actualizada.',
-              confirmButtonColor: '#691C32',
-            });
+            mostrarExitoInstitucional(response.mensaje || 'Configuración global actualizada.');
 
             this.cargarUsuarios();
           },
           error: (error) => {
             this.guardandoGlobal.set(false);
 
-            Swal.fire({
-              icon: 'error',
-              title: 'No fue posible actualizar configuración global',
-              text: obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-              confirmButtonColor: '#691C32',
-            });
+            mostrarError(
+              'No fue posible actualizar configuración global',
+              obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            );
           },
         });
     });
@@ -360,25 +345,16 @@ export class Configuracion implements OnInit {
       );
 
     if (usuariosModificados.length === 0) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Sin cambios',
-        text: 'No hay cambios por guardar.',
-        confirmButtonColor: '#691C32',
-      });
+      mostrarInfo('Sin cambios', 'No hay cambios por guardar.');
 
       return;
     }
 
-    Swal.fire({
-      icon: 'question',
-      title: 'Guardar permisos por entidad',
-      text: `Se actualizarán permisos de ${usuariosModificados.length} usuario(s).`,
-      showCancelButton: true,
-      confirmButtonText: 'Sí, guardar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#691C32',
-    }).then((result) => {
+    confirmarAccion(
+      'Guardar permisos por entidad',
+      `Se actualizarán permisos de ${usuariosModificados.length} usuario(s).`,
+      'Sí, guardar',
+    ).then((result) => {
       if (!result.isConfirmed) {
         return;
       }
@@ -423,23 +399,19 @@ export class Configuracion implements OnInit {
           const errores = resultados.filter((resultado) => !resultado.esValido);
 
           if (errores.length > 0) {
-            Swal.fire({
-              icon: 'warning',
-              title: 'Algunos usuarios no se actualizaron',
-              html: errores.map((error) => `• ${error.mensaje}`).join('<br>'),
-              confirmButtonColor: '#691C32',
-            });
+            mostrarAdvertenciaHtml(
+              'Algunos usuarios no se actualizaron',
+              errores.map((error) => `• ${error.mensaje}`).join('<br>'),
+            );
 
             this.cargarUsuarios();
             return;
           }
 
-          Swal.fire({
-            icon: 'success',
-            title: 'Permisos actualizados',
-            text: 'Los permisos de la entidad se actualizaron correctamente.',
-            confirmButtonColor: '#691C32',
-          });
+          mostrarAdvertenciaHtml(
+            'Algunos usuarios no se actualizaron',
+            errores.map((error) => `• ${error.mensaje}`).join('<br>'),
+          );
 
           this.cerrarPermisosEntidad();
           this.cargarUsuarios();
@@ -447,12 +419,10 @@ export class Configuracion implements OnInit {
         error: (error) => {
           this.guardandoEntidad.set(false);
 
-          Swal.fire({
-            icon: 'error',
-            title: 'No fue posible actualizar permisos',
-            text: obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
-            confirmButtonColor: '#691C32',
-          });
+          mostrarError(
+            'No fue posible actualizar permisos',
+            obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
+          );
         },
       });
     });
@@ -496,7 +466,7 @@ export class Configuracion implements OnInit {
   }
 
   private sincronizarSwitchesGlobales(usuarios: UsuarioListadoItem[]): void {
-    const usuariosOperativos = usuarios.filter((x) => x.activo && x.rol !== 'CONSULTA');
+    const usuariosOperativos = usuarios.filter((x) => x.activo && x.rol !== ROLES.CONSULTA);
 
     if (usuariosOperativos.length === 0) {
       this.habilitaCargaGlobal.set(false);
