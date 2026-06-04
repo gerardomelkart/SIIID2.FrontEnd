@@ -1,7 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CatalogosService } from '../../core/services/catalogos.service';
+import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { InformesService } from '../../core/services/informes.service';
 import {
   mostrarAdvertencia,
   mostrarError,
@@ -56,16 +59,37 @@ type EstadoPeriodo =
   templateUrl: './actualizacion.html',
   styleUrl: './actualizacion.css',
 })
-export class Actualizacion {
+export class Actualizacion implements OnInit {
   private readonly actualizacionService = inject(ActualizacionService);
+  private readonly informesService = inject(InformesService);
   private readonly sessionService = inject(SessionService);
+  private readonly catalogosService = inject(CatalogosService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly router = inject(Router);
 
   anioCorte = signal<string>('');
   mesCorte = signal<string>('');
   idEntidadFederativa = signal<string>('');
+  entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
+  cargandoEntidades = signal(false);
 
+  aniosCorte = signal<string[]>([]);
+  cargandoAniosCorte = signal(false);
+
+  readonly mesesCorte = [
+    { valor: '1', nombre: 'Enero' },
+    { valor: '2', nombre: 'Febrero' },
+    { valor: '3', nombre: 'Marzo' },
+    { valor: '4', nombre: 'Abril' },
+    { valor: '5', nombre: 'Mayo' },
+    { valor: '6', nombre: 'Junio' },
+    { valor: '7', nombre: 'Julio' },
+    { valor: '8', nombre: 'Agosto' },
+    { valor: '9', nombre: 'Septiembre' },
+    { valor: '10', nombre: 'Octubre' },
+    { valor: '11', nombre: 'Noviembre' },
+    { valor: '12', nombre: 'Diciembre' },
+  ];
   estadoPeriodo = signal<EstadoPeriodo>('SIN_CONSULTAR');
   respuestaPeriodo = signal<ActualizacionPeriodoResponse | null>(null);
   respuestaValidacion = signal<CargaValidacionResponse | null>(null);
@@ -162,6 +186,12 @@ export class Actualizacion {
   mostrarDiferencias = computed(() => {
     return this.estadoPeriodo() === 'MOSTRANDO_DIFERENCIAS' && !!this.diferencias();
   });
+
+  ngOnInit(): void {
+    if (this.esSuperUsuario()) {
+      this.cargarEntidadesFederativas();
+    }
+  }
 
   onPeriodoChange(): void {
     this.estadoPeriodo.set('SIN_CONSULTAR');
@@ -561,4 +591,54 @@ export class Actualizacion {
   private resumenPorArchivo(archivo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
     return obtenerResumenPorArchivo(this.respuestaValidacion()?.resumenValidacion ?? [], archivo);
   }
+
+  private cargarEntidadesFederativas(): void {
+    this.cargandoEntidades.set(true);
+
+    this.catalogosService.obtenerEntidadesFederativas().subscribe({
+      next: (entidades) => {
+        this.entidadesFederativas.set(entidades ?? []);
+        this.cargandoEntidades.set(false);
+      },
+      error: (error) => {
+        this.cargandoEntidades.set(false);
+
+        mostrarError(
+          'No fue posible cargar entidades federativas',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
+      },
+    });
+  }
+
+
+
+  private cargarAniosDesdeReporteCargas(): void {
+  this.cargandoAniosCorte.set(true);
+
+  this.informesService.obtenerReporteCargas().subscribe({
+    next: (response) => {
+      const anios = Array.from(
+        new Set(
+          (response.registros ?? [])
+            .map((registro) => registro.anioCorte)
+            .filter((anio): anio is number => !!anio)
+        )
+      )
+        .sort((a, b) => b - a)
+        .map((anio) => anio.toString());
+
+      this.aniosCorte.set(anios);
+      this.cargandoAniosCorte.set(false);
+    },
+    error: (error) => {
+      this.cargandoAniosCorte.set(false);
+
+      mostrarError(
+        'No fue posible cargar años de corte',
+        obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.')
+      );
+    },
+  });
+}
 }
