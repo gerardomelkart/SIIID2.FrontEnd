@@ -81,15 +81,14 @@
 
               <select class="form-select form-select-sm select-corte" [ngModel]="anioCorte()"
                 (ngModelChange)="anioCorte.set($event); onPeriodoChange()">
-<option value="">
-  {{ cargandoAniosCorte() ? 'Cargando años...' : 'Seleccione Año...' }}
-</option>
+                <option value="">
+                  {{ cargandoAniosCorte() ? 'Cargando años...' : 'Seleccione Año...' }}
+                </option>
 
-@for (anio of aniosCorte(); track anio) {
-<option [value]="anio">
-  {{ anio }}
-</option>
-}
+                @for (anio of aniosCorte(); track anio) {
+                <option [value]="anio">
+                  {{ anio }}
+                </option>
                 }
               </select>
             </div>

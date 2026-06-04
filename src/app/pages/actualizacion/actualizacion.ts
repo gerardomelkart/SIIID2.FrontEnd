@@ -191,6 +191,8 @@ export class Actualizacion implements OnInit {
     if (this.esSuperUsuario()) {
       this.cargarEntidadesFederativas();
     }
+
+    this.cargarAniosDesdeReporteCargas();
   }
 
   onPeriodoChange(): void {
@@ -611,34 +613,32 @@ export class Actualizacion implements OnInit {
     });
   }
 
-
-
   private cargarAniosDesdeReporteCargas(): void {
-  this.cargandoAniosCorte.set(true);
+    this.cargandoAniosCorte.set(true);
 
-  this.informesService.obtenerReporteCargas().subscribe({
-    next: (response) => {
-      const anios = Array.from(
-        new Set(
-          (response.registros ?? [])
-            .map((registro) => registro.anioCorte)
-            .filter((anio): anio is number => !!anio)
+    this.informesService.obtenerReporteCargas().subscribe({
+      next: (response) => {
+        const anios = Array.from(
+          new Set(
+            (response.registros ?? [])
+              .map((registro) => registro.anioCorte)
+              .filter((anio): anio is number => !!anio),
+          ),
         )
-      )
-        .sort((a, b) => b - a)
-        .map((anio) => anio.toString());
+          .sort((a, b) => b - a)
+          .map((anio) => anio.toString());
 
-      this.aniosCorte.set(anios);
-      this.cargandoAniosCorte.set(false);
-    },
-    error: (error) => {
-      this.cargandoAniosCorte.set(false);
+        this.aniosCorte.set(anios);
+        this.cargandoAniosCorte.set(false);
+      },
+      error: (error) => {
+        this.cargandoAniosCorte.set(false);
 
-      mostrarError(
-        'No fue posible cargar años de corte',
-        obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.')
-      );
-    },
-  });
-}
+        mostrarError(
+          'No fue posible cargar años de corte',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
+      },
+    });
+  }
 }
