@@ -171,17 +171,10 @@ export class Actualizacion implements OnInit {
     return this.codigoReferenciaPendiente() || this.codigoReferencia();
   });
 
-  totalDiferenciasCarpetas = computed(() => this.diferencias()?.carpetas?.length ?? 0);
-  totalDiferenciasDelitos = computed(() => this.diferencias()?.delitos?.length ?? 0);
-  totalDiferenciasVictimas = computed(() => this.diferencias()?.victimas?.length ?? 0);
-
-  totalDiferencias = computed(() => {
-    return (
-      this.totalDiferenciasCarpetas() +
-      this.totalDiferenciasDelitos() +
-      this.totalDiferenciasVictimas()
-    );
-  });
+  totalDiferenciasCarpetas = computed(() => this.diferencias()?.totalCarpetas ?? 0);
+  totalDiferenciasDelitos = computed(() => this.diferencias()?.totalDelitos ?? 0);
+  totalDiferenciasVictimas = computed(() => this.diferencias()?.totalVictimas ?? 0);
+  totalDiferencias = computed(() => this.diferencias()?.totalDiferencias ?? 0);
 
   mostrarDiferencias = computed(() => {
     return this.estadoPeriodo() === 'MOSTRANDO_DIFERENCIAS' && !!this.diferencias();

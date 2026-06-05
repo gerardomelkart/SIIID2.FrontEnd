@@ -55,9 +55,12 @@ export class ActualizacionService {
     return this.http.post<CargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
   }
 
-  obtenerDiferencias(codigoReferencia: string) {
+  obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 1000) {
+    const params = new HttpParams().set('limitePorSeccion', limitePorSeccion);
+
     return this.http.get<ActualizacionDiferenciasResponse>(
       `${this.apiUrl}/diferencias/${codigoReferencia}`,
+      { params },
     );
   }
 

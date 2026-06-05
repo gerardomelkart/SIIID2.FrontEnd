@@ -14,6 +14,14 @@ export interface ActualizacionDiferenciasResponse {
   esValido: boolean;
   codigoReferencia: string;
   mensaje: string;
+
+  totalCarpetas: number;
+  totalDelitos: number;
+  totalVictimas: number;
+  totalDiferencias: number;
+  limitePorSeccion: number;
+  detalleLimitado: boolean;
+
   carpetas: ActualizacionDiferenciaRegistro[];
   delitos: ActualizacionDiferenciaRegistro[];
   victimas: ActualizacionDiferenciaRegistro[];
