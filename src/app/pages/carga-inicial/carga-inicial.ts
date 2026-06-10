@@ -3,6 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
 import {
+  confirmarAccion,
   mostrarAdvertencia,
   mostrarError,
   mostrarExito,
@@ -143,6 +144,24 @@ export class CargaInicial {
 
           if (!response.esValido) {
             this.estado.set('VALIDADO_ERROR');
+            return;
+          }
+
+          if (this.tieneAdvertenciaFechaHechosMayorFechaInicio(response)) {
+            confirmarAccion(
+              'Advertencia de fechas',
+              'Hay fechas de hechos mayores a la fecha de inicio de la carpeta. ¿Desea insertar los datos aun así?',
+              'Sí, continuar',
+            ).then((resultado) => {
+              if (resultado.isConfirmed) {
+                this.abrirAcusePrevio(response.codigoReferencia);
+                return;
+              }
+
+              this.estado.set('INICIAL');
+              this.errorGeneral.set('Revise las fechas señaladas antes de continuar.');
+            });
+
             return;
           }
 
@@ -303,6 +322,12 @@ export class CargaInicial {
         );
       },
     });
+  }
+
+  private tieneAdvertenciaFechaHechosMayorFechaInicio(response: CargaValidacionResponse): boolean {
+    return (response.advertencias ?? []).some(
+      (advertencia) => advertencia.codigo === 'INTEGRIDAD_FECHA_HECHOS_MAYOR_FECHA_INICIO',
+    );
   }
 
   private reemplazarAcusePrevio(blob: Blob): void {
