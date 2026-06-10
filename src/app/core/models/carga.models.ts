@@ -2,9 +2,11 @@ export interface CargaValidacionResponse {
   esValido: boolean;
   codigoReferencia: string;
   totalErrores: number;
+  totalAdvertencias: number;
   mensaje: string;
   resumenValidacion: CargaValidacionResumenItem[];
   errores: CargaValidacionError[];
+  advertencias: CargaValidacionError[];
 }
 
 export interface CargaValidacionResumenItem {

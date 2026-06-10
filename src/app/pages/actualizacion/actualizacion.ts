@@ -6,6 +6,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { InformesService } from '../../core/services/informes.service';
 import {
+  confirmarAccion,
   mostrarAdvertencia,
   mostrarError,
   mostrarExito,
@@ -290,6 +291,24 @@ export class Actualizacion implements OnInit {
 
           if (!response.esValido) {
             this.estadoPeriodo.set('VALIDADO_ERROR');
+            return;
+          }
+
+          if (this.esSuperUsuario() && this.tieneAdvertenciaFechaHechosMayorFechaInicio(response)) {
+            confirmarAccion(
+              'Advertencia de fechas',
+              'Hay fechas de hechos mayores a la fecha de inicio de la carpeta. ¿Desea insertar los datos aun así?',
+              'Sí, continuar',
+            ).then((resultado) => {
+              if (resultado.isConfirmed) {
+                this.prepararRevisionDiferencias(response.codigoReferencia);
+                return;
+              }
+
+              this.estadoPeriodo.set('DISPONIBLE');
+              this.errorGeneral.set('Revise las fechas señaladas antes de continuar.');
+            });
+
             return;
           }
 
@@ -604,6 +623,12 @@ export class Actualizacion implements OnInit {
         );
       },
     });
+  }
+
+  private tieneAdvertenciaFechaHechosMayorFechaInicio(response: CargaValidacionResponse): boolean {
+    return (response.advertencias ?? []).some(
+      (advertencia) => advertencia.codigo === 'INTEGRIDAD_FECHA_HECHOS_MAYOR_FECHA_INICIO',
+    );
   }
 
   private cargarAniosDesdeReporteCargas(): void {
