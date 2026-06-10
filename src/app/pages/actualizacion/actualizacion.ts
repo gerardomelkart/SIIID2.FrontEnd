@@ -47,6 +47,7 @@ type EstadoPeriodo =
   | 'NO_DISPONIBLE'
   | 'VALIDANDO'
   | 'VALIDADO_ERROR'
+  | 'VALIDADO_ADVERTENCIA'
   | 'MOSTRANDO_DIFERENCIAS'
   | 'MOSTRANDO_ACUSE'
   | 'CONFIRMANDO'
@@ -135,15 +136,25 @@ export class Actualizacion implements OnInit {
     return tieneTresArchivosSeleccionados(this.archivos()) && this.estadoPeriodo() === 'DISPONIBLE';
   });
 
-  mostrarTablasErrores = computed(() => {
-    return this.estadoPeriodo() === 'VALIDADO_ERROR' && !!this.respuestaValidacion();
-  });
+mostrarTablasErrores = computed(() => {
+  return (
+    (this.estadoPeriodo() === 'VALIDADO_ERROR' ||
+      this.estadoPeriodo() === 'VALIDADO_ADVERTENCIA') &&
+    !!this.respuestaValidacion()
+  );
+});
 
   resumenCarpetas = computed(() => this.resumenPorArchivo('carpetas'));
   resumenDelitos = computed(() => this.resumenPorArchivo('delitos'));
   resumenVictimas = computed(() => this.resumenPorArchivo('victimas'));
 
   errores = computed(() => this.respuestaValidacion()?.errores ?? []);
+  advertencias = computed(() => this.respuestaValidacion()?.advertencias ?? []);
+
+detallesValidacion = computed(() => [
+  ...this.errores(),
+  ...this.advertencias(),
+]);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
   codigoReferenciaPendiente = computed(() => {
@@ -294,23 +305,10 @@ export class Actualizacion implements OnInit {
             return;
           }
 
-          if (this.esSuperUsuario() && this.tieneAdvertenciaFechaHechosMayorFechaInicio(response)) {
-            confirmarAccion(
-              'Advertencia de fechas',
-              'Hay fechas de hechos mayores a la fecha de inicio de la carpeta. ¿Desea insertar los datos aun así?',
-              'Sí, continuar',
-            ).then((resultado) => {
-              if (resultado.isConfirmed) {
-                this.prepararRevisionDiferencias(response.codigoReferencia);
-                return;
-              }
-
-              this.estadoPeriodo.set('DISPONIBLE');
-              this.errorGeneral.set('Revise las fechas señaladas antes de continuar.');
-            });
-
-            return;
-          }
+if (this.esSuperUsuario() && this.tieneAdvertenciaFechaHechosMayorFechaInicio(response)) {
+  this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
+  return;
+}
 
           this.prepararRevisionDiferencias(response.codigoReferencia);
         },

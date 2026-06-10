@@ -33,6 +33,7 @@ type EstadoCarga =
   | 'INICIAL'
   | 'VALIDANDO'
   | 'VALIDADO_ERROR'
+  | 'VALIDADO_ADVERTENCIA'
   | 'MOSTRANDO_ACUSE'
   | 'CONFIRMANDO'
   | 'CONFIRMADO'
@@ -63,6 +64,15 @@ export class CargaInicial {
   resumenVictimas = computed(() => this.resumenPorArchivo('victimas'));
 
   errores = computed(() => this.respuesta()?.errores ?? []);
+  advertencias = computed(() => this.respuesta()?.advertencias ?? []);
+
+  detallesValidacion = computed(() => [...this.errores(), ...this.advertencias()]);
+
+  hayAdvertenciaFechaHechosMayorFechaInicio = computed(() => {
+    return this.advertencias().some(
+      (advertencia) => advertencia.codigo === 'INTEGRIDAD_FECHA_HECHOS_MAYOR_FECHA_INICIO',
+    );
+  });
   codigoReferencia = computed(() => this.respuesta()?.codigoReferencia ?? '');
 
   codigoReferenciaPendiente = computed(() => {
@@ -104,7 +114,10 @@ export class CargaInicial {
   });
 
   mostrarTablasErrores = computed(() => {
-    return this.estado() === 'VALIDADO_ERROR' && !!this.respuesta();
+    return (
+      (this.estado() === 'VALIDADO_ERROR' || this.estado() === 'VALIDADO_ADVERTENCIA') &&
+      !!this.respuesta()
+    );
   });
 
   constructor(
@@ -147,21 +160,8 @@ export class CargaInicial {
             return;
           }
 
-          if (this.tieneAdvertenciaFechaHechosMayorFechaInicio(response)) {
-            confirmarAccion(
-              'Advertencia de fechas',
-              'Hay fechas de hechos mayores a la fecha de inicio de la carpeta. ¿Desea insertar los datos aun así?',
-              'Sí, continuar',
-            ).then((resultado) => {
-              if (resultado.isConfirmed) {
-                this.abrirAcusePrevio(response.codigoReferencia);
-                return;
-              }
-
-              this.estado.set('INICIAL');
-              this.errorGeneral.set('Revise las fechas señaladas antes de continuar.');
-            });
-
+          if (this.hayAdvertenciaFechaHechosMayorFechaInicio()) {
+            this.estado.set('VALIDADO_ADVERTENCIA');
             return;
           }
 

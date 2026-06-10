@@ -166,6 +166,8 @@
       Carga pendiente por resolver
       } @else if (debeUsarActualizacion()) {
       Información confirmada previamente
+      } @else if (estado() === 'VALIDADO_ADVERTENCIA') {
+      Validación con advertencias
       } @else {
       Validación con inconsistencias
       }
@@ -177,6 +179,9 @@
       } @else if (debeUsarActualizacion()) {
       Ya existe información confirmada para el periodo seleccionado. Para realizar cambios debe utilizar el flujo de
       actualización.
+      } @else if (estado() === 'VALIDADO_ADVERTENCIA') {
+      Se detectaron advertencias en los archivos. Puede aceptar la carga bajo responsabilidad del super usuario o
+      rechazarla.
       } @else {
       Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
       }
@@ -211,7 +216,18 @@
       <i class="fa-solid fa-arrows-rotate"></i>
       Ir a actualización
     </button>
-    } @else {
+    } @else if (estado() === 'VALIDADO_ADVERTENCIA') {
+    <button type="button" class="btn btn-secondary" (click)="rechazarCarga()">
+      <i class="fa-solid fa-xmark"></i>
+      Rechazar
+    </button>
+
+    <button type="button" class="btn btn-siiid" (click)="aceptarCarga()">
+      <i class="fa-solid fa-circle-check"></i>
+      Aceptar
+    </button>
+    }
+    @else {
     <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
       <i class="fa-solid fa-rotate-left"></i>
       Corregir archivos y volver a cargar
@@ -297,7 +313,7 @@
   }
 </div>
 
-@if (errores().length > 0) {
+@if (detallesValidacion().length > 0) {
 <div class="siiid-card mt-3">
   <div class="siiid-card-header">
     <i class="fa-solid fa-triangle-exclamation"></i>
@@ -316,7 +332,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (error of errores(); track $index) {
+        @for (error of detallesValidacion(); track $index) {
         <tr>
           <td>{{ error.archivo }}</td>
           <td>{{ error.fila || '-' }}</td>
