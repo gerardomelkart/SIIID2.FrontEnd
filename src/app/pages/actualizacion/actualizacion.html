@@ -288,23 +288,24 @@
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
-@if (hayActualizacionPendiente()) {
-Actualización pendiente por resolver
-} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
-Validación con advertencias
-} @else {
-Validación con inconsistencias
-}
+      @if (hayActualizacionPendiente()) {
+      Actualización pendiente por resolver
+      } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+      Validación con advertencias
+      } @else {
+      Validación con inconsistencias
+      }
     </h2>
 
     <p>
-@if (hayActualizacionPendiente()) {
-Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
-} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
-Se detectaron advertencias en los archivos. Puede aceptar la actualización bajo responsabilidad del super usuario o rechazarla.
-} @else {
-Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
-}
+      @if (hayActualizacionPendiente()) {
+      Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+      } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+      Se detectaron advertencias en los archivos. Revise el detalle y decida si desea aceptar la actualización o
+      rechazarla.
+      } @else {
+      Revise los errores detectados. Para intentar nuevamente, corrija los archivos y vuelva a cargarlos.
+      }
     </p>
 
     @if (hayActualizacionPendiente()) {
@@ -315,34 +316,34 @@ Revise los errores detectados. Para intentar nuevamente, corrija los archivos y 
     }
   </div>
 
-<div class="validation-actions">
-  @if (hayActualizacionPendiente()) {
-  <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-    <i class="fa-solid fa-arrow-left"></i>
-    Volver
-  </button>
+  <div class="validation-actions">
+    @if (hayActualizacionPendiente()) {
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
 
-  <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
-    <i class="fa-solid fa-file-signature"></i>
-    Resolver pendiente
-  </button>
-  } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
-  <button type="button" class="btn btn-secondary" (click)="rechazarActualizacion()">
-    <i class="fa-solid fa-xmark"></i>
-    Rechazar
-  </button>
+    <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
+      <i class="fa-solid fa-file-signature"></i>
+      Resolver pendiente
+    </button>
+    } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+    <button type="button" class="btn btn-secondary" (click)="rechazarActualizacion()">
+      <i class="fa-solid fa-xmark"></i>
+      Rechazar
+    </button>
 
-  <button type="button" class="btn btn-siiid" (click)="aceptarActualizacion()">
-    <i class="fa-solid fa-circle-check"></i>
-    Aceptar
-  </button>
-  } @else {
-  <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
-    <i class="fa-solid fa-rotate-left"></i>
-    Corregir archivos y volver a cargar
-  </button>
-  }
-</div>
+    <button type="button" class="btn btn-siiid" (click)="aceptarActualizacion()">
+      <i class="fa-solid fa-circle-check"></i>
+      Aceptar
+    </button>
+    } @else {
+    <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-rotate-left"></i>
+      Corregir archivos y volver a cargar
+    </button>
+    }
+  </div>
 
 
 </div>

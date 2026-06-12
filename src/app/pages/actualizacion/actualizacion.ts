@@ -136,13 +136,13 @@ export class Actualizacion implements OnInit {
     return tieneTresArchivosSeleccionados(this.archivos()) && this.estadoPeriodo() === 'DISPONIBLE';
   });
 
-mostrarTablasErrores = computed(() => {
-  return (
-    (this.estadoPeriodo() === 'VALIDADO_ERROR' ||
-      this.estadoPeriodo() === 'VALIDADO_ADVERTENCIA') &&
-    !!this.respuestaValidacion()
-  );
-});
+  mostrarTablasErrores = computed(() => {
+    return (
+      (this.estadoPeriodo() === 'VALIDADO_ERROR' ||
+        this.estadoPeriodo() === 'VALIDADO_ADVERTENCIA') &&
+      !!this.respuestaValidacion()
+    );
+  });
 
   resumenCarpetas = computed(() => this.resumenPorArchivo('carpetas'));
   resumenDelitos = computed(() => this.resumenPorArchivo('delitos'));
@@ -151,10 +151,11 @@ mostrarTablasErrores = computed(() => {
   errores = computed(() => this.respuestaValidacion()?.errores ?? []);
   advertencias = computed(() => this.respuestaValidacion()?.advertencias ?? []);
 
-detallesValidacion = computed(() => [
-  ...this.errores(),
-  ...this.advertencias(),
-]);
+  hayAdvertenciasDeDecision = computed(() => {
+    return this.advertencias().length > 0;
+  });
+
+  detallesValidacion = computed(() => [...this.errores(), ...this.advertencias()]);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
   codigoReferenciaPendiente = computed(() => {
@@ -305,10 +306,10 @@ detallesValidacion = computed(() => [
             return;
           }
 
-if (this.esSuperUsuario() && this.tieneAdvertenciaFechaHechosMayorFechaInicio(response)) {
-  this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
-  return;
-}
+          if (this.hayAdvertenciasDeDecision()) {
+            this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
+            return;
+          }
 
           this.prepararRevisionDiferencias(response.codigoReferencia);
         },
@@ -621,12 +622,6 @@ if (this.esSuperUsuario() && this.tieneAdvertenciaFechaHechosMayorFechaInicio(re
         );
       },
     });
-  }
-
-  private tieneAdvertenciaFechaHechosMayorFechaInicio(response: CargaValidacionResponse): boolean {
-    return (response.advertencias ?? []).some(
-      (advertencia) => advertencia.codigo === 'INTEGRIDAD_FECHA_HECHOS_MAYOR_FECHA_INICIO',
-    );
   }
 
   private cargarAniosDesdeReporteCargas(): void {

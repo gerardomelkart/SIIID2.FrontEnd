@@ -68,11 +68,10 @@ export class CargaInicial {
 
   detallesValidacion = computed(() => [...this.errores(), ...this.advertencias()]);
 
-  hayAdvertenciaFechaHechosMayorFechaInicio = computed(() => {
-    return this.advertencias().some(
-      (advertencia) => advertencia.codigo === 'INTEGRIDAD_FECHA_HECHOS_MAYOR_FECHA_INICIO',
-    );
+  hayAdvertenciasDeDecision = computed(() => {
+    return this.advertencias().length > 0;
   });
+
   codigoReferencia = computed(() => this.respuesta()?.codigoReferencia ?? '');
 
   codigoReferenciaPendiente = computed(() => {
@@ -160,7 +159,7 @@ export class CargaInicial {
             return;
           }
 
-          if (this.hayAdvertenciaFechaHechosMayorFechaInicio()) {
+          if (this.hayAdvertenciasDeDecision()) {
             this.estado.set('VALIDADO_ADVERTENCIA');
             return;
           }
@@ -322,12 +321,6 @@ export class CargaInicial {
         );
       },
     });
-  }
-
-  private tieneAdvertenciaFechaHechosMayorFechaInicio(response: CargaValidacionResponse): boolean {
-    return (response.advertencias ?? []).some(
-      (advertencia) => advertencia.codigo === 'INTEGRIDAD_FECHA_HECHOS_MAYOR_FECHA_INICIO',
-    );
   }
 
   private reemplazarAcusePrevio(blob: Blob): void {
