@@ -1,4 +1,4 @@
-export type TipoReporte = 'ENVIOS' | 'CARGAS';
+export type TipoReporte = 'ENVIOS' | 'CARGAS' | 'SABANAS';
 
 export type TipoCargaInforme = 'CARGA_INICIAL' | 'ACTUALIZACION' | string;
 

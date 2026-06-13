@@ -52,6 +52,16 @@ export class InformesService {
     return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
+  descargarSabanas(anioCorte: number) {
+    const params = new HttpParams().set('anioCorte', anioCorte);
+
+    return this.http.get(`${this.apiUrl}/sabanas`, {
+      params,
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
   descargarDesdeEndpoint(endpoint: string) {
     return this.http.get(endpoint, {
       responseType: 'blob',

@@ -67,6 +67,16 @@ export const routes: Routes = [
       },
 
       {
+        path: 'informes/sabanas',
+        loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+          reporte: 'SABANAS',
+        },
+      },
+
+      {
         path: 'administracion/usuarios',
         loadComponent: () =>
           import('./pages/crud-registros/crud-registros').then((m) => m.CrudRegistros),
