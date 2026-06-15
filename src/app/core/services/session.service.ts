@@ -39,6 +39,10 @@ export class SessionService {
     return this.usuarioSignal()?.habilitaModificacion === true;
   });
 
+  requiereCambioPassword = computed(() => {
+  return this.usuarioSignal()?.requiereCambioPassword === true;
+});
+
   guardarSesion(response: LoginResponse): void {
     if (!response.token || !response.usuario) {
       this.limpiarSesion();
@@ -63,6 +67,26 @@ export class SessionService {
     this.tokenSignal.set(null);
     this.usuarioSignal.set(null);
   }
+
+  marcarCambioPasswordRequerido(): void {
+  const usuario = this.usuarioSignal();
+
+  if (!usuario) {
+    return;
+  }
+
+  const usuarioActualizado: UsuarioLoginInfo = {
+    ...usuario,
+    requiereCambioPassword: true,
+  };
+
+  localStorage.setItem(
+    USER_KEY,
+    JSON.stringify(usuarioActualizado),
+  );
+
+  this.usuarioSignal.set(usuarioActualizado);
+}
 
   private cargarUsuarioDesdeStorage(): UsuarioLoginInfo | null {
     const raw = localStorage.getItem(USER_KEY);
