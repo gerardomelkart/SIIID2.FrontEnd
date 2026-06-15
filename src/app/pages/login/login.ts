@@ -19,8 +19,8 @@ export class Login {
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) { }
+    private router: Router,
+  ) {}
 
   entrar(): void {
     this.mensajeError.set('');
@@ -44,7 +44,12 @@ export class Login {
           return;
         }
 
-        this.router.navigateByUrl('/');
+        if (response.usuario?.requiereCambioPassword) {
+          void this.router.navigateByUrl('/cambiar-password');
+          return;
+        }
+
+        void this.router.navigateByUrl('/');
       },
       error: (error) => {
         this.cargando.set(false);
@@ -52,10 +57,10 @@ export class Login {
         this.mensajeError.set(
           obtenerMensajeErrorHttp(
             error,
-            'No fue posible iniciar sesión. Verifique sus credenciales.'
-          )
+            'No fue posible iniciar sesión. Verifique sus credenciales.',
+          ),
         );
-      }
+      },
     });
   }
 }

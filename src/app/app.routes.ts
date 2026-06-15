@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 
 import { ROLES } from './core/constants/roles.constants';
 import { authGuard } from './core/guards/auth.guard';
+import { cambioPasswordGuard } from './core/guards/cambio-password.guard';
+import { cambioPasswordPendienteGuard } from './core/guards/cambio-password-pendiente.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
@@ -10,9 +12,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
+    path: 'cambiar-password',
+    loadComponent: () =>
+      import('./pages/cambiar-password/cambiar-password').then((m) => m.CambiarPassword),
+    canActivate: [authGuard, cambioPasswordPendienteGuard],
+  },
+  {
     path: '',
     loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
-    canActivate: [authGuard],
+    canActivate: [authGuard, cambioPasswordGuard],
     children: [
       {
         path: '',

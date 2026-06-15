@@ -257,7 +257,15 @@
           placeholder="Ingresa contraseña" [ngModel]="formulario().password"
           (ngModelChange)="actualizarCampo('password', $event)">
         @if (modoFormulario() === 'EDITAR') {
-        <small>Déjala vacía para conservar la contraseña actual.</small>
+        <small>
+          Déjala vacía para conservar la contraseña actual.
+          Al establecer una nueva contraseña, el usuario deberá cambiarla
+          la próxima vez que inicie sesión.
+        </small>
+        } @else {
+        <small>
+          El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
+        </small>
         }
       </div>
     </div>
