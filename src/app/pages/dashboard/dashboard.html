@@ -116,6 +116,19 @@
       </a>
       }
 
+      @if (puedeVerSabanas()) {
+      <a class="quick-link" routerLink="/informes/sabanas">
+        <div class="quick-icon">
+          <i class="fa-solid fa-table"></i>
+        </div>
+
+        <div>
+          <strong>Sábanas estadísticas</strong>
+          <span>Generación anual de sábanas estatales y municipales.</span>
+        </div>
+      </a>
+      }
+
       @if (puedeVerAdministracion()) {
       <a class="quick-link" routerLink="/administracion/usuarios">
         <div class="quick-icon">

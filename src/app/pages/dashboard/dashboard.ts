@@ -56,6 +56,10 @@ export class Dashboard {
     return this.esSuperUsuario();
   });
 
+  puedeVerSabanas = computed(() => {
+    return this.esSuperUsuario();
+  });
+
   puedeVerAdministracion = computed(() => {
     return this.esSuperUsuario();
   });
