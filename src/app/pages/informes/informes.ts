@@ -74,6 +74,9 @@ export class Informes implements OnInit {
   descargandoArchivos = signal<string | null>(null);
   exportandoExcel = signal<TipoReporte | null>(null);
 
+  descargandoSabanas = signal(false);
+  anioSabana = signal<number>(new Date().getFullYear());
+
   ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
   ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>(null);
 
@@ -81,7 +84,8 @@ export class Informes implements OnInit {
     return (
       this.descargandoAcuse() !== null ||
       this.descargandoArchivos() !== null ||
-      this.exportandoExcel() !== null
+      this.exportandoExcel() !== null ||
+      this.descargandoSabanas()
     );
   });
 
@@ -107,10 +111,20 @@ export class Informes implements OnInit {
         return;
       }
 
+      if (reporte === 'SABANAS' && !this.puedeVerSabanas()) {
+        this.reporteActivo.set('ENVIOS');
+        this.cargarEnvios();
+        return;
+      }
+
       this.reporteActivo.set(reporte ?? 'ENVIOS');
 
       if (this.reporteActivo() === 'CARGAS') {
         this.cargarReporteCargas();
+        return;
+      }
+
+      if (this.reporteActivo() === 'SABANAS') {
         return;
       }
 
@@ -131,6 +145,8 @@ export class Informes implements OnInit {
   });
 
   puedeVerCargas = computed(() => this.esSuperUsuario());
+
+  puedeVerSabanas = computed(() => this.esSuperUsuario());
 
   puedeVerEnvios = computed(() => {
     return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
@@ -218,10 +234,18 @@ export class Informes implements OnInit {
       return;
     }
 
+    if (reporte === 'SABANAS' && !this.puedeVerSabanas()) {
+      return;
+    }
+
     this.reporteActivo.set(reporte);
 
     if (reporte === 'CARGAS') {
       this.cargarReporteCargas();
+      return;
+    }
+
+    if (reporte === 'SABANAS') {
       return;
     }
 
@@ -393,6 +417,9 @@ export class Informes implements OnInit {
   }
 
   async exportarExcel(tipo: TipoReporte): Promise<void> {
+    if (tipo === 'SABANAS') {
+      return;
+    }
     this.exportandoExcel.set(tipo);
 
     try {
@@ -434,6 +461,55 @@ export class Informes implements OnInit {
     } finally {
       this.exportandoExcel.set(null);
     }
+  }
+
+  descargarSabanas(): void {
+    if (!this.puedeVerSabanas()) {
+      return;
+    }
+
+    const anio = Number(this.anioSabana());
+
+    if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
+      mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
+      return;
+    }
+
+    this.descargandoSabanas.set(true);
+
+    this.informesService.descargarSabanas(anio).subscribe({
+      next: (response) => {
+        const blob = response.body;
+
+        if (!blob) {
+          this.descargandoSabanas.set(false);
+          mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
+          return;
+        }
+
+        const nombreArchivo =
+          this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
+          `SABANAS_${anio}.zip`;
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = nombreArchivo;
+        link.click();
+
+        URL.revokeObjectURL(url);
+        this.descargandoSabanas.set(false);
+      },
+      error: async (error) => {
+        this.descargandoSabanas.set(false);
+
+        mostrarError(
+          'No fue posible descargar las sábanas',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+        );
+      },
+    });
   }
 
   private descargarEndpoint(

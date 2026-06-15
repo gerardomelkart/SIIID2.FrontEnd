@@ -8,7 +8,7 @@ import { SessionService } from '../../core/services/session.service';
   selector: 'app-sidebar',
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css'
+  styleUrl: './sidebar.css',
 })
 export class Sidebar {
   private readonly sessionService = inject(SessionService);
@@ -43,12 +43,16 @@ export class Sidebar {
     return this.esSuperUsuario();
   });
 
+  puedeVerSabanas = computed(() => {
+    return this.esSuperUsuario();
+  });
+
   puedeVerAdministracion = computed(() => {
     return this.esSuperUsuario();
   });
 
   toggleCarga(): void {
-    this.cargaAbierta.update(valor => !valor);
+    this.cargaAbierta.update((valor) => !valor);
 
     if (!this.cargaAbierta()) {
       this.incidenciaAbierta.set(false);
@@ -56,11 +60,11 @@ export class Sidebar {
   }
 
   toggleIncidencia(): void {
-    this.incidenciaAbierta.update(valor => !valor);
+    this.incidenciaAbierta.update((valor) => !valor);
   }
 
   toggleInformes(): void {
-    this.informesAbierto.update(valor => !valor);
+    this.informesAbierto.update((valor) => !valor);
 
     if (!this.informesAbierto()) {
       this.informesIncidenciaAbierta.set(false);
@@ -68,11 +72,11 @@ export class Sidebar {
   }
 
   toggleInformesIncidencia(): void {
-    this.informesIncidenciaAbierta.update(valor => !valor);
+    this.informesIncidenciaAbierta.update((valor) => !valor);
   }
 
   toggleAdministracion(): void {
-    this.administracionAbierta.update(valor => !valor);
+    this.administracionAbierta.update((valor) => !valor);
   }
 
   cerrarSesion(): void {

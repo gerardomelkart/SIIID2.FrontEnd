@@ -282,6 +282,48 @@
   </section>
   }
 
+
+
+  @if (reporteActivo() === 'SABANAS' && puedeVerSabanas()) {
+  <section class="siiid-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-table"></i>
+        Sábanas estadísticas
+      </span>
+    </div>
+
+    <div class="corte-selector">
+      <div class="corte-selector-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Año de corte
+      </div>
+
+      <div class="corte-selector-controls">
+        <input type="number" class="form-control form-control-sm" min="2000" max="2100" [ngModel]="anioSabana()"
+          (ngModelChange)="anioSabana.set(+$event)">
+      </div>
+    </div>
+
+    <div class="filtro-entidad-info">
+      <i class="fa-solid fa-circle-info"></i>
+      Se descargará un archivo ZIP con las 4 sábanas estadísticas anuales:
+      estatal delitos, municipal delitos, estatal víctimas y municipal víctimas.
+    </div>
+
+    <div class="reporte-actions mt-3">
+      <button type="button" class="btn btn-siiid" [disabled]="descargaEnProceso()" (click)="descargarSabanas()">
+        @if (descargandoSabanas()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        } @else {
+        <i class="fa-solid fa-file-zipper"></i>
+        }
+        Descargar sábanas
+      </button>
+    </div>
+  </section>
+  }
+
   @if (acuseUrlSegura()) {
   <div class="acuse-modal-backdrop">
     <div class="acuse-modal">
