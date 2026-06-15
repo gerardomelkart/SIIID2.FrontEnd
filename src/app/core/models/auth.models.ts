@@ -20,4 +20,16 @@ export interface UsuarioLoginInfo {
   entidadFederativa: string | null;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
+  requiereCambioPassword: boolean;
+}
+
+export interface CambiarPasswordRequest {
+  nuevaPassword: string;
+  confirmarPassword: string;
+}
+
+export interface CambiarPasswordResponse {
+  esValido: boolean;
+  codigo: string;
+  mensaje: string;
 }
