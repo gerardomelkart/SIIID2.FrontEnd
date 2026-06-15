@@ -10,6 +10,17 @@ export interface ActualizacionPeriodoResponse {
   mensaje: string;
 }
 
+export interface ActualizacionMesDisponibleItem {
+  mesCorte: number;
+  nombreMes: string;
+  periodo: string;
+}
+
+export interface ActualizacionAnioDisponibleItem {
+  anioCorte: number;
+  meses: ActualizacionMesDisponibleItem[];
+}
+
 export interface ActualizacionDiferenciasResponse {
   esValido: boolean;
   codigoReferencia: string;

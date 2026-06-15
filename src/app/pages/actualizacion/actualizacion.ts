@@ -4,7 +4,7 @@ import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.model
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { InformesService } from '../../core/services/informes.service';
+
 import {
   confirmarAccion,
   mostrarAdvertencia,
@@ -18,6 +18,7 @@ import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/h
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import {
+  ActualizacionAnioDisponibleItem,
   ActualizacionDiferenciasResponse,
   ActualizacionPeriodoResponse,
 } from '../../core/models/actualizacion.models';
@@ -63,7 +64,6 @@ type EstadoPeriodo =
 })
 export class Actualizacion implements OnInit {
   private readonly actualizacionService = inject(ActualizacionService);
-  private readonly informesService = inject(InformesService);
   private readonly sessionService = inject(SessionService);
   private readonly catalogosService = inject(CatalogosService);
   private readonly sanitizer = inject(DomSanitizer);
@@ -75,23 +75,28 @@ export class Actualizacion implements OnInit {
   entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
   cargandoEntidades = signal(false);
 
-  aniosCorte = signal<string[]>([]);
+  periodosDisponibles = signal<ActualizacionAnioDisponibleItem[]>([]);
   cargandoAniosCorte = signal(false);
 
-  readonly mesesCorte = [
-    { valor: '1', nombre: 'Enero' },
-    { valor: '2', nombre: 'Febrero' },
-    { valor: '3', nombre: 'Marzo' },
-    { valor: '4', nombre: 'Abril' },
-    { valor: '5', nombre: 'Mayo' },
-    { valor: '6', nombre: 'Junio' },
-    { valor: '7', nombre: 'Julio' },
-    { valor: '8', nombre: 'Agosto' },
-    { valor: '9', nombre: 'Septiembre' },
-    { valor: '10', nombre: 'Octubre' },
-    { valor: '11', nombre: 'Noviembre' },
-    { valor: '12', nombre: 'Diciembre' },
-  ];
+  aniosCorte = computed(() => {
+    return this.periodosDisponibles().map((periodo) => periodo.anioCorte.toString());
+  });
+
+  mesesCorte = computed(() => {
+    const anio = Number(this.anioCorte());
+
+    if (!anio) {
+      return [];
+    }
+
+    const periodo = this.periodosDisponibles().find((item) => item.anioCorte === anio);
+
+    return (periodo?.meses ?? []).map((mes) => ({
+      valor: mes.mesCorte.toString(),
+      nombre: mes.nombreMes,
+    }));
+  });
+
   estadoPeriodo = signal<EstadoPeriodo>('SIN_CONSULTAR');
   respuestaPeriodo = signal<ActualizacionPeriodoResponse | null>(null);
   respuestaValidacion = signal<CargaValidacionResponse | null>(null);
@@ -196,9 +201,29 @@ export class Actualizacion implements OnInit {
   ngOnInit(): void {
     if (this.esSuperUsuario()) {
       this.cargarEntidadesFederativas();
+      return;
     }
 
-    this.cargarAniosDesdeReporteCargas();
+    this.cargarPeriodosDisponibles();
+  }
+
+  onEntidadChange(valor: string): void {
+    this.idEntidadFederativa.set(valor);
+    this.anioCorte.set('');
+    this.mesCorte.set('');
+    this.periodosDisponibles.set([]);
+
+    this.onPeriodoChange();
+
+    if (valor) {
+      this.cargarPeriodosDisponibles(Number(valor));
+    }
+  }
+
+  onAnioChange(valor: string): void {
+    this.anioCorte.set(valor);
+    this.mesCorte.set('');
+    this.onPeriodoChange();
   }
 
   onPeriodoChange(): void {
@@ -623,30 +648,20 @@ export class Actualizacion implements OnInit {
       },
     });
   }
-
-  private cargarAniosDesdeReporteCargas(): void {
+  private cargarPeriodosDisponibles(idEntidadFederativa?: number | null): void {
     this.cargandoAniosCorte.set(true);
 
-    this.informesService.obtenerReporteCargas().subscribe({
-      next: (response) => {
-        const anios = Array.from(
-          new Set(
-            (response.registros ?? [])
-              .map((registro) => registro.anioCorte)
-              .filter((anio): anio is number => !!anio),
-          ),
-        )
-          .sort((a, b) => b - a)
-          .map((anio) => anio.toString());
-
-        this.aniosCorte.set(anios);
+    this.actualizacionService.obtenerPeriodosDisponibles(idEntidadFederativa).subscribe({
+      next: (periodos) => {
+        this.periodosDisponibles.set(periodos ?? []);
         this.cargandoAniosCorte.set(false);
       },
-      error: (error) => {
+      error: (error: unknown) => {
+        this.periodosDisponibles.set([]);
         this.cargandoAniosCorte.set(false);
 
         mostrarError(
-          'No fue posible cargar años de corte',
+          'No fue posible cargar los periodos disponibles',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },

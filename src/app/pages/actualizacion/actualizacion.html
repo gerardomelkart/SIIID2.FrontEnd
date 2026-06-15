@@ -59,7 +59,7 @@
               </label>
 
               <select class="form-select form-select-sm select-corte" [ngModel]="idEntidadFederativa()"
-                (ngModelChange)="idEntidadFederativa.set($event); onPeriodoChange()">
+                (ngModelChange)="onEntidadChange($event)">
                 <option value="">
                   {{ cargandoEntidades() ? 'Cargando entidades...' : 'Seleccione Entidad...' }}
                 </option>
@@ -80,7 +80,8 @@
               </label>
 
               <select class="form-select form-select-sm select-corte" [ngModel]="anioCorte()"
-                (ngModelChange)="anioCorte.set($event); onPeriodoChange()">
+                [disabled]="cargandoAniosCorte() || (esSuperUsuario() && !idEntidadFederativa())"
+                (ngModelChange)="onAnioChange($event)">
                 <option value="">
                   {{ cargandoAniosCorte() ? 'Cargando años...' : 'Seleccione Año...' }}
                 </option>
@@ -99,11 +100,11 @@
                 Mes
               </label>
 
-              <select class="form-select form-select-sm select-corte" [ngModel]="mesCorte()"
+              <select class="form-select form-select-sm select-corte" [ngModel]="mesCorte()" [disabled]="!anioCorte()"
                 (ngModelChange)="mesCorte.set($event); onPeriodoChange()">
                 <option value="">Seleccione Mes...</option>
 
-                @for (mes of mesesCorte; track mes.valor) {
+                @for (mes of mesesCorte(); track mes.valor) {
                 <option [value]="mes.valor">
                   {{ mes.nombre }}
                 </option>

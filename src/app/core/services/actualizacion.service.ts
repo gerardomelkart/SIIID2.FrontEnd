@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
+  ActualizacionAnioDisponibleItem,
   ActualizacionDiferenciasResponse,
   ActualizacionPeriodoResponse,
 } from '../models/actualizacion.models';
@@ -29,6 +30,18 @@ export class ActualizacionService {
     }
 
     return this.http.get<ActualizacionPeriodoResponse>(`${this.apiUrl}/periodo`, { params });
+  }
+
+  obtenerPeriodosDisponibles(idEntidadFederativa?: number | null) {
+    let params = new HttpParams();
+
+    if (idEntidadFederativa) {
+      params = params.set('idEntidadFederativa', idEntidadFederativa);
+    }
+
+    return this.http.get<ActualizacionAnioDisponibleItem[]>(`${this.apiUrl}/periodos-disponibles`, {
+      params,
+    });
   }
 
   validarActualizacion(
