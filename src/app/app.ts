@@ -6,19 +6,21 @@ import { InactivityService } from './core/services/inactivity.service';
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App implements OnInit {
   protected readonly title = signal('SIIID2.FrontEnd');
 
   constructor(
     private router: Router,
-    private inactivityService: InactivityService
-  ) { }
+    private inactivityService: InactivityService,
+  ) {}
 
   ngOnInit(): void {
     this.inactivityService.iniciar();
-    const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const navigationEntry = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
     const esRecarga = navigationEntry?.type === 'reload';
 
     if (!esRecarga) {
@@ -27,8 +29,8 @@ export class App implements OnInit {
 
     const rutaActual = window.location.pathname.toLowerCase();
 
-    // Si está en login, no lo movemos.
-    if (rutaActual === '/login') {
+    // Estas rutas deben conservarse al recargar.
+    if (rutaActual === '/login' || rutaActual === '/cambiar-password') {
       return;
     }
 

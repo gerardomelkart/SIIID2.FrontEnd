@@ -21,7 +21,7 @@ export class Dashboard {
   esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
 
   nombreUsuario = computed(() => {
-    return this.usuario()?.nombreCompleto || this.usuario()?.usuario || 'Usuario';
+    return this.usuario()?.nombre || this.usuario()?.usuario || 'Usuario';
   });
 
   entidadUsuario = computed(() => {

@@ -6,7 +6,9 @@
       </div>
 
       <div class="user-info">
-        <div class="user-name">{{ usuario()?.nombreCompleto || usuario()?.usuario || 'usuario' }}</div>
+        <div class="user-name">
+          {{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}
+        </div>
 
         <div class="user-status">
           <span class="status-dot"></span>

@@ -14,6 +14,7 @@ export interface LoginResponse {
 export interface UsuarioLoginInfo {
   idUsuario: number;
   usuario: string;
+  nombre: string;
   nombreCompleto: string;
   rol: string;
   idEntidadFederativa: number | null;
