@@ -2,7 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { tap } from 'rxjs';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { LoginRequest, LoginResponse } from '../models/auth.models';
+
+import {
+  CambiarPasswordRequest,
+  CambiarPasswordResponse,
+  LoginRequest,
+  LoginResponse,
+} from '../models/auth.models';
+
 import { SessionService } from './session.service';
 
 @Injectable({
@@ -24,6 +31,10 @@ export class AuthService {
         }
       }),
     );
+  }
+
+  cambiarPassword(request: CambiarPasswordRequest) {
+    return this.http.post<CambiarPasswordResponse>(`${this.apiUrl}/cambiar-password`, request);
   }
 
   logout(): void {
