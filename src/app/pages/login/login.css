@@ -1,7 +1,10 @@
 .login-page {
   position: relative;
   min-height: 100vh;
-  background: #ffffff url('/img/ImgFondo2.png') left bottom / cover no-repeat;
+  background-color: #ffffff;
+  background-position: left bottom;
+  background-size: cover;
+  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
