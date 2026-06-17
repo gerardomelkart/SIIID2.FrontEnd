@@ -27,7 +27,12 @@ export class App implements OnInit {
       return;
     }
 
-    const rutaActual = window.location.pathname.toLowerCase();
+    const basePath = new URL(document.baseURI).pathname.replace(/\/$/, '').toLowerCase();
+
+    const pathname = window.location.pathname.replace(/\/$/, '').toLowerCase() || '/';
+
+    const rutaActual =
+      basePath && pathname.startsWith(basePath) ? pathname.slice(basePath.length) || '/' : pathname;
 
     // Estas rutas deben conservarse al recargar.
     if (rutaActual === '/login' || rutaActual === '/cambiar-password') {
