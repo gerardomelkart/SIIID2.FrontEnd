@@ -1,4 +1,7 @@
+//desarrollo
 const API_BASE_URL = 'api';
+//produccion
+//const API_BASE_URL = '/beta/api';
 
 export const API_ENDPOINTS = {
   auth: `${API_BASE_URL}/auth`,
