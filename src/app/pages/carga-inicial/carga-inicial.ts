@@ -201,15 +201,49 @@ export class CargaInicial {
         aceptar: true,
       })
       .pipe(
-        switchMap(() =>
-          this.cargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
-            map((blob) => ({ acuseDescargado: true, blob })),
-            catchError(() => of({ acuseDescargado: false, blob: null as Blob | null })),
-          ),
-        ),
+        switchMap((response) => {
+          if (response.estado === 'PENDIENTE_APROBACION') {
+            return of({
+              response,
+              acuseDescargado: false,
+              blob: null as Blob | null,
+            });
+          }
+
+          return this.cargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
+            map((blob: Blob) => ({
+              response,
+              acuseDescargado: true,
+              blob,
+            })),
+            catchError(() =>
+              of({
+                response,
+                acuseDescargado: false,
+                blob: null as Blob | null,
+              }),
+            ),
+          );
+        }),
       )
       .subscribe({
         next: (resultado) => {
+          if (resultado.response.estado === 'PENDIENTE_APROBACION') {
+            this.limpiarUrlsPdf();
+
+            mostrarExitoInstitucional(
+              'Carga enviada a revision',
+              resultado.response.mensaje ||
+                'La carga quedo pendiente de aprobacion administrativa.',
+            ).then(() => {
+              this.reiniciarFormulario();
+              this.estado.set('INICIAL');
+              this.router.navigateByUrl('/');
+            });
+
+            return;
+          }
+
           if (resultado.blob) {
             this.reemplazarAcuseConfirmado(resultado.blob);
           }
@@ -217,7 +251,7 @@ export class CargaInicial {
           this.estado.set('CONFIRMADO');
 
           mostrarExito(
-            '¡Carga completada!',
+            'Carga completada',
             resultado.acuseDescargado
               ? undefined
               : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
@@ -227,8 +261,8 @@ export class CargaInicial {
           this.estado.set('MOSTRANDO_ACUSE');
 
           mostrarError(
-            'No fue posible confirmar la carga',
-            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            'No fue posible procesar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexion con la API.'),
           );
         },
       });

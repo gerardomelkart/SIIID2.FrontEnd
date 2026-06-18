@@ -387,15 +387,49 @@ export class Actualizacion implements OnInit {
         aceptar: true,
       })
       .pipe(
-        switchMap(() =>
-          this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
-            map((blob: Blob) => ({ acuseDescargado: true, blob })),
-            catchError(() => of({ acuseDescargado: false, blob: null as Blob | null })),
-          ),
-        ),
+        switchMap((response) => {
+          if (response.estado === 'PENDIENTE_APROBACION') {
+            return of({
+              response,
+              acuseDescargado: false,
+              blob: null as Blob | null,
+            });
+          }
+
+          return this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
+            map((blob: Blob) => ({
+              response,
+              acuseDescargado: true,
+              blob,
+            })),
+            catchError(() =>
+              of({
+                response,
+                acuseDescargado: false,
+                blob: null as Blob | null,
+              }),
+            ),
+          );
+        }),
       )
       .subscribe({
         next: (resultado) => {
+          if (resultado.response.estado === 'PENDIENTE_APROBACION') {
+            this.limpiarUrlsPdf();
+
+            mostrarExitoInstitucional(
+              'Actualizacion enviada a revision',
+              resultado.response.mensaje ||
+                'La actualizacion quedo pendiente de aprobacion administrativa.',
+            ).then(() => {
+              this.reiniciarFormulario();
+              this.estadoPeriodo.set('SIN_CONSULTAR');
+              this.router.navigateByUrl('/');
+            });
+
+            return;
+          }
+
           if (resultado.blob) {
             this.reemplazarAcuseConfirmado(resultado.blob);
           }
@@ -403,18 +437,18 @@ export class Actualizacion implements OnInit {
           this.estadoPeriodo.set('CONFIRMADO');
 
           mostrarExito(
-            '¡Actualización completada!',
+            'Actualizacion completada',
             resultado.acuseDescargado
               ? undefined
-              : 'La actualización fue confirmada, pero no fue posible cargar el acuse confirmado.',
+              : 'La actualizacion fue confirmada, pero no fue posible cargar el acuse confirmado.',
           );
         },
         error: (error: unknown) => {
           this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
 
           mostrarError(
-            'No fue posible confirmar la actualización',
-            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+            'No fue posible procesar la actualizacion',
+            obtenerMensajeErrorHttp(error, 'Revise la conexion con la API.'),
           );
         },
       });
