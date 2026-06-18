@@ -105,6 +105,16 @@ export const routes: Routes = [
       },
 
       {
+        path: 'administracion/cargas-pendientes',
+        loadComponent: () =>
+          import('./pages/aprobacion-cargas/aprobacion-cargas').then((m) => m.AprobacionCargas),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+
+      {
         path: 'crud-registros',
         redirectTo: 'administracion/usuarios',
       },
