@@ -15,7 +15,7 @@ import {
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
 
 import {
   ActualizacionAnioDisponibleItem,
@@ -109,6 +109,7 @@ export class Actualizacion implements OnInit {
 
   private acusePrevioObjectUrl: string | null = null;
   private acuseConfirmadoObjectUrl: string | null = null;
+  private diferenciasEnCurso = false;
 
   acusePrevioUrl = signal<SafeResourceUrl | null>(null);
   acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
@@ -629,13 +630,35 @@ export class Actualizacion implements OnInit {
     return (tipoMovimiento?.toUpperCase() ?? '') === 'MODIFICADO';
   }
 
-  private prepararRevisionDiferencias(codigoReferencia: string): void {
-    this.actualizacionService.obtenerDiferencias(codigoReferencia).subscribe({
+private prepararRevisionDiferencias(codigoReferencia: string): void {
+  if (this.diferenciasEnCurso) {
+    return;
+  }
+
+  if (!codigoReferencia?.trim()) {
+    this.errorGeneral.set(
+      'No fue posible identificar el código de referencia de la actualización.',
+    );
+    return;
+  }
+
+  this.diferenciasEnCurso = true;
+  this.errorGeneral.set('');
+
+  this.actualizacionService
+    .obtenerDiferencias(codigoReferencia, 100)
+    .pipe(
+      finalize(() => {
+        this.diferenciasEnCurso = false;
+      }),
+    )
+    .subscribe({
       next: (response: ActualizacionDiferenciasResponse) => {
         if (!response.esValido) {
           this.estadoPeriodo.set('DISPONIBLE');
           this.errorGeneral.set(
-            response.mensaje || 'No fue posible obtener las diferencias de la actualización.',
+            response.mensaje ||
+              'No fue posible obtener las diferencias de la actualización.',
           );
           return;
         }
@@ -645,13 +668,16 @@ export class Actualizacion implements OnInit {
       },
       error: (error: unknown) => {
         this.estadoPeriodo.set('DISPONIBLE');
+
         this.errorGeneral.set(
-          obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
-            'No fue posible consultar las diferencias de la actualización.',
+          obtenerMensajeErrorHttp(
+            error,
+            'La consulta de diferencias tardó demasiado o fue interrumpida.',
+          ) || 'No fue posible consultar las diferencias de la actualización.',
         );
       },
     });
-  }
+}
 
   private abrirAcusePrevio(codigoReferencia: string): void {
     this.actualizacionService.descargarAcusePrevio(codigoReferencia).subscribe({
