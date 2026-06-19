@@ -74,11 +74,25 @@ export class CargaInicial {
 
   codigoReferencia = computed(() => this.respuesta()?.codigoReferencia ?? '');
 
+  errorCargaPendiente = computed(() => {
+    return (
+      this.errores().find(
+        (error) =>
+          error.codigo === 'CARGA_PENDIENTE_EXISTENTE' ||
+          error.codigo === 'CARGA_PENDIENTE_APROBACION',
+      ) ?? null
+    );
+  });
+
   codigoReferenciaPendiente = computed(() => {
+    const codigo = this.errorCargaPendiente()?.valor?.trim();
+
+    if (codigo) {
+      return codigo;
+    }
+
     const textoErrores = this.errores()
-      .map(
-        (error) => `${error.valor ?? ''} ${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`,
-      )
+      .map((error) => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
       .join(' ');
 
     const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
@@ -86,8 +100,14 @@ export class CargaInicial {
     return match?.[1] ?? '';
   });
 
-  hayCargaPendiente = computed(() => {
-    return this.codigoReferenciaPendiente() !== '';
+  hayCargaPendiente = computed(() => this.errorCargaPendiente() !== null);
+
+  cargaPendientePorResolver = computed(() => {
+    return this.errorCargaPendiente()?.codigo === 'CARGA_PENDIENTE_EXISTENTE';
+  });
+
+  cargaEnRevisionAdministrativa = computed(() => {
+    return this.errorCargaPendiente()?.codigo === 'CARGA_PENDIENTE_APROBACION';
   });
 
   codigoReferenciaOperacion = computed(() => {
@@ -334,6 +354,15 @@ export class CargaInicial {
   }
 
   resolverCargaPendiente(): void {
+    if (this.cargaEnRevisionAdministrativa()) {
+      mostrarAdvertencia(
+        'Carga en revisión administrativa',
+        'La carga ya fue aceptada y se encuentra esperando la resolución del administrador.',
+      );
+
+      return;
+    }
+
     const codigoReferencia = this.codigoReferenciaPendiente();
 
     if (!codigoReferencia) {

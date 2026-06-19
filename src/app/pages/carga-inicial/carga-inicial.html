@@ -162,7 +162,9 @@
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
-      @if (hayCargaPendiente()) {
+      @if (cargaEnRevisionAdministrativa()) {
+      Carga en revisión administrativa
+      } @else if (cargaPendientePorResolver()) {
       Carga pendiente por resolver
       } @else if (debeUsarActualizacion()) {
       Información confirmada previamente
@@ -174,7 +176,9 @@
     </h2>
 
     <p>
-      @if (hayCargaPendiente()) {
+      @if (cargaEnRevisionAdministrativa()) {
+      La carga ya fue aceptada por el enlace estatal y está esperando la aprobación o rechazo del administrador.
+      } @else if (cargaPendientePorResolver()) {
       Existe una carga validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
       } @else if (debeUsarActualizacion()) {
       Ya existe información confirmada para el periodo seleccionado. Para realizar cambios debe utilizar el flujo de
@@ -195,7 +199,12 @@
   </div>
 
   <div class="validation-actions">
-    @if (hayCargaPendiente()) {
+    @if (cargaEnRevisionAdministrativa()) {
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
+    } @else if (cargaPendientePorResolver()) {
     <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
       <i class="fa-solid fa-arrow-left"></i>
       Volver
@@ -301,7 +310,9 @@
 </div>
 
 <div class="texto-ayuda-validacion">
-  @if (hayCargaPendiente()) {
+  @if (cargaEnRevisionAdministrativa()) {
+  La carga se encuentra en revisión administrativa. Ya no requiere ninguna acción del enlace estatal.
+  } @else if (cargaPendientePorResolver()) {
   Existe una carga validada pendiente. Debe aceptar o rechazar dicha carga antes de enviar una nueva.
   } @else if (debeUsarActualizacion()) {
   La información del periodo ya fue confirmada. Para modificarla, utilice el módulo de actualización.

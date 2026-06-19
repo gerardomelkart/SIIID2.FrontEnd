@@ -131,37 +131,46 @@
             </button>
           </div>
 
-          @if (mensajePeriodo()) {
-          <div class="periodo-alert" [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
-            [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
-            [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()">
-            <div class="periodo-alert-content">
-              <div>
-                @if (hayActualizacionPendienteEnPeriodo()) {
-                <strong>Actualización pendiente por resolver.</strong>
-                <span>
-                  Existe una actualización validada pendiente de aceptar o rechazar.
-                </span>
+@if (mensajePeriodo()) {
+<div class="periodo-alert"
+  [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+  [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+  [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
+  [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()">
 
-                <div class="pending-reference mt-2">
-                  Código pendiente:
-                  <strong>{{ codigoReferenciaPendiente() }}</strong>
-                </div>
-                } @else {
-                {{ mensajePeriodo() }}
-                }
-              </div>
+  <div class="periodo-alert-content">
+    <div>
+      @if (actualizacionEnRevisionAdministrativa()) {
+      <strong>Actualización en revisión administrativa.</strong>
+      <span>
+        La actualización ya fue aceptada por el enlace estatal y está esperando la resolución del administrador.
+      </span>
+      } @else if (actualizacionPendientePorResolver()) {
+      <strong>Actualización pendiente por resolver.</strong>
+      <span>
+        Existe una actualización validada pendiente de aceptar o rechazar.
+      </span>
+      } @else {
+      {{ mensajePeriodo() }}
+      }
 
-              @if (hayActualizacionPendienteEnPeriodo()) {
-              <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
-                <i class="fa-solid fa-file-signature"></i>
-                Resolver pendiente
-              </button>
-              }
-            </div>
-          </div>
-          }
+      @if (hayActualizacionPendienteEnPeriodo()) {
+      <div class="pending-reference mt-2">
+        Código pendiente:
+        <strong>{{ codigoReferenciaPendiente() }}</strong>
+      </div>
+      }
+    </div>
+
+    @if (actualizacionPendientePorResolver()) {
+    <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
+      <i class="fa-solid fa-file-signature"></i>
+      Resolver pendiente
+    </button>
+    }
+  </div>
+</div>
+}
         </div>
 
         @if (mostrarArchivos()) {
@@ -289,9 +298,11 @@
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
-      @if (hayActualizacionPendiente()) {
-      Actualización pendiente por resolver
-      } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+@if (actualizacionEnRevisionAdministrativa()) {
+Actualización en revisión administrativa
+} @else if (actualizacionPendientePorResolver()) {
+Actualización pendiente por resolver
+} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
       Validación con advertencias
       } @else {
       Validación con inconsistencias
@@ -299,9 +310,11 @@
     </h2>
 
     <p>
-      @if (hayActualizacionPendiente()) {
-      Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
-      } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+@if (actualizacionEnRevisionAdministrativa()) {
+La actualización ya fue aceptada y está esperando la aprobación o rechazo del administrador.
+} @else if (actualizacionPendientePorResolver()) {
+Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
       Se detectaron advertencias en los archivos. Revise el detalle y decida si desea aceptar la actualización o
       rechazarla.
       } @else {
@@ -318,17 +331,22 @@
   </div>
 
   <div class="validation-actions">
-    @if (hayActualizacionPendiente()) {
-    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-      <i class="fa-solid fa-arrow-left"></i>
-      Volver
-    </button>
+@if (actualizacionEnRevisionAdministrativa()) {
+<button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+  <i class="fa-solid fa-arrow-left"></i>
+  Volver
+</button>
+} @else if (actualizacionPendientePorResolver()) {
+<button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+  <i class="fa-solid fa-arrow-left"></i>
+  Volver
+</button>
 
-    <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
-      <i class="fa-solid fa-file-signature"></i>
-      Resolver pendiente
-    </button>
-    } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+<button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
+  <i class="fa-solid fa-file-signature"></i>
+  Resolver pendiente
+</button>
+} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
     <button type="button" class="btn btn-secondary" (click)="rechazarActualizacion()">
       <i class="fa-solid fa-xmark"></i>
       Rechazar
@@ -415,9 +433,14 @@
 </div>
 
 <div class="texto-ayuda-validacion">
-  La información que se muestra en las tablas permite identificar a detalle las inconsistencias
-  detectadas en cada uno de los archivos enviados. Es necesario atender dichas inconsistencias
-  y cargar de nuevo sus archivos.
+  @if (actualizacionEnRevisionAdministrativa()) {
+  La actualización se encuentra en revisión administrativa. Ya no requiere ninguna acción del enlace estatal.
+  } @else if (actualizacionPendientePorResolver()) {
+  Existe una actualización validada pendiente. Debe aceptar o rechazarla antes de enviar una nueva.
+  } @else {
+  La información que se muestra en las tablas permite identificar a detalle las inconsistencias detectadas en cada uno
+  de los archivos enviados. Es necesario atender dichas inconsistencias y cargar de nuevo sus archivos.
+  }
 </div>
 
 @if (detallesValidacion().length > 0) {

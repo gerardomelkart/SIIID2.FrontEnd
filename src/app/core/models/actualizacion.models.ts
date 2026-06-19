@@ -4,6 +4,7 @@ export interface ActualizacionPeriodoResponse {
   tieneCargaConfirmada: boolean;
   existeActualizacionPendiente: boolean;
   codigoActualizacionPendiente: string | null;
+  estadoActualizacionPendiente: string | null;
   idEntidadFederativa: number | null;
   mesCorte: number;
   anioCorte: number;

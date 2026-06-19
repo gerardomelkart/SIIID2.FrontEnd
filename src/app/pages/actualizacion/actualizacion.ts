@@ -163,26 +163,56 @@ export class Actualizacion implements OnInit {
   detallesValidacion = computed(() => [...this.errores(), ...this.advertencias()]);
   codigoReferencia = computed(() => this.respuestaValidacion()?.codigoReferencia ?? '');
 
-  codigoReferenciaPendiente = computed(() => {
-    const textoErrores = this.errores()
-      .map((error) => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
-      .join(' ');
-
-    const textoPeriodo = this.mensajePeriodo() ?? '';
-
-    const textoCompleto = `${textoPeriodo} ${textoErrores}`;
-
-    const match = textoCompleto.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
-
-    return match?.[1] ?? '';
+  errorActualizacionPendiente = computed(() => {
+    return (
+      this.errores().find(
+        (error) =>
+          error.codigo === 'ACTUALIZACION_PENDIENTE_EXISTENTE' ||
+          error.codigo === 'ACTUALIZACION_PENDIENTE_APROBACION',
+      ) ?? null
+    );
   });
 
-  hayActualizacionPendiente = computed(() => {
-    return this.codigoReferenciaPendiente() !== '';
+  estadoActualizacionPendiente = computed(() => {
+    const estadoPeriodo = this.respuestaPeriodo()?.estadoActualizacionPendiente;
+
+    if (estadoPeriodo) {
+      return estadoPeriodo;
+    }
+
+    const errorPendiente = this.errorActualizacionPendiente();
+
+    if (!errorPendiente) {
+      return null;
+    }
+
+    return errorPendiente.codigo === 'ACTUALIZACION_PENDIENTE_APROBACION'
+      ? 'PENDIENTE_APROBACION'
+      : 'VALIDADO_PENDIENTE_ACTUALIZACION';
+  });
+
+  codigoReferenciaPendiente = computed(() => {
+    const codigoError = this.errorActualizacionPendiente()?.valor?.trim();
+
+    if (codigoError) {
+      return codigoError;
+    }
+
+    return this.respuestaPeriodo()?.codigoActualizacionPendiente?.trim() ?? '';
+  });
+
+  hayActualizacionPendiente = computed(() => this.codigoReferenciaPendiente() !== '');
+
+  actualizacionEnRevisionAdministrativa = computed(() => {
+    return this.estadoActualizacionPendiente() === 'PENDIENTE_APROBACION';
+  });
+
+  actualizacionPendientePorResolver = computed(() => {
+    return this.hayActualizacionPendiente() && !this.actualizacionEnRevisionAdministrativa();
   });
 
   hayActualizacionPendienteEnPeriodo = computed(() => {
-    return this.estadoPeriodo() === 'NO_DISPONIBLE' && this.codigoReferenciaPendiente() !== '';
+    return this.estadoPeriodo() === 'NO_DISPONIBLE' && this.hayActualizacionPendiente();
   });
 
   codigoReferenciaOperacion = computed(() => {
@@ -501,6 +531,15 @@ export class Actualizacion implements OnInit {
   }
 
   resolverActualizacionPendiente(): void {
+    if (this.actualizacionEnRevisionAdministrativa()) {
+      mostrarAdvertencia(
+        'Actualización en revisión administrativa',
+        'La actualización ya fue aceptada y está esperando la resolución del administrador.',
+      );
+
+      return;
+    }
+
     const codigoReferencia = this.codigoReferenciaPendiente();
 
     if (!codigoReferencia) {
