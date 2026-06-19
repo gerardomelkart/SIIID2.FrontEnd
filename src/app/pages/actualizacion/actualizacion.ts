@@ -512,7 +512,7 @@ export class Actualizacion implements OnInit {
       return;
     }
 
-    this.abrirAcusePrevio(codigoReferencia);
+    this.prepararRevisionDiferencias(codigoReferencia);
   }
 
   cerrarProcesoConfirmado(): void {

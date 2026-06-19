@@ -455,55 +455,6 @@
 }
 }
 
-@if (estadoPeriodo() === 'MOSTRANDO_ACUSE' || estadoPeriodo() === 'CONFIRMANDO' || estadoPeriodo() === 'CONFIRMADO') {
-<div class="acuse-modal">
-  <div class="acuse-header">
-    <span>Acuse de actualización de información</span>
-
-    @if (estadoPeriodo() === 'CONFIRMADO') {
-    <button type="button" class="acuse-close" (click)="cerrarProcesoConfirmado()">×</button>
-    }
-  </div>
-
-  <div class="acuse-body">
-    @if (acuseConfirmadoUrl()) {
-    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado de actualización"></iframe>
-    } @else if (acusePrevioUrl()) {
-    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Acuse previo de actualización"></iframe>
-    }
-  </div>
-
-  <div class="acuse-actions">
-    @if (estadoPeriodo() === 'MOSTRANDO_ACUSE') {
-    <button type="button" class="btn-rechazar" (click)="rechazarActualizacion()">
-      Rechazar
-    </button>
-
-    <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
-      Aceptar
-    </button>
-    }
-
-    @if (estadoPeriodo() === 'CONFIRMANDO') {
-    <button type="button" class="btn-rechazar btn-disabled" disabled>
-      Rechazar
-    </button>
-
-    <button type="button" class="btn-aceptar btn-disabled" disabled>
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Procesando...
-    </button>
-    }
-
-    @if (estadoPeriodo() === 'CONFIRMADO') {
-    <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
-      Cerrar
-    </button>
-    }
-  </div>
-</div>
-}
-
 @if (mostrarDiferencias()) {
 <div class="diferencias-modal">
   <div class="diferencias-header">
@@ -837,10 +788,11 @@
       Rechazar
     </button>
 
+    @if (diferencias()) {
     <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
       Volver a diferencias
     </button>
-
+    }
     <button type="button" class="btn-aceptar" (click)="aceptarActualizacion()">
       Aceptar
     </button>

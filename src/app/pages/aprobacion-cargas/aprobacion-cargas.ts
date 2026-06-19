@@ -64,6 +64,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
 
   hayOperacionEnCurso = computed(() => {
     return (
+      this.cargandoDetalle() !== null ||
       this.descargandoArchivos() !== null ||
       this.descargandoAcuse() !== null ||
       this.procesando() !== null
@@ -79,7 +80,17 @@ export class AprobacionCargas implements OnInit, OnDestroy {
 
     this.administracionService.obtenerPendientes().subscribe({
       next: (response) => {
-        this.pendientes.set(response.registros ?? []);
+        const registros = response.registros ?? [];
+
+        this.pendientes.set(registros);
+
+        const seleccionada = this.detalle();
+
+        if (seleccionada && !registros.some((item) => item.idCarga === seleccionada.idCarga)) {
+          this.detalle.set(null);
+          this.cerrarAcuse();
+        }
+
         this.cargando.set(false);
       },
       error: (error: unknown) => {
@@ -107,6 +118,8 @@ export class AprobacionCargas implements OnInit, OnDestroy {
       },
       error: (error: unknown) => {
         this.cargandoDetalle.set(null);
+        this.detalle.set(null);
+        this.cerrarAcuse();
 
         mostrarError(
           'No fue posible consultar el detalle',
