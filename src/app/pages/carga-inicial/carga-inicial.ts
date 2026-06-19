@@ -186,6 +186,16 @@ export class CargaInicial {
       });
   }
 
+  continuarAAcusePrevio(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
+
+    if (!codigoReferencia) {
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
+  }
+
   aceptarCarga(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
 
@@ -349,7 +359,7 @@ export class CargaInicial {
         this.estado.set('MOSTRANDO_ACUSE');
       },
       error: () => {
-        this.estado.set('INICIAL');
+        this.estado.set(this.hayAdvertenciasDeDecision() ? 'VALIDADO_ADVERTENCIA' : 'INICIAL');
         this.errorGeneral.set(
           'La validación fue correcta, pero no fue posible generar el acuse previo.',
         );

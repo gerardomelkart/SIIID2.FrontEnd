@@ -355,6 +355,15 @@ export class Actualizacion implements OnInit {
         },
       });
   }
+  aceptarAdvertenciasActualizacion(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
+
+    if (!codigoReferencia) {
+      return;
+    }
+
+    this.prepararRevisionDiferencias(codigoReferencia);
+  }
 
   continuarAAcusePrevio(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
