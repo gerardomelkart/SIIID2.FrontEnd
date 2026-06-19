@@ -1,3 +1,316 @@
-<section>
-  <h1>Aprobación de cargas</h1>
-</section>
+<div class="aprobacion-page">
+  <header class="page-header">
+    <div>
+      <h1>Aprobación de cargas</h1>
+      <p>Revise los archivos enviados por los enlaces estatales antes de incorporarlos al sistema.</p>
+    </div>
+
+    <div class="header-actions">
+      <span class="pendientes-chip">
+        <i class="fa-solid fa-clock"></i>
+        {{ pendientes().length }} pendientes
+      </span>
+
+      <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="cargando()"
+        (click)="cargarPendientes()">
+        @if (cargando()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        } @else {
+        <i class="fa-solid fa-rotate"></i>
+        }
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  <section class="siiid-card bandeja-card">
+    <div class="siiid-card-header card-header-content">
+      <span>
+        <i class="fa-solid fa-inbox"></i>
+        Cargas pendientes de revisión
+      </span>
+
+      <div class="buscador">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Buscar entidad, periodo o usuario..." [ngModel]="busqueda()"
+          (ngModelChange)="buscar($event)">
+      </div>
+    </div>
+
+    @if (cargando()) {
+    <div class="estado-vacio">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <span>Consultando cargas pendientes...</span>
+    </div>
+    } @else {
+    <div class="table-responsive">
+      <table class="table table-sm aprobacion-table">
+        <thead>
+          <tr>
+            <th>Entidad federativa</th>
+            <th>Periodo</th>
+            <th>Tipo</th>
+            <th>Usuario que envió</th>
+            <th>Fecha de validación</th>
+            <th>Registros</th>
+            <th>Advertencias</th>
+            <th class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (carga of pendientesFiltrados(); track carga.idCarga) {
+          <tr [class.fila-seleccionada]="detalle()?.idCarga === carga.idCarga">
+            <td>
+              <strong>{{ carga.entidadFederativa }}</strong>
+            </td>
+
+            <td>{{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</td>
+
+            <td>
+              <span class="tipo-badge" [class.tipo-actualizacion]="carga.tipoCarga === 'ACTUALIZACION'">
+                {{ tipoCargaTexto(carga.tipoCarga) }}
+              </span>
+            </td>
+
+            <td>
+              <div class="usuario-cell">
+                <strong>{{ usuarioTexto(carga) }}</strong>
+                <small>{{ carga.usuarioCarga }}</small>
+              </div>
+            </td>
+
+            <td>{{ fechaTexto(carga.fechaValidacion) }}</td>
+
+            <td>
+              <span class="registros-chip">{{ totalRegistros(carga) }}</span>
+            </td>
+
+            <td>
+              <span class="advertencias-chip" [class.sin-advertencias]="carga.totalAdvertencias === 0">
+                <i class="fa-solid" [class.fa-triangle-exclamation]="carga.totalAdvertencias > 0"
+                  [class.fa-circle-check]="carga.totalAdvertencias === 0"></i>
+                {{ carga.totalAdvertencias }}
+              </span>
+            </td>
+
+            <td>
+              <button type="button" class="btn-revisar" [disabled]="hayOperacionEnCurso()"
+                (click)="verDetalle(carga.codigoReferencia)">
+                @if (cargandoDetalle() === carga.codigoReferencia) {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                } @else {
+                <i class="fa-solid fa-eye"></i>
+                }
+                Revisar
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8">
+              <div class="estado-vacio">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>No hay cargas pendientes de aprobación.</span>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+
+  @if (detalle(); as carga) {
+  <section class="siiid-card detalle-card">
+    <div class="detalle-header">
+      <div>
+        <span class="detalle-eyebrow">Solicitud pendiente</span>
+        <h2>{{ carga.entidadFederativa }} — {{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</h2>
+        <p>{{ tipoCargaTexto(carga.tipoCarga) }}</p>
+      </div>
+
+      <button type="button" class="btn-cerrar" title="Cerrar detalle" [disabled]="hayOperacionEnCurso()"
+        (click)="cerrarDetalle()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="detalle-grid">
+      <div class="detalle-dato">
+        <span>Entidad federativa</span>
+        <strong>{{ carga.entidadFederativa }}</strong>
+      </div>
+
+      <div class="detalle-dato">
+        <span>Periodo de corte</span>
+        <strong>{{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</strong>
+      </div>
+
+      <div class="detalle-dato">
+        <span>Tipo de movimiento</span>
+        <strong>{{ tipoCargaTexto(carga.tipoCarga) }}</strong>
+      </div>
+
+      <div class="detalle-dato">
+        <span>Usuario que envió</span>
+        <strong>{{ usuarioTexto(carga) }}</strong>
+        <small>{{ carga.usuarioCarga }}</small>
+      </div>
+
+      <div class="detalle-dato">
+        <span>Fecha de validación</span>
+        <strong>{{ fechaTexto(carga.fechaValidacion) }}</strong>
+      </div>
+
+      <div class="detalle-dato">
+        <span>Código de referencia</span>
+        <strong class="codigo-referencia">{{ carga.codigoReferencia }}</strong>
+      </div>
+    </div>
+
+    <div class="totales-grid">
+      <div class="total-card">
+        <i class="fa-solid fa-folder-open"></i>
+        <div>
+          <strong>{{ carga.totalCarpetas }}</strong>
+          <span>Carpetas</span>
+        </div>
+      </div>
+
+      <div class="total-card">
+        <i class="fa-solid fa-scale-balanced"></i>
+        <div>
+          <strong>{{ carga.totalDelitos }}</strong>
+          <span>Delitos</span>
+        </div>
+      </div>
+
+      <div class="total-card">
+        <i class="fa-solid fa-people-group"></i>
+        <div>
+          <strong>{{ carga.totalVictimas }}</strong>
+          <span>Víctimas</span>
+        </div>
+      </div>
+
+      <div class="total-card advertencia-total" [class.sin-advertencias]="carga.totalAdvertencias === 0">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div>
+          <strong>{{ carga.totalAdvertencias }}</strong>
+          <span>Advertencias</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="descargas-row">
+      <button type="button" class="btn-descarga btn-zip" [disabled]="hayOperacionEnCurso()"
+        (click)="descargarArchivos(carga)">
+        @if (descargandoArchivos() === carga.codigoReferencia) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        } @else {
+        <i class="fa-solid fa-file-zipper"></i>
+        }
+        Descargar archivos
+      </button>
+
+      <button type="button" class="btn-descarga btn-pdf" [disabled]="hayOperacionEnCurso()"
+        (click)="descargarAcuse(carga)">
+        @if (descargandoAcuse() === carga.codigoReferencia) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        } @else {
+        <i class="fa-solid fa-file-pdf"></i>
+        }
+        Ver acuse previo
+      </button>
+    </div>
+
+    <div class="advertencias-section">
+      <div class="section-title">
+        <div>
+          <h3>Advertencias de validación</h3>
+          <p>Estas inconsistencias fueron aceptadas por el enlace estatal antes de enviar la carga.</p>
+        </div>
+      </div>
+
+      @if (carga.advertencias.length === 0) {
+      <div class="sin-advertencias-box">
+        <i class="fa-solid fa-circle-check"></i>
+        Esta carga no contiene advertencias.
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-sm advertencias-table">
+          <thead>
+            <tr>
+              <th>Archivo</th>
+              <th>Fila</th>
+              <th>Descripción</th>
+              <th>Campo</th>
+              <th>Valor</th>
+              <th>Mensaje</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (advertencia of carga.advertencias; track advertencia.idCargaAdvertencia) {
+            <tr>
+              <td>{{ archivoTexto(advertencia.archivo) }}</td>
+              <td>{{ advertencia.numeroFila ?? '-' }}</td>
+              <td>{{ advertencia.descripcionResumen }}</td>
+              <td>{{ advertencia.campo || advertencia.columna || '-' }}</td>
+              <td class="valor-advertencia">{{ advertencia.valor || '-' }}</td>
+              <td>{{ advertencia.mensaje }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+
+    <div class="resolucion-row">
+      <button type="button" class="btn-rechazar" [disabled]="hayOperacionEnCurso()" (click)="rechazar(carga)">
+        @if (procesando() === carga.codigoReferencia) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        } @else {
+        <i class="fa-solid fa-xmark"></i>
+        }
+        Rechazar
+      </button>
+
+      <button type="button" class="btn-aprobar" [disabled]="hayOperacionEnCurso()" (click)="aprobar(carga)">
+        @if (procesando() === carga.codigoReferencia) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        } @else {
+        <i class="fa-solid fa-check"></i>
+        }
+        Aprobar carga
+      </button>
+    </div>
+  </section>
+  }
+</div>
+
+@if (acuseUrl()) {
+<div class="acuse-modal-backdrop">
+  <div class="acuse-modal">
+    <div class="acuse-modal-header">
+      <h2>{{ acuseTitulo() }}</h2>
+
+      <button type="button" class="acuse-close" title="Cerrar acuse" (click)="cerrarAcuse()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <iframe class="acuse-frame" [src]="acuseUrl()" title="Acuse previo de entrega de información"></iframe>
+
+    <div class="acuse-modal-footer">
+      <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+}
