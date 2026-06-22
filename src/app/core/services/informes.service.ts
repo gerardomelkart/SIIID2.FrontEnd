@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
   InformeEnvioItem,
@@ -62,10 +62,31 @@ export class InformesService {
     });
   }
 
-  descargarDesdeEndpoint(endpoint: string) {
-    return this.http.get(endpoint, {
-      responseType: 'blob',
-      observe: 'response',
-    });
+descargarDesdeEndpoint(endpoint: string) {
+  const url = this.normalizarEndpointDescarga(endpoint);
+
+  return this.http.get(url, {
+    responseType: 'blob',
+    observe: 'response',
+  });
+}
+
+private normalizarEndpointDescarga(endpoint: string): string {
+  if (!endpoint) {
+    return endpoint;
   }
+
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+
+  if (endpoint.startsWith('/api/')) {
+    const base = API_BASE_URL.replace(/\/$/, '');
+    const ruta = endpoint.replace(/^\/api/, '');
+
+    return `${base}${ruta}`;
+  }
+
+  return endpoint;
+}
 }
