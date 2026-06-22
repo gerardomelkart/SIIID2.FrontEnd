@@ -62,31 +62,31 @@ export class InformesService {
     });
   }
 
-descargarDesdeEndpoint(endpoint: string) {
-  const url = this.normalizarEndpointDescarga(endpoint);
+  descargarDesdeEndpoint(endpoint: string) {
+    const url = this.normalizarEndpointDescarga(endpoint);
 
-  return this.http.get(url, {
-    responseType: 'blob',
-    observe: 'response',
-  });
-}
+    return this.http.get(url, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
 
-private normalizarEndpointDescarga(endpoint: string): string {
-  if (!endpoint) {
+  private normalizarEndpointDescarga(endpoint: string): string {
+    if (!endpoint) {
+      return endpoint;
+    }
+
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      return endpoint;
+    }
+
+    if (endpoint.startsWith('/api/')) {
+      const base = API_BASE_URL.replace(/\/$/, '');
+      const ruta = endpoint.replace(/^\/api/, '');
+
+      return `${base}${ruta}`;
+    }
+
     return endpoint;
   }
-
-  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-    return endpoint;
-  }
-
-  if (endpoint.startsWith('/api/')) {
-    const base = API_BASE_URL.replace(/\/$/, '');
-    const ruta = endpoint.replace(/^\/api/, '');
-
-    return `${base}${ruta}`;
-  }
-
-  return endpoint;
-}
 }

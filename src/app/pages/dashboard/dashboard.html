@@ -130,6 +130,17 @@
       }
 
       @if (puedeVerAdministracion()) {
+      <a class="quick-link" routerLink="/administracion/cargas-pendientes">
+        <div class="quick-icon">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+
+        <div>
+          <strong>Aprobación de cargas</strong>
+          <span>Revisión y aceptación administrativa de cargas pendientes.</span>
+        </div>
+      </a>
+
       <a class="quick-link" routerLink="/administracion/usuarios">
         <div class="quick-icon">
           <i class="fa-solid fa-users"></i>
