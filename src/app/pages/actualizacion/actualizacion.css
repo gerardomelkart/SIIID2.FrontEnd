@@ -391,12 +391,6 @@
   }
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .validacion-grid {
   display: grid;
   grid-template-columns: 1fr 2.1fr 1.45fr;
