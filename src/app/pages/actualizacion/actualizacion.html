@@ -131,46 +131,46 @@
             </button>
           </div>
 
-@if (mensajePeriodo()) {
-<div class="periodo-alert"
-  [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
-  [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
-  [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
-  [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()">
+          @if (mensajePeriodo()) {
+          <div class="periodo-alert" [class.periodo-ok]="estadoPeriodo() === 'DISPONIBLE'"
+            [class.periodo-error]="estadoPeriodo() === 'NO_DISPONIBLE' || estadoPeriodo() === 'ERROR'"
+            [class.periodo-info]="estadoPeriodo() === 'CONSULTANDO'"
+            [class.periodo-pending]="hayActualizacionPendienteEnPeriodo()">
 
-  <div class="periodo-alert-content">
-    <div>
-      @if (actualizacionEnRevisionAdministrativa()) {
-      <strong>Actualización en revisión administrativa.</strong>
-      <span>
-        La actualización ya fue aceptada por el enlace estatal y está esperando la resolución del administrador.
-      </span>
-      } @else if (actualizacionPendientePorResolver()) {
-      <strong>Actualización pendiente por resolver.</strong>
-      <span>
-        Existe una actualización validada pendiente de aceptar o rechazar.
-      </span>
-      } @else {
-      {{ mensajePeriodo() }}
-      }
+            <div class="periodo-alert-content">
+              <div>
+                @if (actualizacionEnRevisionAdministrativa()) {
+                <strong>Actualización en revisión administrativa.</strong>
+                <span>
+                  La actualización ya fue aceptada por el enlace estatal y está esperando la resolución del
+                  administrador.
+                </span>
+                } @else if (actualizacionPendientePorResolver()) {
+                <strong>Actualización pendiente por resolver.</strong>
+                <span>
+                  Existe una actualización validada pendiente de aceptar o rechazar.
+                </span>
+                } @else {
+                {{ mensajePeriodo() }}
+                }
 
-      @if (hayActualizacionPendienteEnPeriodo()) {
-      <div class="pending-reference mt-2">
-        Código pendiente:
-        <strong>{{ codigoReferenciaPendiente() }}</strong>
-      </div>
-      }
-    </div>
+                @if (hayActualizacionPendienteEnPeriodo()) {
+                <div class="pending-reference mt-2">
+                  Código pendiente:
+                  <strong>{{ codigoReferenciaPendiente() }}</strong>
+                </div>
+                }
+              </div>
 
-    @if (actualizacionPendientePorResolver()) {
-    <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
-      <i class="fa-solid fa-file-signature"></i>
-      Resolver pendiente
-    </button>
-    }
-  </div>
-</div>
-}
+              @if (actualizacionPendientePorResolver()) {
+              <button type="button" class="btn btn-siiid btn-sm" (click)="resolverActualizacionPendiente()">
+                <i class="fa-solid fa-file-signature"></i>
+                Resolver pendiente
+              </button>
+              }
+            </div>
+          </div>
+          }
         </div>
 
         @if (mostrarArchivos()) {
@@ -283,11 +283,18 @@
 </div>
 }
 
-@if (estadoPeriodo() === 'VALIDANDO') {
-<div class="processing-overlay">
+@if (mostrarLoadingProceso()) {
+<div class="processing-overlay" role="status" aria-live="polite" aria-busy="true">
   <div class="processing-content">
     <div class="processing-spinner"></div>
-    <div class="processing-text">Procesando...</div>
+
+    <div class="processing-text">
+      {{ mensajeLoadingProceso() }}
+    </div>
+
+    <div class="processing-subtext">
+      Espere un momento y no cierre ni actualice esta página.
+    </div>
   </div>
 </div>
 }
@@ -298,11 +305,11 @@
     <h2>
       <i class="fa-solid fa-triangle-exclamation"></i>
 
-@if (actualizacionEnRevisionAdministrativa()) {
-Actualización en revisión administrativa
-} @else if (actualizacionPendientePorResolver()) {
-Actualización pendiente por resolver
-} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+      @if (actualizacionEnRevisionAdministrativa()) {
+      Actualización en revisión administrativa
+      } @else if (actualizacionPendientePorResolver()) {
+      Actualización pendiente por resolver
+      } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
       Validación con advertencias
       } @else {
       Validación con inconsistencias
@@ -310,11 +317,11 @@ Actualización pendiente por resolver
     </h2>
 
     <p>
-@if (actualizacionEnRevisionAdministrativa()) {
-La actualización ya fue aceptada y está esperando la aprobación o rechazo del administrador.
-} @else if (actualizacionPendientePorResolver()) {
-Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
-} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+      @if (actualizacionEnRevisionAdministrativa()) {
+      La actualización ya fue aceptada y está esperando la aprobación o rechazo del administrador.
+      } @else if (actualizacionPendientePorResolver()) {
+      Existe una actualización validada pendiente de aceptar o rechazar. Debe resolverse antes de enviar una nueva.
+      } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
       Se detectaron advertencias en los archivos. Revise el detalle y decida si desea aceptar la actualización o
       rechazarla.
       } @else {
@@ -331,22 +338,22 @@ Existe una actualización validada pendiente de aceptar o rechazar. Debe resolve
   </div>
 
   <div class="validation-actions">
-@if (actualizacionEnRevisionAdministrativa()) {
-<button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-  <i class="fa-solid fa-arrow-left"></i>
-  Volver
-</button>
-} @else if (actualizacionPendientePorResolver()) {
-<button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
-  <i class="fa-solid fa-arrow-left"></i>
-  Volver
-</button>
+    @if (actualizacionEnRevisionAdministrativa()) {
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
+    } @else if (actualizacionPendientePorResolver()) {
+    <button type="button" class="btn btn-secondary" (click)="prepararNuevaValidacion()">
+      <i class="fa-solid fa-arrow-left"></i>
+      Volver
+    </button>
 
-<button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
-  <i class="fa-solid fa-file-signature"></i>
-  Resolver pendiente
-</button>
-} @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
+    <button type="button" class="btn btn-siiid" (click)="resolverActualizacionPendiente()">
+      <i class="fa-solid fa-file-signature"></i>
+      Resolver pendiente
+    </button>
+    } @else if (estadoPeriodo() === 'VALIDADO_ADVERTENCIA') {
     <button type="button" class="btn btn-secondary" (click)="rechazarActualizacion()">
       <i class="fa-solid fa-xmark"></i>
       Rechazar

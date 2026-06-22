@@ -109,7 +109,11 @@ export class Actualizacion implements OnInit {
 
   private acusePrevioObjectUrl: string | null = null;
   private acuseConfirmadoObjectUrl: string | null = null;
-  private diferenciasEnCurso = false;
+
+  cargandoDiferencias = signal(false);
+  generandoAcusePrevio = signal(false);
+  procesandoConfirmacion = signal(false);
+  mensajeConfirmacion = signal('');
 
   acusePrevioUrl = signal<SafeResourceUrl | null>(null);
   acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
@@ -227,6 +231,35 @@ export class Actualizacion implements OnInit {
 
   mostrarDiferencias = computed(() => {
     return this.estadoPeriodo() === 'MOSTRANDO_DIFERENCIAS' && !!this.diferencias();
+  });
+
+  mostrarLoadingProceso = computed(() => {
+    return (
+      this.estadoPeriodo() === 'VALIDANDO' ||
+      this.cargandoDiferencias() ||
+      this.generandoAcusePrevio() ||
+      this.procesandoConfirmacion()
+    );
+  });
+
+  mensajeLoadingProceso = computed(() => {
+    if (this.cargandoDiferencias()) {
+      return 'Cargando diferencias de la actualización...';
+    }
+
+    if (this.generandoAcusePrevio()) {
+      return 'Generando acuse previo...';
+    }
+
+    if (this.procesandoConfirmacion()) {
+      return this.mensajeConfirmacion() || 'Procesando actualización...';
+    }
+
+    if (this.estadoPeriodo() === 'VALIDANDO') {
+      return 'Validando archivos de actualización...';
+    }
+
+    return 'Procesando...';
   });
 
   ngOnInit(): void {
@@ -418,7 +451,9 @@ export class Actualizacion implements OnInit {
     if (!codigoReferencia) {
       return;
     }
+    this.mensajeConfirmacion.set('Aceptando actualización y generando el acuse...');
 
+    this.procesandoConfirmacion.set(true);
     this.estadoPeriodo.set('CONFIRMANDO');
 
     this.actualizacionService
@@ -454,6 +489,9 @@ export class Actualizacion implements OnInit {
       )
       .subscribe({
         next: (resultado) => {
+          this.procesandoConfirmacion.set(false);
+          this.mensajeConfirmacion.set('');
+
           if (resultado.response.estado === 'PENDIENTE_APROBACION') {
             this.limpiarUrlsPdf();
 
@@ -484,11 +522,14 @@ export class Actualizacion implements OnInit {
           );
         },
         error: (error: unknown) => {
-          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+          this.procesandoConfirmacion.set(false);
+          this.mensajeConfirmacion.set('');
+
+          this.estadoPeriodo.set('MOSTRANDO_ACUSE');
 
           mostrarError(
-            'No fue posible procesar la actualizacion',
-            obtenerMensajeErrorHttp(error, 'Revise la conexion con la API.'),
+            'No fue posible procesar la actualización',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           );
         },
       });
@@ -501,6 +542,9 @@ export class Actualizacion implements OnInit {
       return;
     }
 
+    this.mensajeConfirmacion.set('Rechazando actualización...');
+
+    this.procesandoConfirmacion.set(true);
     this.estadoPeriodo.set('CONFIRMANDO');
 
     this.actualizacionService
@@ -510,6 +554,8 @@ export class Actualizacion implements OnInit {
       })
       .subscribe({
         next: () => {
+          this.procesandoConfirmacion.set(false);
+          this.mensajeConfirmacion.set('');
           this.estadoPeriodo.set('RECHAZADO');
           this.limpiarUrlsPdf();
 
@@ -521,7 +567,9 @@ export class Actualizacion implements OnInit {
           });
         },
         error: (error: unknown) => {
-          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+          this.procesandoConfirmacion.set(false);
+          this.mensajeConfirmacion.set('');
+          this.estadoPeriodo.set('MOSTRANDO_ACUSE');
 
           mostrarError(
             'No fue posible rechazar la actualización',
@@ -630,68 +678,97 @@ export class Actualizacion implements OnInit {
     return (tipoMovimiento?.toUpperCase() ?? '') === 'MODIFICADO';
   }
 
-private prepararRevisionDiferencias(codigoReferencia: string): void {
-  if (this.diferenciasEnCurso) {
-    return;
-  }
+  private prepararRevisionDiferencias(codigoReferencia: string): void {
+    if (this.cargandoDiferencias()) {
+      return;
+    }
 
-  if (!codigoReferencia?.trim()) {
-    this.errorGeneral.set(
-      'No fue posible identificar el código de referencia de la actualización.',
-    );
-    return;
-  }
+    if (!codigoReferencia?.trim()) {
+      this.errorGeneral.set(
+        'No fue posible identificar el código de referencia de la actualización.',
+      );
+      return;
+    }
 
-  this.diferenciasEnCurso = true;
-  this.errorGeneral.set('');
+    const estadoAnterior = this.estadoPeriodo();
 
-  this.actualizacionService
-    .obtenerDiferencias(codigoReferencia, 100)
-    .pipe(
-      finalize(() => {
-        this.diferenciasEnCurso = false;
-      }),
-    )
-    .subscribe({
-      next: (response: ActualizacionDiferenciasResponse) => {
-        if (!response.esValido) {
-          this.estadoPeriodo.set('DISPONIBLE');
+    /*
+    Si viene directamente de la validación, no podemos regresar a VALIDANDO
+    en caso de error porque el loading permanecería activo.
+  */
+    const estadoRetorno: EstadoPeriodo =
+      estadoAnterior === 'VALIDANDO' ? 'DISPONIBLE' : estadoAnterior;
+
+    this.cargandoDiferencias.set(true);
+    this.errorGeneral.set('');
+    this.diferencias.set(null);
+
+    this.actualizacionService
+      .obtenerDiferencias(codigoReferencia, 100)
+      .pipe(
+        finalize(() => {
+          this.cargandoDiferencias.set(false);
+        }),
+      )
+      .subscribe({
+        next: (response: ActualizacionDiferenciasResponse) => {
+          if (!response.esValido) {
+            this.estadoPeriodo.set(estadoRetorno);
+
+            this.errorGeneral.set(
+              response.mensaje || 'No fue posible obtener las diferencias de la actualización.',
+            );
+
+            return;
+          }
+
+          this.diferencias.set(response);
+          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+        },
+        error: (error: unknown) => {
+          this.estadoPeriodo.set(estadoRetorno);
+
           this.errorGeneral.set(
-            response.mensaje ||
-              'No fue posible obtener las diferencias de la actualización.',
+            obtenerMensajeErrorHttp(
+              error,
+              'La consulta de diferencias tardó demasiado o fue interrumpida.',
+            ) || 'No fue posible consultar las diferencias de la actualización.',
           );
-          return;
-        }
-
-        this.diferencias.set(response);
-        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
-      },
-      error: (error: unknown) => {
-        this.estadoPeriodo.set('DISPONIBLE');
-
-        this.errorGeneral.set(
-          obtenerMensajeErrorHttp(
-            error,
-            'La consulta de diferencias tardó demasiado o fue interrumpida.',
-          ) || 'No fue posible consultar las diferencias de la actualización.',
-        );
-      },
-    });
-}
+        },
+      });
+  }
 
   private abrirAcusePrevio(codigoReferencia: string): void {
-    this.actualizacionService.descargarAcusePrevio(codigoReferencia).subscribe({
-      next: (blob: Blob) => {
-        this.reemplazarAcusePrevio(blob);
-        this.estadoPeriodo.set('MOSTRANDO_ACUSE');
-      },
-      error: () => {
-        this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
-        this.errorGeneral.set(
-          'La validación fue correcta, pero no fue posible generar el acuse previo.',
-        );
-      },
-    });
+    if (this.generandoAcusePrevio()) {
+      return;
+    }
+
+    this.generandoAcusePrevio.set(true);
+    this.errorGeneral.set('');
+
+    this.actualizacionService
+      .descargarAcusePrevio(codigoReferencia)
+      .pipe(
+        finalize(() => {
+          this.generandoAcusePrevio.set(false);
+        }),
+      )
+      .subscribe({
+        next: (blob: Blob) => {
+          this.reemplazarAcusePrevio(blob);
+          this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+        },
+        error: (error: unknown) => {
+          this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+
+          this.errorGeneral.set(
+            obtenerMensajeErrorHttp(
+              error,
+              'La validación fue correcta, pero no fue posible generar el acuse previo.',
+            ),
+          );
+        },
+      });
   }
 
   private reemplazarAcusePrevio(blob: Blob): void {
