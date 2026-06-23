@@ -284,66 +284,154 @@
 
 
 
-  @if (reporteActivo() === 'SABANAS' && puedeVerSabanas()) {
-  <section class="siiid-card">
-    <div class="siiid-card-header reporte-card-header">
-      <span>
-        <i class="fa-solid fa-table"></i>
-        Sábanas estadísticas
-      </span>
+@if (reporteActivo() === 'SABANAS' && puedeVerSabanas()) {
+<section class="siiid-card sabanas-card">
+  <div class="siiid-card-header reporte-card-header">
+    <span>
+      <i class="fa-solid fa-table"></i>
+      Sábanas estadísticas
+    </span>
+  </div>
+
+  <div class="sabanas-hero">
+    <div class="sabanas-hero-icon">
+      <i class="fa-solid fa-file-zipper"></i>
     </div>
 
-    <div class="corte-selector">
-      <div class="corte-selector-title">
+    <div class="sabanas-hero-text">
+      <h2>Descarga de sábanas anuales</h2>
+      <p>
+        Genere archivos estadísticos en formato ZIP por año de corte.
+        Puede descargar la versión completa o únicamente la parte estatal o municipal.
+      </p>
+    </div>
+  </div>
+
+  <div class="sabanas-toolbar">
+    <div class="sabana-year-card">
+      <div class="sabana-year-label">
         <i class="fa-solid fa-calendar-days"></i>
         Año de corte
       </div>
 
-      <div class="corte-selector-controls">
-        <input type="number" class="form-control form-control-sm" min="2000" max="2100" [ngModel]="anioSabana()"
-          (ngModelChange)="anioSabana.set(+$event)">
+      <div class="sabana-year-input-group">
+        <button
+          type="button"
+          class="sabana-year-step"
+          [disabled]="descargaEnProceso()"
+          (click)="anioSabana.set(anioSabana() - 1)">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+
+        <input
+          type="number"
+          class="sabana-year-input"
+          min="2000"
+          max="2100"
+          [disabled]="descargaEnProceso()"
+          [ngModel]="anioSabana()"
+          (ngModelChange)="anioSabana.set(+$event)" />
+
+        <button
+          type="button"
+          class="sabana-year-step"
+          [disabled]="descargaEnProceso()"
+          (click)="anioSabana.set(anioSabana() + 1)">
+          <i class="fa-solid fa-plus"></i>
+        </button>
       </div>
     </div>
 
-    <div class="filtro-entidad-info">
-      <i class="fa-solid fa-circle-info"></i>
-      Se descargará un archivo ZIP con las 4 sábanas estadísticas anuales:
-      estatal delitos, municipal delitos, estatal víctimas y municipal víctimas.
-    </div>
+    <div class="sabana-info-card">
+      <div class="sabana-info-badge">
+        <i class="fa-solid fa-circle-info"></i>
+        Tipos disponibles
+      </div>
 
-    <div class="reporte-actions mt-3">
-      <button type="button" class="btn btn-siiid" [disabled]="descargaEnProceso()"
-        (click)="descargarSabanas('COMPLETA')">
+      <ul>
+        <li><strong>Completa:</strong> estatal delitos, municipal delitos, estatal víctimas y municipal víctimas.</li>
+        <li><strong>Estatales:</strong> estatal delitos y estatal víctimas.</li>
+        <li><strong>Municipales:</strong> municipal delitos y municipal víctimas.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sabanas-grid">
+    <button
+      type="button"
+      class="sabana-option sabana-option-primary"
+      [disabled]="descargaEnProceso()"
+      (click)="descargarSabanas('COMPLETA')">
+
+      <div class="sabana-option-icon">
         @if (descargandoSabanas() === 'COMPLETA') {
         <i class="fa-solid fa-spinner fa-spin"></i>
         } @else {
-        <i class="fa-solid fa-file-zipper"></i>
+        <i class="fa-solid fa-layer-group"></i>
         }
-        Completa
-      </button>
+      </div>
 
-      <button type="button" class="btn btn-secondary" [disabled]="descargaEnProceso()"
-        (click)="descargarSabanas('ESTATALES')">
+      <div class="sabana-option-body">
+        <strong>Sábana completa</strong>
+        <small>Incluye los 4 archivos estadísticos del año seleccionado.</small>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      class="sabana-option"
+      [disabled]="descargaEnProceso()"
+      (click)="descargarSabanas('ESTATALES')">
+
+      <div class="sabana-option-icon">
         @if (descargandoSabanas() === 'ESTATALES') {
         <i class="fa-solid fa-spinner fa-spin"></i>
         } @else {
         <i class="fa-solid fa-map"></i>
         }
-        Estatales
-      </button>
+      </div>
 
-      <button type="button" class="btn btn-secondary" [disabled]="descargaEnProceso()"
-        (click)="descargarSabanas('MUNICIPALES')">
+      <div class="sabana-option-body">
+        <strong>Estatales</strong>
+        <small>Descarga únicamente estatal delitos y estatal víctimas.</small>
+      </div>
+    </button>
+
+    <button
+      type="button"
+      class="sabana-option"
+      [disabled]="descargaEnProceso()"
+      (click)="descargarSabanas('MUNICIPALES')">
+
+      <div class="sabana-option-icon">
         @if (descargandoSabanas() === 'MUNICIPALES') {
         <i class="fa-solid fa-spinner fa-spin"></i>
         } @else {
         <i class="fa-solid fa-city"></i>
         }
-        Municipales
-      </button>
+      </div>
+
+      <div class="sabana-option-body">
+        <strong>Municipales</strong>
+        <small>Descarga únicamente municipal delitos y municipal víctimas.</small>
+      </div>
+    </button>
+  </div>
+
+  @if (descargandoSabanas()) {
+  <div class="sabana-loading">
+    <div class="sabana-loading-box">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <strong>Generando archivo...</strong>
+      <span>
+        La primera descarga puede tardar un poco. Si no hubo cambios confirmados,
+        las siguientes descargas del mismo tipo usarán caché.
+      </span>
     </div>
-  </section>
+  </div>
   }
+</section>
+}
 
   @if (acuseUrlSegura()) {
   <div class="acuse-modal-backdrop">
