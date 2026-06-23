@@ -344,6 +344,10 @@ export class Informes implements OnInit {
       return `Confirmado ${sufijo}`;
     }
 
+    if (estatus === 'PENDIENTE_APROBACION') {
+      return 'Pendiente de aprobación';
+    }
+
     if (estatus.includes('PENDIENTE')) {
       return `Pendiente ${sufijo}`;
     }
