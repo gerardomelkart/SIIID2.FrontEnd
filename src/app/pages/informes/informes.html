@@ -312,13 +312,43 @@
     </div>
 
     <div class="reporte-actions mt-3">
-      <button type="button" class="btn btn-siiid" [disabled]="descargaEnProceso()" (click)="descargarSabanas()">
-        @if (descargandoSabanas()) {
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        } @else {
-        <i class="fa-solid fa-file-zipper"></i>
-        }
-        Descargar sábanas
+      <div class="reporte-actions mt-3">
+        <button type="button" class="btn btn-siiid" [disabled]="descargaEnProceso()"
+          (click)="descargarSabanas('COMPLETA')">
+          @if (descargandoSabanas() === 'COMPLETA') {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-zipper"></i>
+          }
+          Completa
+        </button>
+
+        <button type="button" class="btn btn-secondary" [disabled]="descargaEnProceso()"
+          (click)="descargarSabanas('ESTATALES')">
+          @if (descargandoSabanas() === 'ESTATALES') {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-map"></i>
+          }
+          Estatales
+        </button>
+
+        <button type="button" class="btn btn-secondary" [disabled]="descargaEnProceso()"
+          (click)="descargarSabanas('MUNICIPALES')">
+          @if (descargandoSabanas() === 'MUNICIPALES') {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-city"></i>
+          }
+          Municipales
+        </button>
+      </div>
+      @if (descargandoSabanas()) {
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      } @else {
+      <i class="fa-solid fa-file-zipper"></i>
+      }
+      Descargar sábanas
       </button>
     </div>
   </section>

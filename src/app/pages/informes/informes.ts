@@ -6,7 +6,7 @@ import { mostrarAdvertencia, mostrarError, mostrarInfo } from '../../core/utils/
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
-import { InformesService } from '../../core/services/informes.service';
+import { InformesService, TipoSabanaDescarga } from '../../core/services/informes.service';
 
 import {
   obtenerMensajeErrorHttp,
@@ -74,7 +74,7 @@ export class Informes implements OnInit {
   descargandoArchivos = signal<string | null>(null);
   exportandoExcel = signal<TipoReporte | null>(null);
 
-  descargandoSabanas = signal(false);
+  descargandoSabanas = signal<TipoSabanaDescarga | null>(null);
   anioSabana = signal<number>(new Date().getFullYear());
 
   ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
@@ -85,7 +85,7 @@ export class Informes implements OnInit {
       this.descargandoAcuse() !== null ||
       this.descargandoArchivos() !== null ||
       this.exportandoExcel() !== null ||
-      this.descargandoSabanas()
+      this.descargandoSabanas() !== null
     );
   });
 
@@ -467,7 +467,7 @@ export class Informes implements OnInit {
     }
   }
 
-  descargarSabanas(): void {
+  descargarSabanas(tipo: TipoSabanaDescarga): void {
     if (!this.puedeVerSabanas()) {
       return;
     }
@@ -479,21 +479,21 @@ export class Informes implements OnInit {
       return;
     }
 
-    this.descargandoSabanas.set(true);
+    this.descargandoSabanas.set(tipo);
 
-    this.informesService.descargarSabanas(anio).subscribe({
+    this.informesService.descargarSabanas(anio, tipo).subscribe({
       next: (response) => {
         const blob = response.body;
 
         if (!blob) {
-          this.descargandoSabanas.set(false);
+          this.descargandoSabanas.set(null);
           mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
           return;
         }
 
         const nombreArchivo =
           this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
-          `SABANAS_${anio}.zip`;
+          this.obtenerNombreDefaultSabanas(tipo, anio);
 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -503,10 +503,10 @@ export class Informes implements OnInit {
         link.click();
 
         URL.revokeObjectURL(url);
-        this.descargandoSabanas.set(false);
+        this.descargandoSabanas.set(null);
       },
       error: async (error) => {
-        this.descargandoSabanas.set(false);
+        this.descargandoSabanas.set(null);
 
         mostrarError(
           'No fue posible descargar las sábanas',
@@ -697,6 +697,18 @@ export class Informes implements OnInit {
     }
 
     this.sincronizarCorteSeleccionado();
+  }
+
+  private obtenerNombreDefaultSabanas(tipo: TipoSabanaDescarga, anio: number): string {
+    if (tipo === 'ESTATALES') {
+      return `SABANAS_ESTATALES_${anio}.zip`;
+    }
+
+    if (tipo === 'MUNICIPALES') {
+      return `SABANAS_MUNICIPALES_${anio}.zip`;
+    }
+
+    return `SABANAS_COMPLETAS_${anio}.zip`;
   }
 
   private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {

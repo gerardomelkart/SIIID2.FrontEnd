@@ -9,6 +9,8 @@ import {
   InformeReporteCargasResponse,
 } from '../models/informes.models';
 
+export type TipoSabanaDescarga = 'COMPLETA' | 'ESTATALES' | 'MUNICIPALES';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -52,8 +54,10 @@ export class InformesService {
     return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
-  descargarSabanas(anioCorte: number) {
-    const params = new HttpParams().set('anioCorte', anioCorte);
+  
+
+  descargarSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA') {
+    const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo);
 
     return this.http.get(`${this.apiUrl}/sabanas`, {
       params,
