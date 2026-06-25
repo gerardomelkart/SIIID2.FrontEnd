@@ -469,7 +469,7 @@ export class Informes implements OnInit {
         'Cve. entidad': carga.claveEntidad,
         Periodo: carga.corte,
         Intentos: carga.intentos,
-        'Orden de carga': this.ordenCarga(carga),
+        Ranking: this.obtenerOrdenCarga(carga) ?? '',
         Estatus: this.etiquetaEstatusCarga(carga),
         'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || '',
       }));
