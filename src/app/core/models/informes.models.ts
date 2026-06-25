@@ -17,6 +17,11 @@ export interface InformeEnvioItem {
   usuarioEnvio: string;
   endpointAcuse: string;
   endpointExcel: string;
+  estado: string;
+  estadoTexto: string;
+  esConfirmado: boolean;
+  codigoReferenciaConfirmada: string | null;
+  tipoCargaConfirmada: string | null;
 }
 
 export interface InformeReporteCargaItem {

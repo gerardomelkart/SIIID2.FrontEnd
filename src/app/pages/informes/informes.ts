@@ -34,7 +34,8 @@ type CampoOrdenEnvios =
   | 'claveEntidad'
   | 'fechaEnvioTexto'
   | 'corte'
-  | 'usuarioEnvio';
+  | 'usuarioEnvio'
+  | 'estadoTexto';
 
 type CampoOrdenCargas =
   | 'entidadFederativa'
@@ -171,10 +172,11 @@ export class Informes implements OnInit {
         envio.corte.toLowerCase().includes(texto) ||
         envio.usuarioEnvio.toLowerCase().includes(texto) ||
         envio.codigoReferencia.toLowerCase().includes(texto) ||
-        envio.tipoCarga.toLowerCase().includes(texto)
+        envio.tipoCarga.toLowerCase().includes(texto) ||
+        envio.estado.toLowerCase().includes(texto) ||
+        envio.estadoTexto.toLowerCase().includes(texto)
       );
     });
-
     return this.ordenarListaEnvios(filtrados);
   });
 
@@ -402,6 +404,14 @@ export class Informes implements OnInit {
   }
 
   verAcuse(envio: InformeEnvioItem): void {
+    if (!envio.endpointAcuse) {
+      mostrarAdvertencia(
+        'Acuse no disponible',
+        'Este envío aún no tiene un acuse confirmado previo disponible.',
+      );
+      return;
+    }
+
     this.descargandoAcuse.set(envio.codigoReferencia);
 
     this.descargarEndpoint(envio.endpointAcuse, `ACUSE_${envio.codigoReferencia}.pdf`, true, () =>
@@ -410,6 +420,14 @@ export class Informes implements OnInit {
   }
 
   descargarArchivos(envio: InformeEnvioItem): void {
+    if (!envio.endpointExcel) {
+      mostrarAdvertencia(
+        'Archivos no disponibles',
+        'Este envío aún no tiene archivos confirmados previos disponibles.',
+      );
+      return;
+    }
+
     this.descargandoArchivos.set(envio.codigoReferencia);
 
     this.descargarEndpoint(
@@ -434,6 +452,7 @@ export class Informes implements OnInit {
           'Fecha de envío': envio.fechaEnvioTexto,
           Corte: envio.corte,
           'Usuario envío': envio.usuarioEnvio,
+          Estatus: envio.estadoTexto,
         }));
 
         const exportado = await exportarFilasExcel(filas, 'consulta_envios.xlsx', 'Envios');
