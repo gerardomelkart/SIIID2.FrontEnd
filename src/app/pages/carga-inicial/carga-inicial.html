@@ -16,7 +16,7 @@
           <div>
             <strong>Carga inicial de incidencia delictiva</strong>
             <p>
-              Selecciona los tres archivos requeridos para validar la información y generar el acuse previo.
+              Selecciona los tres archivos requeridos para validar la información y generar el informe previo.
             </p>
           </div>
         </div>
@@ -232,7 +232,7 @@
 
     <button type="button" class="btn btn-siiid" (click)="continuarAAcusePrevio()">
       <i class="fa-solid fa-file-signature"></i>
-      Aceptar y revisar acuse
+      Aceptar y revisar informe
     </button>
     }
     @else {
@@ -372,7 +372,7 @@
     @if (acuseConfirmadoUrl()) {
     <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado"></iframe>
     } @else if (acusePrevioUrl()) {
-    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Acuse previo"></iframe>
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Informe previo"></iframe>
     }
   </div>
 

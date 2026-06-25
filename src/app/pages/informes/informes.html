@@ -97,7 +97,7 @@
             <td>{{ envio.estadoTexto }}</td>
             <td>
               <div class="acciones">
-                <button type="button" class="btn-icon btn-pdf" title="Ver acuse"
+                <button type="button" class="btn-icon btn-pdf" title="Ver informe"
                   [disabled]="descargaEnProceso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
                   @if (descargandoAcuse() === envio.codigoReferencia) {
                   <i class="fa-solid fa-spinner fa-spin"></i>

@@ -41,7 +41,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   procesando = signal<string | null>(null);
 
   acuseUrl = signal<SafeResourceUrl | null>(null);
-  acuseTitulo = signal('Acuse previo de entrega de información');
+  acuseTitulo = signal('Informe previo de entrega de información');
 
   pendientesFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -172,7 +172,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         this.descargandoAcuse.set(null);
 
         if (!response.body) {
-          mostrarError('Acuse vacío', 'La API no devolvió el acuse previo.');
+          mostrarError('Informe vacío', 'La API no devolvió el informe previo.');
           return;
         }
 
@@ -182,7 +182,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         this.descargandoAcuse.set(null);
 
         mostrarError(
-          'No fue posible consultar el acuse',
+          'No fue posible consultar el informe',
           await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
         );
       },
@@ -361,7 +361,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     this.acuseObjectUrl = pdf.objectUrl;
     this.acuseUrl.set(pdf.safeUrl);
     this.acuseTitulo.set(
-      `Acuse previo — ${carga.entidadFederativa} — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
+      `Informe previo — ${carga.entidadFederativa} — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
     );
   }
 

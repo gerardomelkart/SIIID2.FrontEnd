@@ -222,7 +222,7 @@
         } @else {
         <i class="fa-solid fa-file-pdf"></i>
         }
-        Ver acuse previo
+        Ver informe previo
       </button>
     </div>
 
@@ -299,12 +299,12 @@
     <div class="acuse-modal-header">
       <h2>{{ acuseTitulo() }}</h2>
 
-      <button type="button" class="acuse-close" title="Cerrar acuse" (click)="cerrarAcuse()">
+      <button type="button" class="acuse-close" title="Cerrar informe" (click)="cerrarAcuse()">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <iframe class="acuse-frame" [src]="acuseUrl()" title="Acuse previo de entrega de información"></iframe>
+    <iframe class="acuse-frame" [src]="acuseUrl()" title="Informe previo de entrega de información"></iframe>
 
     <div class="acuse-modal-footer">
       <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">

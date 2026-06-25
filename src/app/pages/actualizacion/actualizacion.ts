@@ -248,7 +248,7 @@ export class Actualizacion implements OnInit {
     }
 
     if (this.generandoAcusePrevio()) {
-      return 'Generando acuse previo...';
+      return 'Generando informe previo...';
     }
 
     if (this.procesandoConfirmacion()) {
@@ -764,7 +764,7 @@ export class Actualizacion implements OnInit {
           this.errorGeneral.set(
             obtenerMensajeErrorHttp(
               error,
-              'La validación fue correcta, pero no fue posible generar el acuse previo.',
+              'La validación fue correcta, pero no fue posible generar el informe previo.',
             ),
           );
         },

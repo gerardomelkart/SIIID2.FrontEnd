@@ -390,7 +390,7 @@ export class CargaInicial {
       error: () => {
         this.estado.set(this.hayAdvertenciasDeDecision() ? 'VALIDADO_ADVERTENCIA' : 'INICIAL');
         this.errorGeneral.set(
-          'La validación fue correcta, pero no fue posible generar el acuse previo.',
+          'La validación fue correcta, pero no fue posible generar el informe previo.',
         );
       },
     });

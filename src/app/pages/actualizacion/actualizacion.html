@@ -516,7 +516,7 @@
 
     <div class="diferencias-mensaje">
       Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
-      <strong>OK, continuar al acuse previo</strong>.
+      <strong>OK, continuar al informe previo</strong>.
     </div>
 
     <div class="diferencias-grid">
@@ -788,7 +788,7 @@
 
   <div class="diferencias-actions diferencias-actions-ok">
     <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
-      OK, continuar al acuse previo
+      OK, continuar al informe previo
     </button>
   </div>
 </div>
@@ -808,7 +808,7 @@
     @if (acuseConfirmadoUrl()) {
     <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado de actualización"></iframe>
     } @else if (acusePrevioUrl()) {
-    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Acuse previo de actualización"></iframe>
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Informe previo de actualización"></iframe>
     }
   </div>
 

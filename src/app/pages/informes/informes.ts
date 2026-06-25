@@ -405,16 +405,16 @@ export class Informes implements OnInit {
 
   verAcuse(envio: InformeEnvioItem): void {
     if (!envio.endpointAcuse) {
-      mostrarAdvertencia(
-        'Acuse no disponible',
-        'Este envío aún no tiene un acuse confirmado previo disponible.',
-      );
+    mostrarAdvertencia(
+      'Informe no disponible',
+      'Este envío aún no tiene informe previo disponible.',
+    );
       return;
     }
 
     this.descargandoAcuse.set(envio.codigoReferencia);
 
-    this.descargarEndpoint(envio.endpointAcuse, `ACUSE_${envio.codigoReferencia}.pdf`, true, () =>
+    this.descargarEndpoint(envio.endpointAcuse, `INFORME_${envio.codigoReferencia}.pdf`, true, () =>
       this.descargandoAcuse.set(null),
     );
   }
