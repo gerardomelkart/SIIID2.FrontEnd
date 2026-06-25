@@ -27,25 +27,25 @@
   </section>
 
   <section class="status-grid">
-    <div class="status-card">
-      <div class="status-number">
-        @if (habilitaCarga()) {
-        Activo
-        } @else {
-        Inactivo
-        }
-      </div>
+    <div class="status-card" [class.status-card-activo]="habilitaCarga()" [class.status-card-inactivo]="!habilitaCarga()">
+    <div class="status-number" [class.status-activo]="habilitaCarga()" [class.status-inactivo]="!habilitaCarga()">
+      @if (habilitaCarga()) {
+      Activo
+      } @else {
+      Inactivo
+      }
+    </div>
       <div class="status-label">Carga inicial</div>
     </div>
 
-    <div class="status-card">
-      <div class="status-number">
-        @if (habilitaModificacion()) {
-        Activo
-        } @else {
-        Inactivo
-        }
-      </div>
+    <div class="status-card" [class.status-card-activo]="habilitaModificacion()" [class.status-card-inactivo]="!habilitaModificacion()">
+    <div class="status-number" [class.status-activo]="habilitaModificacion()" [class.status-inactivo]="!habilitaModificacion()">
+      @if (habilitaModificacion()) {
+      Activo
+      } @else {
+      Inactivo
+      }
+    </div>
       <div class="status-label">Actualización</div>
     </div>
 

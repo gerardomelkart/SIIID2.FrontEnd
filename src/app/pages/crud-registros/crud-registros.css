@@ -63,6 +63,16 @@
   color: #333;
 }
 
+.kpi-ok .kpi-value,
+.kpi-ok .kpi-label {
+  color: #1f6b35;
+}
+
+.kpi-warn .kpi-value,
+.kpi-warn .kpi-label {
+  color: #8a1f1f;
+}
+
 .usuarios-card {
   overflow: hidden;
 }

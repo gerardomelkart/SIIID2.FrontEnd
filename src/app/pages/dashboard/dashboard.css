@@ -197,3 +197,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+.status-activo {
+  color: #1f6b35;
+}
+
+.status-inactivo {
+  color: #8a1f1f;
+}
+
+.status-card-activo {
+  border-left-color: #198754;
+}
+
+.status-card-inactivo {
+  border-left-color: #dc3545;
+}
+
+.status-activo {
+  color: #198754;
+}
+
+.status-inactivo {
+  color: #b02a37;
+}
+
+.status-card-activo .status-label {
+  color: #145c32;
+}
+
+.status-card-inactivo .status-label {
+  color: #842029;
+}
