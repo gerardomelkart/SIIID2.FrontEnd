@@ -147,7 +147,9 @@ export class Informes implements OnInit {
 
   puedeVerCargas = computed(() => this.esSuperUsuario());
 
-  puedeVerSabanas = computed(() => this.esSuperUsuario());
+  puedeVerSabanas = computed(() => {
+    return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
+  });
 
   puedeVerEnvios = computed(() => {
     return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();

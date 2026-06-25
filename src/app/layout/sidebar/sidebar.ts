@@ -44,7 +44,7 @@ export class Sidebar {
   });
 
   puedeVerSabanas = computed(() => {
-    return this.esSuperUsuario();
+    return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
   });
 
   puedeVerAdministracion = computed(() => {

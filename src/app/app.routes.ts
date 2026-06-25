@@ -79,7 +79,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
         canActivate: [permissionGuard],
         data: {
-          roles: [ROLES.SUPER_USUARIO],
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
           reporte: 'SABANAS',
         },
       },

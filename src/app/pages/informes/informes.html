@@ -307,8 +307,13 @@
       <div class="sabanas-hero-text">
         <h2>Descarga de sábanas anuales</h2>
         <p>
+          @if (esSuperUsuario()) {
           Genere archivos estadísticos en formato ZIP por año de corte.
           Puede descargar la versión completa o únicamente la parte estatal o municipal.
+          } @else {
+          Descargue las sábanas estadísticas de su entidad federativa:
+          <strong>{{ entidadUsuario() }}</strong>.
+          }
         </p>
       </div>
     </div>
@@ -337,10 +342,14 @@
       </div>
 
       <div class="sabana-info-card">
-        <div class="sabana-info-badge">
-          <i class="fa-solid fa-circle-info"></i>
-          Tipos disponibles
-        </div>
+      <div class="sabana-info-badge">
+        <i class="fa-solid fa-circle-info"></i>
+        @if (esSuperUsuario()) {
+        Tipos disponibles
+        } @else {
+        Descarga limitada a su entidad
+        }
+      </div>
 
         <ul>
           <li><strong>Completa:</strong> estatal delitos, municipal delitos, estatal víctimas y municipal víctimas.</li>
