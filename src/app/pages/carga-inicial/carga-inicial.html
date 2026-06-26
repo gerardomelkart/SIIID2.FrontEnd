@@ -230,9 +230,14 @@
       Rechazar
     </button>
 
-    <button type="button" class="btn btn-siiid" (click)="continuarAAcusePrevio()">
+    <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio()" (click)="continuarAAcusePrevio()">
+      @if (cargandoAcusePrevio()) {
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Generando informe...
+      } @else {
       <i class="fa-solid fa-file-signature"></i>
       Aceptar y revisar informe
+      }
     </button>
     }
     @else {

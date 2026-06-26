@@ -53,6 +53,8 @@ export class CargaInicial {
   mensaje = signal('');
   errorGeneral = signal('');
 
+  cargandoAcusePrevio = signal(false);
+
   private acusePrevioObjectUrl: string | null = null;
   private acuseConfirmadoObjectUrl: string | null = null;
 
@@ -207,6 +209,10 @@ export class CargaInicial {
   }
 
   continuarAAcusePrevio(): void {
+    if (this.cargandoAcusePrevio()) {
+      return;
+    }
+
     const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) {
@@ -382,16 +388,24 @@ export class CargaInicial {
   }
 
   private abrirAcusePrevio(codigoReferencia: string): void {
+    if (this.cargandoAcusePrevio()) {
+      return;
+    }
+
+    this.cargandoAcusePrevio.set(true);
+
     this.cargaService.descargarAcusePrevio(codigoReferencia).subscribe({
       next: (blob) => {
         this.reemplazarAcusePrevio(blob);
         this.estado.set('MOSTRANDO_ACUSE');
+        this.cargandoAcusePrevio.set(false);
       },
       error: () => {
         this.estado.set(this.hayAdvertenciasDeDecision() ? 'VALIDADO_ADVERTENCIA' : 'INICIAL');
         this.errorGeneral.set(
           'La validación fue correcta, pero no fue posible generar el informe previo.',
         );
+        this.cargandoAcusePrevio.set(false);
       },
     });
   }
@@ -415,6 +429,7 @@ export class CargaInicial {
     this.respuesta.set(null);
     this.mensaje.set('');
     this.errorGeneral.set('');
+    this.cargandoAcusePrevio.set(false);
     this.limpiarUrlsPdf();
   }
 
@@ -422,6 +437,7 @@ export class CargaInicial {
     this.archivos.set(crearArchivosCargaVacios());
     this.respuesta.set(null);
     this.mensaje.set('');
+    this.cargandoAcusePrevio.set(false);
     this.errorGeneral.set('');
   }
 
