@@ -7,6 +7,7 @@ import {
   InformeEnviosFiltro,
   InformeReporteCargasFiltro,
   InformeReporteCargasResponse,
+  UltimosArchivosEntidadResponse,
 } from '../models/informes.models';
 
 export type TipoSabanaDescarga = 'COMPLETA' | 'ESTATALES' | 'MUNICIPALES';
@@ -64,6 +65,17 @@ export class InformesService {
     });
   }
 
+  obtenerArchivosOriginales() {
+    return this.http.get<UltimosArchivosEntidadResponse>(`${this.apiUrl}/archivos-originales`);
+  }
+
+  descargarArchivosOriginales(idEntidadFederativa: number) {
+    return this.http.get(`${this.apiUrl}/archivos-originales/${idEntidadFederativa}`, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
   descargarDesdeEndpoint(endpoint: string) {
     const url = this.normalizarEndpointDescarga(endpoint);
 
@@ -83,8 +95,8 @@ export class InformesService {
     }
 
     if (endpoint.startsWith('/api/')) {
-      const base = API_BASE_URL.replace(/\/$/, '');
-      const ruta = endpoint.replace(/^\/api/, '');
+      const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      const ruta = endpoint.substring(4);
 
       return `${base}${ruta}`;
     }
