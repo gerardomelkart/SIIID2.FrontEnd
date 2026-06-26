@@ -47,6 +47,10 @@ export class Sidebar {
     return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
   });
 
+  puedeVerArchivosOriginales = computed(() => {
+    return this.esSuperUsuario();
+  });
+
   puedeVerAdministracion = computed(() => {
     return this.esSuperUsuario();
   });
