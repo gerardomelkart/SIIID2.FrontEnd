@@ -58,7 +58,7 @@
     }
     }
 
-    @if (puedeVerReporteEnvios() || puedeVerReporteCargas() || puedeVerSabanas()) {
+    @if (puedeVerReporteEnvios() || puedeVerReporteCargas() || puedeVerSabanas() || puedeVerArchivosOriginales()) {
     <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
       <span>
         <i class="fa-solid fa-bars"></i>
@@ -88,10 +88,18 @@
       Reporte de Cargas
     </a>
     }
+
     @if (puedeVerSabanas()) {
     <a class="menu-link level-3" routerLink="/informes/sabanas" routerLinkActive="active">
       <i class="fa-solid fa-table"></i>
       Sábanas estadísticas
+    </a>
+    }
+
+    @if (puedeVerArchivosOriginales()) {
+    <a class="menu-link level-3" routerLink="/informes/originales" routerLinkActive="active">
+      <i class="fa-solid fa-box-archive"></i>
+      Archivos originales
     </a>
     }
 
