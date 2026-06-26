@@ -4,6 +4,8 @@ import { InformesService } from '../../core/services/informes.service';
 import { UltimosArchivosEntidadResumen } from '../../core/models/informes.models';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { CatalogosService } from '../../core/services/catalogos.service';
+import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
 
 @Component({
   selector: 'app-originales',
@@ -14,10 +16,24 @@ import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../cor
 export class Originales implements OnInit {
   private readonly informesService = inject(InformesService);
 
+  private readonly catalogosService = inject(CatalogosService);
+
   archivos = signal<UltimosArchivosEntidadResumen[]>([]);
+
+  entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
   busqueda = signal('');
   cargando = signal(false);
   descargandoEntidad = signal<number | null>(null);
+
+
+  entidadPorId = computed(() => {
+  return new Map(
+    this.entidadesFederativas().map((entidad) => [
+      entidad.idEntidadFederativa,
+      entidad,
+    ]),
+  );
+});
 
   archivosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -36,9 +52,10 @@ export class Originales implements OnInit {
     });
   });
 
-  ngOnInit(): void {
-    this.cargarArchivos();
-  }
+ngOnInit(): void {
+  this.cargarEntidadesFederativas();
+  this.cargarArchivos();
+}
 
   cargarArchivos(): void {
     this.cargando.set(true);
@@ -58,6 +75,18 @@ export class Originales implements OnInit {
       },
     });
   }
+
+cargarEntidadesFederativas(): void {
+  this.catalogosService.obtenerEntidadesFederativas().subscribe({
+    next: (entidades) => {
+      this.entidadesFederativas.set(entidades ?? []);
+    },
+    error: () => {
+      this.entidadesFederativas.set([]);
+    },
+  });
+}
+
 
   descargar(item: UltimosArchivosEntidadResumen): void {
     this.descargandoEntidad.set(item.idEntidadFederativa);
@@ -97,9 +126,17 @@ export class Originales implements OnInit {
     });
   }
 
-  entidadTexto(item: UltimosArchivosEntidadResumen): string {
-    return `Entidad ${item.idEntidadFederativa.toString().padStart(2, '0')}`;
+entidadTexto(item: UltimosArchivosEntidadResumen): string {
+  const entidad = this.entidadPorId().get(item.idEntidadFederativa);
+
+  if (entidad) {
+    return `${entidad.clave} - ${entidad.nombre}`;
   }
+
+  return `Entidad ${item.idEntidadFederativa.toString().padStart(2, '0')}`;
+}
+
+
 
   tipoMovimientoTexto(tipoMovimiento: string | null): string {
     if (!tipoMovimiento) {

@@ -62,7 +62,6 @@ export interface InformeReporteCargasFiltro {
 export interface UltimosArchivosEntidadArchivo {
   tipo: string;
   nombreOriginal: string;
-  nombreGuardado: string;
   rutaRelativa: string;
   tamanioBytes: number;
   sha256: string;
