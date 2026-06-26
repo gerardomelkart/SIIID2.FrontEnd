@@ -75,6 +75,15 @@ export const routes: Routes = [
       },
 
       {
+        path: 'informes/originales',
+        loadComponent: () => import('./pages/originales/originales').then((m) => m.Originales),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+
+      {
         path: 'informes/sabanas',
         loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
         canActivate: [permissionGuard],

@@ -2,8 +2,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InformesService } from '../../core/services/informes.service';
 import { UltimosArchivosEntidadResumen } from '../../core/models/informes.models';
-import { mostrarError } from '../../core/utils/alert.utils';
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
+import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 @Component({
   selector: 'app-originales',
@@ -50,14 +50,51 @@ export class Originales implements OnInit {
       },
       error: (error) => {
         this.cargando.set(false);
-        mostrarError('No fue posible consultar los archivos originales', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+
+        mostrarError(
+          'No fue posible consultar los archivos originales',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
 
   descargar(item: UltimosArchivosEntidadResumen): void {
     this.descargandoEntidad.set(item.idEntidadFederativa);
-    this.descargandoEntidad.set(null);
+
+    this.informesService.descargarArchivosOriginales(item.idEntidadFederativa).subscribe({
+      next: (response) => {
+        const blob = response.body;
+
+        if (!blob) {
+          this.descargandoEntidad.set(null);
+          mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
+          return;
+        }
+
+        const nombreArchivo =
+          this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
+          `ARCHIVOS_ORIGINALES_ENTIDAD_${item.idEntidadFederativa.toString().padStart(2, '0')}_${item.anioCorte}_${item.mesCorte.toString().padStart(2, '0')}.zip`;
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = nombreArchivo;
+        link.click();
+
+        URL.revokeObjectURL(url);
+        this.descargandoEntidad.set(null);
+      },
+      error: async (error) => {
+        this.descargandoEntidad.set(null);
+
+        mostrarError(
+          'No fue posible descargar los archivos originales',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+        );
+      },
+    });
   }
 
   entidadTexto(item: UltimosArchivosEntidadResumen): string {
@@ -83,6 +120,7 @@ export class Originales implements OnInit {
   periodoTexto(item: UltimosArchivosEntidadResumen): string {
     const fecha = new Date(item.anioCorte, item.mesCorte - 1, 1);
     const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(fecha);
+
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
@@ -91,7 +129,10 @@ export class Originales implements OnInit {
       return '-';
     }
 
-    return new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(fecha));
+    return new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(fecha));
   }
 
   tamanioTexto(bytes: number): string {
@@ -109,5 +150,29 @@ export class Originales implements OnInit {
     }
 
     return `${valor.toFixed(indice === 0 ? 0 : 2)} ${unidades[indice]}`;
+  }
+
+  shaCorto(sha256: string): string {
+    if (!sha256) {
+      return '-';
+    }
+
+    return `${sha256.substring(0, 12)}...`;
+  }
+
+  private obtenerNombreArchivo(contentDisposition: string | null): string {
+    if (!contentDisposition) {
+      return '';
+    }
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+
+    const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
+    return normalMatch?.[1] ?? '';
   }
 }

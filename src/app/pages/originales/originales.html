@@ -1,3 +1,126 @@
 <div class="originales-page">
-  <h1>Archivos originales</h1>
+  <div class="originales-header">
+    <div>
+      <h1>Archivos originales</h1>
+      <p>
+        Descarga de los últimos archivos originales recibidos por entidad federativa.
+        Solo se conserva el último paquete por entidad.
+      </p>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarArchivos()">
+      @if (cargando()) {
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      } @else {
+      <i class="fa-solid fa-rotate"></i>
+      }
+      Actualizar
+    </button>
+  </div>
+
+  <section class="siiid-card">
+    <div class="siiid-card-header originales-card-header">
+      <span>
+        <i class="fa-solid fa-box-archive"></i>
+        Últimos archivos originales por entidad
+      </span>
+
+      <div class="buscador">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Buscar entidad, código o archivo..." [ngModel]="busqueda()"
+          (ngModelChange)="busqueda.set($event)">
+      </div>
+    </div>
+
+    <div class="originales-alert">
+      <i class="fa-solid fa-circle-info"></i>
+      Estos archivos son copia íntegra de lo recibido. No son archivos reconstruidos ni modificados por el sistema.
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm originales-table">
+        <thead>
+          <tr>
+            <th>Entidad</th>
+            <th>Último movimiento</th>
+            <th>Periodo</th>
+            <th>Código referencia</th>
+            <th>Fecha guardado</th>
+            <th>Archivos</th>
+            <th>Descargar</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (item of archivosFiltrados(); track item.idEntidadFederativa) {
+          <tr>
+            <td>
+              <strong>{{ entidadTexto(item) }}</strong>
+            </td>
+
+            <td>
+              <span class="movimiento-chip">
+                {{ tipoMovimientoTexto(item.tipoMovimiento) }}
+              </span>
+            </td>
+
+            <td>{{ periodoTexto(item) }}</td>
+
+            <td>
+              <code>{{ item.codigoReferencia }}</code>
+            </td>
+
+            <td>{{ fechaTexto(item.fechaGuardado) }}</td>
+
+            <td>
+              <div class="archivo-lista">
+                @for (archivo of item.archivos; track archivo.rutaRelativa) {
+                <div class="archivo-item">
+                  <div>
+                    <strong>{{ archivo.tipo }}</strong>
+                    <span>{{ archivo.nombreOriginal }}</span>
+                  </div>
+
+                  <small>
+                    {{ tamanioTexto(archivo.tamanioBytes) }}
+                    @if (archivo.sha256) {
+                    · SHA256: {{ shaCorto(archivo.sha256) }}
+                    }
+                  </small>
+                </div>
+                }
+              </div>
+            </td>
+
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-success"
+                [disabled]="descargandoEntidad() !== null" (click)="descargar(item)">
+                @if (descargandoEntidad() === item.idEntidadFederativa) {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                } @else {
+                <i class="fa-solid fa-file-zipper"></i>
+                }
+                ZIP
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" class="text-center p-4">
+              @if (cargando()) {
+              Consultando archivos originales...
+              } @else {
+              No hay archivos originales guardados.
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="originales-footer">
+      Mostrando {{ archivosFiltrados().length }} de {{ archivos().length }} entidades con respaldo disponible.
+    </div>
+  </section>
 </div>

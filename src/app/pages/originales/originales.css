@@ -1,3 +1,155 @@
 .originales-page {
   padding: 6px;
 }
+.originales-page {
+  padding: 6px;
+}
+
+.originales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.originales-header h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #333;
+  font-weight: 800;
+}
+
+.originales-header p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.originales-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.buscador {
+  width: 360px;
+  height: 34px;
+  background: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #777;
+}
+
+.buscador input {
+  border: 0;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.originales-alert {
+  background: #f8f8f8;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 12px 14px;
+  color: #555;
+  font-weight: 700;
+}
+
+.originales-table {
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.originales-table thead th {
+  background: var(--siiid-guinda);
+  color: #fff;
+  border-color: #5b1428;
+  padding: 11px 10px;
+  white-space: nowrap;
+}
+
+.originales-table tbody td {
+  vertical-align: middle;
+  padding: 10px;
+  border-color: #dedede;
+}
+
+.originales-table tbody tr:nth-child(even) {
+  background: #f5f5f5;
+}
+
+.movimiento-chip {
+  display: inline-flex;
+  min-width: 112px;
+  justify-content: center;
+  border-radius: 18px;
+  padding: 4px 10px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.archivo-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.archivo-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid var(--siiid-guinda);
+  border-radius: 6px;
+  padding: 7px 9px;
+}
+
+.archivo-item div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.archivo-item strong {
+  color: var(--siiid-guinda);
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.archivo-item span {
+  color: #333;
+  font-weight: 700;
+}
+
+.archivo-item small {
+  display: block;
+  margin-top: 3px;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.originales-footer {
+  padding: 14px;
+  border-top: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .originales-header,
+  .originales-card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .buscador {
+    width: 100%;
+  }
+}
