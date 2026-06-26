@@ -1,1 +1,3 @@
-export class Originales {}
+export class Originales {
+  titulo = 'Originales';
+}
