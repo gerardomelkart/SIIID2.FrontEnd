@@ -1,4 +1,4 @@
-export type TipoReporte = 'ENVIOS' | 'CARGAS' | 'SABANAS';
+export type TipoReporte = 'ENVIOS' | 'CARGAS' | 'SABANAS' | 'ORIGINALES';
 
 export type TipoCargaInforme = 'CARGA_INICIAL' | 'ACTUALIZACION' | string;
 
@@ -57,6 +57,31 @@ export interface InformeReporteCargasFiltro {
   idEntidadFederativa?: number | null;
   mesCorte?: number | null;
   anioCorte?: number | null;
+}
+
+export interface UltimosArchivosEntidadArchivo {
+  tipo: string;
+  nombreOriginal: string;
+  nombreGuardado: string;
+  rutaRelativa: string;
+  tamanioBytes: number;
+  sha256: string;
+}
+
+export interface UltimosArchivosEntidadResumen {
+  idEntidadFederativa: number;
+  codigoReferencia: string;
+  tipoMovimiento: TipoCargaInforme;
+  mesCorte: number;
+  anioCorte: number;
+  fechaGuardado: string;
+  archivos: UltimosArchivosEntidadArchivo[];
+}
+
+export interface UltimosArchivosEntidadResponse {
+  esValido: boolean;
+  total: number;
+  registros: UltimosArchivosEntidadResumen[];
 }
 
 export interface CorteOperativo {
