@@ -12,6 +12,11 @@ import {
 
 export type TipoSabanaDescarga = 'COMPLETA' | 'ESTATALES' | 'MUNICIPALES';
 
+export interface SabanaTicketResponse {
+  esValido: boolean;
+  ticket: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -64,6 +69,20 @@ export class InformesService {
       observe: 'response',
     });
   }
+
+  crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA') {
+  const params = new HttpParams()
+    .set('anioCorte', anioCorte)
+    .set('tipo', tipo);
+
+  return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, {
+    params,
+  });
+}
+
+obtenerUrlDescargaSabanas(ticket: string): string {
+  return `${API_BASE_URL}/informes/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
+}
 
   obtenerArchivosOriginales() {
     return this.http.get<UltimosArchivosEntidadResponse>(`${this.apiUrl}/archivos-originales`);

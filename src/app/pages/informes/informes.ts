@@ -488,54 +488,55 @@ export class Informes implements OnInit {
     }
   }
 
-  descargarSabanas(tipo: TipoSabanaDescarga): void {
-    if (!this.puedeVerSabanas()) {
-      return;
-    }
-
-    const anio = Number(this.anioSabana());
-
-    if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
-      mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
-      return;
-    }
-
-    this.descargandoSabanas.set(tipo);
-
-    this.informesService.descargarSabanas(anio, tipo).subscribe({
-      next: (response) => {
-        const blob = response.body;
-
-        if (!blob) {
-          this.descargandoSabanas.set(null);
-          mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
-          return;
-        }
-
-        const nombreArchivo =
-          this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
-          this.obtenerNombreDefaultSabanas(tipo, anio);
-
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-
-        link.href = url;
-        link.download = nombreArchivo;
-        link.click();
-
-        URL.revokeObjectURL(url);
-        this.descargandoSabanas.set(null);
-      },
-      error: async (error) => {
-        this.descargandoSabanas.set(null);
-
-        mostrarError(
-          'No fue posible descargar las sábanas',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-        );
-      },
-    });
+descargarSabanas(tipo: TipoSabanaDescarga): void {
+  if (!this.puedeVerSabanas()) {
+    return;
   }
+
+  const anio = Number(this.anioSabana());
+
+  if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
+    mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
+    return;
+  }
+
+  this.descargandoSabanas.set(tipo);
+
+  this.informesService.crearTicketDescargaSabanas(anio, tipo).subscribe({
+    next: (response) => {
+      if (!response.ticket) {
+        this.descargandoSabanas.set(null);
+        mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+        return;
+      }
+
+      const url = this.informesService.obtenerUrlDescargaSabanas(response.ticket);
+      const iframe = document.createElement('iframe');
+
+      iframe.src = url;
+      iframe.style.display = 'none';
+
+      document.body.appendChild(iframe);
+
+      // Aquí ya terminó la generación. La descarga solo se está disparando.
+      this.descargandoSabanas.set(null);
+
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      }, 60000);
+    },
+    error: async (error) => {
+      this.descargandoSabanas.set(null);
+
+      mostrarError(
+        'No fue posible descargar las sábanas',
+        await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+      );
+    },
+  });
+}
 
   private descargarEndpoint(
     endpoint: string,
