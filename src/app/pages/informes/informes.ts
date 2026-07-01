@@ -407,10 +407,10 @@ export class Informes implements OnInit {
 
   verAcuse(envio: InformeEnvioItem): void {
     if (!envio.endpointAcuse) {
-    mostrarAdvertencia(
-      'Informe no disponible',
-      'Este envío aún no tiene informe previo disponible.',
-    );
+      mostrarAdvertencia(
+        'Informe no disponible',
+        'Este envío aún no tiene informe previo disponible.',
+      );
       return;
     }
 
@@ -488,55 +488,55 @@ export class Informes implements OnInit {
     }
   }
 
-descargarSabanas(tipo: TipoSabanaDescarga): void {
-  if (!this.puedeVerSabanas()) {
-    return;
-  }
+  descargarSabanas(tipo: TipoSabanaDescarga): void {
+    if (!this.puedeVerSabanas()) {
+      return;
+    }
 
-  const anio = Number(this.anioSabana());
+    const anio = Number(this.anioSabana());
 
-  if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
-    mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
-    return;
-  }
+    if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
+      mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
+      return;
+    }
 
-  this.descargandoSabanas.set(tipo);
+    this.descargandoSabanas.set(tipo);
 
-  this.informesService.crearTicketDescargaSabanas(anio, tipo).subscribe({
-    next: (response) => {
-      if (!response.ticket) {
-        this.descargandoSabanas.set(null);
-        mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
-        return;
-      }
-
-      const url = this.informesService.obtenerUrlDescargaSabanas(response.ticket);
-      const iframe = document.createElement('iframe');
-
-      iframe.src = url;
-      iframe.style.display = 'none';
-
-      document.body.appendChild(iframe);
-
-      // Aquí ya terminó la generación. La descarga solo se está disparando.
-      this.descargandoSabanas.set(null);
-
-      setTimeout(() => {
-        if (iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
+    this.informesService.crearTicketDescargaSabanas(anio, tipo).subscribe({
+      next: (response) => {
+        if (!response.ticket) {
+          this.descargandoSabanas.set(null);
+          mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+          return;
         }
-      }, 60000);
-    },
-    error: async (error) => {
-      this.descargandoSabanas.set(null);
 
-      mostrarError(
-        'No fue posible descargar las sábanas',
-        await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-      );
-    },
-  });
-}
+        const url = this.informesService.obtenerUrlDescargaSabanas(response.ticket);
+        const iframe = document.createElement('iframe');
+
+        iframe.src = url;
+        iframe.style.display = 'none';
+
+        document.body.appendChild(iframe);
+
+        // Aquí ya terminó la generación. La descarga solo se está disparando.
+        this.descargandoSabanas.set(null);
+
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 60000);
+      },
+      error: async (error) => {
+        this.descargandoSabanas.set(null);
+
+        mostrarError(
+          'No fue posible descargar las sábanas',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+        );
+      },
+    });
+  }
 
   private descargarEndpoint(
     endpoint: string,
@@ -719,18 +719,6 @@ descargarSabanas(tipo: TipoSabanaDescarga): void {
     }
 
     this.sincronizarCorteSeleccionado();
-  }
-
-  private obtenerNombreDefaultSabanas(tipo: TipoSabanaDescarga, anio: number): string {
-    if (tipo === 'ESTATALES') {
-      return `SABANAS_ESTATALES_${anio}.zip`;
-    }
-
-    if (tipo === 'MUNICIPALES') {
-      return `SABANAS_MUNICIPALES_${anio}.zip`;
-    }
-
-    return `SABANAS_COMPLETAS_${anio}.zip`;
   }
 
   private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {

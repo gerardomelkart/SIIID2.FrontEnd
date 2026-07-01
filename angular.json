@@ -53,9 +53,6 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": {
-            "allowedHosts": ["6c28-187-217-137-56.ngrok-free.app"]
-          },
           "configurations": {
             "production": {
               "buildTarget": "SIIID2.FrontEnd:build:production"

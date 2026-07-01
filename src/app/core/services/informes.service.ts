@@ -60,29 +60,17 @@ export class InformesService {
     return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
-  descargarSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA') {
+  crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA') {
     const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo);
 
-    return this.http.get(`${this.apiUrl}/sabanas`, {
+    return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, {
       params,
-      responseType: 'blob',
-      observe: 'response',
     });
   }
 
-  crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA') {
-  const params = new HttpParams()
-    .set('anioCorte', anioCorte)
-    .set('tipo', tipo);
-
-  return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, {
-    params,
-  });
-}
-
-obtenerUrlDescargaSabanas(ticket: string): string {
-  return `${API_BASE_URL}/informes/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
-}
+  obtenerUrlDescargaSabanas(ticket: string): string {
+    return `${API_BASE_URL}/informes/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
+  }
 
   obtenerArchivosOriginales() {
     return this.http.get<UltimosArchivosEntidadResponse>(`${this.apiUrl}/archivos-originales`);

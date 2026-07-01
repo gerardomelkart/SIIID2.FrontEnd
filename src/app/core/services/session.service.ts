@@ -40,8 +40,8 @@ export class SessionService {
   });
 
   requiereCambioPassword = computed(() => {
-  return this.usuarioSignal()?.requiereCambioPassword === true;
-});
+    return this.usuarioSignal()?.requiereCambioPassword === true;
+  });
 
   guardarSesion(response: LoginResponse): void {
     if (!response.token || !response.usuario) {
@@ -69,24 +69,21 @@ export class SessionService {
   }
 
   marcarCambioPasswordRequerido(): void {
-  const usuario = this.usuarioSignal();
+    const usuario = this.usuarioSignal();
 
-  if (!usuario) {
-    return;
+    if (!usuario) {
+      return;
+    }
+
+    const usuarioActualizado: UsuarioLoginInfo = {
+      ...usuario,
+      requiereCambioPassword: true,
+    };
+
+    localStorage.setItem(USER_KEY, JSON.stringify(usuarioActualizado));
+
+    this.usuarioSignal.set(usuarioActualizado);
   }
-
-  const usuarioActualizado: UsuarioLoginInfo = {
-    ...usuario,
-    requiereCambioPassword: true,
-  };
-
-  localStorage.setItem(
-    USER_KEY,
-    JSON.stringify(usuarioActualizado),
-  );
-
-  this.usuarioSignal.set(usuarioActualizado);
-}
 
   private cargarUsuarioDesdeStorage(): UsuarioLoginInfo | null {
     const raw = localStorage.getItem(USER_KEY);
