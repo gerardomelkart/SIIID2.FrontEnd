@@ -1,7 +1,8 @@
-// API relativa al base href de Angular.
-// Local: el proxy redirige /api hacia la API.
-// Producción bajo /beta/: se resuelve como /beta/api.
-export const API_BASE_URL = 'api';
+const esLocal =
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1';
+
+export const API_BASE_URL = esLocal ? 'api' : '/beta/api';
 
 export const API_ENDPOINTS = {
   auth: `${API_BASE_URL}/auth`,
