@@ -362,7 +362,7 @@ export class Actualizacion implements OnInit {
     const archivos = this.archivos();
 
     if (!tieneTresArchivosSeleccionados(archivos)) {
-      this.errorGeneral.set('Debe seleccionar los tres archivos: expedientes, delitos y víctimas.');
+      this.errorGeneral.set('Debe seleccionar los tres archivos: carpetas, delitos y víctimas.');
       return;
     }
 
