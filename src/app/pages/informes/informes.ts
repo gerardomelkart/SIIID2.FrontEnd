@@ -531,7 +531,7 @@ export class Informes implements OnInit {
         this.descargandoSabanas.set(null);
 
         mostrarError(
-          'No fue posible descargar las sábanas',
+          'No fue posible descargar los planos',
           await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
         );
       },

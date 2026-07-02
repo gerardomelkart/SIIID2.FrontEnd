@@ -295,7 +295,7 @@
     <div class="siiid-card-header reporte-card-header">
       <span>
         <i class="fa-solid fa-table"></i>
-        Sábanas estadísticas
+        Planos estadísticos
       </span>
     </div>
 
@@ -305,13 +305,13 @@
       </div>
 
       <div class="sabanas-hero-text">
-        <h2>Descarga de sábanas anuales</h2>
+        <h2>Descarga de planos estadísticos anuales</h2>
         <p>
           @if (esSuperUsuario()) {
           Genere archivos estadísticos en formato ZIP por año de corte.
           Puede descargar la versión completa o únicamente la parte estatal o municipal.
           } @else {
-          Descargue las sábanas estadísticas de su entidad federativa:
+          Descargue los planos estadísticos de su entidad federativa:
           <strong>{{ entidadUsuario() }}</strong>.
           }
         </p>
@@ -342,19 +342,20 @@
       </div>
 
       <div class="sabana-info-card">
-      <div class="sabana-info-badge">
-        <i class="fa-solid fa-circle-info"></i>
-        @if (esSuperUsuario()) {
-        Tipos disponibles
-        } @else {
-        Descarga limitada a su entidad
-        }
-      </div>
+        <div class="sabana-info-badge">
+          <i class="fa-solid fa-circle-info"></i>
+          @if (esSuperUsuario()) {
+          Tipos disponibles
+          } @else {
+          Descarga limitada a su entidad
+          }
+        </div>
 
         <ul>
-          <li><strong>Completa:</strong> estatal delitos, municipal delitos, estatal víctimas y municipal víctimas.</li>
-          <li><strong>Estatales:</strong> estatal delitos y estatal víctimas.</li>
-          <li><strong>Municipales:</strong> municipal delitos y municipal víctimas.</li>
+          <li><strong>Plano estadístico:</strong> estatal delitos, municipal delitos, estatal víctimas y municipal
+            víctimas.</li>
+          <li><strong>Plano estatal:</strong> estatal delitos y estatal víctimas.</li>
+          <li><strong>Plano municipal:</strong> municipal delitos y municipal víctimas.</li>
         </ul>
       </div>
     </div>
@@ -372,7 +373,7 @@
         </div>
 
         <div class="sabana-option-body">
-          <strong>Sábana completa</strong>
+          <strong>Plano estadístico</strong>
           <small>Incluye los 4 archivos estadísticos del año seleccionado.</small>
         </div>
       </button>
@@ -389,7 +390,7 @@
         </div>
 
         <div class="sabana-option-body">
-          <strong>Estatales</strong>
+          <strong>Plano estatal</strong>
           <small>Descarga únicamente estatal delitos y estatal víctimas.</small>
         </div>
       </button>
@@ -406,7 +407,7 @@
         </div>
 
         <div class="sabana-option-body">
-          <strong>Municipales</strong>
+          <strong>Plano municipal</strong>
           <small>Descarga únicamente municipal delitos y municipal víctimas.</small>
         </div>
       </button>
