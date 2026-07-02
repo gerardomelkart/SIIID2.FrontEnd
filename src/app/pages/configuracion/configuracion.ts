@@ -408,9 +408,9 @@ export class Configuracion implements OnInit {
             return;
           }
 
-          mostrarAdvertenciaHtml(
-            'Algunos usuarios no se actualizaron',
-            errores.map((error) => `• ${error.mensaje}`).join('<br>'),
+          mostrarExitoInstitucional(
+            'Permisos actualizados',
+            `Se actualizaron correctamente los permisos de ${usuariosModificados.length} usuario(s).`,
           );
 
           this.cerrarPermisosEntidad();
