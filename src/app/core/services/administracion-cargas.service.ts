@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { AcuseService, TipoAcuseTicket } from './acuse.service';
 import {
   CargaPendienteAdministracionDetalleResponse,
   CargasPendientesAdministracionResponse,
@@ -13,6 +14,7 @@ import {
 })
 export class AdministracionCargasService {
   private readonly http = inject(HttpClient);
+  private readonly acuseService = inject(AcuseService);
   private readonly apiUrl = API_ENDPOINTS.administracionCargas;
 
   obtenerPendientes() {
@@ -31,15 +33,8 @@ export class AdministracionCargasService {
   }
 
   descargarAcuse(codigoReferencia: string, tipoCarga: string) {
-    const endpoint =
-      tipoCarga === 'ACTUALIZACION'
-        ? `${API_ENDPOINTS.actualizaciones}/${codigoReferencia}/acuse`
-        : `${API_ENDPOINTS.cargas}/${codigoReferencia}/acuse`;
-
-    return this.http.get(endpoint, {
-      responseType: 'blob',
-      observe: 'response',
-    });
+    const tipo: TipoAcuseTicket = tipoCarga === 'ACTUALIZACION' ? 'PREVIO_ACTUALIZACION' : 'PREVIO_CARGA';
+    return this.acuseService.crearRespuestaBlobDirecta(codigoReferencia, tipo);
   }
 
   aprobar(codigoReferencia: string) {
