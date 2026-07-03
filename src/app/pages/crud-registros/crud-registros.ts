@@ -78,8 +78,12 @@ export class CrudRegistros implements OnInit {
   exportandoExcel = signal(false);
 
   busqueda = signal('');
+  paginaUsuarios = signal(1);
+  readonly tamanioPaginaUsuarios = 10;
+
   mostrarInactivos = signal(false);
   cargando = signal(false);
+
   guardando = signal(false);
   modalAbierto = signal(false);
   modoFormulario = signal<ModoFormulario>('NUEVO');
@@ -108,6 +112,15 @@ export class CrudRegistros implements OnInit {
 
     return this.ordenarListaUsuarios(filtrados);
   });
+
+  usuariosPaginados = computed(() => {
+    const inicio = (this.paginaUsuarios() - 1) * this.tamanioPaginaUsuarios;
+    return this.usuariosFiltrados().slice(inicio, inicio + this.tamanioPaginaUsuarios);
+  });
+
+  totalPaginasUsuarios = computed(() =>
+    Math.max(1, Math.ceil(this.usuariosFiltrados().length / this.tamanioPaginaUsuarios)),
+  );
 
   totalUsuarios = computed(() => this.usuarios().length);
   totalActivos = computed(() => this.usuarios().filter((x) => x.activo).length);
@@ -168,10 +181,24 @@ export class CrudRegistros implements OnInit {
 
   ordenarUsuariosPor(campo: CampoOrdenUsuarios): void {
     this.ordenUsuarios.set(alternarOrden(this.ordenUsuarios(), campo));
+    this.paginaUsuarios.set(1);
   }
 
   iconoOrdenUsuarios(campo: CampoOrdenUsuarios): string {
     return obtenerIconoOrden(this.ordenUsuarios(), campo);
+  }
+
+  buscarUsuarios(valor: string): void {
+    this.busqueda.set(valor);
+    this.paginaUsuarios.set(1);
+  }
+
+  cambiarPaginaUsuarios(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginasUsuarios()) {
+      return;
+    }
+
+    this.paginaUsuarios.set(pagina);
   }
 
   async exportarUsuariosExcel(): Promise<void> {
@@ -247,6 +274,7 @@ export class CrudRegistros implements OnInit {
     }).subscribe({
       next: ({ usuarios, entidades, roles }) => {
         this.usuarios.set(usuarios.usuarios ?? []);
+        this.paginaUsuarios.set(1);
         this.entidades.set(entidades ?? []);
         this.roles.set(roles ?? []);
         this.cargando.set(false);
@@ -268,6 +296,7 @@ export class CrudRegistros implements OnInit {
     this.usuariosService.obtenerUsuarios(this.mostrarInactivos()).subscribe({
       next: (response) => {
         this.usuarios.set(response.usuarios ?? []);
+        this.paginaUsuarios.set(1);
         this.cargando.set(false);
       },
       error: (error) => {
@@ -283,6 +312,7 @@ export class CrudRegistros implements OnInit {
 
   cambiarFiltroInactivos(valor: boolean): void {
     this.mostrarInactivos.set(valor);
+    this.paginaUsuarios.set(1);
     this.cargarUsuarios();
   }
 

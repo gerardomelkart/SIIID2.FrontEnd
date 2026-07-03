@@ -98,7 +98,7 @@
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" placeholder="Buscar entidad..." [ngModel]="busquedaEntidad()"
-            (ngModelChange)="busquedaEntidad.set($event)">
+            (ngModelChange)="buscarEntidades($event)">
         </div>
       </div>
     </div>
@@ -127,7 +127,7 @@
         </thead>
 
         <tbody>
-          @for (entidad of entidadesFiltradas(); track entidad.idEntidadFederativa) {
+          @for (entidad of entidadesPaginadas(); track entidad.idEntidadFederativa) {
           <tr>
             <td><strong>{{ entidad.entidadFederativa }}</strong></td>
 
@@ -166,6 +166,28 @@
         </tbody>
       </table>
     </div>
+    @if (entidadesFiltradas().length > 0) {
+    <div class="pagination-row">
+      <span>Mostrando {{ entidadesPaginadas().length }} de {{ entidadesFiltradas().length }} entidades</span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaEntidades() === 1"
+          (click)="cambiarPaginaEntidades(paginaEntidades() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaEntidades() }} / {{ totalPaginasEntidades() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaEntidades() === totalPaginasEntidades()"
+          (click)="cambiarPaginaEntidades(paginaEntidades() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
+
+
   </section>
 </div>
 

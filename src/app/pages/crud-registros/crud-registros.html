@@ -58,7 +58,7 @@
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" placeholder="Buscar por nombre, usuario, correo, rol o entidad..." [ngModel]="busqueda()"
-            (ngModelChange)="busqueda.set($event)">
+            (ngModelChange)="buscarUsuarios($event)">
         </div>
       </div>
     </div>
@@ -112,7 +112,7 @@
         </thead>
 
         <tbody>
-          @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {
+          @for (usuario of usuariosPaginados(); track usuario.idUsuario) {
           <tr>
             <td>
               <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
@@ -162,6 +162,27 @@
         </tbody>
       </table>
     </div>
+    @if (usuariosFiltrados().length > 0) {
+    <div class="pagination-row">
+      <span>Mostrando {{ usuariosPaginados().length }} de {{ usuariosFiltrados().length }} usuarios</span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaUsuarios() === 1"
+          (click)="cambiarPaginaUsuarios(paginaUsuarios() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaUsuarios() }} / {{ totalPaginasUsuarios() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaUsuarios() === totalPaginasUsuarios()"
+          (click)="cambiarPaginaUsuarios(paginaUsuarios() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
+
   </div>
 </div>
 

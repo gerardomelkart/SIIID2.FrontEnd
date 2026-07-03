@@ -75,6 +75,8 @@ export class Configuracion implements OnInit {
   guardandoGlobal = signal(false);
 
   busquedaEntidad = signal('');
+  paginaEntidades = signal(1);
+  readonly tamanioPaginaEntidades = 10;
 
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
@@ -143,6 +145,15 @@ export class Configuracion implements OnInit {
     return this.ordenarEntidadesConfiguracion(filtradas);
   });
 
+  entidadesPaginadas = computed(() => {
+    const inicio = (this.paginaEntidades() - 1) * this.tamanioPaginaEntidades;
+    return this.entidadesFiltradas().slice(inicio, inicio + this.tamanioPaginaEntidades);
+  });
+
+  totalPaginasEntidades = computed(() =>
+    Math.max(1, Math.ceil(this.entidadesFiltradas().length / this.tamanioPaginaEntidades)),
+  );
+
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
 
   totalEntidadesCargaActiva = computed(() => {
@@ -165,6 +176,7 @@ export class Configuracion implements OnInit {
         const usuarios = response.usuarios ?? [];
 
         this.usuarios.set(usuarios);
+        this.paginaEntidades.set(1);
         this.sincronizarSwitchesGlobales(usuarios);
         this.cargando.set(false);
       },
@@ -181,10 +193,24 @@ export class Configuracion implements OnInit {
 
   ordenarEntidadesPor(campo: CampoOrdenConfiguracionEntidad): void {
     this.ordenEntidades.set(alternarOrden(this.ordenEntidades(), campo));
+    this.paginaEntidades.set(1);
   }
 
   iconoOrdenEntidades(campo: CampoOrdenConfiguracionEntidad): string {
     return obtenerIconoOrden(this.ordenEntidades(), campo);
+  }
+
+  buscarEntidades(valor: string): void {
+    this.busquedaEntidad.set(valor);
+    this.paginaEntidades.set(1);
+  }
+
+  cambiarPaginaEntidades(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginasEntidades()) {
+      return;
+    }
+
+    this.paginaEntidades.set(pagina);
   }
 
   async exportarConfiguracionExcel(): Promise<void> {
