@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { AcuseService } from './acuse.service';
 
 import {
   ActualizacionAnioDisponibleItem,
@@ -20,7 +21,7 @@ import {
 export class ActualizacionService {
   private readonly apiUrl = API_ENDPOINTS.actualizaciones;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private acuseService: AcuseService) {}
 
   consultarPeriodo(mesCorte: number, anioCorte: number, idEntidadFederativa?: number | null) {
     let params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
@@ -82,14 +83,10 @@ export class ActualizacionService {
   }
 
   descargarAcusePrevio(codigoReferencia: string) {
-    return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse`, {
-      responseType: 'blob',
-    });
+    return this.acuseService.crearBlobDirecto(codigoReferencia, 'PREVIO_ACTUALIZACION');
   }
 
   descargarAcuseConfirmado(codigoReferencia: string) {
-    return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse-confirmado`, {
-      responseType: 'blob',
-    });
+    return this.acuseService.crearBlobDirecto(codigoReferencia, 'CONFIRMADO_ACTUALIZACION');
   }
 }
