@@ -38,3 +38,5 @@ export function instalarSoporteUrlDirecta(): void {
     URL.revokeObjectURL = revokePatched;
   }
 }
+
+instalarSoporteUrlDirecta();
