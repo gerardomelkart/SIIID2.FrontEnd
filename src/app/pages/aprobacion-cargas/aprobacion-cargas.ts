@@ -202,10 +202,20 @@ export class AprobacionCargas implements OnInit, OnDestroy {
 
     this.procesando.set(carga.codigoReferencia);
 
+    Swal.fire({
+      title: 'Aprobando carga',
+      html: `Se está incorporando definitivamente la información de <strong>${carga.entidadFederativa}</strong>.<br>Espere un momento...`,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
     this.administracionService.aprobar(carga.codigoReferencia).subscribe({
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
+        Swal.close();
 
         mostrarExitoInstitucional(
           'Carga aprobada',
@@ -216,6 +226,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
       },
       error: (error: unknown) => {
         this.procesando.set(null);
+        Swal.close();
 
         mostrarError(
           'No fue posible aprobar la carga',
