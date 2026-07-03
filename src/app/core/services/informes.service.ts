@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { AcuseService } from './acuse.service';
 
 import {
   InformeEnvioItem,
@@ -22,6 +23,7 @@ export interface SabanaTicketResponse {
 })
 export class InformesService {
   private readonly http = inject(HttpClient);
+  private readonly acuseService = inject(AcuseService);
   private readonly apiUrl = API_ENDPOINTS.informes;
 
   obtenerEnvios(filtro: InformeEnviosFiltro = {}) {
@@ -84,6 +86,12 @@ export class InformesService {
   }
 
   descargarDesdeEndpoint(endpoint: string) {
+    const respuestaAcuse = this.acuseService.crearRespuestaBlobDesdeEndpoint(endpoint);
+
+    if (respuestaAcuse) {
+      return respuestaAcuse;
+    }
+
     const url = this.normalizarEndpointDescarga(endpoint);
 
     return this.http.get(url, {
