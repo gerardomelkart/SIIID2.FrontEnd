@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map } from 'rxjs';
-import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { API_BASE_URL } from '../constants/api-endpoints.constants';
 import { crearBlobUrlDirecta } from '../utils/direct-object-url.utils';
 
 export type TipoAcuseTicket =
@@ -21,7 +21,7 @@ export interface AcuseTicketResponse {
 })
 export class AcuseService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = API_ENDPOINTS.acuses;
+  private readonly apiUrl = `${API_BASE_URL}/acuses`;
 
   crearTicket(codigoReferencia: string, tipo: TipoAcuseTicket) {
     const params = new HttpParams().set('tipo', tipo);
@@ -29,7 +29,7 @@ export class AcuseService {
   }
 
   obtenerUrlDescarga(ticket: string): string {
-    return `${API_BASE_URL}/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
+    return `${this.apiUrl}/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
   crearBlobDirecto(codigoReferencia: string, tipo: TipoAcuseTicket) {
