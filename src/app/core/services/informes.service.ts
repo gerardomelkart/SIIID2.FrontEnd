@@ -1,5 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { forkJoin, map } from 'rxjs';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
@@ -39,7 +40,32 @@ export class InformesService {
       params = params.set('anioCorte', filtro.anioCorte);
     }
 
-    return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
+    return forkJoin({
+      envios: this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params }),
+      rechazados: this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/rechazos`, { params }),
+    }).pipe(
+      map(({ envios, rechazados }) =>
+        [...envios, ...rechazados].sort((a, b) => {
+          const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', { sensitivity: 'base' });
+
+          if (entidad !== 0) {
+            return entidad;
+          }
+
+          const periodoA = a.anioCorte * 100 + a.mesCorte;
+          const periodoB = b.anioCorte * 100 + b.mesCorte;
+
+          if (periodoA !== periodoB) {
+            return periodoB - periodoA;
+          }
+
+          const fechaA = new Date(a.fechaRechazo || a.fechaEnvio).getTime();
+          const fechaB = new Date(b.fechaRechazo || b.fechaEnvio).getTime();
+
+          return fechaB - fechaA;
+        }),
+      ),
+    );
   }
 
   obtenerReporteCargas(filtro: InformeReporteCargasFiltro = {}) {

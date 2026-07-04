@@ -20,6 +20,11 @@ export interface InformeEnvioItem {
   estado: string;
   estadoTexto: string;
   esConfirmado: boolean;
+  esRechazadoAdministrador?: boolean;
+  motivoRechazo?: string | null;
+  fechaRechazo?: string | null;
+  fechaRechazoTexto?: string;
+  usuarioRechazo?: string | null;
   codigoReferenciaConfirmada: string | null;
   tipoCargaConfirmada: string | null;
 }

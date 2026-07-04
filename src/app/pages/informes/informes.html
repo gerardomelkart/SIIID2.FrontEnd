@@ -3,7 +3,7 @@
     <div>
       <h1>Informes</h1>
       <p>
-        Consulta de envíos confirmados y monitoreo de cargas por entidad federativa.
+        Consulta de envíos, rechazos administrativos y monitoreo de cargas por entidad federativa.
       </p>
     </div>
 
@@ -97,7 +97,8 @@
             <td>{{ envio.estadoTexto }}</td>
             <td>
               <div class="acciones">
-                <button type="button" class="btn-icon btn-pdf" title="Ver informe"
+                <button type="button" class="btn-icon btn-pdf"
+                  [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
                   [disabled]="descargaEnProceso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
                   @if (descargandoAcuse() === envio.codigoReferencia) {
                   <i class="fa-solid fa-spinner fa-spin"></i>
@@ -114,6 +115,33 @@
                   <i class="fa-solid fa-file-excel"></i>
                   }
                 </button>
+
+                @if (envio.esRechazadoAdministrador) {
+                <details class="position-relative">
+                  <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
+                    style="list-style: none; cursor: pointer;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                  </summary>
+
+                  <div class="position-absolute end-0 mt-2 p-3 bg-white border rounded shadow text-start"
+                    style="z-index: 30; width: min(360px, 80vw); white-space: normal;">
+                    <strong class="d-block mb-2">Motivo del rechazo</strong>
+                    <div class="mb-2">{{ envio.motivoRechazo || 'Sin motivo registrado.' }}</div>
+
+                    @if (envio.usuarioRechazo) {
+                    <small class="d-block text-muted">
+                      <strong>Rechazado por:</strong> {{ envio.usuarioRechazo }}
+                    </small>
+                    }
+
+                    @if (envio.fechaRechazoTexto) {
+                    <small class="d-block text-muted">
+                      <strong>Fecha:</strong> {{ envio.fechaRechazoTexto }}
+                    </small>
+                    }
+                  </div>
+                </details>
+                }
               </div>
             </td>
           </tr>
@@ -287,8 +315,6 @@
     </div>
   </section>
   }
-
-
 
   @if (reporteActivo() === 'SABANAS' && puedeVerSabanas()) {
   <section class="siiid-card sabanas-card">
