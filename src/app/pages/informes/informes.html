@@ -97,6 +97,7 @@
             <td>{{ envio.estadoTexto }}</td>
             <td>
               <div class="acciones">
+                @if (!envio.esRechazadoAdministrador || envio.endpointAcuse.length > 0 || envio.endpointExcel.length > 0) {
                 <button type="button" class="btn-icon btn-pdf"
                   [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
                   [disabled]="descargaEnProceso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
@@ -115,6 +116,7 @@
                   <i class="fa-solid fa-file-excel"></i>
                   }
                 </button>
+                }
 
                 @if (envio.esRechazadoAdministrador) {
                 <details class="position-relative">
