@@ -24,6 +24,14 @@ export interface SabanaTicketResponse {
 export class InformesService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = API_ENDPOINTS.informes;
+  private readonly estadosQueSustituyenRechazo = new Set([
+    'VALIDADO_PENDIENTE',
+    'VALIDADO_PENDIENTE_ACTUALIZACION',
+    'PENDIENTE_APROBACION',
+    'RECHAZADO_ADMIN',
+    'CONFIRMADO',
+    'CONFIRMADO_ACTUALIZACION',
+  ]);
 
   obtenerEnvios(filtro: InformeEnviosFiltro = {}) {
     let params = new HttpParams();
@@ -44,8 +52,33 @@ export class InformesService {
       envios: this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params }),
       rechazados: this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/rechazos`, { params }),
     }).pipe(
-      map(({ envios, rechazados }) =>
-        [...envios, ...rechazados].sort((a, b) => {
+      map(({ envios, rechazados }) => {
+        const todos = [...envios, ...rechazados];
+
+        const rechazadosAjustados = rechazados.map((rechazo) => {
+          const tieneIntentoPosterior = todos.some(
+            (envio) =>
+              envio.idCarga > rechazo.idCarga &&
+              envio.idEntidadFederativa === rechazo.idEntidadFederativa &&
+              envio.mesCorte === rechazo.mesCorte &&
+              envio.anioCorte === rechazo.anioCorte &&
+              envio.tipoCarga === rechazo.tipoCarga &&
+              this.estadosQueSustituyenRechazo.has(envio.estado),
+          );
+
+          if (!tieneIntentoPosterior) {
+            return rechazo;
+          }
+
+          return {
+            ...rechazo,
+            estadoTexto: 'Rechazado por administrador (histórico)',
+            endpointAcuse: '',
+            endpointExcel: '',
+          };
+        });
+
+        return [...envios, ...rechazadosAjustados].sort((a, b) => {
           const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', { sensitivity: 'base' });
 
           if (entidad !== 0) {
@@ -63,8 +96,8 @@ export class InformesService {
           const fechaB = new Date(b.fechaRechazo || b.fechaEnvio).getTime();
 
           return fechaB - fechaA;
-        }),
-      ),
+        });
+      }),
     );
   }
 
