@@ -28,7 +28,7 @@
       <div class="buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" placeholder="Buscar entidad, código o archivo..." [ngModel]="busqueda()"
-          (ngModelChange)="busqueda.set($event)">
+          (ngModelChange)="cambiarBusqueda($event)">
       </div>
     </div>
 
@@ -52,7 +52,7 @@
         </thead>
 
         <tbody>
-          @for (item of archivosFiltrados(); track item.idEntidadFederativa) {
+          @for (item of archivosPaginados(); track item.idEntidadFederativa) {
           <tr>
             <td>
               <strong>{{ entidadTexto(item) }}</strong>
@@ -93,8 +93,8 @@
             </td>
 
             <td class="text-center">
-              <button type="button" class="btn btn-sm btn-success"
-                [disabled]="descargandoEntidad() !== null" (click)="descargar(item)">
+              <button type="button" class="btn btn-sm btn-success" [disabled]="descargandoEntidad() !== null"
+                (click)="descargar(item)">
                 @if (descargandoEntidad() === item.idEntidadFederativa) {
                 <i class="fa-solid fa-spinner fa-spin"></i>
                 } @else {
@@ -120,7 +120,31 @@
     </div>
 
     <div class="originales-footer">
-      Mostrando {{ archivosFiltrados().length }} de {{ archivos().length }} entidades con respaldo disponible.
+      <div>
+        Mostrando {{ primerRegistroVisible() }}-{{ ultimoRegistroVisible() }} de {{ archivosFiltrados().length }}
+        resultados.
+        {{ archivos().length }} entidades con respaldo disponible.
+      </div>
+
+      @if (totalPaginas() > 1) {
+      <nav class="paginacion-originales" aria-label="Paginación de archivos originales">
+        <button type="button" class="btn-pagina" [disabled]="paginaActual() === 1"
+          (click)="irPagina(paginaActual() - 1)" aria-label="Página anterior">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        @for (pagina of paginas(); track pagina) {
+        <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina" (click)="irPagina(pagina)">
+          {{ pagina }}
+        </button>
+        }
+
+        <button type="button" class="btn-pagina" [disabled]="paginaActual() === totalPaginas()"
+          (click)="irPagina(paginaActual() + 1)" aria-label="Página siguiente">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </nav>
+      }
     </div>
   </section>
 </div>

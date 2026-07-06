@@ -3,7 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { InformesService } from '../../core/services/informes.service';
 import { UltimosArchivosEntidadResumen } from '../../core/models/informes.models';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
-import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import {
+  obtenerMensajeErrorHttp,
+  obtenerMensajeErrorHttpAsync,
+} from '../../core/utils/http-error.utils';
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
 
@@ -25,15 +28,14 @@ export class Originales implements OnInit {
   cargando = signal(false);
   descargandoEntidad = signal<number | null>(null);
 
+  paginaActual = signal(1);
+  readonly tamanioPagina = 5;
 
   entidadPorId = computed(() => {
-  return new Map(
-    this.entidadesFederativas().map((entidad) => [
-      entidad.idEntidadFederativa,
-      entidad,
-    ]),
-  );
-});
+    return new Map(
+      this.entidadesFederativas().map((entidad) => [entidad.idEntidadFederativa, entidad]),
+    );
+  });
 
   archivosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -52,10 +54,33 @@ export class Originales implements OnInit {
     });
   });
 
-ngOnInit(): void {
-  this.cargarEntidadesFederativas();
-  this.cargarArchivos();
-}
+  totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.archivosFiltrados().length / this.tamanioPagina)),
+  );
+
+  paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, indice) => indice + 1));
+
+  archivosPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
+    return this.archivosFiltrados().slice(inicio, inicio + this.tamanioPagina);
+  });
+
+  primerRegistroVisible = computed(() => {
+    if (this.archivosFiltrados().length === 0) {
+      return 0;
+    }
+
+    return (this.paginaActual() - 1) * this.tamanioPagina + 1;
+  });
+
+  ultimoRegistroVisible = computed(() =>
+    Math.min(this.paginaActual() * this.tamanioPagina, this.archivosFiltrados().length),
+  );
+
+  ngOnInit(): void {
+    this.cargarEntidadesFederativas();
+    this.cargarArchivos();
+  }
 
   cargarArchivos(): void {
     this.cargando.set(true);
@@ -63,6 +88,7 @@ ngOnInit(): void {
     this.informesService.obtenerArchivosOriginales().subscribe({
       next: (response) => {
         this.archivos.set(response.registros ?? []);
+        this.paginaActual.set(1);
         this.cargando.set(false);
       },
       error: (error) => {
@@ -76,17 +102,29 @@ ngOnInit(): void {
     });
   }
 
-cargarEntidadesFederativas(): void {
-  this.catalogosService.obtenerEntidadesFederativas().subscribe({
-    next: (entidades) => {
-      this.entidadesFederativas.set(entidades ?? []);
-    },
-    error: () => {
-      this.entidadesFederativas.set([]);
-    },
-  });
-}
+  cargarEntidadesFederativas(): void {
+    this.catalogosService.obtenerEntidadesFederativas().subscribe({
+      next: (entidades) => {
+        this.entidadesFederativas.set(entidades ?? []);
+      },
+      error: () => {
+        this.entidadesFederativas.set([]);
+      },
+    });
+  }
 
+  cambiarBusqueda(valor: string): void {
+    this.busqueda.set(valor);
+    this.paginaActual.set(1);
+  }
+
+  irPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas()) {
+      return;
+    }
+
+    this.paginaActual.set(pagina);
+  }
 
   descargar(item: UltimosArchivosEntidadResumen): void {
     this.descargandoEntidad.set(item.idEntidadFederativa);
@@ -126,17 +164,15 @@ cargarEntidadesFederativas(): void {
     });
   }
 
-entidadTexto(item: UltimosArchivosEntidadResumen): string {
-  const entidad = this.entidadPorId().get(item.idEntidadFederativa);
+  entidadTexto(item: UltimosArchivosEntidadResumen): string {
+    const entidad = this.entidadPorId().get(item.idEntidadFederativa);
 
-  if (entidad) {
-    return `${entidad.clave} - ${entidad.nombre}`;
+    if (entidad) {
+      return `${entidad.clave} - ${entidad.nombre}`;
+    }
+
+    return `Entidad ${item.idEntidadFederativa.toString().padStart(2, '0')}`;
   }
-
-  return `Entidad ${item.idEntidadFederativa.toString().padStart(2, '0')}`;
-}
-
-
 
   tipoMovimientoTexto(tipoMovimiento: string | null): string {
     if (!tipoMovimiento) {
@@ -156,7 +192,9 @@ entidadTexto(item: UltimosArchivosEntidadResumen): string {
 
   periodoTexto(item: UltimosArchivosEntidadResumen): string {
     const fecha = new Date(item.anioCorte, item.mesCorte - 1, 1);
-    const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(fecha);
+    const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(
+      fecha,
+    );
 
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
