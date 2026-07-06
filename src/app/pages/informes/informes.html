@@ -22,6 +22,15 @@
       </span>
 
       <div class="reporte-actions">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoEnvios()" (click)="cargarEnvios()">
+          @if (cargandoEnvios()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-rotate"></i>
+          }
+          Actualizar
+        </button>
+
         <button type="button" class="btn btn-sm btn-secondary" [disabled]="descargaEnProceso()"
           (click)="exportarExcel('ENVIOS')">
           @if (exportandoExcel() === 'ENVIOS') {
@@ -97,7 +106,8 @@
             <td>{{ envio.estadoTexto }}</td>
             <td>
               <div class="acciones">
-                @if (!envio.esRechazadoAdministrador || envio.endpointAcuse.length > 0 || envio.endpointExcel.length > 0) {
+                @if (!envio.esRechazadoAdministrador || envio.endpointAcuse.length > 0 || envio.endpointExcel.length >
+                0) {
                 <button type="button" class="btn-icon btn-pdf"
                   [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
                   [disabled]="descargaEnProceso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
@@ -187,6 +197,16 @@
       </span>
 
       <div class="reporte-actions">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoCargas()"
+          (click)="cargarReporteCargas()">
+          @if (cargandoCargas()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-rotate"></i>
+          }
+          Actualizar
+        </button>
+
         <button type="button" class="btn btn-sm btn-secondary" [disabled]="descargaEnProceso()"
           (click)="exportarExcel('CARGAS')">
           @if (exportandoExcel() === 'CARGAS') {
