@@ -42,6 +42,7 @@ export interface InformeReporteCargaItem {
   estatusUltimoIntento: string | null;
   fechaUltimaCarga: string | null;
   fechaUltimaCargaTexto: string;
+  fechaCargaExitosa: string | null;
 }
 
 export interface InformeReporteCargasResponse {

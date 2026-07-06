@@ -599,40 +599,39 @@ export class Informes implements OnInit {
     return orden ? `${orden}°` : '-';
   }
 
-  private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
-    if (!carga.fechaUltimaCarga) {
-      return null;
-    }
-
-    const corte = this.corteOperativo();
-
-    const cargasOrdenadas = this.cargas()
-      .filter((item) => item.claveEntidad !== '00')
-      .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
-      .filter((item) => !!item.intentos && item.intentos > 0)
-      .filter((item) => !!item.fechaUltimaCarga)
-      .sort((a, b) => {
-        const fechaA = new Date(a.fechaUltimaCarga!).getTime();
-        const fechaB = new Date(b.fechaUltimaCarga!).getTime();
-
-        if (fechaA !== fechaB) {
-          return fechaA - fechaB;
-        }
-
-        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-          sensitivity: 'base',
-        });
-      });
-
-    const indice = cargasOrdenadas.findIndex(
-      (item) =>
-        item.idEntidadFederativa === carga.idEntidadFederativa &&
-        item.mesCorte === carga.mesCorte &&
-        item.anioCorte === carga.anioCorte,
-    );
-
-    return indice >= 0 ? indice + 1 : null;
+private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
+  if (!carga.fechaCargaExitosa) {
+    return null;
   }
+
+  const corte = this.corteOperativo();
+
+  const cargasOrdenadas = this.cargas()
+    .filter((item) => item.claveEntidad !== '00')
+    .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
+    .filter((item) => !!item.fechaCargaExitosa)
+    .sort((a, b) => {
+      const fechaA = new Date(a.fechaCargaExitosa!).getTime();
+      const fechaB = new Date(b.fechaCargaExitosa!).getTime();
+
+      if (fechaA !== fechaB) {
+        return fechaA - fechaB;
+      }
+
+      return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+        sensitivity: 'base',
+      });
+    });
+
+  const indice = cargasOrdenadas.findIndex(
+    (item) =>
+      item.idEntidadFederativa === carga.idEntidadFederativa &&
+      item.mesCorte === carga.mesCorte &&
+      item.anioCorte === carga.anioCorte,
+  );
+
+  return indice >= 0 ? indice + 1 : null;
+}
 
   ordenarEnviosPor(campo: CampoOrdenEnvios): void {
     this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
