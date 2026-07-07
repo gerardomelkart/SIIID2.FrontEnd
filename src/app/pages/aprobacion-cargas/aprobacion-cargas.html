@@ -59,7 +59,7 @@
         </thead>
 
         <tbody>
-          @for (carga of pendientesFiltrados(); track carga.idCarga) {
+          @for (carga of pendientesPaginados(); track carga.idCarga) {
           <tr [class.fila-seleccionada]="detalle()?.idCarga === carga.idCarga">
             <td>
               <strong>{{ carga.entidadFederativa }}</strong>
@@ -120,10 +120,39 @@
       </table>
     </div>
     }
+    @if (!cargando() && pendientesFiltrados().length > 0) {
+<div class="bandeja-footer">
+  <div>
+    Mostrando {{ primerRegistroVisible() }}-{{ ultimoRegistroVisible() }}
+    de {{ pendientesFiltrados().length }} pendientes.
+  </div>
+
+  @if (totalPaginas() > 1) {
+  <nav class="paginacion-bandeja" aria-label="Paginación de cargas pendientes">
+    <button type="button" class="btn-pagina" [disabled]="paginaActual() === 1"
+      (click)="irPagina(paginaActual() - 1)" aria-label="Página anterior">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    @for (pagina of paginas(); track pagina) {
+    <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina"
+      (click)="irPagina(pagina)">
+      {{ pagina }}
+    </button>
+    }
+
+    <button type="button" class="btn-pagina" [disabled]="paginaActual() === totalPaginas()"
+      (click)="irPagina(paginaActual() + 1)" aria-label="Página siguiente">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </nav>
+  }
+</div>
+}
   </section>
 
   @if (detalle(); as carga) {
-  <section class="siiid-card detalle-card">
+  <section id="detalle-carga" class="siiid-card detalle-card">
     <div class="detalle-header">
       <div>
         <span class="detalle-eyebrow">Solicitud pendiente</span>

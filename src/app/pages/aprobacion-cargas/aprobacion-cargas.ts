@@ -34,6 +34,9 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   detalle = signal<CargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
 
+  paginaActual = signal(1);
+  readonly tamanioPagina = 10;
+
   cargando = signal(false);
   cargandoDetalle = signal<string | null>(null);
   descargandoArchivos = signal<string | null>(null);
@@ -62,6 +65,29 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     });
   });
 
+  totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.pendientesFiltrados().length / this.tamanioPagina)),
+  );
+
+  paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, indice) => indice + 1));
+
+  pendientesPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
+    return this.pendientesFiltrados().slice(inicio, inicio + this.tamanioPagina);
+  });
+
+  primerRegistroVisible = computed(() => {
+    if (this.pendientesFiltrados().length === 0) {
+      return 0;
+    }
+
+    return (this.paginaActual() - 1) * this.tamanioPagina + 1;
+  });
+
+  ultimoRegistroVisible = computed(() =>
+    Math.min(this.paginaActual() * this.tamanioPagina, this.pendientesFiltrados().length),
+  );
+
   hayOperacionEnCurso = computed(() => {
     return (
       this.cargandoDetalle() !== null ||
@@ -83,6 +109,10 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         const registros = response.registros ?? [];
 
         this.pendientes.set(registros);
+
+        if (this.paginaActual() > this.totalPaginas()) {
+          this.paginaActual.set(this.totalPaginas());
+        }
 
         const seleccionada = this.detalle();
 
@@ -106,6 +136,15 @@ export class AprobacionCargas implements OnInit, OnDestroy {
 
   buscar(valor: string): void {
     this.busqueda.set(valor);
+    this.paginaActual.set(1);
+  }
+
+  irPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas()) {
+      return;
+    }
+
+    this.paginaActual.set(pagina);
   }
 
   verDetalle(codigoReferencia: string): void {
@@ -115,6 +154,13 @@ export class AprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.detalle.set(response.detalle);
         this.cargandoDetalle.set(null);
+
+        setTimeout(() => {
+          document.getElementById('detalle-carga')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }, 0);
       },
       error: (error: unknown) => {
         this.cargandoDetalle.set(null);
