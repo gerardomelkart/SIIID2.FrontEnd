@@ -1,4 +1,13 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +35,7 @@ import {
 })
 export class AprobacionCargas implements OnInit, OnDestroy {
   private readonly administracionService = inject(AdministracionCargasService);
-
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private acuseObjectUrl: string | null = null;
 
@@ -154,13 +163,12 @@ export class AprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.detalle.set(response.detalle);
         this.cargandoDetalle.set(null);
+        this.cdr.detectChanges();
 
-        setTimeout(() => {
-          document.getElementById('detalle-carga')?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          });
-        }, 0);
+        document.getElementById('detalle-carga')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
       },
       error: (error: unknown) => {
         this.cargandoDetalle.set(null);
