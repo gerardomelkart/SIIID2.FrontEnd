@@ -456,13 +456,34 @@
   border-bottom: 1px solid #ededed;
 }
 
+.sabanas-toolbar.sabanas-toolbar-super {
+  grid-template-columns: 280px 280px 1fr;
+}
+
 .sabana-year-card,
+.sabana-mode-card,
 .sabana-info-card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.sabana-mode-card select {
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.sabana-mode-help {
+  display: block;
+  margin-top: 9px;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 700;
 }
 
 .sabana-year-label,
@@ -642,7 +663,9 @@
 }
 
 @media (max-width: 980px) {
-  .sabanas-toolbar {
+
+  .sabanas-toolbar,
+  .sabanas-toolbar.sabanas-toolbar-super {
     grid-template-columns: 1fr;
   }
 

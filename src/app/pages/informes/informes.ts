@@ -6,7 +6,11 @@ import { mostrarAdvertencia, mostrarError, mostrarInfo } from '../../core/utils/
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
-import { InformesService, TipoSabanaDescarga } from '../../core/services/informes.service';
+import {
+  InformesService,
+  ModoPlanoDescarga,
+  TipoSabanaDescarga,
+} from '../../core/services/informes.service';
 
 import {
   obtenerMensajeErrorHttp,
@@ -83,6 +87,7 @@ export class Informes implements OnInit {
 
   descargandoSabanas = signal<TipoSabanaDescarga | null>(null);
   anioSabana = signal<number>(new Date().getFullYear());
+  modoPlano = signal<ModoPlanoDescarga>('CONFIRMADO');
 
   ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
   ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>(null);
@@ -573,9 +578,11 @@ export class Informes implements OnInit {
       return;
     }
 
+    const modo: ModoPlanoDescarga = this.esSuperUsuario() ? this.modoPlano() : 'CONFIRMADO';
+
     this.descargandoSabanas.set(tipo);
 
-    this.informesService.crearTicketDescargaSabanas(anio, tipo).subscribe({
+    this.informesService.crearTicketDescargaSabanas(anio, tipo, modo).subscribe({
       next: (response) => {
         if (!response.ticket) {
           this.descargandoSabanas.set(null);

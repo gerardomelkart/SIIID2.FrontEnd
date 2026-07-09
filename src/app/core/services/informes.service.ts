@@ -12,6 +12,7 @@ import {
 } from '../models/informes.models';
 
 export type TipoSabanaDescarga = 'COMPLETA' | 'ESTATALES' | 'MUNICIPALES';
+export type ModoPlanoDescarga = 'CONFIRMADO' | 'PREVIO' | 'MIXTO';
 
 export interface SabanaTicketResponse {
   esValido: boolean;
@@ -88,8 +89,12 @@ export class InformesService {
     return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
-  crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA') {
-    const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo);
+  crearTicketDescargaSabanas(
+    anioCorte: number,
+    tipo: TipoSabanaDescarga = 'COMPLETA',
+    modo: ModoPlanoDescarga = 'CONFIRMADO',
+  ) {
+    const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo).set('modo', modo);
 
     return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, {
       params,

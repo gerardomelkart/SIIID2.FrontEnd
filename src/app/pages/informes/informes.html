@@ -402,7 +402,7 @@
       </div>
     </div>
 
-    <div class="sabanas-toolbar">
+    <div class="sabanas-toolbar" [class.sabanas-toolbar-super]="esSuperUsuario()">
       <div class="sabana-year-card">
         <div class="sabana-year-label">
           <i class="fa-solid fa-calendar-days"></i>
@@ -424,6 +424,32 @@
           </button>
         </div>
       </div>
+
+      @if (esSuperUsuario()) {
+      <div class="sabana-mode-card">
+        <div class="sabana-year-label">
+          <i class="fa-solid fa-layer-group"></i>
+          Tipo de plano
+        </div>
+
+        <select class="form-select" [disabled]="descargaEnProceso()" [ngModel]="modoPlano()"
+          (ngModelChange)="modoPlano.set($event)">
+          <option value="CONFIRMADO">Plano confirmado</option>
+          <option value="PREVIO">Plano previo</option>
+          <option value="MIXTO">Plano mixto</option>
+        </select>
+
+        <small class="sabana-mode-help">
+          @if (modoPlano() === 'CONFIRMADO') {
+          Usa únicamente cargas confirmadas.
+          } @else if (modoPlano() === 'PREVIO') {
+          Usa cargas pendientes de aprobación en el último corte.
+          } @else {
+          Usa pendientes cuando existan y confirmadas para el resto.
+          }
+        </small>
+      </div>
+      }
 
       <div class="sabana-info-card">
         <div class="sabana-info-badge">
@@ -503,8 +529,8 @@
         <i class="fa-solid fa-spinner fa-spin"></i>
         <strong>Generando archivo...</strong>
         <span>
-          La primera descarga puede tardar un poco. Si no hubo cambios confirmados,
-          las siguientes descargas del mismo tipo usarán caché.
+          La primera descarga puede tardar un poco. Las siguientes descargas sin cambios
+          en la información podrán usar caché.
         </span>
       </div>
     </div>
