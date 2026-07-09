@@ -124,7 +124,6 @@
 }
 
 .tipo-badge,
-.registros-chip,
 .advertencias-chip {
   display: inline-flex;
   align-items: center;
@@ -148,9 +147,32 @@
   color: #654099;
 }
 
-.registros-chip {
+.registros-desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 120px;
+}
+
+.registros-desglose>div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 7px;
+  border-radius: 4px;
   background: #edf5ed;
   color: #306530;
+  font-size: 11px;
+}
+
+.registros-desglose span {
+  color: #4f6f4f;
+}
+
+.registros-desglose strong {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .advertencias-chip {

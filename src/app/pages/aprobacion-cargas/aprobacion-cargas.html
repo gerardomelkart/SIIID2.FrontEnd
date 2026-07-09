@@ -82,9 +82,24 @@
 
             <td>{{ fechaTexto(carga.fechaValidacion) }}</td>
 
-            <td>
-              <span class="registros-chip">{{ totalRegistros(carga) }}</span>
-            </td>
+           <td>
+  <div class="registros-desglose">
+    <div>
+      <span>Carpetas</span>
+      <strong>{{ carga.totalCarpetas }}</strong>
+    </div>
+
+    <div>
+      <span>Delitos</span>
+      <strong>{{ carga.totalDelitos }}</strong>
+    </div>
+
+    <div>
+      <span>Víctimas</span>
+      <strong>{{ carga.totalVictimas }}</strong>
+    </div>
+  </div>
+</td>
 
             <td>
               <span class="advertencias-chip" [class.sin-advertencias]="carga.totalAdvertencias === 0">

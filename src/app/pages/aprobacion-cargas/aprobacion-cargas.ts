@@ -393,10 +393,6 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
-  totalRegistros(carga: CargaPendienteAdministracionItem): number {
-    return carga.totalCarpetas + carga.totalDelitos + carga.totalVictimas;
-  }
-
   private descargarBlob(blob: Blob, nombreArchivo: string): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
