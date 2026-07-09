@@ -124,7 +124,6 @@ function instalarIntercepcionAcuses(http: HttpClient): void {
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css',
 })
 export class App implements OnInit {
 
