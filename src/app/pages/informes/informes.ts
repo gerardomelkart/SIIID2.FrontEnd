@@ -44,7 +44,8 @@ type CampoOrdenCargas =
   | 'intentos'
   | 'ordenCarga'
   | 'estatusUltimoIntento'
-  | 'fechaUltimaCargaTexto';
+  | 'fechaCargaActualizacionTexto'
+  | 'fechaAprobacionTexto';
 
 @Component({
   selector: 'app-informes',
@@ -473,7 +474,8 @@ export class Informes implements OnInit {
         Intentos: carga.intentos,
         Ranking: this.obtenerOrdenCarga(carga) ?? '',
         Estatus: this.etiquetaEstatusCarga(carga),
-        'Fecha/hora último movimiento': carga.fechaUltimaCargaTexto || '',
+        'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
+        'Fecha de aprobación': carga.fechaAprobacionTexto || '',
       }));
 
       const exportado = await exportarFilasExcel(filas, 'reporte_cargas.xlsx', 'Cargas');
@@ -599,39 +601,39 @@ export class Informes implements OnInit {
     return orden ? `${orden}°` : '-';
   }
 
-private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
-  if (!carga.fechaCargaExitosa) {
-    return null;
-  }
+  private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
+    if (!carga.fechaCargaExitosa) {
+      return null;
+    }
 
-  const corte = this.corteOperativo();
+    const corte = this.corteOperativo();
 
-  const cargasOrdenadas = this.cargas()
-    .filter((item) => item.claveEntidad !== '00')
-    .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
-    .filter((item) => !!item.fechaCargaExitosa)
-    .sort((a, b) => {
-      const fechaA = new Date(a.fechaCargaExitosa!).getTime();
-      const fechaB = new Date(b.fechaCargaExitosa!).getTime();
+    const cargasOrdenadas = this.cargas()
+      .filter((item) => item.claveEntidad !== '00')
+      .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
+      .filter((item) => !!item.fechaCargaExitosa)
+      .sort((a, b) => {
+        const fechaA = new Date(a.fechaCargaExitosa!).getTime();
+        const fechaB = new Date(b.fechaCargaExitosa!).getTime();
 
-      if (fechaA !== fechaB) {
-        return fechaA - fechaB;
-      }
+        if (fechaA !== fechaB) {
+          return fechaA - fechaB;
+        }
 
-      return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-        sensitivity: 'base',
+        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+          sensitivity: 'base',
+        });
       });
-    });
 
-  const indice = cargasOrdenadas.findIndex(
-    (item) =>
-      item.idEntidadFederativa === carga.idEntidadFederativa &&
-      item.mesCorte === carga.mesCorte &&
-      item.anioCorte === carga.anioCorte,
-  );
+    const indice = cargasOrdenadas.findIndex(
+      (item) =>
+        item.idEntidadFederativa === carga.idEntidadFederativa &&
+        item.mesCorte === carga.mesCorte &&
+        item.anioCorte === carga.anioCorte,
+    );
 
-  return indice >= 0 ? indice + 1 : null;
-}
+    return indice >= 0 ? indice + 1 : null;
+  }
 
   ordenarEnviosPor(campo: CampoOrdenEnvios): void {
     this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
@@ -677,8 +679,12 @@ private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
     carga: InformeReporteCargaItem,
     campo: CampoOrdenCargas,
   ): ValorOrden {
-    if (campo === 'fechaUltimaCargaTexto') {
-      return carga.fechaUltimaCarga;
+    if (campo === 'fechaCargaActualizacionTexto') {
+      return carga.fechaCargaActualizacion;
+    }
+
+    if (campo === 'fechaAprobacionTexto') {
+      return carga.fechaAprobacion;
     }
 
     if (campo === 'corte') {

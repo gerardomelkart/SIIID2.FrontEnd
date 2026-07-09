@@ -277,9 +277,14 @@
               <i [class]="iconoOrdenCargas('estatusUltimoIntento')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarCargasPor('fechaUltimaCargaTexto')">
-              Fecha/hora último movimiento
-              <i [class]="iconoOrdenCargas('fechaUltimaCargaTexto')"></i>
+            <th class="sortable" (click)="ordenarCargasPor('fechaCargaActualizacionTexto')">
+              Fecha de carga/actualización
+              <i [class]="iconoOrdenCargas('fechaCargaActualizacionTexto')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarCargasPor('fechaAprobacionTexto')">
+              Fecha de aprobación
+              <i [class]="iconoOrdenCargas('fechaAprobacionTexto')"></i>
             </th>
           </tr>
         </thead>
@@ -305,11 +310,12 @@
                 {{ etiquetaEstatusCarga(carga) }}
               </span>
             </td>
-            <td>{{ carga.fechaUltimaCargaTexto || '-' }}</td>
+            <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
+            <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="7" class="text-center p-4">No se encontraron cargas.</td>
+            <td colspan="8" class="text-center p-4">No se encontraron cargas.</td>
           </tr>
           }
         </tbody>

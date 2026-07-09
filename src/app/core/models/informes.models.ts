@@ -40,8 +40,10 @@ export interface InformeReporteCargaItem {
   ultimoIntento: string | null;
   tipoCargaUltimoIntento: TipoCargaInforme | null;
   estatusUltimoIntento: string | null;
-  fechaUltimaCarga: string | null;
-  fechaUltimaCargaTexto: string;
+  fechaCargaActualizacion: string | null;
+  fechaCargaActualizacionTexto: string;
+  fechaAprobacion: string | null;
+  fechaAprobacionTexto: string;
   fechaCargaExitosa: string | null;
 }
 
