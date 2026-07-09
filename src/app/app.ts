@@ -1,5 +1,5 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { map } from 'rxjs';
 import { InactivityService } from './core/services/inactivity.service';
@@ -127,7 +127,6 @@ function instalarIntercepcionAcuses(http: HttpClient): void {
   styleUrl: './app.css',
 })
 export class App implements OnInit {
-  protected readonly title = signal('SIIID2.FrontEnd');
 
   constructor(
     private router: Router,
