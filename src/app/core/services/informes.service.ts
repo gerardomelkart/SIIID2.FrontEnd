@@ -46,7 +46,9 @@ export class InformesService {
     }).pipe(
       map(({ envios, rechazados }) =>
         [...envios, ...rechazados].sort((a, b) => {
-          const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', { sensitivity: 'base' });
+          const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+            sensitivity: 'base',
+          });
 
           if (entidad !== 0) {
             return entidad;
@@ -96,6 +98,18 @@ export class InformesService {
 
   obtenerUrlDescargaSabanas(ticket: string): string {
     return `${API_BASE_URL}/informes/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
+  }
+
+  crearTicketDescargaAcuses(mesCorte: number, anioCorte: number) {
+    const params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
+
+    return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/envios/acuses/ticket`, null, {
+      params,
+    });
+  }
+
+  obtenerUrlDescargaAcuses(ticket: string): string {
+    return `${API_BASE_URL}/informes/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
   obtenerArchivosOriginales() {

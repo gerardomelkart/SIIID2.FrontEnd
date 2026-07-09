@@ -31,6 +31,16 @@
           Actualizar
         </button>
 
+        <button type="button" class="btn btn-sm btn-secondary"
+          [disabled]="descargaEnProceso() || !periodoEnvioSeleccionado()" (click)="descargarAcusesCorte()">
+          @if (descargandoAcuses()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-zipper"></i>
+          }
+          Descargar acuses
+        </button>
+
         <button type="button" class="btn btn-sm btn-secondary" [disabled]="descargaEnProceso()"
           (click)="exportarExcel('ENVIOS')">
           @if (exportandoExcel() === 'ENVIOS') {
@@ -46,6 +56,24 @@
           <input type="text" placeholder="Buscar envío..." [ngModel]="busquedaEnvios()"
             (ngModelChange)="buscarEnvios($event)">
         </div>
+      </div>
+    </div>
+
+    <div class="corte-selector">
+      <div class="corte-selector-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Corte consultado
+      </div>
+
+      <div class="corte-selector-controls">
+        <select class="form-select form-select-sm" [ngModel]="periodoEnvioSeleccionado()"
+          (ngModelChange)="periodoEnvioSeleccionado.set($event); cambiarCorteEnvios()">
+          @for (periodo of periodosEnvio(); track periodo.mesCorte + '-' + periodo.anioCorte) {
+          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
+            {{ periodo.corte }}
+          </option>
+          }
+        </select>
       </div>
     </div>
 
@@ -224,6 +252,8 @@
         </div>
       </div>
     </div>
+
+
 
     <div class="corte-selector">
       <div class="corte-selector-title">

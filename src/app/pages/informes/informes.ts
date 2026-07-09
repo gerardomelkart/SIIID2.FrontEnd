@@ -67,6 +67,11 @@ export class Informes implements OnInit {
 
   paginaEnvios = signal(1);
   paginaCargas = signal(1);
+
+  periodosEnvio = signal<PeriodoCorteInforme[]>([]);
+  periodoEnvioSeleccionado = signal('');
+  descargandoAcuses = signal(false);
+
   tamanioPagina = 10;
 
   cargandoEnvios = signal(false);
@@ -87,7 +92,8 @@ export class Informes implements OnInit {
       this.descargandoAcuse() !== null ||
       this.descargandoArchivos() !== null ||
       this.exportandoExcel() !== null ||
-      this.descargandoSabanas() !== null
+      this.descargandoSabanas() !== null ||
+      this.descargandoAcuses()
     );
   });
 
@@ -162,8 +168,15 @@ export class Informes implements OnInit {
 
   enviosFiltrados = computed(() => {
     const texto = this.busquedaEnvios().trim().toLowerCase();
+    const periodoSeleccionado = this.periodoEnvioSeleccionado();
 
     const filtrados = this.envios().filter((envio) => {
+      const keyPeriodo = `${envio.anioCorte}-${envio.mesCorte.toString().padStart(2, '0')}`;
+
+      if (periodoSeleccionado && keyPeriodo !== periodoSeleccionado) {
+        return false;
+      }
+
       if (!texto) {
         return true;
       }
@@ -180,6 +193,7 @@ export class Informes implements OnInit {
         envio.estadoTexto.toLowerCase().includes(texto)
       );
     });
+
     return this.ordenarListaEnvios(filtrados);
   });
 
@@ -263,6 +277,7 @@ export class Informes implements OnInit {
     this.informesService.obtenerEnvios().subscribe({
       next: (envios) => {
         this.envios.set(envios);
+        this.sincronizarPeriodosEnvio(envios);
         this.paginaEnvios.set(1);
         this.cargandoEnvios.set(false);
       },
@@ -311,6 +326,10 @@ export class Informes implements OnInit {
 
   buscarEnvios(valor: string): void {
     this.busquedaEnvios.set(valor);
+    this.paginaEnvios.set(1);
+  }
+
+  cambiarCorteEnvios(): void {
     this.paginaEnvios.set(1);
   }
 
@@ -490,6 +509,58 @@ export class Informes implements OnInit {
     }
   }
 
+  descargarAcusesCorte(): void {
+    const periodo = this.periodoEnvioSeleccionado();
+    const [anioTexto, mesTexto] = periodo.split('-');
+    const anioCorte = Number(anioTexto);
+    const mesCorte = Number(mesTexto);
+
+    if (
+      !Number.isInteger(mesCorte) ||
+      mesCorte < 1 ||
+      mesCorte > 12 ||
+      !Number.isInteger(anioCorte)
+    ) {
+      mostrarAdvertencia('Corte inválido', 'Seleccione un corte válido.');
+      return;
+    }
+
+    this.descargandoAcuses.set(true);
+
+    this.informesService.crearTicketDescargaAcuses(mesCorte, anioCorte).subscribe({
+      next: (response) => {
+        if (!response.ticket) {
+          this.descargandoAcuses.set(false);
+          mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+          return;
+        }
+
+        const url = this.informesService.obtenerUrlDescargaAcuses(response.ticket);
+        const iframe = document.createElement('iframe');
+
+        iframe.src = url;
+        iframe.style.display = 'none';
+
+        document.body.appendChild(iframe);
+        this.descargandoAcuses.set(false);
+
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 60000);
+      },
+      error: async (error) => {
+        this.descargandoAcuses.set(false);
+
+        mostrarError(
+          'No fue posible descargar los acuses',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+        );
+      },
+    });
+  }
+
   descargarSabanas(tipo: TipoSabanaDescarga): void {
     if (!this.puedeVerSabanas()) {
       return;
@@ -538,6 +609,51 @@ export class Informes implements OnInit {
         );
       },
     });
+  }
+
+  private sincronizarPeriodosEnvio(registros: InformeEnvioItem[]): void {
+    const mapa = new Map<string, PeriodoCorteInforme>();
+
+    for (const registro of registros) {
+      if (!registro.mesCorte || !registro.anioCorte) {
+        continue;
+      }
+
+      const key = `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
+
+      if (!mapa.has(key)) {
+        mapa.set(key, {
+          mesCorte: registro.mesCorte,
+          anioCorte: registro.anioCorte,
+          corte: registro.corte,
+        });
+      }
+    }
+
+    const periodos = Array.from(mapa.values()).sort((a, b) => {
+      return b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte);
+    });
+
+    this.periodosEnvio.set(periodos);
+
+    if (periodos.length === 0) {
+      this.periodoEnvioSeleccionado.set('');
+      return;
+    }
+
+    const seleccionado = this.periodoEnvioSeleccionado();
+    const existeSeleccionado = periodos.some((periodo) => {
+      return (
+        `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado
+      );
+    });
+
+    if (!existeSeleccionado) {
+      const primero = periodos[0];
+      this.periodoEnvioSeleccionado.set(
+        `${primero.anioCorte}-${primero.mesCorte.toString().padStart(2, '0')}`,
+      );
+    }
   }
 
   private descargarEndpoint(
