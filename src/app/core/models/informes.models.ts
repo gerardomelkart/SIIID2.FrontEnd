@@ -1,4 +1,4 @@
-export type TipoReporte = 'ENVIOS' | 'CARGAS' | 'SABANAS' | 'ORIGINALES';
+export type TipoReporte = 'ENVIOS' | 'CARGAS' | 'SABANAS';
 
 export type TipoCargaInforme = 'CARGA_INICIAL' | 'ACTUALIZACION' | string;
 
@@ -25,8 +25,6 @@ export interface InformeEnvioItem {
   fechaRechazo?: string | null;
   fechaRechazoTexto?: string;
   usuarioRechazo?: string | null;
-  codigoReferenciaConfirmada: string | null;
-  tipoCargaConfirmada: string | null;
 }
 
 export interface InformeReporteCargaItem {

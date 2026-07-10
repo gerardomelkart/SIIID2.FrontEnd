@@ -61,20 +61,6 @@ export class InactivityService {
     this.reiniciarTemporizador();
   }
 
-  detener(): void {
-    if (!this.iniciado) {
-      return;
-    }
-
-    this.iniciado = false;
-
-    for (const evento of this.eventosActividad) {
-      window.removeEventListener(evento, this.manejarActividad);
-    }
-
-    this.limpiarTemporizador();
-  }
-
   private reiniciarTemporizador(): void {
     this.limpiarTemporizador();
 
