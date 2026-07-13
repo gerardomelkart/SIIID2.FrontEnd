@@ -1,15 +1,8 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import {
-  confirmarAccion,
-  mostrarAdvertencia,
-  mostrarAdvertenciaHtml,
-  mostrarError,
-  mostrarExitoInstitucional,
-  mostrarInfo,
-} from '../../core/utils/alert.utils';
+import { confirmarAccion, mostrarAdvertenciaHtml, mostrarError, mostrarExitoInstitucional, mostrarInfo } from '../../core/utils/alert.utils';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 import { ROLES } from '../../core/constants/roles.constants';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';

@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { mostrarAdvertencia, mostrarError, mostrarInfo } from '../../core/utils/alert.utils';
+import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
@@ -252,29 +252,6 @@ export class Informes implements OnInit {
   totalPaginasCargas = computed(() => {
     return Math.max(1, Math.ceil(this.cargasFiltradas().length / this.tamanioPagina));
   });
-
-  cambiarReporte(reporte: TipoReporte): void {
-    if (reporte === 'CARGAS' && !this.puedeVerCargas()) {
-      return;
-    }
-
-    if (reporte === 'SABANAS' && !this.puedeVerSabanas()) {
-      return;
-    }
-
-    this.reporteActivo.set(reporte);
-
-    if (reporte === 'CARGAS') {
-      this.cargarReporteCargas();
-      return;
-    }
-
-    if (reporte === 'SABANAS') {
-      return;
-    }
-
-    this.cargarEnvios();
-  }
 
   cargarEnvios(): void {
     this.cargandoEnvios.set(true);

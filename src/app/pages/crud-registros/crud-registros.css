@@ -127,11 +127,6 @@
   color: #222;
 }
 
-.usuario-sub {
-  color: #777;
-  font-size: 11px;
-}
-
 .rol-badge,
 .permiso-badge,
 .estado-badge {
@@ -191,11 +186,6 @@
 .btn-toggle {
   color: #6c757d;
   border-color: #6c757d;
-}
-
-.btn-delete {
-  color: #dc3545;
-  border-color: #dc3545;
 }
 
 /* Drawer */

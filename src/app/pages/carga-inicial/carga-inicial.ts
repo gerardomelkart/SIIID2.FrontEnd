@@ -2,13 +2,7 @@ import { Component, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
-import {
-  confirmarAccion,
-  mostrarAdvertencia,
-  mostrarError,
-  mostrarExito,
-  mostrarExitoInstitucional,
-} from '../../core/utils/alert.utils';
+import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';

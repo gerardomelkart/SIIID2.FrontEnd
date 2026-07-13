@@ -5,13 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
-import {
-  confirmarAccion,
-  mostrarAdvertencia,
-  mostrarError,
-  mostrarExito,
-  mostrarExitoInstitucional,
-} from '../../core/utils/alert.utils';
+import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';

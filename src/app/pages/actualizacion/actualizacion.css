@@ -742,16 +742,6 @@
   font-weight: 700;
 }
 
-.diferencias-table {
-  font-size: 13px;
-  margin-bottom: 0;
-}
-
-.diferencias-table thead th {
-  background: #e5e5e5;
-  color: #222;
-}
-
 .diferencias-actions {
   height: 76px;
   background: #fff;
