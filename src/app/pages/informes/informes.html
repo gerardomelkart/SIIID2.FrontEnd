@@ -443,7 +443,7 @@
           @if (modoPlano() === 'CONFIRMADO') {
           Usa únicamente cargas confirmadas.
           } @else if (modoPlano() === 'PREVIO') {
-          Usa cargas pendientes de aprobación en el último corte.
+          En periodos con pendientes usa únicamente esas cargas; conserva confirmadas en los demás periodos.
           } @else {
           Usa pendientes cuando existan y confirmadas para el resto.
           }
