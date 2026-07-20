@@ -51,6 +51,10 @@ interface UsuarioForm {
   idEntidadFederativa: string;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
+  habilitaSemanal: boolean;
+  habilitaCargaSemanal: boolean;
+  habilitaModificacionSemanal: boolean;
+  administraDelitosSemanal: boolean;
 }
 
 type CampoOrdenUsuarios =
@@ -61,6 +65,7 @@ type CampoOrdenUsuarios =
   | 'entidadFederativa'
   | 'habilitaCarga'
   | 'habilitaModificacion'
+  | 'habilitaSemanal'
   | 'activo';
 
 @Component({
@@ -211,8 +216,9 @@ export class CrudRegistros implements OnInit {
         Correo: usuario.correoElectronico,
         Rol: usuario.rol,
         Entidad: usuario.entidadFederativa || 'Nacional',
-        Carga: usuario.habilitaCarga ? 'Sí' : 'No',
-        Modificación: usuario.habilitaModificacion ? 'Sí' : 'No',
+        'Carga mensual': usuario.habilitaCarga ? 'Sí' : 'No',
+        'Modificación mensual': usuario.habilitaModificacion ? 'Sí' : 'No',
+        'Módulo semanal': usuario.habilitaSemanal ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
 
@@ -397,14 +403,10 @@ export class CrudRegistros implements OnInit {
   }
 
   actualizarCampo<K extends keyof UsuarioForm>(campo: K, valor: UsuarioForm[K]): void {
-    this.formulario.update((actual) => ({
-      ...actual,
-      [campo]: valor,
-    }));
+    this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
 
-    if (campo === 'rol') {
-      this.normalizarPermisosPorRol(valor as string);
-    }
+    if (campo === 'rol') this.normalizarPermisosPorRol(valor as string);
+    if (campo === 'habilitaSemanal' && valor === false) this.normalizarPermisosSemanales();
   }
 
   private crearUsuario(form: UsuarioForm): void {
@@ -422,6 +424,10 @@ export class CrudRegistros implements OnInit {
       rol: form.rol,
       habilitaCarga: form.habilitaCarga,
       habilitaModificacion: form.habilitaModificacion,
+      habilitaSemanal: form.habilitaSemanal,
+      habilitaCargaSemanal: form.habilitaCargaSemanal,
+      habilitaModificacionSemanal: form.habilitaModificacionSemanal,
+      administraDelitosSemanal: form.administraDelitosSemanal,
     };
 
     this.guardando.set(true);
@@ -555,6 +561,10 @@ export class CrudRegistros implements OnInit {
       idEntidadFederativa: usuario.idEntidadFederativa?.toString() ?? '',
       habilitaCarga: usuario.habilitaCarga,
       habilitaModificacion: usuario.habilitaModificacion,
+      habilitaSemanal: usuario.habilitaSemanal ?? false,
+      habilitaCargaSemanal: usuario.habilitaCargaSemanal ?? false,
+      habilitaModificacionSemanal: usuario.habilitaModificacionSemanal ?? false,
+      administraDelitosSemanal: usuario.administraDelitosSemanal ?? false,
     };
   }
 
@@ -574,6 +584,10 @@ export class CrudRegistros implements OnInit {
       idEntidadFederativa: '',
       habilitaCarga: true,
       habilitaModificacion: true,
+      habilitaSemanal: false,
+      habilitaCargaSemanal: false,
+      habilitaModificacionSemanal: false,
+      administraDelitosSemanal: false,
     };
   }
 
@@ -592,14 +606,29 @@ export class CrudRegistros implements OnInit {
   }
 
   private normalizarPermisosPorRol(rol: string): void {
-    if (rol !== ROLES.CONSULTA) {
-      return;
-    }
-
     this.formulario.update((actual) => ({
       ...actual,
-      habilitaCarga: false,
-      habilitaModificacion: false,
+      habilitaCarga: rol === ROLES.CONSULTA ? false : actual.habilitaCarga,
+      habilitaModificacion: rol === ROLES.CONSULTA ? false : actual.habilitaModificacion,
+      habilitaCargaSemanal:
+        actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
+      habilitaModificacionSemanal:
+        actual.habilitaSemanal && rol !== ROLES.CONSULTA
+          ? actual.habilitaModificacionSemanal
+          : false,
+      administraDelitosSemanal:
+        actual.habilitaSemanal && rol === ROLES.SUPER_USUARIO
+          ? actual.administraDelitosSemanal
+          : false,
+    }));
+  }
+
+  private normalizarPermisosSemanales(): void {
+    this.formulario.update((actual) => ({
+      ...actual,
+      habilitaCargaSemanal: false,
+      habilitaModificacionSemanal: false,
+      administraDelitosSemanal: false,
     }));
   }
 }

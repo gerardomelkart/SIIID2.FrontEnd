@@ -14,6 +14,7 @@ export interface UsuarioListadoItem {
     entidadFederativa: string | null;
     habilitaCarga: boolean;
     habilitaModificacion: boolean;
+    habilitaSemanal: boolean;
     activo: boolean;
 }
 
@@ -40,6 +41,10 @@ export interface UsuarioDetalle {
     rol: string;
     habilitaCarga: boolean;
     habilitaModificacion: boolean;
+    habilitaSemanal: boolean;
+    habilitaCargaSemanal: boolean;
+    habilitaModificacionSemanal: boolean;
+    administraDelitosSemanal: boolean;
     fechaAlta: string;
     fechaModificacion: string;
     activo: boolean;
@@ -59,6 +64,10 @@ export interface CrearUsuarioRequest {
     rol: string;
     habilitaCarga: boolean;
     habilitaModificacion: boolean;
+    habilitaSemanal: boolean;
+    habilitaCargaSemanal: boolean;
+    habilitaModificacionSemanal: boolean;
+    administraDelitosSemanal: boolean;
 }
 
 export interface EditarUsuarioRequest {
@@ -75,6 +84,10 @@ export interface EditarUsuarioRequest {
     rol: string;
     habilitaCarga: boolean;
     habilitaModificacion: boolean;
+    habilitaSemanal: boolean;
+    habilitaCargaSemanal: boolean;
+    habilitaModificacionSemanal: boolean;
+    administraDelitosSemanal: boolean;
 }
 
 export interface ReactivarUsuarioRequest {
