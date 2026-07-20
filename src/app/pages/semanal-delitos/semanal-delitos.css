@@ -1,0 +1,200 @@
+.delitos-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.delitos-header-row p {
+  margin-bottom: 0;
+}
+
+.btn-guardar {
+  min-width: 205px;
+  border: 0;
+  background: var(--siiid-guinda);
+  color: #fff;
+  padding: 11px 16px;
+  font-weight: 900;
+}
+
+.btn-guardar:hover:not(:disabled) {
+  filter: brightness(.88);
+}
+
+.btn-guardar:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.btn-guardar i {
+  margin-right: 6px;
+}
+
+.resumen-seleccionados {
+  border-left-color: #235B4E;
+}
+
+.resumen-opcionales {
+  border-left-color: var(--siiid-dorado);
+}
+
+.nota-extorsion {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid #ead8b9;
+  background: #fff8eb;
+  color: #72531f;
+  padding: 11px 14px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fila-seleccionada td {
+  background: #f1f8f5;
+}
+
+.fila-obligatoria td {
+  background: #fff8eb;
+}
+
+.delito-clave {
+  color: var(--siiid-guinda);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.delito-nombre {
+  min-width: 260px;
+  color: #222;
+  font-weight: 800;
+}
+
+.badge-obligatorio,
+.estado-badge {
+  display: inline-flex;
+  border-radius: 20px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.badge-obligatorio {
+  margin-left: 7px;
+  background: #ead8b9;
+  color: #72531f;
+}
+
+.estado-activo {
+  background: #e2f3eb;
+  color: #17603e;
+}
+
+.estado-inactivo {
+  background: #f2f2f2;
+  color: #666;
+}
+
+.orden-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orden-control strong {
+  width: 22px;
+  color: var(--siiid-guinda);
+  font-size: 16px;
+  text-align: center;
+}
+
+.orden-control div {
+  display: flex;
+  gap: 3px;
+}
+
+.orden-control button {
+  width: 25px;
+  height: 25px;
+  border: 1px solid #bbb;
+  background: #fff;
+  color: var(--siiid-guinda);
+  padding: 0;
+}
+
+.orden-control button:hover:not(:disabled) {
+  border-color: var(--siiid-guinda);
+  background: var(--siiid-guinda);
+  color: #fff;
+}
+
+.orden-control button:disabled {
+  opacity: .3;
+}
+
+.sin-orden {
+  display: block;
+  color: #999;
+  text-align: center;
+}
+
+.seleccion-control {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  cursor: pointer;
+}
+
+.seleccion-control input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.toggle {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  border-radius: 20px;
+  background: #bbb;
+  transition: .2s;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: .2s;
+}
+
+.seleccion-control input:checked + .toggle {
+  background: var(--siiid-guinda);
+}
+
+.seleccion-control input:checked + .toggle::after {
+  transform: translateX(20px);
+}
+
+.seleccion-bloqueada {
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+@media (max-width: 850px) {
+  .delitos-header-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .btn-guardar {
+    width: 100%;
+  }
+}

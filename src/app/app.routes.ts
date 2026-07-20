@@ -47,6 +47,16 @@ export const routes: Routes = [
           roles: [ROLES.SUPER_USUARIO],
         },
       },
+      {
+        path: 'administracion/delitos',
+        loadComponent: () =>
+          import('./pages/semanal-delitos/semanal-delitos').then((m) => m.SemanalDelitos),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+          permiso: 'ADMINISTRA_DELITOS',
+        },
+      },
     ],
   },
   {

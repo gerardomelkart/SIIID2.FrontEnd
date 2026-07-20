@@ -19,6 +19,7 @@ export class SemanalLayout {
   usuario = this.sessionService.usuario;
   puedeCambiarModulo = computed(() => this.sessionService.modulos().length > 1);
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+  puedeAdministrarDelitos = computed(() => this.esSuperUsuario() && this.sessionService.administraDelitos());
 
   cambiarModulo(): void {
     this.sessionService.limpiarModuloActivo();

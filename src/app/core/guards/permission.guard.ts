@@ -6,7 +6,7 @@ import { SessionService } from '../services/session.service';
 
 interface PermissionRouteData {
   roles?: RolSistema[];
-  permiso?: 'CARGA' | 'MODIFICACION';
+  permiso?: 'CARGA' | 'MODIFICACION' | 'ADMINISTRA_DELITOS';
 }
 
 export const permissionGuard: CanActivateFn = (route) => {
@@ -23,27 +23,27 @@ export const permissionGuard: CanActivateFn = (route) => {
   const data = route.data as PermissionRouteData;
 
   if (data.roles?.length && !data.roles.includes(usuario.rol as RolSistema)) {
-    mostrarAccesoDenegado(
-      router,
-      'No cuenta con el perfil necesario para acceder a este módulo.'
-    );
+    mostrarAccesoDenegado(router, 'No cuenta con el perfil necesario para acceder a este módulo.');
 
     return false;
   }
 
   if (data.permiso === 'CARGA' && !sessionService.habilitaCarga()) {
-    mostrarAccesoDenegado(
-      router,
-      'No tiene habilitado el permiso de carga inicial.'
-    );
+    mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de carga inicial.');
 
     return false;
   }
 
   if (data.permiso === 'MODIFICACION' && !sessionService.habilitaModificacion()) {
+    mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de actualización.');
+
+    return false;
+  }
+
+  if (data.permiso === 'ADMINISTRA_DELITOS' && !sessionService.administraDelitos()) {
     mostrarAccesoDenegado(
       router,
-      'No tiene habilitado el permiso de actualización.'
+      'No tiene habilitado el permiso de administración de delitos semanales.',
     );
 
     return false;
@@ -54,9 +54,6 @@ export const permissionGuard: CanActivateFn = (route) => {
 
 function mostrarAccesoDenegado(router: Router, mensaje: string): void {
   router.navigateByUrl('/').then(() => {
-    mostrarAdvertencia(
-      'Acceso no permitido',
-      mensaje
-    );
+    mostrarAdvertencia('Acceso no permitido', mensaje);
   });
 }

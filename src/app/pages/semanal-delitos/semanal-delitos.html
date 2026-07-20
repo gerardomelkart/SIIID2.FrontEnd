@@ -1,0 +1,127 @@
+<div class="semanal-delitos">
+  <div class="semanal-admin-header delitos-header-row">
+    <div>
+      <span>Administración semanal</span>
+      <h1>Delitos del módulo semanal</h1>
+      <p>Seleccione y ordene los delitos que podrán integrarse en las cargas semanales.</p>
+    </div>
+
+    <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()" (click)="guardarConfiguracion()">
+      <i class="fa-solid" [class.fa-floppy-disk]="!guardando()" [class.fa-spinner]="guardando()" [class.fa-spin]="guardando()"></i>
+      {{ guardando() ? 'Guardando...' : 'Guardar configuración' }}
+    </button>
+  </div>
+
+  <div class="semanal-resumen">
+    <div class="resumen-card">
+      <strong>{{ totalDisponibles() }}</strong>
+      <span>Delitos disponibles</span>
+    </div>
+
+    <div class="resumen-card resumen-seleccionados">
+      <strong>{{ totalSeleccionados() }}</strong>
+      <span>Incluidos semanalmente</span>
+    </div>
+
+    <div class="resumen-card resumen-opcionales">
+      <strong>{{ totalOpcionales() }}</strong>
+      <span>Delitos opcionales</span>
+    </div>
+  </div>
+
+  <section class="siiid-card semanal-card">
+    <div class="siiid-card-header semanal-card-header">
+      <span>
+        <i class="fa-solid fa-list-check"></i>
+        Configuración de delitos
+      </span>
+
+      <div class="semanal-buscador">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Buscar clave, delito o bien jurídico..." [ngModel]="busqueda()" (ngModelChange)="buscar($event)">
+      </div>
+    </div>
+
+    <div class="nota-extorsion">
+      <i class="fa-solid fa-shield-halved"></i>
+      Extorsión es obligatoria, ocupa el primer lugar y no puede deshabilitarse.
+    </div>
+
+    @if (cargando()) {
+    <div class="semanal-mensaje">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Cargando delitos...
+    </div>
+    } @else {
+    <div class="table-responsive">
+      <table class="table table-sm semanal-table">
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Clave</th>
+            <th>Delito</th>
+            <th>Bien jurídico</th>
+            <th>Estado</th>
+            <th>Incluir</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (delito of delitosFiltrados(); track delito.idDelito) {
+          <tr [class.fila-seleccionada]="delito.seleccionado" [class.fila-obligatoria]="delito.esObligatorio">
+            <td>
+              @if (delito.seleccionado) {
+              <div class="orden-control">
+                <strong>{{ delito.orden }}</strong>
+
+                <div>
+                  <button type="button" title="Subir" [disabled]="!puedeSubir(delito)" (click)="mover(delito.idDelito, -1)">
+                    <i class="fa-solid fa-chevron-up"></i>
+                  </button>
+
+                  <button type="button" title="Bajar" [disabled]="!puedeBajar(delito)" (click)="mover(delito.idDelito, 1)">
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              } @else {
+              <span class="sin-orden">—</span>
+              }
+            </td>
+
+            <td class="delito-clave">{{ delito.clave }}</td>
+
+            <td class="delito-nombre">
+              {{ delito.delito }}
+
+              @if (delito.esObligatorio) {
+              <span class="badge-obligatorio">OBLIGATORIO</span>
+              }
+            </td>
+
+            <td>{{ delito.bienJuridico }}</td>
+
+            <td>
+              <span class="estado-badge" [class.estado-activo]="delito.seleccionado" [class.estado-inactivo]="!delito.seleccionado">
+                {{ delito.seleccionado ? 'INCLUIDO' : 'NO INCLUIDO' }}
+              </span>
+            </td>
+
+            <td>
+              <label class="seleccion-control" [class.seleccion-bloqueada]="delito.esObligatorio">
+                <input type="checkbox" [disabled]="delito.esObligatorio || guardando()" [ngModel]="delito.seleccionado" (ngModelChange)="cambiarSeleccion(delito.idDelito, $event)">
+                <span class="toggle"></span>
+              </label>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="semanal-mensaje">No se encontraron delitos.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</div>

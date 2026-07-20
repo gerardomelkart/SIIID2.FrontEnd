@@ -39,6 +39,13 @@
         </a>
         }
 
+        @if (puedeAdministrarDelitos()) {
+        <a class="menu-link" routerLink="/semanal/administracion/delitos" routerLinkActive="active">
+          <i class="fa-solid fa-list-check"></i>
+          Delitos semanales
+        </a>
+        }
+
         @if (puedeCambiarModulo()) {
         <button type="button" class="menu-link menu-button" (click)="cambiarModulo()">
           <span>
