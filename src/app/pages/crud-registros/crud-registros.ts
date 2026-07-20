@@ -65,7 +65,6 @@ type CampoOrdenUsuarios =
   | 'entidadFederativa'
   | 'habilitaCarga'
   | 'habilitaModificacion'
-  | 'habilitaSemanal'
   | 'activo';
 
 @Component({
@@ -218,7 +217,6 @@ export class CrudRegistros implements OnInit {
         Entidad: usuario.entidadFederativa || 'Nacional',
         'Carga mensual': usuario.habilitaCarga ? 'Sí' : 'No',
         'Modificación mensual': usuario.habilitaModificacion ? 'Sí' : 'No',
-        'Módulo semanal': usuario.habilitaSemanal ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
 
