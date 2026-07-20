@@ -457,6 +457,10 @@ export class CrudRegistros implements OnInit {
       rol: form.rol,
       habilitaCarga: form.habilitaCarga,
       habilitaModificacion: form.habilitaModificacion,
+      habilitaSemanal: form.habilitaSemanal,
+      habilitaCargaSemanal: form.habilitaCargaSemanal,
+      habilitaModificacionSemanal: form.habilitaModificacionSemanal,
+      administraDelitosSemanal: form.administraDelitosSemanal,
     };
 
     this.guardando.set(true);
