@@ -27,11 +27,18 @@ export const routes: Routes = [
   {
     path: 'semanal',
     loadComponent: () =>
-      import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
+      import('./layout/semanal-layout/semanal-layout').then((m) => m.SemanalLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
     data: {
       modulo: 'SEMANAL',
     },
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
+      },
+    ],
   },
   {
     path: '',

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
+  ActualizarPermisosSemanalesRequest,
   CrearUsuarioRequest,
   EditarUsuarioRequest,
   PermisosGlobalesUsuariosRequest,
@@ -36,6 +37,13 @@ export class UsuariosService {
 
   editarUsuario(idUsuario: number, request: EditarUsuarioRequest) {
     return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`, request);
+  }
+
+  actualizarPermisosSemanales(idUsuario: number, request: ActualizarPermisosSemanalesRequest) {
+    return this.http.put<UsuarioOperacionResponse>(
+      `${this.apiUrl}/${idUsuario}/permisos-semanales`,
+      request,
+    );
   }
 
   desactivarUsuario(idUsuario: number) {

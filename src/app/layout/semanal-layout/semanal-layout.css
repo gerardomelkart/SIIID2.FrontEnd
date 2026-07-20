@@ -1,0 +1,12 @@
+.sidebar {
+  border-top: 5px solid var(--siiid-dorado);
+}
+
+.system-info span {
+  color: var(--siiid-guinda);
+  font-weight: 900;
+}
+
+.menu-link:first-child {
+  margin-top: 4px;
+}

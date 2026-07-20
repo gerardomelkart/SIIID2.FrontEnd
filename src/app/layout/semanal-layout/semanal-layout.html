@@ -1,0 +1,58 @@
+<div class="siiid-shell">
+  <app-topbar></app-topbar>
+
+  <div class="siiid-body">
+    <aside class="sidebar">
+      <div class="user-card">
+        <div class="user-main">
+          <div class="avatar">
+            <img src="img/logoMujBandera.png" alt="Usuario en línea">
+          </div>
+
+          <div class="user-info">
+            <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
+
+            <div class="user-status">
+              <span class="status-dot"></span>
+              EN LÍNEA
+            </div>
+          </div>
+        </div>
+
+        <div class="system-info">
+          <span>SIIID2 Semanal</span>
+          <strong>Version. 2.0.0</strong>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <a class="menu-link" routerLink="/semanal" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <i class="fa-solid fa-house"></i>
+          Inicio semanal
+        </a>
+
+        @if (puedeCambiarModulo()) {
+        <button type="button" class="menu-link menu-button" (click)="cambiarModulo()">
+          <span>
+            <i class="fa-solid fa-repeat"></i>
+            Cambiar de módulo
+          </span>
+        </button>
+        }
+
+        <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">
+          <span>
+            <i class="fa-solid fa-power-off"></i>
+            Cerrar Sesión
+          </span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="siiid-main">
+      <section class="siiid-content">
+        <router-outlet></router-outlet>
+      </section>
+    </main>
+  </div>
+</div>

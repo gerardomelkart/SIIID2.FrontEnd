@@ -2,52 +2,28 @@
   display: block;
 }
 
-.semanal-page {
-  min-height: 100vh;
-  background: var(--siiid-bg);
-}
-
-header {
-  height: 92px;
+.semanal-inicio {
+  max-width: 860px;
   background: #fff;
-  border-bottom: 5px solid var(--siiid-guinda);
-  display: flex;
-  align-items: center;
-  padding: 12px 32px;
-}
-
-header img {
-  height: 58px;
-  width: auto;
-}
-
-main {
-  display: flex;
-  justify-content: center;
-  padding: 70px 24px;
-}
-
-.semanal-card {
-  width: min(720px, 100%);
-  background: #fff;
+  border: 1px solid #ddd;
   border-left: 8px solid var(--siiid-guinda);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
-  padding: 38px;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .14);
+  padding: 36px;
 }
 
-.semanal-icon {
-  width: 68px;
-  height: 68px;
+.semanal-icono {
+  width: 66px;
+  height: 66px;
   background: var(--siiid-guinda);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 29px;
-  margin-bottom: 20px;
+  font-size: 28px;
+  margin-bottom: 18px;
 }
 
-.etiqueta {
+.semanal-etiqueta {
   color: var(--siiid-dorado);
   font-weight: 900;
   text-transform: uppercase;
@@ -55,40 +31,24 @@ main {
 }
 
 h1 {
-  margin: 5px 0 16px;
+  margin: 5px 0 12px;
   color: var(--siiid-guinda);
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 900;
 }
 
 p {
   color: #667085;
-  font-size: 15px;
   font-weight: 700;
 }
 
-.acciones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 28px;
-}
-
-.acciones button {
-  min-height: 42px;
-  border-radius: 3px;
-  padding: 0 20px;
+.semanal-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 8px 12px;
+  background: #eaf7ee;
+  color: #1f6b35;
   font-weight: 800;
-}
-
-.btn-principal {
-  border: none;
-  background: var(--siiid-guinda);
-  color: #fff;
-}
-
-.btn-secundario {
-  border: 1px solid var(--siiid-guinda);
-  background: #fff;
-  color: var(--siiid-guinda);
 }
