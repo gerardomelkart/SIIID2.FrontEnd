@@ -26,10 +26,18 @@
       </div>
 
       <nav class="menu">
-        <a class="menu-link" routerLink="/semanal" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a class="menu-link" routerLink="/semanal" routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }">
           <i class="fa-solid fa-house"></i>
           Inicio semanal
         </a>
+
+        @if (esSuperUsuario()) {
+        <a class="menu-link" routerLink="/semanal/administracion/usuarios" routerLinkActive="active">
+          <i class="fa-solid fa-users-gear"></i>
+          Usuarios semanales
+        </a>
+        }
 
         @if (puedeCambiarModulo()) {
         <button type="button" class="menu-link menu-button" (click)="cambiarModulo()">

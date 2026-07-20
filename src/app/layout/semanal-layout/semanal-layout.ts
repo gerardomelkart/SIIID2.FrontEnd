@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { AuthService } from '../../core/services/auth.service';
 import { SessionService } from '../../core/services/session.service';
 import { Topbar } from '../topbar/topbar';
+import { ROLES } from '../../core/constants/roles.constants';
 
 @Component({
   selector: 'app-semanal-layout',
@@ -17,6 +18,7 @@ export class SemanalLayout {
 
   usuario = this.sessionService.usuario;
   puedeCambiarModulo = computed(() => this.sessionService.modulos().length > 1);
+  esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
 
   cambiarModulo(): void {
     this.sessionService.limpiarModuloActivo();

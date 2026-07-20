@@ -38,6 +38,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
       },
+      {
+        path: 'administracion/usuarios',
+        loadComponent: () =>
+          import('./pages/semanal-usuarios/semanal-usuarios').then((m) => m.SemanalUsuarios),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
     ],
   },
   {

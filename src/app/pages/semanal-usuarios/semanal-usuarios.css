@@ -1,0 +1,300 @@
+:host {
+  display: block;
+}
+
+.semanal-admin-header span {
+  color: var(--siiid-dorado);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.semanal-admin-header h1 {
+  margin: 3px 0;
+  color: var(--siiid-guinda);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.semanal-admin-header p {
+  color: #667085;
+  font-weight: 700;
+}
+
+.semanal-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.resumen-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-left: 6px solid var(--siiid-guinda);
+  padding: 16px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .1);
+}
+
+.resumen-card strong {
+  display: block;
+  color: var(--siiid-guinda);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.resumen-card span {
+  display: block;
+  margin-top: 7px;
+  color: #444;
+  font-weight: 800;
+}
+
+.resumen-activo {
+  border-left-color: #1f6b35;
+}
+
+.resumen-inactivo {
+  border-left-color: #8a1f1f;
+}
+
+.semanal-card {
+  overflow: hidden;
+}
+
+.semanal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.semanal-buscador {
+  width: 380px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #777;
+  padding: 0 10px;
+}
+
+.semanal-buscador input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  font-size: 13px;
+}
+
+.semanal-table {
+  margin: 0;
+  font-size: 13px;
+}
+
+.semanal-table thead th {
+  background: var(--siiid-guinda);
+  color: #fff;
+  padding: 11px 10px;
+  white-space: nowrap;
+}
+
+.semanal-table tbody td {
+  vertical-align: middle;
+  padding: 10px;
+}
+
+.usuario-nombre {
+  color: #222;
+  font-weight: 800;
+}
+
+.rol-badge,
+.semanal-badge {
+  display: inline-flex;
+  justify-content: center;
+  border-radius: 20px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.rol-badge {
+  background: #f2eef0;
+  color: var(--siiid-guinda);
+}
+
+.semanal-on {
+  background: #eaf7ee;
+  color: #1f6b35;
+}
+
+.semanal-off {
+  background: #fff0f0;
+  color: #8a1f1f;
+}
+
+.btn-configurar {
+  border: 1px solid var(--siiid-guinda);
+  background: #fff;
+  color: var(--siiid-guinda);
+  padding: 5px 9px;
+  font-weight: 800;
+}
+
+.btn-configurar:hover {
+  background: var(--siiid-guinda);
+  color: #fff;
+}
+
+.semanal-mensaje {
+  padding: 28px;
+  text-align: center;
+  color: #667085;
+  font-weight: 700;
+}
+
+.semanal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4800;
+  background: rgba(0, 0, 0, .38);
+}
+
+.semanal-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 4900;
+  width: min(600px, 95vw);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: -8px 0 18px rgba(0, 0, 0, .25);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--siiid-guinda);
+  color: #fff;
+  padding: 20px 22px;
+}
+
+.panel-header span {
+  color: #e6c89b;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.panel-header h2 {
+  margin: 3px 0;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.panel-header p {
+  margin: 0;
+  color: rgba(255, 255, 255, .8);
+}
+
+.panel-header button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.panel-body {
+  flex: 1;
+  overflow: auto;
+  padding: 22px;
+}
+
+.usuario-resumen {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 15px;
+}
+
+.usuario-resumen span {
+  color: #667085;
+}
+
+.permisos-semanales {
+  margin-top: 20px;
+}
+
+.permiso-principal,
+.permiso-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #ddd;
+  border-left: 5px solid var(--siiid-guinda);
+  padding: 15px;
+  margin-bottom: 12px;
+}
+
+.permiso-principal {
+  background: #faf6f7;
+}
+
+.permiso-principal div,
+.permiso-row div {
+  display: flex;
+  flex-direction: column;
+}
+
+.permiso-principal span,
+.permiso-row span {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.permiso-principal input,
+.permiso-row input {
+  width: 44px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.permiso-nota {
+  margin: 10px 0 14px;
+  border-left: 4px solid var(--siiid-dorado);
+  background: #fff8eb;
+  color: #72531f;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #ddd;
+  padding: 14px 22px;
+}
+
+@media (max-width: 800px) {
+  .semanal-resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .semanal-card-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .semanal-buscador {
+    width: 100%;
+  }
+}

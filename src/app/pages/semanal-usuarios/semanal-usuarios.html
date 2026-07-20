@@ -1,0 +1,172 @@
+<div class="semanal-admin">
+  <div class="semanal-admin-header">
+    <div>
+      <span>Administración semanal</span>
+      <h1>Usuarios del módulo semanal</h1>
+      <p>Habilitación de acceso y permisos exclusivos del seguimiento semanal.</p>
+    </div>
+  </div>
+
+  <div class="semanal-resumen">
+    <div class="resumen-card">
+      <strong>{{ totalUsuarios() }}</strong>
+      <span>Usuarios activos</span>
+    </div>
+
+    <div class="resumen-card resumen-activo">
+      <strong>{{ totalConSemanal() }}</strong>
+      <span>Con acceso semanal</span>
+    </div>
+
+    <div class="resumen-card resumen-inactivo">
+      <strong>{{ totalSinSemanal() }}</strong>
+      <span>Sin acceso semanal</span>
+    </div>
+  </div>
+
+  <section class="siiid-card semanal-card">
+    <div class="siiid-card-header semanal-card-header">
+      <span>
+        <i class="fa-solid fa-users-gear"></i>
+        Configuración semanal por usuario
+      </span>
+
+      <div class="semanal-buscador">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Buscar usuario, nombre, rol o entidad..." [ngModel]="busqueda()" (ngModelChange)="buscarUsuarios($event)">
+      </div>
+    </div>
+
+    @if (cargandoUsuarios()) {
+    <div class="semanal-mensaje">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Cargando usuarios...
+    </div>
+    } @else {
+    <div class="table-responsive">
+      <table class="table table-sm semanal-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Entidad</th>
+            <th>Acceso semanal</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {
+          <tr>
+            <td class="usuario-nombre">{{ usuario.nombreCompleto }}</td>
+            <td>{{ usuario.usuario }}</td>
+            <td><span class="rol-badge">{{ usuario.rol }}</span></td>
+            <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
+            <td>
+              <span class="semanal-badge" [class.semanal-on]="usuario.habilitaSemanal" [class.semanal-off]="!usuario.habilitaSemanal">
+                {{ usuario.habilitaSemanal ? 'HABILITADO' : 'NO HABILITADO' }}
+              </span>
+            </td>
+            <td>
+              <button type="button" class="btn-configurar" [disabled]="cargandoDetalle()" (click)="abrirPermisos(usuario)">
+                <i class="fa-solid fa-sliders"></i>
+                Configurar
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="semanal-mensaje">No se encontraron usuarios.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</div>
+
+@if (panelAbierto()) {
+<div class="semanal-backdrop" (click)="cerrarPanel()"></div>
+
+<aside class="semanal-panel">
+  <div class="panel-header">
+    <div>
+      <span>Permisos semanales</span>
+      <h2>{{ usuarioSeleccionado()?.nombre }} {{ usuarioSeleccionado()?.primerApellido }}</h2>
+      <p>{{ usuarioSeleccionado()?.usuario }} · {{ usuarioSeleccionado()?.rol }}</p>
+    </div>
+
+    <button type="button" (click)="cerrarPanel()">×</button>
+  </div>
+
+  <div class="panel-body">
+    <div class="usuario-resumen">
+      <span>Entidad federativa</span>
+      <strong>{{ usuarioSeleccionado()?.entidadFederativa || 'Nacional' }}</strong>
+    </div>
+
+    <div class="permisos-semanales">
+      <label class="permiso-principal">
+        <div>
+          <strong>Acceso al módulo semanal</strong>
+          <span>Permite que el usuario ingrese al seguimiento semanal.</span>
+        </div>
+
+        <input type="checkbox" [disabled]="esUsuarioActualSeleccionado()" [ngModel]="formulario().habilitaSemanal" (ngModelChange)="actualizarCampo('habilitaSemanal', $event)">
+      </label>
+
+      @if (esUsuarioActualSeleccionado()) {
+      <div class="permiso-nota">
+        No puede deshabilitar su propio acceso semanal.
+      </div>
+      }
+
+      @if (formulario().habilitaSemanal) {
+      <label class="permiso-row">
+        <div>
+          <strong>Carga semanal</strong>
+          <span>Permite integrar información del periodo semanal.</span>
+        </div>
+
+        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'" [ngModel]="formulario().habilitaCargaSemanal" (ngModelChange)="actualizarCampo('habilitaCargaSemanal', $event)">
+      </label>
+
+      <label class="permiso-row">
+        <div>
+          <strong>Modificación semanal</strong>
+          <span>Permite actualizar información semanal registrada.</span>
+        </div>
+
+        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'" [ngModel]="formulario().habilitaModificacionSemanal" (ngModelChange)="actualizarCampo('habilitaModificacionSemanal', $event)">
+      </label>
+
+      @if (usuarioSeleccionado()?.rol === 'SUPER_USUARIO') {
+      <label class="permiso-row">
+        <div>
+          <strong>Administración de delitos</strong>
+          <span>Permite configurar los delitos que serán reportados semanalmente.</span>
+        </div>
+
+        <input type="checkbox" [ngModel]="formulario().administraDelitosSemanal" (ngModelChange)="actualizarCampo('administraDelitosSemanal', $event)">
+      </label>
+      }
+
+      @if (usuarioSeleccionado()?.rol === 'CONSULTA') {
+      <div class="permiso-nota">
+        El rol CONSULTA tendrá acceso semanal únicamente para consulta.
+      </div>
+      }
+      }
+    </div>
+  </div>
+
+  <div class="panel-actions">
+    <button type="button" class="btn btn-secondary" [disabled]="guardando()" (click)="cerrarPanel()">Cancelar</button>
+    <button type="button" class="btn btn-siiid" [disabled]="guardando()" (click)="guardarPermisos()">
+      {{ guardando() ? 'Guardando...' : 'Guardar permisos' }}
+    </button>
+  </div>
+</aside>
+}
