@@ -1,6 +1,12 @@
 import Swal, { SweetAlertIcon, SweetAlertResult } from 'sweetalert2';
 
-const COLOR_PRIMARIO = '#691C32';
+const COLOR_PRIMARIO_MENSUAL = '#691C32';
+const COLOR_PRIMARIO_SEMANAL = '#235B4E';
+const MODULO_ACTIVO_KEY = 'siiid_modulo_activo';
+
+function obtenerColorPrimario(): string {
+  return localStorage.getItem(MODULO_ACTIVO_KEY)?.toUpperCase() === 'SEMANAL' ? COLOR_PRIMARIO_SEMANAL : COLOR_PRIMARIO_MENSUAL;
+}
 const COLOR_EXITO = '#2f80d0';
 
 interface AlertaBaseOptions {
@@ -12,7 +18,7 @@ interface AlertaBaseOptions {
 function mostrarAlerta(
   icon: SweetAlertIcon,
   options: AlertaBaseOptions,
-  confirmButtonColor = COLOR_PRIMARIO,
+  confirmButtonColor = obtenerColorPrimario(),
 ): Promise<SweetAlertResult> {
   return Swal.fire({
     icon,
@@ -62,7 +68,7 @@ export function confirmarAccion(
     showCancelButton: true,
     confirmButtonText,
     cancelButtonText: 'Cancelar',
-    confirmButtonColor: COLOR_PRIMARIO,
+    confirmButtonColor: obtenerColorPrimario(),
   });
 }
 
@@ -72,6 +78,6 @@ export function mostrarAdvertenciaHtml(title: string, html: string): Promise<Swe
     title,
     html,
     confirmButtonText: 'OK',
-    confirmButtonColor: COLOR_PRIMARIO,
+    confirmButtonColor: obtenerColorPrimario(),
   });
 }
