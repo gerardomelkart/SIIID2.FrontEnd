@@ -4,6 +4,9 @@ import { ActualizarConfiguracionDelitosSemanalesRequest, ConfiguracionDelitoSema
 import { SemanalDelitosService } from '../../core/services/semanal-delitos.service';
 import { mostrarAdvertencia, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { EstadoOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
+
+type CampoOrdenDelitos = 'clave' | 'delito' | 'bienJuridico' | 'seleccionado';
 
 @Component({
   selector: 'app-semanal-delitos',
@@ -19,13 +22,13 @@ export class SemanalDelitos implements OnInit {
   cargando = signal(false);
   guardando = signal(false);
   firmaOriginal = signal('');
+  ordenDelitos = signal<EstadoOrden<CampoOrdenDelitos>>({ campo: 'clave', direccion: 'asc' });
 
   delitosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
+    const filtrados = !texto ? this.delitos() : this.delitos().filter((delito) => delito.clave.toLowerCase().includes(texto) || delito.delito.toLowerCase().includes(texto) || delito.bienJuridico.toLowerCase().includes(texto));
 
-    if (!texto) return this.delitos();
-
-    return this.delitos().filter((delito) => delito.clave.toLowerCase().includes(texto) || delito.delito.toLowerCase().includes(texto) || delito.bienJuridico.toLowerCase().includes(texto));
+    return ordenarPorEstado(filtrados, this.ordenDelitos(), (delito, campo) => delito[campo]);
   });
 
   totalDisponibles = computed(() => this.delitos().length);
@@ -62,57 +65,27 @@ export class SemanalDelitos implements OnInit {
     this.busqueda.set(valor);
   }
 
+  ordenarDelitosPor(campo: CampoOrdenDelitos): void {
+    this.ordenDelitos.set(alternarOrden(this.ordenDelitos(), campo));
+  }
+
+  iconoOrdenDelitos(campo: CampoOrdenDelitos): string {
+    return obtenerIconoOrden(this.ordenDelitos(), campo);
+  }
+
   cambiarSeleccion(idDelito: number, seleccionado: boolean): void {
     const delito = this.delitos().find((item) => item.idDelito === idDelito);
 
     if (!delito || delito.esObligatorio) return;
 
-    this.delitos.update((actuales) => this.normalizarOrden(actuales.map((item) => item.idDelito === idDelito ? { ...item, seleccionado } : item)));
-  }
-
-  mover(idDelito: number, direccion: -1 | 1): void {
-    const seleccionados = this.delitos().filter((delito) => delito.seleccionado).sort((a, b) => a.orden - b.orden).map((delito) => ({ ...delito }));
-    const indice = seleccionados.findIndex((delito) => delito.idDelito === idDelito);
-    const destino = indice + direccion;
-
-    if (indice < 0 || destino < 0 || destino >= seleccionados.length || seleccionados[indice].esObligatorio || seleccionados[destino].esObligatorio) return;
-
-    [seleccionados[indice], seleccionados[destino]] = [seleccionados[destino], seleccionados[indice]];
-
-    seleccionados.forEach((delito, posicion) => delito.orden = posicion + 1);
-
-    const ordenPorId = new Map(seleccionados.map((delito) => [delito.idDelito, delito.orden]));
-
-    this.delitos.update((actuales) => this.normalizarOrden(actuales.map((delito) => ({ ...delito, orden: ordenPorId.get(delito.idDelito) ?? 0 }))));
-  }
-
-  puedeSubir(delito: ConfiguracionDelitoSemanalItem): boolean {
-    if (!delito.seleccionado || delito.esObligatorio) return false;
-
-    const seleccionados = this.delitos().filter((item) => item.seleccionado).sort((a, b) => a.orden - b.orden);
-    const indice = seleccionados.findIndex((item) => item.idDelito === delito.idDelito);
-
-    return indice > 0 && !seleccionados[indice - 1].esObligatorio;
-  }
-
-  puedeBajar(delito: ConfiguracionDelitoSemanalItem): boolean {
-    if (!delito.seleccionado || delito.esObligatorio) return false;
-
-    const seleccionados = this.delitos().filter((item) => item.seleccionado).sort((a, b) => a.orden - b.orden);
-    const indice = seleccionados.findIndex((item) => item.idDelito === delito.idDelito);
-
-    return indice >= 0 && indice < seleccionados.length - 1;
+    this.delitos.update((actuales) => this.normalizarConfiguracion(actuales.map((item) => item.idDelito === idDelito ? { ...item, seleccionado } : item)));
   }
 
   guardarConfiguracion(): void {
     if (!this.hayCambios() || this.guardando()) return;
 
     const request: ActualizarConfiguracionDelitosSemanalesRequest = {
-      delitos: this.delitos().map((delito) => ({
-        idDelito: delito.idDelito,
-        seleccionado: delito.seleccionado,
-        orden: delito.orden,
-      })),
+      delitos: this.delitos().map((delito) => ({ idDelito: delito.idDelito, seleccionado: delito.seleccionado })),
     };
 
     this.guardando.set(true);
@@ -137,26 +110,17 @@ export class SemanalDelitos implements OnInit {
   }
 
   private establecerConfiguracion(delitos: ConfiguracionDelitoSemanalItem[]): void {
-    const normalizados = this.normalizarOrden(delitos);
+    const normalizados = this.normalizarConfiguracion(delitos);
 
     this.firmaOriginal.set(this.firmaConfiguracion(normalizados));
     this.delitos.set(normalizados);
   }
 
-  private normalizarOrden(delitos: ConfiguracionDelitoSemanalItem[]): ConfiguracionDelitoSemanalItem[] {
-    const seleccionados = delitos.filter((delito) => delito.esObligatorio || delito.seleccionado).map((delito) => ({ ...delito, seleccionado: true })).sort((a, b) => Number(b.esObligatorio) - Number(a.esObligatorio) || this.ordenComparable(a) - this.ordenComparable(b) || a.clave.localeCompare(b.clave, 'es', { numeric: true }));
-    const noSeleccionados = delitos.filter((delito) => !delito.esObligatorio && !delito.seleccionado).map((delito) => ({ ...delito, orden: 0 })).sort((a, b) => a.clave.localeCompare(b.clave, 'es', { numeric: true }));
-
-    seleccionados.forEach((delito, indice) => delito.orden = indice + 1);
-
-    return [...seleccionados, ...noSeleccionados];
-  }
-
-  private ordenComparable(delito: ConfiguracionDelitoSemanalItem): number {
-    return delito.orden > 0 ? delito.orden : Number.MAX_SAFE_INTEGER;
+  private normalizarConfiguracion(delitos: ConfiguracionDelitoSemanalItem[]): ConfiguracionDelitoSemanalItem[] {
+    return delitos.map((delito) => ({ ...delito, seleccionado: delito.esObligatorio || delito.seleccionado }));
   }
 
   private firmaConfiguracion(delitos: ConfiguracionDelitoSemanalItem[]): string {
-    return [...delitos].sort((a, b) => a.idDelito - b.idDelito).map((delito) => `${delito.idDelito}:${delito.seleccionado ? 1 : 0}:${delito.orden}`).join('|');
+    return [...delitos].sort((a, b) => a.idDelito - b.idDelito).map((delito) => `${delito.idDelito}:${delito.seleccionado ? 1 : 0}`).join('|');
   }
 }

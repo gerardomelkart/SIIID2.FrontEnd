@@ -33,7 +33,8 @@
 
       <div class="semanal-buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar usuario, nombre, rol o entidad..." [ngModel]="busqueda()" (ngModelChange)="buscarUsuarios($event)">
+        <input type="text" placeholder="Buscar usuario, nombre, rol o entidad..." [ngModel]="busqueda()"
+          (ngModelChange)="buscarUsuarios($event)">
       </div>
     </div>
 
@@ -45,16 +46,32 @@
     } @else {
     <div class="table-responsive">
       <table class="table table-sm semanal-table">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Usuario</th>
-            <th>Rol</th>
-            <th>Entidad</th>
-            <th>Acceso semanal</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
+        <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
+          Nombre
+          <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
+        </th>
+
+        <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
+          Usuario
+          <i [class]="iconoOrdenUsuarios('usuario')"></i>
+        </th>
+
+        <th class="sortable" (click)="ordenarUsuariosPor('rol')">
+          Rol
+          <i [class]="iconoOrdenUsuarios('rol')"></i>
+        </th>
+
+        <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
+          Entidad
+          <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
+        </th>
+
+        <th class="sortable" (click)="ordenarUsuariosPor('habilitaSemanal')">
+          Acceso semanal
+          <i [class]="iconoOrdenUsuarios('habilitaSemanal')"></i>
+        </th>
+
+        <th>Acción</th>
 
         <tbody>
           @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {
@@ -64,12 +81,14 @@
             <td><span class="rol-badge">{{ usuario.rol }}</span></td>
             <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
             <td>
-              <span class="semanal-badge" [class.semanal-on]="usuario.habilitaSemanal" [class.semanal-off]="!usuario.habilitaSemanal">
+              <span class="semanal-badge" [class.semanal-on]="usuario.habilitaSemanal"
+                [class.semanal-off]="!usuario.habilitaSemanal">
                 {{ usuario.habilitaSemanal ? 'HABILITADO' : 'NO HABILITADO' }}
               </span>
             </td>
             <td>
-              <button type="button" class="btn-configurar" [disabled]="cargandoDetalle()" (click)="abrirPermisos(usuario)">
+              <button type="button" class="btn-configurar" [disabled]="cargandoDetalle()"
+                (click)="abrirPermisos(usuario)">
                 <i class="fa-solid fa-sliders"></i>
                 Configurar
               </button>
@@ -114,7 +133,8 @@
           <span>Permite que el usuario ingrese al seguimiento semanal.</span>
         </div>
 
-        <input type="checkbox" [disabled]="esUsuarioActualSeleccionado()" [ngModel]="formulario().habilitaSemanal" (ngModelChange)="actualizarCampo('habilitaSemanal', $event)">
+        <input type="checkbox" [disabled]="esUsuarioActualSeleccionado()" [ngModel]="formulario().habilitaSemanal"
+          (ngModelChange)="actualizarCampo('habilitaSemanal', $event)">
       </label>
 
       @if (esUsuarioActualSeleccionado()) {
@@ -130,7 +150,9 @@
           <span>Permite integrar información del periodo semanal.</span>
         </div>
 
-        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'" [ngModel]="formulario().habilitaCargaSemanal" (ngModelChange)="actualizarCampo('habilitaCargaSemanal', $event)">
+        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'"
+          [ngModel]="formulario().habilitaCargaSemanal"
+          (ngModelChange)="actualizarCampo('habilitaCargaSemanal', $event)">
       </label>
 
       <label class="permiso-row">
@@ -139,7 +161,9 @@
           <span>Permite actualizar información semanal registrada.</span>
         </div>
 
-        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'" [ngModel]="formulario().habilitaModificacionSemanal" (ngModelChange)="actualizarCampo('habilitaModificacionSemanal', $event)">
+        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'"
+          [ngModel]="formulario().habilitaModificacionSemanal"
+          (ngModelChange)="actualizarCampo('habilitaModificacionSemanal', $event)">
       </label>
 
       @if (usuarioSeleccionado()?.rol === 'SUPER_USUARIO') {
@@ -149,7 +173,8 @@
           <span>Permite configurar los delitos que serán reportados semanalmente.</span>
         </div>
 
-        <input type="checkbox" [ngModel]="formulario().administraDelitosSemanal" (ngModelChange)="actualizarCampo('administraDelitosSemanal', $event)">
+        <input type="checkbox" [ngModel]="formulario().administraDelitosSemanal"
+          (ngModelChange)="actualizarCampo('administraDelitosSemanal', $event)">
       </label>
       }
 

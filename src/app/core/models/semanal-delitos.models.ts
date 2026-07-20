@@ -6,13 +6,11 @@ export interface ConfiguracionDelitoSemanalItem {
   seleccionado: boolean;
   esObligatorio: boolean;
   conservarEntrePeriodos: boolean;
-  orden: number;
 }
 
 export interface ConfiguracionDelitoSemanalRequest {
   idDelito: number;
   seleccionado: boolean;
-  orden: number;
 }
 
 export interface ActualizarConfiguracionDelitosSemanalesRequest {

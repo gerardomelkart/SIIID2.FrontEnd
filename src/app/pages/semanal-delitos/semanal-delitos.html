@@ -3,11 +3,13 @@
     <div>
       <span>Administración semanal</span>
       <h1>Delitos del módulo semanal</h1>
-      <p>Seleccione y ordene los delitos que podrán integrarse en las cargas semanales.</p>
+      <p>Seleccione los delitos que podrán integrarse en las cargas semanales.</p>
     </div>
 
-    <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()" (click)="guardarConfiguracion()">
-      <i class="fa-solid" [class.fa-floppy-disk]="!guardando()" [class.fa-spinner]="guardando()" [class.fa-spin]="guardando()"></i>
+    <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()"
+      (click)="guardarConfiguracion()">
+      <i class="fa-solid" [class.fa-floppy-disk]="!guardando()" [class.fa-spinner]="guardando()"
+        [class.fa-spin]="guardando()"></i>
       {{ guardando() ? 'Guardando...' : 'Guardar configuración' }}
     </button>
   </div>
@@ -38,13 +40,14 @@
 
       <div class="semanal-buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar clave, delito o bien jurídico..." [ngModel]="busqueda()" (ngModelChange)="buscar($event)">
+        <input type="text" placeholder="Buscar clave, delito o bien jurídico..." [ngModel]="busqueda()"
+          (ngModelChange)="buscar($event)">
       </div>
     </div>
 
     <div class="nota-extorsion">
       <i class="fa-solid fa-shield-halved"></i>
-      Extorsión es obligatoria, ocupa el primer lugar y no puede deshabilitarse.
+      Extorsión siempre forma parte de los delitos permitidos y no puede deshabilitarse.
     </div>
 
     @if (cargando()) {
@@ -57,11 +60,26 @@
       <table class="table table-sm semanal-table">
         <thead>
           <tr>
-            <th>Orden</th>
-            <th>Clave</th>
-            <th>Delito</th>
-            <th>Bien jurídico</th>
-            <th>Estado</th>
+            <th class="sortable" (click)="ordenarDelitosPor('clave')">
+              Clave
+              <i [class]="iconoOrdenDelitos('clave')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarDelitosPor('delito')">
+              Delito
+              <i [class]="iconoOrdenDelitos('delito')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarDelitosPor('bienJuridico')">
+              Bien jurídico
+              <i [class]="iconoOrdenDelitos('bienJuridico')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarDelitosPor('seleccionado')">
+              Estado
+              <i [class]="iconoOrdenDelitos('seleccionado')"></i>
+            </th>
+
             <th>Incluir</th>
           </tr>
         </thead>
@@ -75,11 +93,13 @@
                 <strong>{{ delito.orden }}</strong>
 
                 <div>
-                  <button type="button" title="Subir" [disabled]="!puedeSubir(delito)" (click)="mover(delito.idDelito, -1)">
+                  <button type="button" title="Subir" [disabled]="!puedeSubir(delito)"
+                    (click)="mover(delito.idDelito, -1)">
                     <i class="fa-solid fa-chevron-up"></i>
                   </button>
 
-                  <button type="button" title="Bajar" [disabled]="!puedeBajar(delito)" (click)="mover(delito.idDelito, 1)">
+                  <button type="button" title="Bajar" [disabled]="!puedeBajar(delito)"
+                    (click)="mover(delito.idDelito, 1)">
                     <i class="fa-solid fa-chevron-down"></i>
                   </button>
                 </div>
@@ -102,14 +122,16 @@
             <td>{{ delito.bienJuridico }}</td>
 
             <td>
-              <span class="estado-badge" [class.estado-activo]="delito.seleccionado" [class.estado-inactivo]="!delito.seleccionado">
+              <span class="estado-badge" [class.estado-activo]="delito.seleccionado"
+                [class.estado-inactivo]="!delito.seleccionado">
                 {{ delito.seleccionado ? 'INCLUIDO' : 'NO INCLUIDO' }}
               </span>
             </td>
 
             <td>
               <label class="seleccion-control" [class.seleccion-bloqueada]="delito.esObligatorio">
-                <input type="checkbox" [disabled]="delito.esObligatorio || guardando()" [ngModel]="delito.seleccionado" (ngModelChange)="cambiarSeleccion(delito.idDelito, $event)">
+                <input type="checkbox" [disabled]="delito.esObligatorio || guardando()" [ngModel]="delito.seleccionado"
+                  (ngModelChange)="cambiarSeleccion(delito.idDelito, $event)">
                 <span class="toggle"></span>
               </label>
             </td>

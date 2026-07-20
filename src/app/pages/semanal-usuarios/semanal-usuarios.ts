@@ -1,11 +1,25 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ROLES } from '../../core/constants/roles.constants';
-import { ActualizarPermisosSemanalesRequest, UsuarioDetalle, UsuarioListadoItem } from '../../core/models/usuarios.models';
+import {
+  ActualizarPermisosSemanalesRequest,
+  UsuarioDetalle,
+  UsuarioListadoItem,
+} from '../../core/models/usuarios.models';
 import { SessionService } from '../../core/services/session.service';
 import { UsuariosService } from '../../core/services/usuarios.service';
-import { mostrarAdvertencia, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import {
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import {
+  EstadoOrden,
+  alternarOrden,
+  obtenerIconoOrden,
+  ordenarPorEstado,
+} from '../../core/utils/sort.utils';
 
 interface PermisosSemanalesForm {
   habilitaSemanal: boolean;
@@ -13,6 +27,13 @@ interface PermisosSemanalesForm {
   habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
+
+type CampoOrdenUsuariosSemanales =
+  | 'nombreCompleto'
+  | 'usuario'
+  | 'rol'
+  | 'entidadFederativa'
+  | 'habilitaSemanal';
 
 @Component({
   selector: 'app-semanal-usuarios',
@@ -23,6 +44,10 @@ interface PermisosSemanalesForm {
 export class SemanalUsuarios implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
   private readonly sessionService = inject(SessionService);
+  ordenUsuarios = signal<EstadoOrden<CampoOrdenUsuariosSemanales>>({
+    campo: 'nombreCompleto',
+    direccion: 'asc',
+  });
 
   usuarios = signal<UsuarioListadoItem[]>([]);
   usuarioSeleccionado = signal<UsuarioDetalle | null>(null);
@@ -38,15 +63,30 @@ export class SemanalUsuarios implements OnInit {
 
   usuariosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
+    const filtrados = !texto
+      ? this.usuarios()
+      : this.usuarios().filter(
+          (usuario) =>
+            usuario.nombreCompleto.toLowerCase().includes(texto) ||
+            usuario.usuario.toLowerCase().includes(texto) ||
+            usuario.rol.toLowerCase().includes(texto) ||
+            usuario.entidadFederativa?.toLowerCase().includes(texto),
+        );
 
-    if (!texto) return this.usuarios();
-
-    return this.usuarios().filter((usuario) => usuario.nombreCompleto.toLowerCase().includes(texto) || usuario.usuario.toLowerCase().includes(texto) || usuario.rol.toLowerCase().includes(texto) || usuario.entidadFederativa?.toLowerCase().includes(texto));
+    return ordenarPorEstado(
+      filtrados,
+      this.ordenUsuarios(),
+      (usuario, campo) => usuario[campo] ?? '',
+    );
   });
 
   totalUsuarios = computed(() => this.usuarios().length);
-  totalConSemanal = computed(() => this.usuarios().filter((usuario) => usuario.habilitaSemanal).length);
-  totalSinSemanal = computed(() => this.usuarios().filter((usuario) => !usuario.habilitaSemanal).length);
+  totalConSemanal = computed(
+    () => this.usuarios().filter((usuario) => usuario.habilitaSemanal).length,
+  );
+  totalSinSemanal = computed(
+    () => this.usuarios().filter((usuario) => !usuario.habilitaSemanal).length,
+  );
 
   ngOnInit(): void {
     this.cargarUsuarios();
@@ -62,13 +102,24 @@ export class SemanalUsuarios implements OnInit {
       },
       error: (error) => {
         this.cargandoUsuarios.set(false);
-        mostrarError('No fue posible cargar usuarios', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+        mostrarError(
+          'No fue posible cargar usuarios',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
 
   buscarUsuarios(valor: string): void {
     this.busqueda.set(valor);
+  }
+
+  ordenarUsuariosPor(campo: CampoOrdenUsuariosSemanales): void {
+    this.ordenUsuarios.set(alternarOrden(this.ordenUsuarios(), campo));
+  }
+
+  iconoOrdenUsuarios(campo: CampoOrdenUsuariosSemanales): string {
+    return obtenerIconoOrden(this.ordenUsuarios(), campo);
   }
 
   abrirPermisos(usuario: UsuarioListadoItem): void {
@@ -79,7 +130,10 @@ export class SemanalUsuarios implements OnInit {
         this.cargandoDetalle.set(false);
 
         if (!response.esValido || !response.usuario) {
-          mostrarAdvertencia('Usuario no encontrado', response.mensaje || 'No fue posible obtener el detalle.');
+          mostrarAdvertencia(
+            'Usuario no encontrado',
+            response.mensaje || 'No fue posible obtener el detalle.',
+          );
           return;
         }
 
@@ -97,7 +151,10 @@ export class SemanalUsuarios implements OnInit {
       },
       error: (error) => {
         this.cargandoDetalle.set(false);
-        mostrarError('No fue posible obtener el usuario', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+        mostrarError(
+          'No fue posible obtener el usuario',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -110,7 +167,10 @@ export class SemanalUsuarios implements OnInit {
     this.formulario.set(this.crearFormularioVacio());
   }
 
-  actualizarCampo<K extends keyof PermisosSemanalesForm>(campo: K, valor: PermisosSemanalesForm[K]): void {
+  actualizarCampo<K extends keyof PermisosSemanalesForm>(
+    campo: K,
+    valor: PermisosSemanalesForm[K],
+  ): void {
     this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
     this.normalizarFormulario();
   }
@@ -145,7 +205,10 @@ export class SemanalUsuarios implements OnInit {
       },
       error: (error) => {
         this.guardando.set(false);
-        mostrarError('No fue posible actualizar permisos', obtenerMensajeErrorHttp(error, 'Intente nuevamente.'));
+        mostrarError(
+          'No fue posible actualizar permisos',
+          obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
+        );
       },
     });
   }
@@ -157,9 +220,18 @@ export class SemanalUsuarios implements OnInit {
 
     this.formulario.update((actual) => ({
       ...actual,
-      habilitaCargaSemanal: actual.habilitaSemanal && usuario.rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
-      habilitaModificacionSemanal: actual.habilitaSemanal && usuario.rol !== ROLES.CONSULTA ? actual.habilitaModificacionSemanal : false,
-      administraDelitosSemanal: actual.habilitaSemanal && usuario.rol === ROLES.SUPER_USUARIO ? actual.administraDelitosSemanal : false,
+      habilitaCargaSemanal:
+        actual.habilitaSemanal && usuario.rol !== ROLES.CONSULTA
+          ? actual.habilitaCargaSemanal
+          : false,
+      habilitaModificacionSemanal:
+        actual.habilitaSemanal && usuario.rol !== ROLES.CONSULTA
+          ? actual.habilitaModificacionSemanal
+          : false,
+      administraDelitosSemanal:
+        actual.habilitaSemanal && usuario.rol === ROLES.SUPER_USUARIO
+          ? actual.administraDelitosSemanal
+          : false,
     }));
   }
 
