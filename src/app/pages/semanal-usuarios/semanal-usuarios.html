@@ -46,32 +46,21 @@
     } @else {
     <div class="table-responsive">
       <table class="table table-sm semanal-table">
-        <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
-          Nombre
-          <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
-        </th>
-
-        <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
-          Usuario
-          <i [class]="iconoOrdenUsuarios('usuario')"></i>
-        </th>
-
-        <th class="sortable" (click)="ordenarUsuariosPor('rol')">
-          Rol
-          <i [class]="iconoOrdenUsuarios('rol')"></i>
-        </th>
-
-        <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
-          Entidad
-          <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
-        </th>
-
-        <th class="sortable" (click)="ordenarUsuariosPor('habilitaSemanal')">
-          Acceso semanal
-          <i [class]="iconoOrdenUsuarios('habilitaSemanal')"></i>
-        </th>
-
-        <th>Acción</th>
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">Nombre <i
+                [class]="iconoOrdenUsuarios('nombreCompleto')"></i></th>
+            <th class="sortable" (click)="ordenarUsuariosPor('usuario')">Usuario <i
+                [class]="iconoOrdenUsuarios('usuario')"></i></th>
+            <th class="sortable" (click)="ordenarUsuariosPor('rol')">Rol <i [class]="iconoOrdenUsuarios('rol')"></i>
+            </th>
+            <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">Entidad <i
+                [class]="iconoOrdenUsuarios('entidadFederativa')"></i></th>
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaSemanal')">Acceso semanal <i
+                [class]="iconoOrdenUsuarios('habilitaSemanal')"></i></th>
+            <th>Acción</th>
+          </tr>
+        </thead>
 
         <tbody>
           @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {

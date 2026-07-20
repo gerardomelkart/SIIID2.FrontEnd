@@ -87,47 +87,20 @@
         <tbody>
           @for (delito of delitosFiltrados(); track delito.idDelito) {
           <tr [class.fila-seleccionada]="delito.seleccionado" [class.fila-obligatoria]="delito.esObligatorio">
-            <td>
-              @if (delito.seleccionado) {
-              <div class="orden-control">
-                <strong>{{ delito.orden }}</strong>
-
-                <div>
-                  <button type="button" title="Subir" [disabled]="!puedeSubir(delito)"
-                    (click)="mover(delito.idDelito, -1)">
-                    <i class="fa-solid fa-chevron-up"></i>
-                  </button>
-
-                  <button type="button" title="Bajar" [disabled]="!puedeBajar(delito)"
-                    (click)="mover(delito.idDelito, 1)">
-                    <i class="fa-solid fa-chevron-down"></i>
-                  </button>
-                </div>
-              </div>
-              } @else {
-              <span class="sin-orden">—</span>
-              }
-            </td>
-
             <td class="delito-clave">{{ delito.clave }}</td>
-
             <td class="delito-nombre">
               {{ delito.delito }}
-
               @if (delito.esObligatorio) {
               <span class="badge-obligatorio">OBLIGATORIO</span>
               }
             </td>
-
             <td>{{ delito.bienJuridico }}</td>
-
             <td>
               <span class="estado-badge" [class.estado-activo]="delito.seleccionado"
                 [class.estado-inactivo]="!delito.seleccionado">
                 {{ delito.seleccionado ? 'INCLUIDO' : 'NO INCLUIDO' }}
               </span>
             </td>
-
             <td>
               <label class="seleccion-control" [class.seleccion-bloqueada]="delito.esObligatorio">
                 <input type="checkbox" [disabled]="delito.esObligatorio || guardando()" [ngModel]="delito.seleccionado"
@@ -138,7 +111,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="semanal-mensaje">No se encontraron delitos.</td>
+            <td colspan="5" class="semanal-mensaje">No se encontraron delitos.</td>
           </tr>
           }
         </tbody>
