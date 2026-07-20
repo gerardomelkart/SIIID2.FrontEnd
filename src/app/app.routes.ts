@@ -5,6 +5,7 @@ import { authGuard } from './core/guards/auth.guard';
 import { cambioPasswordGuard } from './core/guards/cambio-password.guard';
 import { cambioPasswordPendienteGuard } from './core/guards/cambio-password-pendiente.guard';
 import { permissionGuard } from './core/guards/permission.guard';
+import { moduloGuard } from './core/guards/modulo.guard';
 
 export const routes: Routes = [
   {
@@ -18,9 +19,27 @@ export const routes: Routes = [
     canActivate: [authGuard, cambioPasswordPendienteGuard],
   },
   {
+    path: 'seleccionar-modulo',
+    loadComponent: () =>
+      import('./pages/seleccionar-modulo/seleccionar-modulo').then((m) => m.SeleccionarModulo),
+    canActivate: [authGuard, cambioPasswordGuard],
+  },
+  {
+    path: 'semanal',
+    loadComponent: () =>
+      import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
+    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    data: {
+      modulo: 'SEMANAL',
+    },
+  },
+  {
     path: '',
     loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
-    canActivate: [authGuard, cambioPasswordGuard],
+    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    data: {
+      modulo: 'MENSUAL',
+    },
     children: [
       {
         path: '',

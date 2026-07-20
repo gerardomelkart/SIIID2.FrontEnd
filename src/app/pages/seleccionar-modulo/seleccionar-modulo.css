@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+.modulo-page {
+  min-height: 100vh;
+  background-color: #fff;
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 70px 24px 40px;
+}
+
+.modulo-logo {
+  width: auto;
+  height: 92px;
+  margin-bottom: 42px;
+}
+
+.modulo-panel {
+  width: min(860px, 100%);
+  background: #fff;
+  border-top: 8px solid var(--siiid-guinda);
+  box-shadow: 0 10px 30px rgba(105, 28, 50, .22);
+  padding: 32px;
+  text-align: center;
+}
+
+.modulo-panel h1 {
+  margin: 0;
+  color: var(--siiid-guinda);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.usuario {
+  margin: 8px 0 28px;
+  color: #667085;
+  font-weight: 700;
+}
+
+.modulo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 22px;
+}
+
+.modulo-card {
+  border: 1px solid #ddd;
+  border-left: 7px solid var(--siiid-guinda);
+  background: #fff;
+  min-height: 210px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform .12s ease-in-out, box-shadow .12s ease-in-out;
+}
+
+.modulo-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .16);
+}
+
+.modulo-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--siiid-guinda);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 27px;
+  margin-bottom: 16px;
+}
+
+.modulo-card strong {
+  color: var(--siiid-guinda);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.modulo-card > span:last-child {
+  margin-top: 8px;
+  color: #667085;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cerrar-sesion {
+  margin-top: 28px;
+  border: none;
+  background: transparent;
+  color: var(--siiid-guinda);
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+@media (max-width: 680px) {
+  .modulo-page {
+    padding-top: 35px;
+  }
+
+  .modulo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modulo-panel {
+    padding: 24px 18px;
+  }
+}

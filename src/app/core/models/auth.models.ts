@@ -1,3 +1,5 @@
+export type ClaveModulo = 'MENSUAL' | 'SEMANAL';
+
 export interface LoginRequest {
   usuario: string;
   password: string;
@@ -11,6 +13,15 @@ export interface LoginResponse {
   usuario: UsuarioLoginInfo | null;
 }
 
+export interface ModuloUsuarioInfo {
+  idModulo: number;
+  clave: ClaveModulo;
+  nombre: string;
+  habilitaCarga: boolean;
+  habilitaModificacion: boolean;
+  administraDelitos: boolean;
+}
+
 export interface UsuarioLoginInfo {
   idUsuario: number;
   usuario: string;
@@ -21,6 +32,7 @@ export interface UsuarioLoginInfo {
   entidadFederativa: string | null;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
+  modulos: ModuloUsuarioInfo[];
   requiereCambioPassword: boolean;
 }
 

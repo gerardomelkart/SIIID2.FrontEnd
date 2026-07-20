@@ -1,0 +1,94 @@
+:host {
+  display: block;
+}
+
+.semanal-page {
+  min-height: 100vh;
+  background: var(--siiid-bg);
+}
+
+header {
+  height: 92px;
+  background: #fff;
+  border-bottom: 5px solid var(--siiid-guinda);
+  display: flex;
+  align-items: center;
+  padding: 12px 32px;
+}
+
+header img {
+  height: 58px;
+  width: auto;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  padding: 70px 24px;
+}
+
+.semanal-card {
+  width: min(720px, 100%);
+  background: #fff;
+  border-left: 8px solid var(--siiid-guinda);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+  padding: 38px;
+}
+
+.semanal-icon {
+  width: 68px;
+  height: 68px;
+  background: var(--siiid-guinda);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 29px;
+  margin-bottom: 20px;
+}
+
+.etiqueta {
+  color: var(--siiid-dorado);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+h1 {
+  margin: 5px 0 16px;
+  color: var(--siiid-guinda);
+  font-size: 32px;
+  font-weight: 900;
+}
+
+p {
+  color: #667085;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.acciones button {
+  min-height: 42px;
+  border-radius: 3px;
+  padding: 0 20px;
+  font-weight: 800;
+}
+
+.btn-principal {
+  border: none;
+  background: var(--siiid-guinda);
+  color: #fff;
+}
+
+.btn-secundario {
+  border: 1px solid var(--siiid-guinda);
+  background: #fff;
+  color: var(--siiid-guinda);
+}

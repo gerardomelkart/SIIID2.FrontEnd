@@ -1,0 +1,37 @@
+<div class="modulo-page" style="background-image: url('img/ImgFondo2.png')">
+  <img class="modulo-logo" src="img/LogoSEGURIDAD.png"
+    alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
+
+  <section class="modulo-panel">
+    <h1>Seleccione un módulo</h1>
+    <p class="usuario">Bienvenido, {{ nombreUsuario() }}</p>
+
+    <div class="modulo-grid">
+      @for (modulo of modulos(); track modulo.idModulo) {
+      <button type="button" class="modulo-card" (click)="seleccionar(modulo)">
+        <span class="modulo-icon">
+          @if (modulo.clave === 'MENSUAL') {
+          <i class="fa-solid fa-calendar-days"></i>
+          } @else {
+          <i class="fa-solid fa-calendar-week"></i>
+          }
+        </span>
+
+        <strong>{{ modulo.nombre }}</strong>
+
+        <span>
+          @if (modulo.clave === 'MENSUAL') {
+          Integración mensual de incidencia delictiva.
+          } @else {
+          Integración y seguimiento semanal de delitos configurados.
+          }
+        </span>
+      </button>
+      }
+    </div>
+
+    <button type="button" class="cerrar-sesion" (click)="cerrarSesion()">
+      Cerrar sesión
+    </button>
+  </section>
+</div>

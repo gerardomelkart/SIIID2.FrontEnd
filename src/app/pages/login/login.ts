@@ -1,9 +1,10 @@
 import { Component, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
+import { SessionService } from '../../core/services/session.service';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ export class Login {
 
   constructor(
     private authService: AuthService,
+    private sessionService: SessionService,
     private router: Router,
   ) {}
 
@@ -49,11 +51,23 @@ export class Login {
           return;
         }
 
-        void this.router.navigateByUrl('/');
+        const modulos = this.sessionService.modulos();
+
+        if (modulos.length === 0) {
+          this.authService.logout();
+          this.mensajeError.set('El usuario no tiene módulos habilitados.');
+          return;
+        }
+
+        if (modulos.length > 1) {
+          void this.router.navigateByUrl('/seleccionar-modulo');
+          return;
+        }
+
+        void this.router.navigateByUrl(this.sessionService.obtenerRutaModulo(modulos[0].clave));
       },
       error: (error) => {
         this.cargando.set(false);
-
         this.mensajeError.set(
           obtenerMensajeErrorHttp(
             error,
