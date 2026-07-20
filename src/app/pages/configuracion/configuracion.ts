@@ -447,11 +447,7 @@ export class Configuracion implements OnInit {
     });
   }
 
-  private construirRequestEditarUsuario(
-    usuario: UsuarioDetalle,
-    habilitaCarga: boolean,
-    habilitaModificacion: boolean,
-  ): EditarUsuarioRequest {
+  private construirRequestEditarUsuario(usuario: UsuarioDetalle, habilitaCarga: boolean, habilitaModificacion: boolean): EditarUsuarioRequest {
     return {
       usuario: usuario.usuario,
       nuevaPassword: null,
@@ -466,6 +462,10 @@ export class Configuracion implements OnInit {
       rol: usuario.rol,
       habilitaCarga,
       habilitaModificacion,
+      habilitaSemanal: usuario.habilitaSemanal,
+      habilitaCargaSemanal: usuario.habilitaCargaSemanal,
+      habilitaModificacionSemanal: usuario.habilitaModificacionSemanal,
+      administraDelitosSemanal: usuario.administraDelitosSemanal,
     };
   }
 
