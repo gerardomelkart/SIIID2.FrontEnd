@@ -24,6 +24,7 @@ export const routes: Routes = [
       import('./pages/seleccionar-modulo/seleccionar-modulo').then((m) => m.SeleccionarModulo),
     canActivate: [authGuard, cambioPasswordGuard],
   },
+
   {
     path: 'semanal',
     loadComponent: () =>
@@ -37,6 +38,16 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
+      },
+      {
+        path: 'carga',
+        loadComponent: () =>
+          import('./pages/semanal-carga/semanal-carga').then((m) => m.SemanalCarga),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+          permiso: 'CARGA',
+        },
       },
       {
         path: 'administracion/usuarios',
@@ -59,15 +70,7 @@ export const routes: Routes = [
       },
     ],
   },
-  {
-    path: 'carga',
-    loadComponent: () => import('./pages/semanal-carga/semanal-carga').then((m) => m.SemanalCarga),
-    canActivate: [permissionGuard],
-    data: {
-      roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-      permiso: 'CARGA',
-    },
-  },
+
   {
     path: '',
     loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
