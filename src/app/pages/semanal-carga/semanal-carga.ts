@@ -59,10 +59,7 @@ interface VistaTramoSemanal {
   selector: 'app-semanal-carga',
   imports: [FormsModule],
   templateUrl: './semanal-carga.html',
-  styleUrls: [
-    '../semanal-usuarios/semanal-usuarios.css',
-    './semanal-carga.css',
-  ],
+  styleUrls: ['../semanal-usuarios/semanal-usuarios.css', './semanal-carga.css'],
 })
 export class SemanalCarga {
   private readonly semanalCargaService = inject(SemanalCargaService);
@@ -121,12 +118,8 @@ export class SemanalCarga {
     },
   ];
 
-  archivos = signal<ArchivosCargaSeleccionados>(
-    crearArchivosCargaVacios(),
-  );
-  formulario = signal<SemanalCargaFormulario>(
-    this.crearFormularioInicial(),
-  );
+  archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
+  formulario = signal<SemanalCargaFormulario>(this.crearFormularioInicial());
   estado = signal<EstadoCargaSemanal>('CAPTURA');
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   errorGeneral = signal('');
@@ -155,25 +148,19 @@ export class SemanalCarga {
   puedeValidar = computed(
     () =>
       tieneTresArchivosSeleccionados(this.archivos()) &&
-      this      this.periodoValido() &&
+      this.periodoValido() &&
       this.estado() !== 'VALIDANDO' &&
       this.estado() !== 'CONFIRMANDO',
   );
 
   mostrandoResultado = computed(
-    () =>
-      this.estado() === 'RESULTADO' ||
-      this.estado() === 'CONFIRMANDO',
+    () => this.estado() === 'RESULTADO' || this.estado() === 'CONFIRMANDO',
   );
 
-  respuestaValida = computed(
-    () => this.respuesta()?.esValido === true,
-  );
+  respuestaValida = computed(() => this.respuesta()?.esValido === true);
 
   errores = computed(() => this.respuesta()?.errores ?? []);
-  advertencias = computed(
-    () => this.respuesta()?.advertencias ?? [],
-  );
+  advertencias = computed(() => this.respuesta()?.advertencias ?? []);
 
   detallesValidacion = computed<CargaValidacionError[]>(() => [
     ...this.errores(),
@@ -195,21 +182,13 @@ export class SemanalCarga {
   seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
     const archivo = obtenerArchivoDesdeEvento(event);
 
-    this.archivos.set(
-      actualizarArchivoSeleccionado(
-        this.archivos(),
-        tipo,
-        archivo,
-      ),
-    );
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
 
     this.limpiarResultado();
   }
 
   nombreArchivo(tipo: ArchivoCargaTipo): string {
-    return (
-      this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado'
-    );
+    return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
   }
 
   tamanioArchivo(tipo: ArchivoCargaTipo): string {
@@ -229,9 +208,7 @@ export class SemanalCarga {
     const formulario = this.formulario();
 
     if (!tieneTresArchivosSeleccionados(archivos)) {
-      this.errorGeneral.set(
-        'Debe seleccionar los archivos de carpetas, delitos y víctimas.',
-      );
+      this.errorGeneral.set('Debe seleccionar los archivos de carpetas, delitos y víctimas.');
       return;
     }
 
@@ -240,9 +217,7 @@ export class SemanalCarga {
       formulario.anioSemana === null ||
       formulario.numeroSemana === null
     ) {
-      this.errorGeneral.set(
-        'Complete un periodo semanal válido antes de continuar.',
-      );
+      this.errorGeneral.set('Complete un periodo semanal válido antes de continuar.');
       return;
     }
 
@@ -259,44 +234,32 @@ export class SemanalCarga {
     this.respuesta.set(null);
     this.errorGeneral.set('');
 
-    this.semanalCargaService
-      .validarArchivos(archivos, periodo)
-      .subscribe({
-        next: (response) => {
+    this.semanalCargaService.validarArchivos(archivos, periodo).subscribe({
+      next: (response) => {
+        this.respuesta.set(response);
+        this.estado.set('RESULTADO');
+      },
+      error: (error: unknown) => {
+        const response = obtenerErrorPayload<SemanalCargaValidacionResponse>(error);
+
+        if (response?.errores || response?.resumenValidacion) {
           this.respuesta.set(response);
           this.estado.set('RESULTADO');
-        },
-        error: (error: unknown) => {
-          const response =
-            obtenerErrorPayload<SemanalCargaValidacionResponse>(
-              error,
-            );
+          return;
+        }
 
-          if (response?.errores || response?.resumenValidacion) {
-            this.respuesta.set(response);
-            this.estado.set('RESULTADO');
-            return;
-          }
-
-          this.estado.set('CAPTURA');
-          this.errorGeneral.set(
-            obtenerMensajeErrorHttp(
-              error,
-              'No fue posible validar la carga semanal.',
-            ),
-          );
-        },
-      });
+        this.estado.set('CAPTURA');
+        this.errorGeneral.set(
+          obtenerMensajeErrorHttp(error, 'No fue posible validar la carga semanal.'),
+        );
+      },
+    });
   }
 
   confirmarCarga(aceptar: boolean): void {
     const response = this.respuesta();
 
-    if (
-      !response?.esValido ||
-      !response.codigoReferencia ||
-      this.estado() === 'CONFIRMANDO'
-    ) {
+    if (!response?.esValido || !response.codigoReferencia || this.estado() === 'CONFIRMANDO') {
       return;
     }
 
@@ -309,8 +272,7 @@ export class SemanalCarga {
       })
       .subscribe({
         next: (resultado) => {
-          const pendienteAprobacion =
-            resultado.estado === 'PENDIENTE_APROBACION';
+          const pendienteAprobacion = resultado.estado === 'PENDIENTE_APROBACION';
 
           const titulo = aceptar
             ? pendienteAprobacion
@@ -318,10 +280,7 @@ export class SemanalCarga {
               : 'Carga semanal confirmada'
             : 'Carga semanal rechazada';
 
-          mostrarExitoInstitucional(
-            titulo,
-            resultado.mensaje,
-          ).then(() => {
+          mostrarExitoInstitucional(titulo, resultado.mensaje).then(() => {
             this.reiniciarFormulario();
             void this.router.navigateByUrl('/semanal');
           });
@@ -330,13 +289,8 @@ export class SemanalCarga {
           this.estado.set('RESULTADO');
 
           mostrarError(
-            aceptar
-              ? 'No fue posible confirmar la carga'
-              : 'No fue posible rechazar la carga',
-            obtenerMensajeErrorHttp(
-              error,
-              'Revise la conexión con la API.',
-            ),
+            aceptar ? 'No fue posible confirmar la carga' : 'No fue posible rechazar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           );
         },
       });
@@ -364,23 +318,14 @@ export class SemanalCarga {
     if (!response) return 0;
 
     if (tipo === 'carpetas') {
-      return (
-        response.totalCarpetasIncluidas +
-        response.totalCarpetasExcluidas
-      );
+      return response.totalCarpetasIncluidas + response.totalCarpetasExcluidas;
     }
 
     if (tipo === 'delitos') {
-      return (
-        response.totalDelitosIncluidos +
-        response.totalDelitosExcluidos
-      );
+      return response.totalDelitosIncluidos + response.totalDelitosExcluidos;
     }
 
-    return (
-      response.totalVictimasIncluidas +
-      response.totalVictimasExcluidas
-    );
+    return response.totalVictimasIncluidas + response.totalVictimasExcluidas;
   }
 
   totalIncluido(tipo: ArchivoCargaTipo): number {
@@ -415,13 +360,10 @@ export class SemanalCarga {
     return response.totalVictimasExcluidas;
   }
 
-  formatearFecha(
-    valor: string | Date | null | undefined,
-  ): string {
+  formatearFecha(valor: string | Date | null | undefined): string {
     if (!valor) return '-';
 
-    const fecha =
-      valor instanceof Date ? valor : this.convertirFecha(valor);
+    const fecha = valor instanceof Date ? valor : this.convertirFecha(valor);
 
     return fecha
       ? new Intl.DateTimeFormat('es-MX', {
@@ -432,38 +374,24 @@ export class SemanalCarga {
       : '-';
   }
 
-  etiquetaTipoContenido(
-    tipo: TipoContenidoSemanal | undefined,
-  ): string {
-    return tipo === 'ACUMULADO_MES'
-      ? 'Acumulado del mes'
-      : 'Solo semana';
+  etiquetaTipoContenido(tipo: TipoContenidoSemanal | undefined): string {
+    return tipo === 'ACUMULADO_MES' ? 'Acumulado del mes' : 'Solo semana';
   }
 
   nombreMes(numero: number | undefined): string {
-    return (
-      this.meses.find((mes) => mes.valor === numero)?.nombre ?? '-'
-    );
+    return this.meses.find((mes) => mes.valor === numero)?.nombre ?? '-';
   }
 
   esErrorDetalle(detalle: CargaValidacionError): boolean {
     return this.errores().includes(detalle);
   }
 
-  resumenPorArchivo(
-    tipo: ArchivoCargaTipo,
-  ): CargaValidacionResumenItem[] {
-    return obtenerResumenPorArchivo(
-      this.respuesta()?.resumenValidacion ?? [],
-      tipo,
-    );
+  resumenPorArchivo(tipo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
+    return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
   }
 
   private limpiarResultado(): void {
-    if (
-      this.estado() === 'VALIDANDO' ||
-      this.estado() === 'CONFIRMANDO'
-    ) {
+    if (this.estado() === 'VALIDANDO' || this.estado() === 'CONFIRMANDO') {
       return;
     }
 
@@ -485,83 +413,49 @@ export class SemanalCarga {
     };
   }
 
-  private calcularTramo(
-    formulario: SemanalCargaFormulario,
-  ): VistaTramoSemanal | null {
-    const fechaInicioSemana = this.convertirFecha(
-      formulario.fechaInicioSemana,
-    );
+  private calcularTramo(formulario: SemanalCargaFormulario): VistaTramoSemanal | null {
+    const fechaInicioSemana = this.convertirFecha(formulario.fechaInicioSemana);
 
-    if (
-      !fechaInicioSemana ||
-      formulario.mesCorte < 1 ||
-      formulario.mesCorte > 12
-    ) {
+    if (!fechaInicioSemana || formulario.mesCorte < 1 || formulario.mesCorte > 12) {
       return null;
     }
 
     const fechaFinSemana = this.sumarDias(fechaInicioSemana, 6);
-    const fechaInicioMes = new Date(
-      formulario.anioCorte,
-      formulario.mesCorte - 1,
-      1,
-    );
-    const fechaFinMes = new Date(
-      formulario.anioCorte,
-      formulario.mesCorte,
-      0,
-    );
+    const fechaInicioMes = new Date(formulario.anioCorte, formulario.mesCorte - 1, 1);
+    const fechaFinMes = new Date(formulario.anioCorte, formulario.mesCorte, 0);
 
     const fechaInicioTramo =
-      fechaInicioSemana > fechaInicioMes
-        ? fechaInicioSemana
-        : fechaInicioMes;
+      fechaInicioSemana > fechaInicioMes ? fechaInicioSemana : fechaInicioMes;
 
-    const fechaFinTramo =
-      fechaFinSemana < fechaFinMes
-        ? fechaFinSemana
-        : fechaFinMes;
+    const fechaFinTramo = fechaFinSemana < fechaFinMes ? fechaFinSemana : fechaFinMes;
 
     const intersecaMes = fechaInicioTramo <= fechaFinTramo;
 
     return {
       fechaInicioSemana,
       fechaFinSemana,
-      fechaInicioTramo: intersecaMes
-        ? fechaInicioTramo
-        : null,
+      fechaInicioTramo: intersecaMes ? fechaInicioTramo : null,
       fechaFinTramo: intersecaMes ? fechaFinTramo : null,
       intersecaMes,
       semanaCortada:
         intersecaMes &&
-        (fechaInicioTramo.getTime() !==
-          fechaInicioSemana.getTime() ||
-          fechaFinTramo.getTime() !==
-            fechaFinSemana.getTime()),
+        (fechaInicioTramo.getTime() !== fechaInicioSemana.getTime() ||
+          fechaFinTramo.getTime() !== fechaFinSemana.getTime()),
     };
   }
 
   private convertirFecha(valor: string): Date | null {
     const fechaBase = valor.slice(0, 10);
-    const partes = fechaBase
-      .split('-')
-      .map((parte) => Number(parte));
+    const partes = fechaBase.split('-').map((parte) => Number(parte));
 
-    if (
-      partes.length !== 3 ||
-      partes.some((parte) => !Number.isInteger(parte))
-    ) {
+    if (partes.length !== 3 || partes.some((parte) => !Number.isInteger(parte))) {
       return null;
     }
 
     const [anio, mes, dia] = partes;
     const fecha = new Date(anio, mes - 1, dia);
 
-    if (
-      fecha.getFullYear() !== anio ||
-      fecha.getMonth() !== mes - 1 ||
-      fecha.getDate() !== dia
-    ) {
+    if (fecha.getFullYear() !== anio || fecha.getMonth() !== mes - 1 || fecha.getDate() !== dia) {
       return null;
     }
 
