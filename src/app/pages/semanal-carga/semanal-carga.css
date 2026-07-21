@@ -203,7 +203,10 @@
 
 .periodo-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  grid-template-columns:
+    minmax(260px, 0.75fr)
+    minmax(280px, 1.25fr);
+  align-items: end;
   gap: 12px;
 }
 
@@ -215,17 +218,48 @@
   font-weight: 900;
 }
 
-.campo-periodo .form-control,
-.campo-periodo .form-select {
-  min-height: 40px;
+.campo-periodo .form-control {
+  min-height: 46px;
   border-radius: 0;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.campo-periodo .form-control:focus,
-.campo-periodo .form-select:focus {
+.campo-periodo .form-control:focus {
   border-color: var(--siiid-guinda);
   box-shadow: 0 0 0 0.2rem rgba(35, 91, 78, 0.14);
+}
+
+.periodo-automatico {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 46px;
+  border-left: 5px solid var(--siiid-guinda);
+  background: #edf4f1;
+  padding: 8px 12px;
+}
+
+.periodo-automatico > i {
+  color: var(--siiid-guinda);
+  font-size: 18px;
+}
+
+.periodo-automatico strong,
+.periodo-automatico span {
+  display: block;
+}
+
+.periodo-automatico strong {
+  color: var(--siiid-guinda-dark);
+  font-size: 11px;
+}
+
+.periodo-automatico span {
+  margin-top: 1px;
+  color: #667085;
+  font-size: 10px;
+  line-height: 1.3;
 }
 
 .tramo-preview {
@@ -277,22 +311,6 @@
 
 .tramo-cortado > i {
   color: var(--siiid-dorado);
-}
-
-.tramo-invalido {
-  grid-template-columns: auto 1fr;
-  border-left-color: #b42318;
-  background: #fff1f0;
-  color: #8a1f1f;
-}
-
-.tramo-invalido > i {
-  color: #b42318;
-}
-
-.archivos-grid {
-  display: grid;
-  gap: 10px;
 }
 
 .archivo-card {
@@ -871,9 +889,6 @@
 }
 
 @media (max-width: 1200px) {
-  .periodo-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 
   .periodo-confirmado {
     grid-template-columns: repeat(3, 1fr);

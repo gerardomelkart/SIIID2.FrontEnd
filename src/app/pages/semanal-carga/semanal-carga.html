@@ -3,10 +3,10 @@
     <div>
       <span>Módulo semanal</span>
       <h1>Carga semanal de incidencia delictiva</h1>
-      <p>
-        Integre únicamente el tramo semanal que corresponde al mes de corte
-        seleccionado.
-      </p>
+<p>
+  Seleccione la semana; el sistema calculará automáticamente
+  todo el periodo de carga.
+</p>
     </div>
 
     @if (mostrandoResultado()) {
@@ -42,212 +42,153 @@
               </div>
             </div>
 
-            <div class="seccion-titulo">
-              <div>
-                <strong>Contenido de los archivos</strong>
-                <p>
-                  Indique si cada archivo contiene solo la semana o el
-                  acumulado completo del mes.
-                </p>
-              </div>
-            </div>
+<div class="seccion-titulo">
+  <div>
+    <strong>Tipo de carga</strong>
+    <p>
+      Indique si los archivos contienen solo la semana o el
+      acumulado del mes.
+    </p>
+  </div>
+</div>
 
-            <div class="tipo-contenido-grid">
-              <label
-                class="tipo-contenido-card"
-                [class.seleccionado]="
-                  formulario().tipoContenido === 'SOLO_SEMANA'
-                "
-              >
-                <input
-                  type="radio"
-                  name="tipoContenido"
-                  value="SOLO_SEMANA"
-                  [ngModel]="formulario().tipoContenido"
-                  (ngModelChange)="
-                    actualizarCampo('tipoContenido', $event)
-                  "
-                />
+<div class="tipo-contenido-grid">
+  <label
+    class="tipo-contenido-card"
+    [class.seleccionado]="
+      formulario().tipoContenido === 'SOLO_SEMANA'
+    "
+  >
+    <input
+      type="radio"
+      name="tipoContenido"
+      value="SOLO_SEMANA"
+      [ngModel]="formulario().tipoContenido"
+      (ngModelChange)="
+        actualizarCampo('tipoContenido', $event)
+      "
+    />
 
-                <span class="tipo-icono">
-                  <i class="fa-solid fa-calendar-day"></i>
-                </span>
+    <span class="tipo-icono">
+      <i class="fa-solid fa-calendar-day"></i>
+    </span>
 
-                <span>
-                  <strong>Solo semana</strong>
-                  <small>
-                    Los archivos contienen exclusivamente los registros de
-                    la semana indicada.
-                  </small>
-                </span>
-              </label>
+    <span>
+      <strong>Carga semanal</strong>
+      <small>
+        Los archivos contienen exclusivamente los registros de
+        la semana indicada.
+      </small>
+    </span>
+  </label>
 
-              <label
-                class="tipo-contenido-card"
-                [class.seleccionado]="
-                  formulario().tipoContenido === 'ACUMULADO_MES'
-                "
-              >
-                <input
-                  type="radio"
-                  name="tipoContenido"
-                  value="ACUMULADO_MES"
-                  [ngModel]="formulario().tipoContenido"
-                  (ngModelChange)="
-                    actualizarCampo('tipoContenido', $event)
-                  "
-                />
+  <label
+    class="tipo-contenido-card"
+    [class.seleccionado]="
+      formulario().tipoContenido === 'ACUMULADO_MES'
+    "
+  >
+    <input
+      type="radio"
+      name="tipoContenido"
+      value="ACUMULADO_MES"
+      [ngModel]="formulario().tipoContenido"
+      (ngModelChange)="
+        actualizarCampo('tipoContenido', $event)
+      "
+    />
 
-                <span class="tipo-icono">
-                  <i class="fa-solid fa-layer-group"></i>
-                </span>
+    <span class="tipo-icono">
+      <i class="fa-solid fa-layer-group"></i>
+    </span>
 
-                <span>
-                  <strong>Acumulado del mes</strong>
-                  <small>
-                    Los archivos contienen el mes completo y el sistema
-                    conservará solo el tramo semanal.
-                  </small>
-                </span>
-              </label>
-            </div>
+    <span>
+      <strong>Acumulado mensual</strong>
+      <small>
+        Los archivos contienen el mes completo y el sistema
+        conservará solo el tramo semanal.
+      </small>
+    </span>
+  </label>
+</div>
 
-            <div class="seccion-titulo seccion-periodo">
-              <div>
-                <strong>Identificación de la semana</strong>
-                <p>
-                  La fecha inicial define un periodo de siete días
-                  naturales.
-                </p>
-              </div>
-            </div>
+<div class="seccion-titulo seccion-periodo">
+  <div>
+    <strong>Semana a integrar</strong>
+    <p>
+      Seleccione una semana del calendario; los demás datos se
+      obtienen de ella.
+    </p>
+  </div>
+</div>
 
-            <div class="periodo-grid">
-              <label class="campo-periodo">
-                <span>Año de la semana</span>
-                <input
-                  type="number"
-                  min="2000"
-                  max="2100"
-                  class="form-control"
-                  [ngModel]="formulario().anioSemana"
-                  (ngModelChange)="
-                    actualizarCampo('anioSemana', $event)
-                  "
-                />
-              </label>
+<div class="periodo-grid">
+  <label class="campo-periodo campo-semana">
+    <span>Seleccionar semana</span>
 
-              <label class="campo-periodo">
-                <span>Número de semana</span>
-                <input
-                  type="number"
-                  min="1"
-                  max="53"
-                  placeholder="1 a 53"
-                  class="form-control"
-                  [ngModel]="formulario().numeroSemana"
-                  (ngModelChange)="
-                    actualizarCampo('numeroSemana', $event)
-                  "
-                />
-              </label>
+    <input
+      type="week"
+      min="2000-W01"
+      max="2100-W51"
+      class="form-control"
+      [ngModel]="formulario().semanaSeleccionada"
+      (ngModelChange)="
+        actualizarCampo('semanaSeleccionada', $event)
+      "
+    />
+  </label>
 
-              <label class="campo-periodo campo-fecha">
-                <span>Fecha de inicio</span>
-                <input
-                  type="date"
-                  class="form-control"
-                  [ngModel]="formulario().fechaInicioSemana"
-                  (ngModelChange)="
-                    actualizarCampo('fechaInicioSemana', $event)
-                  "
-                />
-              </label>
+  <div class="periodo-automatico">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
 
-              <label class="campo-periodo">
-                <span>Mes de corte</span>
-                <select
-                  class="form-select"
-                  [ngModel]="formulario().mesCorte"
-                  (ngModelChange)="
-                    actualizarCampo('mesCorte', $event)
-                  "
-                >
-                  @for (mes of meses; track mes.valor) {
-                    <option [ngValue]="mes.valor">
-                      {{ mes.nombre }}
-                    </option>
-                  }
-                </select>
-              </label>
+    <div>
+      <strong>Cálculo automático</strong>
+      <span>
+        Año, número de semana, fechas y mes de corte se enviarán
+        automáticamente.
+      </span>
+    </div>
+  </div>
+</div>
 
-              <label class="campo-periodo">
-                <span>Año de corte</span>
-                <input
-                  type="number"
-                  min="2000"
-                  max="2100"
-                  class="form-control"
-                  [ngModel]="formulario().anioCorte"
-                  (ngModelChange)="
-                    actualizarCampo('anioCorte', $event)
-                  "
-                />
-              </label>
-            </div>
+@if (tramoPrevisto(); as tramo) {
+  <div
+    class="tramo-preview"
+    [class.tramo-cortado]="tramo.semanaCortada"
+  >
+    <i class="fa-solid fa-calendar-check"></i>
 
-            @if (tramoPrevisto(); as tramo) {
-              <div
-                class="tramo-preview"
-                [class.tramo-invalido]="!tramo.intersecaMes"
-                [class.tramo-cortado]="tramo.semanaCortada"
-              >
-                <i
-                  class="fa-solid"
-                  [class.fa-calendar-check]="tramo.intersecaMes"
-                  [class.fa-triangle-exclamation]="
-                    !tramo.intersecaMes
-                  "
-                ></i>
+    <div>
+      <span>
+        Semana {{ tramo.numeroSemana }} / {{ tramo.anioSemana }}
+      </span>
 
-                @if (tramo.intersecaMes) {
-                  <div>
-                    <span>Semana completa</span>
-                    <strong>
-                      {{ formatearFecha(tramo.fechaInicioSemana) }} al
-                      {{ formatearFecha(tramo.fechaFinSemana) }}
-                    </strong>
-                  </div>
+      <strong>
+        {{ formatearFecha(tramo.fechaInicioSemana) }} al
+        {{ formatearFecha(tramo.fechaFinSemana) }}
+      </strong>
+    </div>
 
-                  <div>
-                    <span>
-                      Tramo que se integrará en
-                      {{ nombreMes(formulario().mesCorte) }}
-                    </span>
-                    <strong>
-                      {{ formatearFecha(tramo.fechaInicioTramo) }} al
-                      {{ formatearFecha(tramo.fechaFinTramo) }}
-                    </strong>
-                  </div>
+    <div>
+      <span>
+        Tramo que se integrará en
+        {{ nombreMes(tramo.mesCorte) }}
+      </span>
 
-                  @if (tramo.semanaCortada) {
-                    <em>
-                      La semana cruza de mes; solo se conservarán los
-                      registros del mes de corte.
-                    </em>
-                  }
-                } @else {
-                  <div>
-                    <span>Periodo inválido</span>
-                    <strong>
-                      La semana indicada no coincide con el mes y año de
-                      corte.
-                    </strong>
-                  </div>
-                }
-              </div>
-            }
+      <strong>
+        {{ formatearFecha(tramo.fechaInicioTramo) }} al
+        {{ formatearFecha(tramo.fechaFinTramo) }}
+      </strong>
+    </div>
 
+    @if (tramo.semanaCortada) {
+      <em>
+        La semana cruza de mes; se conservará automáticamente el
+        tramo del mes en que termina la semana.
+      </em>
+    }
+  </div>
+}
             <div class="seccion-titulo seccion-archivos">
               <div>
                 <strong>Archivos requeridos</strong>
