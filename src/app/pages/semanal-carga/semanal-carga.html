@@ -66,8 +66,8 @@
               <span>
                 <strong>Carga semanal</strong>
                 <small>
-                  Se toma automáticamente la semana en curso y se integran
-                  registros de semanas que todavía no tengan carga.
+                  Los archivos contienen exclusivamente los registros de
+                  la semana seleccionada.
                 </small>
               </span>
             </label>
@@ -75,10 +75,9 @@
             <label class="tipo-contenido-card" [class.seleccionado]="
       formulario().tipoContenido === 'ACUMULADO_MES'
     ">
+
               <input type="radio" name="tipoContenido" value="ACUMULADO_MES" [ngModel]="formulario().tipoContenido"
-                (ngModelChange)="
-        actualizarCampo('tipoContenido', $event)
-      " />
+                (ngModelChange)="actualizarTipoContenido($event)" />
 
               <span class="tipo-icono">
                 <i class="fa-solid fa-layer-group"></i>
@@ -87,8 +86,8 @@
               <span>
                 <strong>Acumulado mensual</strong>
                 <small>
-                  Los archivos contienen el mes completo y el sistema
-                  conservará solo el tramo semanal.
+                  Se toma automáticamente la semana en curso y se integran
+                  registros de semanas que todavía no tengan carga.
                 </small>
               </span>
             </label>
