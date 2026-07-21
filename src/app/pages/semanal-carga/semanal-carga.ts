@@ -1,20 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import {
-  CargaValidacionError,
-  CargaValidacionResumenItem,
-} from '../../core/models/carga.models';
+import { CargaValidacionError, CargaValidacionResumenItem } from '../../core/models/carga.models';
 import {
   SemanalCargaPeriodoRequest,
   SemanalCargaValidacionResponse,
   TipoContenidoSemanal,
 } from '../../core/models/semanal-carga.models';
 import { SemanalCargaService } from '../../core/services/semanal-carga.service';
-import {
-  ArchivoCargaTipo,
-  ArchivosCargaSeleccionados,
-} from '../../core/types/archivo-carga.types';
+import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/archivo-carga.types';
 import {
   actualizarArchivoSeleccionado,
   crearArchivosCargaVacios,
@@ -22,20 +16,10 @@ import {
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
-import {
-  mostrarError,
-  mostrarExitoInstitucional,
-} from '../../core/utils/alert.utils';
-import {
-  obtenerErrorPayload,
-  obtenerMensajeErrorHttp,
-} from '../../core/utils/http-error.utils';
+import { mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
-type EstadoCargaSemanal =
-  | 'CAPTURA'
-  | 'VALIDANDO'
-  | 'RESULTADO'
-  | 'CONFIRMANDO';
+type EstadoCargaSemanal = 'CAPTURA' | 'VALIDANDO' | 'RESULTADO' | 'CONFIRMANDO';
 
 interface SemanalCargaFormulario {
   tipoContenido: TipoContenidoSemanal;
@@ -123,8 +107,8 @@ export class SemanalCarga {
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   errorGeneral = signal('');
 
-tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
-periodoValido = computed(() => this.tramoPrevisto() !== null);
+  tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
+  periodoValido = computed(() => this.tramoPrevisto() !== null);
 
   puedeValidar = computed(
     () =>
@@ -184,52 +168,41 @@ periodoValido = computed(() => this.tramoPrevisto() !== null);
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-validarArchivos(): void {
-  const archivos = this.archivos();
-  const formulario = this.formulario();
-  const tramo = this.tramoPrevisto();
+  validarArchivos(): void {
+    const archivos = this.archivos();
+    const formulario = this.formulario();
+    const tramo = this.tramoPrevisto();
 
-  if (!tieneTresArchivosSeleccionados(archivos)) {
-    this.errorGeneral.set(
-      'Debe seleccionar los archivos de carpetas, delitos y víctimas.',
-    );
-    return;
-  }
+    if (!tieneTresArchivosSeleccionados(archivos)) {
+      this.errorGeneral.set('Debe seleccionar los archivos de carpetas, delitos y víctimas.');
+      return;
+    }
 
-  if (!tramo) {
-    this.errorGeneral.set(
-      'Seleccione una semana válida antes de continuar.',
-    );
-    return;
-  }
+    if (!tramo) {
+      this.errorGeneral.set('Seleccione una semana válida antes de continuar.');
+      return;
+    }
 
-  const periodo: SemanalCargaPeriodoRequest = {
-    tipoContenido: formulario.tipoContenido,
-    anioSemana: tramo.anioSemana,
-    numeroSemana: tramo.numeroSemana,
-    fechaInicioSemana: this.formatearFechaApi(
-      tramo.fechaInicioSemana,
-    ),
-    mesCorte: tramo.mesCorte,
-    anioCorte: tramo.anioCorte,
-  };
+    const periodo: SemanalCargaPeriodoRequest = {
+      tipoContenido: formulario.tipoContenido,
+      anioSemana: tramo.anioSemana,
+      numeroSemana: tramo.numeroSemana,
+      fechaInicioSemana: this.formatearFechaApi(tramo.fechaInicioSemana),
+      mesCorte: tramo.mesCorte,
+      anioCorte: tramo.anioCorte,
+    };
 
-  this.estado.set('VALIDANDO');
-  this.respuesta.set(null);
-  this.errorGeneral.set('');
+    this.estado.set('VALIDANDO');
+    this.respuesta.set(null);
+    this.errorGeneral.set('');
 
-  this.semanalCargaService
-    .validarArchivos(archivos, periodo)
-    .subscribe({
+    this.semanalCargaService.validarArchivos(archivos, periodo).subscribe({
       next: (response) => {
         this.respuesta.set(response);
         this.estado.set('RESULTADO');
       },
       error: (error: unknown) => {
-        const response =
-          obtenerErrorPayload<SemanalCargaValidacionResponse>(
-            error,
-          );
+        const response = obtenerErrorPayload<SemanalCargaValidacionResponse>(error);
 
         if (response?.errores || response?.resumenValidacion) {
           this.respuesta.set(response);
@@ -239,14 +212,11 @@ validarArchivos(): void {
 
         this.estado.set('CAPTURA');
         this.errorGeneral.set(
-          obtenerMensajeErrorHttp(
-            error,
-            'No fue posible validar la carga semanal.',
-          ),
+          obtenerMensajeErrorHttp(error, 'No fue posible validar la carga semanal.'),
         );
       },
     });
-}
+  }
 
   confirmarCarga(aceptar: boolean): void {
     const response = this.respuesta();
@@ -392,150 +362,106 @@ validarArchivos(): void {
     this.estado.set('CAPTURA');
   }
 
-private crearFormularioInicial(): SemanalCargaFormulario {
-  return {
-    tipoContenido: 'SOLO_SEMANA',
-    semanaSeleccionada: '',
-  };
-}
-
-private calcularTramo(
-  formulario: SemanalCargaFormulario,
-): VistaTramoSemanal | null {
-  const coincidencia = /^(\d{4})-W(\d{2})$/.exec(
-    formulario.semanaSeleccionada,
-  );
-
-  if (!coincidencia) {
-    return null;
+  private crearFormularioInicial(): SemanalCargaFormulario {
+    return {
+      tipoContenido: 'SOLO_SEMANA',
+      semanaSeleccionada: '',
+    };
   }
 
-  const anioSemana = Number(coincidencia[1]);
-  const numeroSemana = Number(coincidencia[2]);
+  private calcularTramo(formulario: SemanalCargaFormulario): VistaTramoSemanal | null {
+    const coincidencia = /^(\d{4})-W(\d{2})$/.exec(formulario.semanaSeleccionada);
 
-  if (
-    anioSemana < 2000 ||
-    anioSemana > 2100 ||
-    numeroSemana < 1 ||
-    numeroSemana > 53
-  ) {
-    return null;
+    if (!coincidencia) {
+      return null;
+    }
+
+    const anioSemana = Number(coincidencia[1]);
+    const numeroSemana = Number(coincidencia[2]);
+
+    if (anioSemana < 2000 || anioSemana > 2100 || numeroSemana < 1 || numeroSemana > 53) {
+      return null;
+    }
+
+    const fechaInicioSemana = this.obtenerInicioSemanaIso(anioSemana, numeroSemana);
+
+    if (
+      !fechaInicioSemana ||
+      fechaInicioSemana < new Date(2000, 0, 1) ||
+      fechaInicioSemana > new Date(2100, 11, 25)
+    ) {
+      return null;
+    }
+
+    const fechaFinSemana = this.sumarDias(fechaInicioSemana, 6);
+    const mesCorte = fechaFinSemana.getMonth() + 1;
+    const anioCorte = fechaFinSemana.getFullYear();
+
+    const fechaInicioMes = new Date(anioCorte, mesCorte - 1, 1);
+    const fechaFinMes = new Date(anioCorte, mesCorte, 0);
+
+    const fechaInicioTramo =
+      fechaInicioSemana > fechaInicioMes ? fechaInicioSemana : fechaInicioMes;
+
+    const fechaFinTramo = fechaFinSemana < fechaFinMes ? fechaFinSemana : fechaFinMes;
+
+    return {
+      anioSemana,
+      numeroSemana,
+      fechaInicioSemana,
+      fechaFinSemana,
+      fechaInicioTramo,
+      fechaFinTramo,
+      mesCorte,
+      anioCorte,
+      semanaCortada:
+        fechaInicioSemana.getMonth() !== fechaFinSemana.getMonth() ||
+        fechaInicioSemana.getFullYear() !== fechaFinSemana.getFullYear(),
+    };
   }
 
-  const fechaInicioSemana = this.obtenerInicioSemanaIso(
-    anioSemana,
-    numeroSemana,
-  );
+  private obtenerInicioSemanaIso(anioSemana: number, numeroSemana: number): Date | null {
+    const cuatroDeEnero = new Date(Date.UTC(anioSemana, 0, 4));
 
-  if (
-    !fechaInicioSemana ||
-    fechaInicioSemana < new Date(2000, 0, 1) ||
-    fechaInicioSemana > new Date(2100, 11, 25)
-  ) {
-    return null;
+    const diaSemana = cuatroDeEnero.getUTCDay() || 7;
+
+    cuatroDeEnero.setUTCDate(cuatroDeEnero.getUTCDate() - diaSemana + 1 + (numeroSemana - 1) * 7);
+
+    const fechaInicio = new Date(
+      cuatroDeEnero.getUTCFullYear(),
+      cuatroDeEnero.getUTCMonth(),
+      cuatroDeEnero.getUTCDate(),
+    );
+
+    const semanaCalculada = this.obtenerSemanaIso(fechaInicio);
+
+    return semanaCalculada.anio === anioSemana && semanaCalculada.numero === numeroSemana
+      ? fechaInicio
+      : null;
   }
 
-  const fechaFinSemana = this.sumarDias(fechaInicioSemana, 6);
-  const mesCorte = fechaFinSemana.getMonth() + 1;
-  const anioCorte = fechaFinSemana.getFullYear();
+  private obtenerSemanaIso(fecha: Date): { anio: number; numero: number } {
+    const fechaUtc = new Date(Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()));
 
-  const fechaInicioMes = new Date(anioCorte, mesCorte - 1, 1);
-  const fechaFinMes = new Date(anioCorte, mesCorte, 0);
+    const diaSemana = fechaUtc.getUTCDay() || 7;
 
-  const fechaInicioTramo =
-    fechaInicioSemana > fechaInicioMes
-      ? fechaInicioSemana
-      : fechaInicioMes;
+    fechaUtc.setUTCDate(fechaUtc.getUTCDate() + 4 - diaSemana);
 
-  const fechaFinTramo =
-    fechaFinSemana < fechaFinMes
-      ? fechaFinSemana
-      : fechaFinMes;
+    const anio = fechaUtc.getUTCFullYear();
+    const inicioAnio = new Date(Date.UTC(anio, 0, 1));
 
-  return {
-    anioSemana,
-    numeroSemana,
-    fechaInicioSemana,
-    fechaFinSemana,
-    fechaInicioTramo,
-    fechaFinTramo,
-    mesCorte,
-    anioCorte,
-    semanaCortada:
-      fechaInicioSemana.getMonth() !== fechaFinSemana.getMonth() ||
-      fechaInicioSemana.getFullYear() !==
-        fechaFinSemana.getFullYear(),
-  };
-}
+    const numero = Math.ceil(((fechaUtc.getTime() - inicioAnio.getTime()) / 86400000 + 1) / 7);
 
-private obtenerInicioSemanaIso(
-  anioSemana: number,
-  numeroSemana: number,
-): Date | null {
-  const cuatroDeEnero = new Date(
-    Date.UTC(anioSemana, 0, 4),
-  );
+    return { anio, numero };
+  }
 
-  const diaSemana = cuatroDeEnero.getUTCDay() || 7;
+  private formatearFechaApi(fecha: Date): string {
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
 
-  cuatroDeEnero.setUTCDate(
-    cuatroDeEnero.getUTCDate() -
-      diaSemana +
-      1 +
-      (numeroSemana - 1) * 7,
-  );
-
-  const fechaInicio = new Date(
-    cuatroDeEnero.getUTCFullYear(),
-    cuatroDeEnero.getUTCMonth(),
-    cuatroDeEnero.getUTCDate(),
-  );
-
-  const semanaCalculada = this.obtenerSemanaIso(fechaInicio);
-
-  return semanaCalculada.anio === anioSemana &&
-    semanaCalculada.numero === numeroSemana
-    ? fechaInicio
-    : null;
-}
-
-private obtenerSemanaIso(
-  fecha: Date,
-): { anio: number; numero: number } {
-  const fechaUtc = new Date(
-    Date.UTC(
-      fecha.getFullYear(),
-      fecha.getMonth(),
-      fecha.getDate(),
-    ),
-  );
-
-  const diaSemana = fechaUtc.getUTCDay() || 7;
-
-  fechaUtc.setUTCDate(
-    fechaUtc.getUTCDate() + 4 - diaSemana,
-  );
-
-  const anio = fechaUtc.getUTCFullYear();
-  const inicioAnio = new Date(Date.UTC(anio, 0, 1));
-
-  const numero = Math.ceil(
-    ((fechaUtc.getTime() - inicioAnio.getTime()) /
-      86400000 +
-      1) /
-      7,
-  );
-
-  return { anio, numero };
-}
-
-private formatearFechaApi(fecha: Date): string {
-  const anio = fecha.getFullYear();
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
-
-  return `${anio}-${mes}-${dia}`;
-}
+    return `${anio}-${mes}-${dia}`;
+  }
 
   private convertirFecha(valor: string): Date | null {
     const fechaBase = valor.slice(0, 10);
