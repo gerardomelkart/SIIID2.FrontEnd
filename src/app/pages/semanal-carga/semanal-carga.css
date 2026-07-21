@@ -349,6 +349,16 @@
   background: #f8fbfa;
 }
 
+.archivo-card.archivo-arrastrando {
+  border-color: var(--siiid-dorado);
+  border-left-color: var(--siiid-dorado);
+  border-style: dashed;
+  border-left-style: solid;
+  background: #fff8eb;
+  box-shadow: 0 3px 8px rgba(166, 128, 52, 0.18);
+  transform: translateY(-1px);
+}
+
 .archivo-card input {
   position: absolute;
   width: 1px;
@@ -407,6 +417,12 @@
 
 .archivo-card:hover .archivo-accion {
   background: var(--siiid-guinda);
+  color: #fff;
+}
+
+.archivo-card.archivo-arrastrando .archivo-accion {
+  border-color: var(--siiid-dorado);
+  background: var(--siiid-dorado);
   color: #fff;
 }
 

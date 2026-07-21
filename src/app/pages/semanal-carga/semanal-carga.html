@@ -119,10 +119,10 @@
             <label class="campo-periodo campo-semana">
               <span>Seleccionar semana</span>
 
-              <input type="week" min="2000-W01" max="2100-W51" class="form-control"
-                [ngModel]="formulario().semanaSeleccionada" (ngModelChange)="
-            actualizarCampo('semanaSeleccionada', $event)
-          " />
+              <input type="week" min="2000-W01" [max]="semanaMaxima" class="form-control"
+                [ngModel]="formulario().semanaSeleccionada"
+                (ngModelChange)="actualizarCampo('semanaSeleccionada', $event)" />
+
             </label>
 
             <div class="periodo-automatico">
@@ -203,16 +203,17 @@
           <div class="seccion-titulo seccion-archivos">
             <div>
               <strong>Archivos requeridos</strong>
-              <p>
-                Utilice los mismos encabezados y estructura de las
-                plantillas mensuales.
+              <p>Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas mensuales.
               </p>
             </div>
           </div>
 
           <div class="archivos-grid">
             @for (archivo of tiposArchivo; track archivo.tipo) {
-            <label class="archivo-card" [class.archivo-listo]="archivos()[archivo.tipo]">
+            <label class="archivo-card" [class.archivo-listo]="archivos()[archivo.tipo]"
+              [class.archivo-arrastrando]="archivoArrastrado() === archivo.tipo"
+              (dragenter)="arrastrarArchivo($event, archivo.tipo)" (dragover)="arrastrarArchivo($event, archivo.tipo)"
+              (dragleave)="salirArrastreArchivo($event, archivo.tipo)" (drop)="soltarArchivo($event, archivo.tipo)">
               <span class="archivo-icono">
                 <i class="fa-solid" [class]="archivo.icono"></i>
               </span>
@@ -226,7 +227,8 @@
                 }
               </span>
 
-              <span class="archivo-accion">Seleccionar</span>
+              <span class="archivo-accion">{{ archivoArrastrado() === archivo.tipo ? 'Soltar aquí' : 'Seleccionar o
+                arrastrar' }}</span>
 
               <input type="file" accept=".csv,.xlsx" (change)="
                       seleccionarArchivo($event, archivo.tipo)

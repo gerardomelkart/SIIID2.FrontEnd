@@ -108,6 +108,9 @@ export class SemanalCarga {
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   errorGeneral = signal('');
 
+  archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
+  readonly semanaMaxima = this.obtenerSemanaInput(new Date());
+
   tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
   periodoValido = computed(() => this.tramoPrevisto() !== null);
 
@@ -160,6 +163,34 @@ export class SemanalCarga {
 
     this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
 
+    this.limpiarResultado();
+  }
+
+  arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.archivoArrastrado.set(tipo);
+  }
+
+  salirArrastreArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    const tarjeta = event.currentTarget as HTMLElement | null;
+    const destino = event.relatedTarget as Node | null;
+
+    if (tarjeta && destino && tarjeta.contains(destino)) return;
+    if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
+  }
+
+  soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(null);
+
+    const archivo = event.dataTransfer?.files.item(0) ?? null;
+
+    if (!archivo) return;
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
     this.limpiarResultado();
   }
 
@@ -282,6 +313,7 @@ export class SemanalCarga {
     this.formulario.set(this.crearFormularioInicial());
     this.respuesta.set(null);
     this.errorGeneral.set('');
+    this.archivoArrastrado.set(null);
     this.estado.set('CAPTURA');
   }
 
@@ -386,9 +418,7 @@ export class SemanalCarga {
     }
     const coincidencia = /^(\d{4})-W(\d{2})$/.exec(formulario.semanaSeleccionada);
 
-    if (!coincidencia) {
-      return null;
-    }
+    if (!coincidencia || formulario.semanaSeleccionada > this.semanaMaxima) return null;
 
     const anioSemana = Number(coincidencia[1]);
     const numeroSemana = Number(coincidencia[2]);
