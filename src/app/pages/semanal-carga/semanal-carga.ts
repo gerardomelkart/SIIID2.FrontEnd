@@ -22,7 +22,7 @@ import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/h
 type EstadoCargaSemanal = 'CAPTURA' | 'VALIDANDO' | 'RESULTADO' | 'CONFIRMANDO';
 
 interface SemanalCargaFormulario {
-  tipoContenido: TipoContenidoSemanal;
+  tipoContenido: TipoContenidoSemanal | '';
   semanaSeleccionada: string;
 }
 
@@ -33,6 +33,7 @@ interface VistaTramoSemanal {
   fechaFinSemana: Date;
   fechaInicioTramo: Date;
   fechaFinTramo: Date;
+  fechaInicioMesCorte: Date;
   mesCorte: number;
   anioCorte: number;
   semanaCortada: boolean;
@@ -144,6 +145,16 @@ export class SemanalCarga {
     this.limpiarResultado();
   }
 
+  actualizarTipoContenido(tipoContenido: TipoContenidoSemanal): void {
+    this.formulario.set({
+      tipoContenido,
+      semanaSeleccionada:
+        tipoContenido === 'ACUMULADO_MES' ? this.obtenerSemanaInput(new Date()) : '',
+    });
+
+    this.limpiarResultado();
+  }
+
   seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
     const archivo = obtenerArchivoDesdeEvento(event);
 
@@ -178,8 +189,8 @@ export class SemanalCarga {
       return;
     }
 
-    if (!tramo) {
-      this.errorGeneral.set('Seleccione una semana válida antes de continuar.');
+    if (!tramo || !formulario.tipoContenido) {
+      this.errorGeneral.set('Seleccione el tipo de carga y un periodo válido antes de continuar.');
       return;
     }
 
@@ -364,12 +375,15 @@ export class SemanalCarga {
 
   private crearFormularioInicial(): SemanalCargaFormulario {
     return {
-      tipoContenido: 'SOLO_SEMANA',
+      tipoContenido: '',
       semanaSeleccionada: '',
     };
   }
 
   private calcularTramo(formulario: SemanalCargaFormulario): VistaTramoSemanal | null {
+    if (!formulario.tipoContenido) {
+      return null;
+    }
     const coincidencia = /^(\d{4})-W(\d{2})$/.exec(formulario.semanaSeleccionada);
 
     if (!coincidencia) {
@@ -412,6 +426,7 @@ export class SemanalCarga {
       fechaFinSemana,
       fechaInicioTramo,
       fechaFinTramo,
+      fechaInicioMesCorte: fechaInicioMes,
       mesCorte,
       anioCorte,
       semanaCortada:
@@ -453,6 +468,12 @@ export class SemanalCarga {
     const numero = Math.ceil(((fechaUtc.getTime() - inicioAnio.getTime()) / 86400000 + 1) / 7);
 
     return { anio, numero };
+  }
+
+  private obtenerSemanaInput(fecha: Date): string {
+    const semana = this.obtenerSemanaIso(fecha);
+
+    return `${semana.anio}-W${String(semana.numero).padStart(2, '0')}`;
   }
 
   private formatearFechaApi(fecha: Date): string {

@@ -57,9 +57,7 @@
       formulario().tipoContenido === 'SOLO_SEMANA'
     ">
               <input type="radio" name="tipoContenido" value="SOLO_SEMANA" [ngModel]="formulario().tipoContenido"
-                (ngModelChange)="
-        actualizarCampo('tipoContenido', $event)
-      " />
+                (ngModelChange)="actualizarTipoContenido($event)" />
 
               <span class="tipo-icono">
                 <i class="fa-solid fa-calendar-day"></i>
@@ -68,8 +66,8 @@
               <span>
                 <strong>Carga semanal</strong>
                 <small>
-                  Los archivos contienen exclusivamente los registros de
-                  la semana indicada.
+                  Se toma automáticamente la semana en curso y se integran
+                  registros de semanas que todavía no tengan carga.
                 </small>
               </span>
             </label>
@@ -96,24 +94,36 @@
             </label>
           </div>
 
+          @if (formulario().tipoContenido) {
           <div class="seccion-titulo seccion-periodo">
             <div>
-              <strong>Semana a integrar</strong>
+              <strong>
+                {{
+                formulario().tipoContenido === 'SOLO_SEMANA'
+                ? 'Semana a cargar'
+                : 'Periodo automático'
+                }}
+              </strong>
+
               <p>
-                Seleccione una semana del calendario; los demás datos se
-                obtienen de ella.
+                @if (formulario().tipoContenido === 'SOLO_SEMANA') {
+                Seleccione la semana que desea cargar.
+                } @else {
+                El acumulado mensual utiliza automáticamente la semana en curso.
+                }
               </p>
             </div>
           </div>
 
           <div class="periodo-grid">
+            @if (formulario().tipoContenido === 'SOLO_SEMANA') {
             <label class="campo-periodo campo-semana">
               <span>Seleccionar semana</span>
 
               <input type="week" min="2000-W01" max="2100-W51" class="form-control"
                 [ngModel]="formulario().semanaSeleccionada" (ngModelChange)="
-        actualizarCampo('semanaSeleccionada', $event)
-      " />
+            actualizarCampo('semanaSeleccionada', $event)
+          " />
             </label>
 
             <div class="periodo-automatico">
@@ -122,11 +132,24 @@
               <div>
                 <strong>Cálculo automático</strong>
                 <span>
-                  Año, número de semana, fechas y mes de corte se enviarán
+                  Año, fechas y mes de corte se obtendrán de la semana
+                  seleccionada.
+                </span>
+              </div>
+            </div>
+            } @else {
+            <div class="periodo-automatico periodo-automatico-completo">
+              <i class="fa-solid fa-calendar-check"></i>
+
+              <div>
+                <strong>Semana en curso</strong>
+                <span>
+                  No necesita seleccionar una fecha; el periodo se calculó
                   automáticamente.
                 </span>
               </div>
             </div>
+            }
           </div>
 
           @if (tramoPrevisto(); as tramo) {
@@ -145,6 +168,7 @@
             </div>
 
             <div>
+              @if (formulario().tipoContenido === 'SOLO_SEMANA') {
               <span>
                 Tramo que se integrará en
                 {{ nombreMes(tramo.mesCorte) }}
@@ -154,16 +178,29 @@
                 {{ formatearFecha(tramo.fechaInicioTramo) }} al
                 {{ formatearFecha(tramo.fechaFinTramo) }}
               </strong>
+              } @else {
+              <span>
+                Acumulado que se revisará en
+                {{ nombreMes(tramo.mesCorte) }}
+              </span>
+
+              <strong>
+                {{ formatearFecha(tramo.fechaInicioMesCorte) }} al
+                {{ formatearFecha(tramo.fechaFinTramo) }}
+              </strong>
+              }
             </div>
 
             @if (tramo.semanaCortada) {
             <em>
-              La semana cruza de mes; se conservará automáticamente el
-              tramo del mes en que termina la semana.
+              La semana cruza de mes; en ambos tipos de carga solo se
+              considerarán los registros del mes donde cae el último día.
             </em>
             }
           </div>
           }
+          }
+          @if (periodoValido()) {
           <div class="seccion-titulo seccion-archivos">
             <div>
               <strong>Archivos requeridos</strong>
@@ -218,6 +255,7 @@
               Validar carga semanal
             </button>
           </div>
+          }
         </div>
       </section>
     </div>
