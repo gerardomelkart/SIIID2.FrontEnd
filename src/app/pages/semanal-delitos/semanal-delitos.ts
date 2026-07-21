@@ -1,12 +1,23 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActualizarConfiguracionDelitosSemanalesRequest, ConfiguracionDelitoSemanalItem } from '../../core/models/semanal-delitos.models';
+import { ActualizarConfiguracionDelitosSemanalesRequest, ConfiguracionModalidadSemanalItem } from '../../core/models/semanal-delitos.models';
 import { SemanalDelitosService } from '../../core/services/semanal-delitos.service';
 import { mostrarAdvertencia, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
-import { EstadoOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
 
-type CampoOrdenDelitos = 'clave' | 'delito' | 'bienJuridico' | 'seleccionado';
+interface DelitoSemanalAgrupado {
+  idDelito: number;
+  claveDelito: string;
+  delito: string;
+  modalidades: ConfiguracionModalidadSemanalItem[];
+}
+
+interface BienJuridicoSemanalAgrupado {
+  idBienJuridico: number;
+  claveBienJuridico: string;
+  bienJuridico: string;
+  delitos: DelitoSemanalAgrupado[];
+}
 
 @Component({
   selector: 'app-semanal-delitos',
@@ -17,24 +28,17 @@ type CampoOrdenDelitos = 'clave' | 'delito' | 'bienJuridico' | 'seleccionado';
 export class SemanalDelitos implements OnInit {
   private readonly semanalDelitosService = inject(SemanalDelitosService);
 
-  delitos = signal<ConfiguracionDelitoSemanalItem[]>([]);
+  modalidades = signal<ConfiguracionModalidadSemanalItem[]>([]);
   busqueda = signal('');
   cargando = signal(false);
   guardando = signal(false);
   firmaOriginal = signal('');
-  ordenDelitos = signal<EstadoOrden<CampoOrdenDelitos>>({ campo: 'clave', direccion: 'asc' });
 
-  delitosFiltrados = computed(() => {
-    const texto = this.busqueda().trim().toLowerCase();
-    const filtrados = !texto ? this.delitos() : this.delitos().filter((delito) => delito.clave.toLowerCase().includes(texto) || delito.delito.toLowerCase().includes(texto) || delito.bienJuridico.toLowerCase().includes(texto));
-
-    return ordenarPorEstado(filtrados, this.ordenDelitos(), (delito, campo) => delito[campo]);
-  });
-
-  totalDisponibles = computed(() => this.delitos().length);
-  totalSeleccionados = computed(() => this.delitos().filter((delito) => delito.seleccionado).length);
-  totalOpcionales = computed(() => this.delitos().filter((delito) => delito.seleccionado && !delito.esObligatorio).length);
-  hayCambios = computed(() => this.firmaConfiguracion(this.delitos()) !== this.firmaOriginal());
+  jerarquiaFiltrada = computed(() => this.construirJerarquia(this.modalidades(), this.busqueda()));
+  totalDisponibles = computed(() => this.modalidades().length);
+  totalSeleccionados = computed(() => this.modalidades().filter((modalidad) => modalidad.seleccionado).length);
+  totalOpcionales = computed(() => this.modalidades().filter((modalidad) => modalidad.seleccionado && !modalidad.esObligatorio).length);
+  hayCambios = computed(() => this.firmaConfiguracion(this.modalidades()) !== this.firmaOriginal());
 
   ngOnInit(): void {
     this.cargarConfiguracion();
@@ -52,11 +56,11 @@ export class SemanalDelitos implements OnInit {
           return;
         }
 
-        this.establecerConfiguracion(response.delitos ?? []);
+        this.establecerConfiguracion(response.modalidades ?? []);
       },
       error: (error) => {
         this.cargando.set(false);
-        mostrarError('No fue posible cargar los delitos', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+        mostrarError('No fue posible cargar las modalidades', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
       },
     });
   }
@@ -65,27 +69,65 @@ export class SemanalDelitos implements OnInit {
     this.busqueda.set(valor);
   }
 
-  ordenarDelitosPor(campo: CampoOrdenDelitos): void {
-    this.ordenDelitos.set(alternarOrden(this.ordenDelitos(), campo));
+  cambiarSeleccionModalidad(idModalidadDelito: number, seleccionado: boolean): void {
+    const modalidad = this.modalidades().find((item) => item.idModalidadDelito === idModalidadDelito);
+
+    if (!modalidad || modalidad.esObligatorio) return;
+
+    this.modalidades.update((actuales) => this.normalizarConfiguracion(actuales.map((item) => item.idModalidadDelito === idModalidadDelito ? { ...item, seleccionado } : item)));
   }
 
-  iconoOrdenDelitos(campo: CampoOrdenDelitos): string {
-    return obtenerIconoOrden(this.ordenDelitos(), campo);
+  cambiarSeleccionDelito(idDelito: number, seleccionado: boolean): void {
+    this.modalidades.update((actuales) => this.normalizarConfiguracion(actuales.map((modalidad) => modalidad.idDelito === idDelito && !modalidad.esObligatorio ? { ...modalidad, seleccionado } : modalidad)));
   }
 
-  cambiarSeleccion(idDelito: number, seleccionado: boolean): void {
-    const delito = this.delitos().find((item) => item.idDelito === idDelito);
+  cambiarSeleccionBienJuridico(idBienJuridico: number, seleccionado: boolean): void {
+    this.modalidades.update((actuales) => this.normalizarConfiguracion(actuales.map((modalidad) => modalidad.idBienJuridico === idBienJuridico && !modalidad.esObligatorio ? { ...modalidad, seleccionado } : modalidad)));
+  }
 
-    if (!delito || delito.esObligatorio) return;
+  delitoSeleccionadoCompleto(idDelito: number): boolean {
+    const modalidades = this.modalidades().filter((modalidad) => modalidad.idDelito === idDelito);
+    return modalidades.length > 0 && modalidades.every((modalidad) => modalidad.seleccionado);
+  }
 
-    this.delitos.update((actuales) => this.normalizarConfiguracion(actuales.map((item) => item.idDelito === idDelito ? { ...item, seleccionado } : item)));
+  delitoSeleccionParcial(idDelito: number): boolean {
+    const modalidades = this.modalidades().filter((modalidad) => modalidad.idDelito === idDelito);
+    const seleccionadas = modalidades.filter((modalidad) => modalidad.seleccionado).length;
+    return seleccionadas > 0 && seleccionadas < modalidades.length;
+  }
+
+  delitoTieneOpcionales(idDelito: number): boolean {
+    return this.modalidades().some((modalidad) => modalidad.idDelito === idDelito && !modalidad.esObligatorio);
+  }
+
+  bienSeleccionadoCompleto(idBienJuridico: number): boolean {
+    const modalidades = this.modalidades().filter((modalidad) => modalidad.idBienJuridico === idBienJuridico);
+    return modalidades.length > 0 && modalidades.every((modalidad) => modalidad.seleccionado);
+  }
+
+  bienSeleccionParcial(idBienJuridico: number): boolean {
+    const modalidades = this.modalidades().filter((modalidad) => modalidad.idBienJuridico === idBienJuridico);
+    const seleccionadas = modalidades.filter((modalidad) => modalidad.seleccionado).length;
+    return seleccionadas > 0 && seleccionadas < modalidades.length;
+  }
+
+  bienTieneOpcionales(idBienJuridico: number): boolean {
+    return this.modalidades().some((modalidad) => modalidad.idBienJuridico === idBienJuridico && !modalidad.esObligatorio);
+  }
+
+  totalModalidadesDelito(idDelito: number): number {
+    return this.modalidades().filter((modalidad) => modalidad.idDelito === idDelito).length;
+  }
+
+  totalModalidadesBien(idBienJuridico: number): number {
+    return this.modalidades().filter((modalidad) => modalidad.idBienJuridico === idBienJuridico).length;
   }
 
   guardarConfiguracion(): void {
     if (!this.hayCambios() || this.guardando()) return;
 
     const request: ActualizarConfiguracionDelitosSemanalesRequest = {
-      delitos: this.delitos().map((delito) => ({ idDelito: delito.idDelito, seleccionado: delito.seleccionado })),
+      modalidades: this.modalidades().map((modalidad) => ({ idModalidadDelito: modalidad.idModalidadDelito, seleccionado: modalidad.seleccionado })),
     };
 
     this.guardando.set(true);
@@ -99,7 +141,7 @@ export class SemanalDelitos implements OnInit {
           return;
         }
 
-        this.establecerConfiguracion(response.delitos ?? []);
+        this.establecerConfiguracion(response.modalidades ?? []);
         mostrarExitoInstitucional(response.mensaje || 'Configuración semanal guardada correctamente.');
       },
       error: (error) => {
@@ -109,18 +151,74 @@ export class SemanalDelitos implements OnInit {
     });
   }
 
-  private establecerConfiguracion(delitos: ConfiguracionDelitoSemanalItem[]): void {
-    const normalizados = this.normalizarConfiguracion(delitos);
+  private establecerConfiguracion(modalidades: ConfiguracionModalidadSemanalItem[]): void {
+    const normalizadas = this.normalizarConfiguracion(modalidades);
 
-    this.firmaOriginal.set(this.firmaConfiguracion(normalizados));
-    this.delitos.set(normalizados);
+    this.firmaOriginal.set(this.firmaConfiguracion(normalizadas));
+    this.modalidades.set(normalizadas);
   }
 
-  private normalizarConfiguracion(delitos: ConfiguracionDelitoSemanalItem[]): ConfiguracionDelitoSemanalItem[] {
-    return delitos.map((delito) => ({ ...delito, seleccionado: delito.esObligatorio || delito.seleccionado }));
+  private normalizarConfiguracion(modalidades: ConfiguracionModalidadSemanalItem[]): ConfiguracionModalidadSemanalItem[] {
+    return modalidades.map((modalidad) => ({ ...modalidad, seleccionado: modalidad.esObligatorio || modalidad.seleccionado }));
   }
 
-  private firmaConfiguracion(delitos: ConfiguracionDelitoSemanalItem[]): string {
-    return [...delitos].sort((a, b) => a.idDelito - b.idDelito).map((delito) => `${delito.idDelito}:${delito.seleccionado ? 1 : 0}`).join('|');
+  private construirJerarquia(modalidades: ConfiguracionModalidadSemanalItem[], textoBusqueda: string): BienJuridicoSemanalAgrupado[] {
+    const texto = textoBusqueda.trim().toLowerCase();
+    const visibles = texto ? modalidades.filter((modalidad) => this.coincideBusqueda(modalidad, texto)) : modalidades;
+    const ordenadas = [...visibles].sort((a, b) => this.compararClaves(a.claveBienJuridico, b.claveBienJuridico) || this.compararClaves(a.claveDelito, b.claveDelito) || this.compararClaves(a.claveSubtipo, b.claveSubtipo) || this.compararClaves(a.claveModalidad, b.claveModalidad));
+    const bienes = new Map<number, BienJuridicoSemanalAgrupado>();
+
+    for (const modalidad of ordenadas) {
+      let bien = bienes.get(modalidad.idBienJuridico);
+
+      if (!bien) {
+        bien = {
+          idBienJuridico: modalidad.idBienJuridico,
+          claveBienJuridico: modalidad.claveBienJuridico,
+          bienJuridico: modalidad.bienJuridico,
+          delitos: [],
+        };
+
+        bienes.set(modalidad.idBienJuridico, bien);
+      }
+
+      let delito = bien.delitos.find((item) => item.idDelito === modalidad.idDelito);
+
+      if (!delito) {
+        delito = {
+          idDelito: modalidad.idDelito,
+          claveDelito: modalidad.claveDelito,
+          delito: modalidad.delito,
+          modalidades: [],
+        };
+
+        bien.delitos.push(delito);
+      }
+
+      delito.modalidades.push(modalidad);
+    }
+
+    return [...bienes.values()];
+  }
+
+  private coincideBusqueda(modalidad: ConfiguracionModalidadSemanalItem, texto: string): boolean {
+    return [
+      modalidad.claveBienJuridico,
+      modalidad.bienJuridico,
+      modalidad.claveDelito,
+      modalidad.delito,
+      modalidad.claveSubtipo,
+      modalidad.subtipo,
+      modalidad.claveModalidad,
+      modalidad.modalidad,
+    ].some((valor) => valor.toLowerCase().includes(texto));
+  }
+
+  private compararClaves(a: string, b: string): number {
+    return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' });
+  }
+
+  private firmaConfiguracion(modalidades: ConfiguracionModalidadSemanalItem[]): string {
+    return [...modalidades].sort((a, b) => a.idModalidadDelito - b.idModalidadDelito).map((modalidad) => `${modalidad.idModalidadDelito}:${modalidad.seleccionado ? 1 : 0}`).join('|');
   }
 }

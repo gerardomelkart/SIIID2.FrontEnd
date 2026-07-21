@@ -1,3 +1,10 @@
+:host {
+  --semanal-verde: #235B4E;
+  --semanal-verde-oscuro: #10312B;
+  --semanal-dorado: #BC955C;
+  display: block;
+}
+
 .delitos-header-row {
   display: flex;
   align-items: flex-end;
@@ -9,17 +16,21 @@
   margin-bottom: 0;
 }
 
+.semanal-delitos .semanal-admin-header h1 {
+  color: var(--semanal-verde);
+}
+
 .btn-guardar {
   min-width: 205px;
   border: 0;
-  background: var(--siiid-guinda);
+  background: var(--semanal-verde);
   color: #fff;
   padding: 11px 16px;
   font-weight: 900;
 }
 
 .btn-guardar:hover:not(:disabled) {
-  filter: brightness(.88);
+  background: var(--semanal-verde-oscuro);
 }
 
 .btn-guardar:disabled {
@@ -31,12 +42,30 @@
   margin-right: 6px;
 }
 
+.semanal-delitos .resumen-card strong {
+  color: var(--semanal-verde);
+}
+
+.resumen-disponibles {
+  border-left-color: var(--semanal-verde-oscuro);
+}
+
 .resumen-seleccionados {
-  border-left-color: #235B4E;
+  border-left-color: var(--semanal-verde);
 }
 
 .resumen-opcionales {
-  border-left-color: var(--siiid-dorado);
+  border-left-color: var(--semanal-dorado);
+}
+
+.semanal-delitos .semanal-card-header {
+  background: var(--semanal-verde-oscuro);
+  color: #fff;
+}
+
+.semanal-delitos .semanal-card-header > span {
+  color: #fff;
+  font-weight: 900;
 }
 
 .nota-extorsion {
@@ -51,6 +80,117 @@
   font-weight: 800;
 }
 
+.jerarquia-lista {
+  display: grid;
+  gap: 18px;
+  background: #f4f7f6;
+  padding: 18px;
+}
+
+.bien-juridico-grupo {
+  overflow: hidden;
+  border: 1px solid #cbd8d4;
+  background: #fff;
+  box-shadow: 0 3px 9px rgba(16, 49, 43, .1);
+}
+
+.bien-juridico-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--semanal-verde-oscuro);
+  color: #fff;
+  padding: 17px 18px;
+}
+
+.grupo-identidad {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bien-clave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  min-height: 42px;
+  background: var(--semanal-dorado);
+  color: var(--semanal-verde-oscuro);
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.nivel-etiqueta {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--semanal-dorado);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.bien-juridico-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.bien-juridico-header p,
+.delito-header p {
+  margin: 3px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: .75;
+}
+
+.delito-grupo {
+  overflow: hidden;
+  margin: 14px;
+  border: 1px solid #d8e1de;
+  background: #fff;
+}
+
+.delito-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #cad8d3;
+  background: #edf4f1;
+  padding: 13px 15px;
+}
+
+.delito-header .nivel-etiqueta {
+  color: var(--semanal-verde);
+}
+
+.delito-header h3 {
+  margin: 0;
+  color: var(--semanal-verde-oscuro);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.delito-clave-header {
+  margin-right: 8px;
+  color: var(--semanal-verde);
+}
+
+.semanal-delitos .modalidades-table {
+  min-width: 900px;
+  margin: 0;
+}
+
+.semanal-delitos .modalidades-table thead th {
+  background: var(--semanal-verde);
+  color: #fff;
+}
+
 .fila-seleccionada td {
   background: #f1f8f5;
 }
@@ -59,13 +199,26 @@
   background: #fff8eb;
 }
 
-.delito-clave {
-  color: var(--siiid-guinda);
+.modalidad-clave {
+  color: var(--semanal-verde);
   font-weight: 900;
   white-space: nowrap;
 }
 
-.delito-nombre {
+.modalidad-subtipo {
+  min-width: 210px;
+  color: #333;
+  font-weight: 700;
+}
+
+.modalidad-subtipo span {
+  display: block;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.modalidad-nombre {
   min-width: 260px;
   color: #222;
   font-weight: 800;
@@ -98,10 +251,29 @@
 }
 
 .seleccion-control {
-  display: inline-flex;
   position: relative;
+  display: inline-flex;
   align-items: center;
   cursor: pointer;
+}
+
+.seleccion-masiva {
+  flex: 0 0 auto;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.seleccion-masiva-texto {
+  white-space: nowrap;
+}
+
+.bien-juridico-header .seleccion-masiva-texto {
+  color: #fff;
+}
+
+.delito-header .seleccion-masiva-texto {
+  color: var(--semanal-verde-oscuro);
 }
 
 .seleccion-control input {
@@ -115,8 +287,9 @@
   position: relative;
   width: 42px;
   height: 22px;
+  flex: 0 0 auto;
   border-radius: 20px;
-  background: #bbb;
+  background: #aaa;
   transition: .2s;
 }
 
@@ -133,20 +306,35 @@
 }
 
 .seleccion-control input:checked + .toggle {
-  background: var(--siiid-guinda);
+  background: var(--semanal-verde);
 }
 
 .seleccion-control input:checked + .toggle::after {
   transform: translateX(20px);
 }
 
+.seleccion-control input:indeterminate + .toggle {
+  background: var(--semanal-dorado);
+}
+
+.seleccion-control input:indeterminate + .toggle::after {
+  transform: translateX(10px);
+}
+
+.seleccion-control input:focus-visible + .toggle {
+  outline: 3px solid rgba(188, 149, 92, .4);
+  outline-offset: 2px;
+}
+
 .seleccion-bloqueada {
   cursor: not-allowed;
-  opacity: .72;
+  opacity: .65;
 }
 
 @media (max-width: 850px) {
-  .delitos-header-row {
+  .delitos-header-row,
+  .bien-juridico-header,
+  .delito-header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -154,23 +342,16 @@
   .btn-guardar {
     width: 100%;
   }
-}
 
-.sortable {
-  cursor: pointer;
-  user-select: none;
-}
+  .jerarquia-lista {
+    padding: 9px;
+  }
 
-.sortable:hover {
-  filter: brightness(.88);
-}
+  .delito-grupo {
+    margin: 9px;
+  }
 
-.sort-icon {
-  margin-left: 6px;
-  opacity: .45;
-  font-size: 11px;
-}
-
-.sort-icon.active {
-  opacity: 1;
+  .seleccion-masiva {
+    justify-content: space-between;
+  }
 }

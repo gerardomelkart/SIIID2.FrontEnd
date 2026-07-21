@@ -1,20 +1,29 @@
-export interface ConfiguracionDelitoSemanalItem {
-  idDelito: number;
-  clave: string;
-  delito: string;
+export interface ConfiguracionModalidadSemanalItem {
+  idBienJuridico: number;
+  claveBienJuridico: string;
   bienJuridico: string;
+  idDelito: number;
+  claveDelito: string;
+  delito: string;
+  idSubtipoDelito: number;
+  claveSubtipo: string;
+  subtipo: string;
+  idModalidadDelito: number;
+  claveModalidad: string;
+  modalidad: string;
   seleccionado: boolean;
   esObligatorio: boolean;
   conservarEntrePeriodos: boolean;
+  orden: number;
 }
 
-export interface ConfiguracionDelitoSemanalRequest {
-  idDelito: number;
+export interface ConfiguracionModalidadSemanalRequest {
+  idModalidadDelito: number;
   seleccionado: boolean;
 }
 
 export interface ActualizarConfiguracionDelitosSemanalesRequest {
-  delitos: ConfiguracionDelitoSemanalRequest[];
+  modalidades: ConfiguracionModalidadSemanalRequest[];
 }
 
 export interface ConfiguracionDelitosSemanalesResponse {
@@ -22,5 +31,5 @@ export interface ConfiguracionDelitosSemanalesResponse {
   codigo: string;
   mensaje: string;
   totalSeleccionados: number;
-  delitos: ConfiguracionDelitoSemanalItem[];
+  modalidades: ConfiguracionModalidadSemanalItem[];
 }

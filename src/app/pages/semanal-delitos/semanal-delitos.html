@@ -2,8 +2,8 @@
   <div class="semanal-admin-header delitos-header-row">
     <div>
       <span>Administración semanal</span>
-      <h1>Delitos del módulo semanal</h1>
-      <p>Seleccione los delitos que podrán integrarse en las cargas semanales.</p>
+      <h1>Modalidades del módulo semanal</h1>
+      <p>Seleccione las modalidades permitidas en los archivos semanales.</p>
     </div>
 
     <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()"
@@ -15,19 +15,19 @@
   </div>
 
   <div class="semanal-resumen">
-    <div class="resumen-card">
+    <div class="resumen-card resumen-disponibles">
       <strong>{{ totalDisponibles() }}</strong>
-      <span>Delitos disponibles</span>
+      <span>Modalidades disponibles</span>
     </div>
 
     <div class="resumen-card resumen-seleccionados">
       <strong>{{ totalSeleccionados() }}</strong>
-      <span>Incluidos semanalmente</span>
+      <span>Incluidas semanalmente</span>
     </div>
 
     <div class="resumen-card resumen-opcionales">
       <strong>{{ totalOpcionales() }}</strong>
-      <span>Delitos opcionales</span>
+      <span>Opcionales incluidas</span>
     </div>
   </div>
 
@@ -35,87 +35,133 @@
     <div class="siiid-card-header semanal-card-header">
       <span>
         <i class="fa-solid fa-list-check"></i>
-        Configuración de delitos
+        Configuración jerárquica
       </span>
 
       <div class="semanal-buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar clave, delito o bien jurídico..." [ngModel]="busqueda()"
+        <input type="text" placeholder="Buscar bien jurídico, delito, subtipo o modalidad..." [ngModel]="busqueda()"
           (ngModelChange)="buscar($event)">
       </div>
     </div>
 
     <div class="nota-extorsion">
       <i class="fa-solid fa-shield-halved"></i>
-      Extorsión siempre forma parte de los delitos permitidos y no puede deshabilitarse.
+      Las modalidades 4.04.01 y 4.04.02 de Extorsión son obligatorias y no pueden deshabilitarse.
     </div>
 
     @if (cargando()) {
     <div class="semanal-mensaje">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      Cargando delitos...
+      Cargando modalidades...
     </div>
+    } @else if (jerarquiaFiltrada().length === 0) {
+    <div class="semanal-mensaje">No se encontraron modalidades.</div>
     } @else {
-    <div class="table-responsive">
-      <table class="table table-sm semanal-table">
-        <thead>
-          <tr>
-            <th class="sortable" (click)="ordenarDelitosPor('clave')">
-              Clave
-              <i [class]="iconoOrdenDelitos('clave')"></i>
-            </th>
+    <div class="jerarquia-lista">
+      @for (bien of jerarquiaFiltrada(); track bien.idBienJuridico) {
+      <section class="bien-juridico-grupo">
+        <header class="bien-juridico-header">
+          <div class="grupo-identidad">
+            <span class="bien-clave">{{ bien.claveBienJuridico }}</span>
 
-            <th class="sortable" (click)="ordenarDelitosPor('delito')">
-              Delito
-              <i [class]="iconoOrdenDelitos('delito')"></i>
-            </th>
+            <div>
+              <span class="nivel-etiqueta">Bien jurídico</span>
+              <h2>{{ bien.bienJuridico }}</h2>
+              <p>{{ totalModalidadesBien(bien.idBienJuridico) }} modalidades</p>
+            </div>
+          </div>
 
-            <th class="sortable" (click)="ordenarDelitosPor('bienJuridico')">
-              Bien jurídico
-              <i [class]="iconoOrdenDelitos('bienJuridico')"></i>
-            </th>
+          <label class="seleccion-control seleccion-masiva"
+            [class.seleccion-bloqueada]="guardando() || !bienTieneOpcionales(bien.idBienJuridico)">
+            <span class="seleccion-masiva-texto">Incluir todas</span>
+            <input type="checkbox" [disabled]="guardando() || !bienTieneOpcionales(bien.idBienJuridico)"
+              [ngModel]="bienSeleccionadoCompleto(bien.idBienJuridico)"
+              [indeterminate]="bienSeleccionParcial(bien.idBienJuridico)"
+              (ngModelChange)="cambiarSeleccionBienJuridico(bien.idBienJuridico, $event)">
+            <span class="toggle"></span>
+          </label>
+        </header>
 
-            <th class="sortable" (click)="ordenarDelitosPor('seleccionado')">
-              Estado
-              <i [class]="iconoOrdenDelitos('seleccionado')"></i>
-            </th>
+        @for (delito of bien.delitos; track delito.idDelito) {
+        <article class="delito-grupo">
+          <header class="delito-header">
+            <div>
+              <span class="nivel-etiqueta">Delito</span>
+              <h3>
+                <span class="delito-clave-header">{{ delito.claveDelito }}</span>
+                {{ delito.delito }}
+              </h3>
+              <p>{{ totalModalidadesDelito(delito.idDelito) }} modalidades</p>
+            </div>
 
-            <th>Incluir</th>
-          </tr>
-        </thead>
+            <label class="seleccion-control seleccion-masiva"
+              [class.seleccion-bloqueada]="guardando() || !delitoTieneOpcionales(delito.idDelito)">
+              <span class="seleccion-masiva-texto">Incluir todas</span>
+              <input type="checkbox" [disabled]="guardando() || !delitoTieneOpcionales(delito.idDelito)"
+                [ngModel]="delitoSeleccionadoCompleto(delito.idDelito)"
+                [indeterminate]="delitoSeleccionParcial(delito.idDelito)"
+                (ngModelChange)="cambiarSeleccionDelito(delito.idDelito, $event)">
+              <span class="toggle"></span>
+            </label>
+          </header>
 
-        <tbody>
-          @for (delito of delitosFiltrados(); track delito.idDelito) {
-          <tr [class.fila-seleccionada]="delito.seleccionado" [class.fila-obligatoria]="delito.esObligatorio">
-            <td class="delito-clave">{{ delito.clave }}</td>
-            <td class="delito-nombre">
-              {{ delito.delito }}
-              @if (delito.esObligatorio) {
-              <span class="badge-obligatorio">OBLIGATORIO</span>
-              }
-            </td>
-            <td>{{ delito.bienJuridico }}</td>
-            <td>
-              <span class="estado-badge" [class.estado-activo]="delito.seleccionado"
-                [class.estado-inactivo]="!delito.seleccionado">
-                {{ delito.seleccionado ? 'INCLUIDO' : 'NO INCLUIDO' }}
-              </span>
-            </td>
-            <td>
-              <label class="seleccion-control" [class.seleccion-bloqueada]="delito.esObligatorio">
-                <input type="checkbox" [disabled]="delito.esObligatorio || guardando()" [ngModel]="delito.seleccionado"
-                  (ngModelChange)="cambiarSeleccion(delito.idDelito, $event)">
-                <span class="toggle"></span>
-              </label>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="5" class="semanal-mensaje">No se encontraron delitos.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+          <div class="table-responsive">
+            <table class="table table-sm semanal-table modalidades-table">
+              <thead>
+                <tr>
+                  <th>Clave de modalidad</th>
+                  <th>Subtipo</th>
+                  <th>Modalidad</th>
+                  <th>Estado</th>
+                  <th>Incluir</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (modalidad of delito.modalidades; track modalidad.idModalidadDelito) {
+                <tr [class.fila-seleccionada]="modalidad.seleccionado"
+                  [class.fila-obligatoria]="modalidad.esObligatorio">
+                  <td class="modalidad-clave">{{ modalidad.claveModalidad }}</td>
+
+                  <td class="modalidad-subtipo">
+                    <span>{{ modalidad.claveSubtipo }}</span>
+                    {{ modalidad.subtipo }}
+                  </td>
+
+                  <td class="modalidad-nombre">
+                    {{ modalidad.modalidad }}
+
+                    @if (modalidad.esObligatorio) {
+                    <span class="badge-obligatorio">OBLIGATORIA</span>
+                    }
+                  </td>
+
+                  <td>
+                    <span class="estado-badge" [class.estado-activo]="modalidad.seleccionado"
+                      [class.estado-inactivo]="!modalidad.seleccionado">
+                      {{ modalidad.seleccionado ? 'INCLUIDA' : 'NO INCLUIDA' }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <label class="seleccion-control"
+                      [class.seleccion-bloqueada]="modalidad.esObligatorio || guardando()">
+                      <input type="checkbox" [disabled]="modalidad.esObligatorio || guardando()"
+                        [ngModel]="modalidad.seleccionado"
+                        (ngModelChange)="cambiarSeleccionModalidad(modalidad.idModalidadDelito, $event)">
+                      <span class="toggle"></span>
+                    </label>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </article>
+        }
+      </section>
+      }
     </div>
     }
   </section>
