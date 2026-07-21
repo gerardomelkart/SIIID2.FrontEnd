@@ -195,3 +195,22 @@
     flex-direction: column;
   }
 }
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background: #5f172c !important;
+}
+
+.sort-icon {
+  margin-left: 6px;
+  opacity: .45;
+  font-size: 11px;
+}
+
+.sort-icon.active {
+  opacity: 1;
+}

@@ -10,6 +10,22 @@ import {
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
 
+import {
+  EstadoOrden,
+  ValorOrden,
+  alternarOrden,
+  obtenerIconoOrden,
+  ordenarPorEstado,
+} from '../../core/utils/sort.utils';
+
+type CampoOrdenOriginales =
+  | 'entidad'
+  | 'movimiento'
+  | 'periodo'
+  | 'codigoReferencia'
+  | 'fechaGuardado'
+  | 'archivos';
+
 @Component({
   selector: 'app-originales',
   imports: [FormsModule],
@@ -29,6 +45,7 @@ export class Originales implements OnInit {
   descargandoEntidad = signal<number | null>(null);
 
   paginaActual = signal(1);
+  orden = signal<EstadoOrden<CampoOrdenOriginales> | null>(null);
   readonly tamanioPagina = 5;
 
   entidadPorId = computed(() => {
@@ -54,6 +71,12 @@ export class Originales implements OnInit {
     });
   });
 
+  archivosOrdenados = computed(() =>
+    ordenarPorEstado(this.archivosFiltrados(), this.orden(), (item, campo) =>
+      this.obtenerValorOrden(item, campo),
+    ),
+  );
+
   totalPaginas = computed(() =>
     Math.max(1, Math.ceil(this.archivosFiltrados().length / this.tamanioPagina)),
   );
@@ -62,7 +85,7 @@ export class Originales implements OnInit {
 
   archivosPaginados = computed(() => {
     const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
-    return this.archivosFiltrados().slice(inicio, inicio + this.tamanioPagina);
+    return this.archivosOrdenados().slice(inicio, inicio + this.tamanioPagina);
   });
 
   primerRegistroVisible = computed(() => {
@@ -116,6 +139,15 @@ export class Originales implements OnInit {
   cambiarBusqueda(valor: string): void {
     this.busqueda.set(valor);
     this.paginaActual.set(1);
+  }
+
+  ordenarPor(campo: CampoOrdenOriginales): void {
+    this.orden.set(alternarOrden(this.orden(), campo));
+    this.paginaActual.set(1);
+  }
+
+  iconoOrden(campo: CampoOrdenOriginales): string {
+    return obtenerIconoOrden(this.orden(), campo);
   }
 
   irPagina(pagina: number): void {
@@ -233,6 +265,24 @@ export class Originales implements OnInit {
     }
 
     return `${sha256.substring(0, 12)}...`;
+  }
+
+  private obtenerValorOrden(
+    item: UltimosArchivosEntidadResumen,
+    campo: CampoOrdenOriginales,
+  ): ValorOrden {
+    if (campo === 'entidad') return this.entidadTexto(item);
+    if (campo === 'movimiento') return this.tipoMovimientoTexto(item.tipoMovimiento);
+    if (campo === 'periodo') return item.anioCorte * 100 + item.mesCorte;
+    if (campo === 'codigoReferencia') return item.codigoReferencia;
+    if (campo === 'archivos')
+      return item.archivos
+        .map((archivo) => archivo.nombreOriginal)
+        .sort()
+        .join(' ');
+
+    const fecha = Date.parse(item.fechaGuardado);
+    return Number.isNaN(fecha) ? null : fecha;
   }
 
   private obtenerNombreArchivo(contentDisposition: string | null): string {

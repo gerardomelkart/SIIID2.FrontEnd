@@ -152,10 +152,24 @@
   display: block;
   cursor: pointer;
   transition: box-shadow .12s ease-in-out, transform .12s ease-in-out;
+  position: relative;
+  border-left: 5px solid #bbb;
 }
 
 .file-upload-card:hover {
   box-shadow: 0 4px 10px rgba(0, 0, 0, .14);
+  transform: translateY(-1px);
+}
+
+.file-upload-card.file-upload-ready {
+  border-left-color: var(--siiid-guinda);
+  background: #f8fbfa;
+}
+
+.file-upload-card.file-upload-dragging {
+  border-color: var(--siiid-dorado);
+  background: #fff8eb;
+  box-shadow: 0 3px 8px rgba(166, 128, 52, .18);
   transform: translateY(-1px);
 }
 
@@ -279,8 +293,10 @@
 }
 
 .file-input {
-  max-width: 380px;
-  margin-top: 4px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 
 

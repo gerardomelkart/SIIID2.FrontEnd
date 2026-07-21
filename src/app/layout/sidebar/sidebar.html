@@ -133,11 +133,29 @@
     }
     }
 
-    <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">
-      <span>
-        <i class="fa-solid fa-power-off"></i>
-        Cerrar Sesión
-      </span>
-    </button>
+<button type="button" class="menu-link menu-button" (click)="toggleSesion()">
+  <span>
+    <i class="fa-solid fa-user"></i>
+    Sesión
+  </span>
+</button>
+
+@if (sesionAbierta()) {
+@if (puedeCambiarAModuloPreliminar()) {
+<button type="button" class="menu-link menu-button level-2" (click)="cambiarAModuloPreliminar()">
+  <span>
+    <i class="fa-solid fa-repeat"></i>
+    Ir a Módulo preliminar
+  </span>
+</button>
+}
+
+<button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
+  <span>
+    <i class="fa-solid fa-power-off"></i>
+    Cerrar sesión
+  </span>
+</button>
+}
   </nav>
 </aside>

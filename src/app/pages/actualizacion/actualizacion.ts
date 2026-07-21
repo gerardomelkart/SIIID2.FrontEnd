@@ -5,7 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
-import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import {
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExito,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
@@ -100,6 +105,8 @@ export class Actualizacion implements OnInit {
   errorGeneral = signal('');
 
   archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
+
+  archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
 
   private acusePrevioObjectUrl: string | null = null;
   private acuseConfirmadoObjectUrl: string | null = null;
@@ -350,6 +357,39 @@ export class Actualizacion implements OnInit {
     this.respuestaValidacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
+  }
+
+  arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.archivoArrastrado.set(tipo);
+  }
+
+  salirArrastreArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    const tarjeta = event.currentTarget as HTMLElement | null;
+    const destino = event.relatedTarget as Node | null;
+
+    if (tarjeta && destino && tarjeta.contains(destino)) return;
+    if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
+  }
+
+  soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(null);
+
+    const archivo = event.dataTransfer?.files.item(0) ?? null;
+    if (!archivo) return;
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+    this.respuestaValidacion.set(null);
+    this.diferencias.set(null);
+    this.errorGeneral.set('');
+  }
+
+  nombreArchivo(tipo: ArchivoCargaTipo): string {
+    return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
   }
 
   validarActualizacion(): void {
@@ -792,7 +832,9 @@ export class Actualizacion implements OnInit {
 
   private limpiarArchivos(): void {
     this.archivos.set(crearArchivosCargaVacios());
+    this.archivoArrastrado.set(null);
   }
+
   private reiniciarFormulario(): void {
     this.anioCorte.set('');
     this.mesCorte.set('');

@@ -40,15 +40,27 @@
     <div class="table-responsive">
       <table class="table table-sm originales-table">
         <thead>
-          <tr>
-            <th>Entidad</th>
-            <th>Último movimiento</th>
-            <th>Periodo</th>
-            <th>Código referencia</th>
-            <th>Fecha guardado</th>
-            <th>Archivos</th>
-            <th>Descargar</th>
-          </tr>
+<tr>
+  <th class="sortable" (click)="ordenarPor('entidad')">
+    Entidad <i [class]="iconoOrden('entidad')"></i>
+  </th>
+  <th class="sortable" (click)="ordenarPor('movimiento')">
+    Último movimiento <i [class]="iconoOrden('movimiento')"></i>
+  </th>
+  <th class="sortable" (click)="ordenarPor('periodo')">
+    Periodo <i [class]="iconoOrden('periodo')"></i>
+  </th>
+  <th class="sortable" (click)="ordenarPor('codigoReferencia')">
+    Código referencia <i [class]="iconoOrden('codigoReferencia')"></i>
+  </th>
+  <th class="sortable" (click)="ordenarPor('fechaGuardado')">
+    Fecha guardado <i [class]="iconoOrden('fechaGuardado')"></i>
+  </th>
+  <th class="sortable" (click)="ordenarPor('archivos')">
+    Archivos <i [class]="iconoOrden('archivos')"></i>
+  </th>
+  <th>Descargar</th>
+</tr>
         </thead>
 
         <tbody>

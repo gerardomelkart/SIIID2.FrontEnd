@@ -2,7 +2,12 @@ import { Component, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
-import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import {
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExito,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
 
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
@@ -46,6 +51,8 @@ export class CargaInicial {
   respuesta = signal<CargaValidacionResponse | null>(null);
   mensaje = signal('');
   errorGeneral = signal('');
+
+  archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
 
   cargandoAcusePrevio = signal(false);
 
@@ -147,6 +154,37 @@ export class CargaInicial {
     this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
 
     this.limpiarResultado();
+  }
+
+  arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.archivoArrastrado.set(tipo);
+  }
+
+  salirArrastreArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    const tarjeta = event.currentTarget as HTMLElement | null;
+    const destino = event.relatedTarget as Node | null;
+
+    if (tarjeta && destino && tarjeta.contains(destino)) return;
+    if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
+  }
+
+  soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(null);
+
+    const archivo = event.dataTransfer?.files.item(0) ?? null;
+    if (!archivo) return;
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+    this.limpiarResultado();
+  }
+
+  nombreArchivo(tipo: ArchivoCargaTipo): string {
+    return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
   }
 
   validarArchivos(): void {
@@ -433,6 +471,7 @@ export class CargaInicial {
     this.mensaje.set('');
     this.cargandoAcusePrevio.set(false);
     this.errorGeneral.set('');
+    this.archivoArrastrado.set(null);
   }
 
   private limpiarUrlsPdf(): void {

@@ -23,6 +23,8 @@ export class Sidebar {
 
   administracionAbierta = signal(false);
 
+  sesionAbierta = signal(false);
+
   usuario = this.sessionService.usuario;
   habilitaCarga = this.sessionService.habilitaCarga;
   habilitaModificacion = this.sessionService.habilitaModificacion;
@@ -30,6 +32,10 @@ export class Sidebar {
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
   esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
+
+  puedeCambiarAModuloPreliminar = computed(() =>
+    this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'SEMANAL'),
+  );
 
   puedeVerCargaInformacion = computed(() => {
     return !this.esConsulta() && (this.habilitaCarga() || this.habilitaModificacion());
@@ -83,8 +89,17 @@ export class Sidebar {
     this.administracionAbierta.update((valor) => !valor);
   }
 
+  toggleSesion(): void {
+    this.sesionAbierta.update((valor) => !valor);
+  }
+
+  cambiarAModuloPreliminar(): void {
+    if (!this.sessionService.seleccionarModulo('SEMANAL')) return;
+    void this.router.navigateByUrl('/semanal');
+  }
+
   cerrarSesion(): void {
     this.authService.logout();
-    this.router.navigateByUrl('/login');
+    void this.router.navigateByUrl('/login');
   }
 }
