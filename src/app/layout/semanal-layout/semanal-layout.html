@@ -32,6 +32,13 @@
           Inicio semanal
         </a>
 
+        @if (puedeCargar()) {
+        <a class="menu-link" routerLink="/semanal/carga" routerLinkActive="active">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          Carga semanal
+        </a>
+        }
+
         @if (esSuperUsuario()) {
         <a class="menu-link" routerLink="/semanal/administracion/usuarios" routerLinkActive="active">
           <i class="fa-solid fa-users-gear"></i>

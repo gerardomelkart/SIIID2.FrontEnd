@@ -1,0 +1,654 @@
+<div class="semanal-carga">
+  <div class="semanal-admin-header carga-header">
+    <div>
+      <span>Módulo semanal</span>
+      <h1>Carga semanal de incidencia delictiva</h1>
+      <p>
+        Integre únicamente el tramo semanal que corresponde al mes de corte
+        seleccionado.
+      </p>
+    </div>
+
+    @if (mostrandoResultado()) {
+      <div class="referencia-carga">
+        <span>Referencia</span>
+        <strong>{{ respuesta()?.codigoReferencia }}</strong>
+      </div>
+    }
+  </div>
+
+  @if (!mostrandoResultado()) {
+    <div class="row g-4 mt-1">
+      <div class="col-xl-8">
+        <section class="siiid-card carga-card">
+          <div class="siiid-card-header carga-card-header">
+            <i class="fa-solid fa-calendar-week"></i>
+            Periodo y archivos de la carga
+          </div>
+
+          <div class="carga-contenido">
+            <div class="pasos-carga">
+              <div class="paso activo">
+                <span>1</span>
+                Definir corte
+              </div>
+              <div class="paso">
+                <span>2</span>
+                Validar archivos
+              </div>
+              <div class="paso">
+                <span>3</span>
+                Confirmar carga
+              </div>
+            </div>
+
+            <div class="seccion-titulo">
+              <div>
+                <strong>Contenido de los archivos</strong>
+                <p>
+                  Indique si cada archivo contiene solo la semana o el
+                  acumulado completo del mes.
+                </p>
+              </div>
+            </div>
+
+            <div class="tipo-contenido-grid">
+              <label
+                class="tipo-contenido-card"
+                [class.seleccionado]="
+                  formulario().tipoContenido === 'SOLO_SEMANA'
+                "
+              >
+                <input
+                  type="radio"
+                  name="tipoContenido"
+                  value="SOLO_SEMANA"
+                  [ngModel]="formulario().tipoContenido"
+                  (ngModelChange)="
+                    actualizarCampo('tipoContenido', $event)
+                  "
+                />
+
+                <span class="tipo-icono">
+                  <i class="fa-solid fa-calendar-day"></i>
+                </span>
+
+                <span>
+                  <strong>Solo semana</strong>
+                  <small>
+                    Los archivos contienen exclusivamente los registros de
+                    la semana indicada.
+                  </small>
+                </span>
+              </label>
+
+              <label
+                class="tipo-contenido-card"
+                [class.seleccionado]="
+                  formulario().tipoContenido === 'ACUMULADO_MES'
+                "
+              >
+                <input
+                  type="radio"
+                  name="tipoContenido"
+                  value="ACUMULADO_MES"
+                  [ngModel]="formulario().tipoContenido"
+                  (ngModelChange)="
+                    actualizarCampo('tipoContenido', $event)
+                  "
+                />
+
+                <span class="tipo-icono">
+                  <i class="fa-solid fa-layer-group"></i>
+                </span>
+
+                <span>
+                  <strong>Acumulado del mes</strong>
+                  <small>
+                    Los archivos contienen el mes completo y el sistema
+                    conservará solo el tramo semanal.
+                  </small>
+                </span>
+              </label>
+            </div>
+
+            <div class="seccion-titulo seccion-periodo">
+              <div>
+                <strong>Identificación de la semana</strong>
+                <p>
+                  La fecha inicial define un periodo de siete días
+                  naturales.
+                </p>
+              </div>
+            </div>
+
+            <div class="periodo-grid">
+              <label class="campo-periodo">
+                <span>Año de la semana</span>
+                <input
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  class="form-control"
+                  [ngModel]="formulario().anioSemana"
+                  (ngModelChange)="
+                    actualizarCampo('anioSemana', $event)
+                  "
+                />
+              </label>
+
+              <label class="campo-periodo">
+                <span>Número de semana</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="53"
+                  placeholder="1 a 53"
+                  class="form-control"
+                  [ngModel]="formulario().numeroSemana"
+                  (ngModelChange)="
+                    actualizarCampo('numeroSemana', $event)
+                  "
+                />
+              </label>
+
+              <label class="campo-periodo campo-fecha">
+                <span>Fecha de inicio</span>
+                <input
+                  type="date"
+                  class="form-control"
+                  [ngModel]="formulario().fechaInicioSemana"
+                  (ngModelChange)="
+                    actualizarCampo('fechaInicioSemana', $event)
+                  "
+                />
+              </label>
+
+              <label class="campo-periodo">
+                <span>Mes de corte</span>
+                <select
+                  class="form-select"
+                  [ngModel]="formulario().mesCorte"
+                  (ngModelChange)="
+                    actualizarCampo('mesCorte', $event)
+                  "
+                >
+                  @for (mes of meses; track mes.valor) {
+                    <option [ngValue]="mes.valor">
+                      {{ mes.nombre }}
+                    </option>
+                  }
+                </select>
+              </label>
+
+              <label class="campo-periodo">
+                <span>Año de corte</span>
+                <input
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  class="form-control"
+                  [ngModel]="formulario().anioCorte"
+                  (ngModelChange)="
+                    actualizarCampo('anioCorte', $event)
+                  "
+                />
+              </label>
+            </div>
+
+            @if (tramoPrevisto(); as tramo) {
+              <div
+                class="tramo-preview"
+                [class.tramo-invalido]="!tramo.intersecaMes"
+                [class.tramo-cortado]="tramo.semanaCortada"
+              >
+                <i
+                  class="fa-solid"
+                  [class.fa-calendar-check]="tramo.intersecaMes"
+                  [class.fa-triangle-exclamation]="
+                    !tramo.intersecaMes
+                  "
+                ></i>
+
+                @if (tramo.intersecaMes) {
+                  <div>
+                    <span>Semana completa</span>
+                    <strong>
+                      {{ formatearFecha(tramo.fechaInicioSemana) }} al
+                      {{ formatearFecha(tramo.fechaFinSemana) }}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Tramo que se integrará en
+                      {{ nombreMes(formulario().mesCorte) }}
+                    </span>
+                    <strong>
+                      {{ formatearFecha(tramo.fechaInicioTramo) }} al
+                      {{ formatearFecha(tramo.fechaFinTramo) }}
+                    </strong>
+                  </div>
+
+                  @if (tramo.semanaCortada) {
+                    <em>
+                      La semana cruza de mes; solo se conservarán los
+                      registros del mes de corte.
+                    </em>
+                  }
+                } @else {
+                  <div>
+                    <span>Periodo inválido</span>
+                    <strong>
+                      La semana indicada no coincide con el mes y año de
+                      corte.
+                    </strong>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="seccion-titulo seccion-archivos">
+              <div>
+                <strong>Archivos requeridos</strong>
+                <p>
+                  Utilice los mismos encabezados y estructura de las
+                  plantillas mensuales.
+                </p>
+              </div>
+            </div>
+
+            <div class="archivos-grid">
+              @for (archivo of tiposArchivo; track archivo.tipo) {
+                <label
+                  class="archivo-card"
+                  [class.archivo-listo]="archivos()[archivo.tipo]"
+                >
+                  <span class="archivo-icono">
+                    <i
+                      class="fa-solid"
+                      [class]="archivo.icono"
+                    ></i>
+                  </span>
+
+                  <span class="archivo-info">
+                    <strong>{{ archivo.nombre }}</strong>
+                    <small>{{ nombreArchivo(archivo.tipo) }}</small>
+
+                    @if (tamanioArchivo(archivo.tipo)) {
+                      <em>{{ tamanioArchivo(archivo.tipo) }}</em>
+                    }
+                  </span>
+
+                  <span class="archivo-accion">Seleccionar</span>
+
+                  <input
+                    type="file"
+                    accept=".csv,.xlsx"
+                    (change)="
+                      seleccionarArchivo($event, archivo.tipo)
+                    "
+                  />
+                </label>
+              }
+            </div>
+
+            @if (errorGeneral()) {
+              <div class="alert alert-danger mb-0 mt-3">
+                {{ errorGeneral() }}
+              </div>
+            }
+
+            <div class="carga-acciones">
+              <div>
+                <i class="fa-solid fa-circle-info"></i>
+                Formatos permitidos: CSV y XLSX. Máximo 50 MB por
+                archivo.
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-siiid btn-validar"
+                [disabled]="!puedeValidar()"
+                (click)="validarArchivos()"
+              >
+                <i class="fa-solid fa-shield-halved"></i>
+                Validar carga semanal
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-xl-4">
+        <section class="siiid-card ayuda-card">
+          <div class="siiid-card-header carga-card-header">
+            <i class="fa-solid fa-file-excel"></i>
+            Plantillas oficiales
+          </div>
+
+          <div class="ayuda-contenido">
+            <p>
+              La carga semanal utiliza las mismas plantillas de carpetas,
+              delitos y víctimas.
+            </p>
+
+            <div class="plantillas-lista">
+              @for (archivo of tiposArchivo; track archivo.tipo) {
+                <a
+                  [href]="archivo.plantilla"
+                  [attr.download]="archivo.tipo + '.xlsx'"
+                >
+                  <img
+                    src="img/logo_XLSX.png"
+                    [alt]="'Plantilla de ' + archivo.nombre"
+                  />
+
+                  <span>
+                    <strong>{{ archivo.nombre }}</strong>
+                    <small>Descargar XLSX</small>
+                  </span>
+
+                  <i class="fa-solid fa-download"></i>
+                </a>
+              }
+            </div>
+
+            <div class="regla-semanal">
+              <i class="fa-solid fa-filter-circle-dollar"></i>
+
+              <div>
+                <strong>Filtro semanal automático</strong>
+                <span>
+                  Los registros fuera del tramo se contabilizan como
+                  excluidos y no pasan a las tablas finales.
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+
+  @if (mostrandoResultado()) {
+    <section
+      class="resultado-encabezado"
+      [class.resultado-correcto]="respuestaValida()"
+      [class.resultado-advertencia]="
+        respuestaValida() && advertencias().length > 0
+      "
+      [class.resultado-error]="!respuestaValida()"
+    >
+      <div class="resultado-icono">
+        <i
+          class="fa-solid"
+          [class.fa-circle-check]="
+            respuestaValida() && advertencias().length === 0
+          "
+          [class.fa-triangle-exclamation]="
+            !respuestaValida() || advertencias().length > 0
+          "
+        ></i>
+      </div>
+
+      <div>
+        <span>Resultado de validación</span>
+
+        <h2>
+          @if (!respuestaValida()) {
+            La carga contiene inconsistencias
+          } @else if (advertencias().length > 0) {
+            Carga válida con advertencias
+          } @else {
+            Carga semanal lista para confirmar
+          }
+        </h2>
+
+        <p>{{ respuesta()?.mensaje }}</p>
+      </div>
+
+      <div class="resultado-totales">
+        <div>
+          <strong>{{ errores().length }}</strong>
+          <span>Errores</span>
+        </div>
+
+        <div>
+          <strong>{{ advertencias().length }}</strong>
+          <span>Advertencias</span>
+        </div>
+      </div>
+    </section>
+
+    @if (respuesta()?.periodo; as periodo) {
+      <section class="periodo-confirmado">
+        <div>
+          <span>Tipo de contenido</span>
+          <strong>
+            {{ etiquetaTipoContenido(periodo.tipoContenido) }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Semana</span>
+          <strong>
+            {{ periodo.numeroSemana }} / {{ periodo.anioSemana }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Semana completa</span>
+          <strong>
+            {{ formatearFecha(periodo.fechaInicioSemana) }} al
+            {{ formatearFecha(periodo.fechaFinSemana) }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Tramo integrado</span>
+          <strong>
+            {{ formatearFecha(periodo.fechaInicioTramo) }} al
+            {{ formatearFecha(periodo.fechaFinTramo) }}
+          </strong>
+        </div>
+
+        <div>
+          <span>Mes de corte</span>
+          <strong>
+            {{ nombreMes(periodo.mesCorte) }}
+            {{ periodo.anioCorte }}
+          </strong>
+        </div>
+      </section>
+    }
+
+    <div class="conteos-grid">
+      @for (archivo of tiposArchivo; track archivo.tipo) {
+        <section class="conteo-card">
+          <div class="conteo-cabecera">
+            <i
+              class="fa-solid"
+              [class]="archivo.icono"
+            ></i>
+            {{ archivo.nombre }}
+          </div>
+
+          <div>
+            <span>{{ archivo.recibidos }}</span>
+            <strong>{{ totalRecibido(archivo.tipo) }}</strong>
+          </div>
+
+          <div class="incluido">
+            <span>{{ archivo.incluidos }}</span>
+            <strong>{{ totalIncluido(archivo.tipo) }}</strong>
+          </div>
+
+          <div class="excluido">
+            <span>{{ archivo.excluidos }}</span>
+            <strong>{{ totalExcluido(archivo.tipo) }}</strong>
+          </div>
+        </section>
+      }
+    </div>
+
+    <div class="resumen-validacion-grid">
+      @for (archivo of tiposArchivo; track archivo.tipo) {
+        <section class="resumen-validacion-card">
+          <h3>
+            Validación de {{ archivo.nombre.toLowerCase() }}
+          </h3>
+
+          <table>
+            <tbody>
+              @for (
+                item of resumenPorArchivo(archivo.tipo);
+                track item.codigo
+              ) {
+                <tr [class.fila-error]="item.esError">
+                  <td>{{ item.descripcion }}</td>
+                  <td>{{ item.totalRegistros }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="2">
+                    Sin resultados de resumen.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+    </div>
+
+    @if (detallesValidacion().length > 0) {
+      <section class="siiid-card detalle-card">
+        <div class="siiid-card-header carga-card-header">
+          <i class="fa-solid fa-list-ul"></i>
+          Detalle de errores y advertencias
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm mb-0 detalle-tabla">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Archivo</th>
+                <th>Fila</th>
+                <th>Columna</th>
+                <th>Valor</th>
+                <th>Mensaje</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (
+                detalle of detallesValidacion();
+                track $index
+              ) {
+                <tr>
+                  <td>
+                    <span
+                      class="detalle-tipo"
+                      [class.tipo-error]="
+                        esErrorDetalle(detalle)
+                      "
+                      [class.tipo-advertencia]="
+                        !esErrorDetalle(detalle)
+                      "
+                    >
+                      {{
+                        esErrorDetalle(detalle)
+                          ? 'ERROR'
+                          : 'ADVERTENCIA'
+                      }}
+                    </span>
+                  </td>
+
+                  <td>{{ detalle.archivo }}</td>
+                  <td>{{ detalle.fila ?? '-' }}</td>
+                  <td>{{ detalle.columna || '-' }}</td>
+                  <td>{{ detalle.valor || '-' }}</td>
+                  <td>{{ detalle.mensaje }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <section class="resultado-acciones">
+      @if (!respuestaValida()) {
+        <div>
+          <strong>
+            Corrija las inconsistencias antes de continuar.
+          </strong>
+          <span>
+            La información no fue integrada en las tablas semanales.
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-siiid"
+          (click)="volverACaptura()"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver a los archivos
+        </button>
+      } @else {
+        <div>
+          <strong>
+            Revise el tramo y los conteos antes de confirmar.
+          </strong>
+          <span>
+            Al rechazar se cancelará este intento; al aceptar continuará
+            el flujo semanal.
+          </span>
+        </div>
+
+        <div class="botones-confirmacion">
+          <button
+            type="button"
+            class="btn btn-outline-danger"
+            [disabled]="estado() === 'CONFIRMANDO'"
+            (click)="confirmarCarga(false)"
+          >
+            <i class="fa-solid fa-xmark"></i>
+            Rechazar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-siiid"
+            [disabled]="estado() === 'CONFIRMANDO'"
+            (click)="confirmarCarga(true)"
+          >
+            @if (estado() === 'CONFIRMANDO') {
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              Procesando...
+            } @else {
+              <i class="fa-solid fa-check"></i>
+              Confirmar carga semanal
+            }
+          </button>
+        </div>
+      }
+    </section>
+  }
+</div>
+
+@if (estado() === 'VALIDANDO') {
+  <div class="procesando-overlay">
+    <div class="procesando-caja">
+      <div class="procesando-spinner"></div>
+      <strong>Validando carga semanal...</strong>
+      <span>
+        Se están revisando estructura, catálogos, periodo y modalidades
+        configuradas.
+      </span>
+    </div>
+  </div>
+}

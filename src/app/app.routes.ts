@@ -60,6 +60,15 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'carga',
+    loadComponent: () => import('./pages/semanal-carga/semanal-carga').then((m) => m.SemanalCarga),
+    canActivate: [permissionGuard],
+    data: {
+      roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+      permiso: 'CARGA',
+    },
+  },
+  {
     path: '',
     loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
