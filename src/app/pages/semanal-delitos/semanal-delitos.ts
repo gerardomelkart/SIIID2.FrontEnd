@@ -33,12 +33,15 @@ export class SemanalDelitos implements OnInit {
   cargando = signal(false);
   guardando = signal(false);
   firmaOriginal = signal('');
+  bienesContraidos = signal<Set<number>>(new Set<number>());
+  delitosContraidos = signal<Set<number>>(new Set<number>());
 
   jerarquiaFiltrada = computed(() => this.construirJerarquia(this.modalidades(), this.busqueda()));
   totalDisponibles = computed(() => this.modalidades().length);
   totalSeleccionados = computed(() => this.modalidades().filter((modalidad) => modalidad.seleccionado).length);
   totalOpcionales = computed(() => this.modalidades().filter((modalidad) => modalidad.seleccionado && !modalidad.esObligatorio).length);
   hayCambios = computed(() => this.firmaConfiguracion(this.modalidades()) !== this.firmaOriginal());
+  hayBusqueda = computed(() => this.busqueda().trim().length > 0);
 
   ngOnInit(): void {
     this.cargarConfiguracion();
@@ -67,6 +70,60 @@ export class SemanalDelitos implements OnInit {
 
   buscar(valor: string): void {
     this.busqueda.set(valor);
+  }
+
+  alternarBien(idBienJuridico: number): void {
+    if (this.hayBusqueda()) return;
+
+    this.bienesContraidos.update((actuales) => {
+      const nuevos = new Set(actuales);
+
+      if (nuevos.has(idBienJuridico)) {
+        nuevos.delete(idBienJuridico);
+      } else {
+        nuevos.add(idBienJuridico);
+      }
+
+      return nuevos;
+    });
+  }
+
+  alternarDelito(idDelito: number): void {
+    if (this.hayBusqueda()) return;
+
+    this.delitosContraidos.update((actuales) => {
+      const nuevos = new Set(actuales);
+
+      if (nuevos.has(idDelito)) {
+        nuevos.delete(idDelito);
+      } else {
+        nuevos.add(idDelito);
+      }
+
+      return nuevos;
+    });
+  }
+
+  expandirTodo(): void {
+    if (this.hayBusqueda()) return;
+
+    this.bienesContraidos.set(new Set<number>());
+    this.delitosContraidos.set(new Set<number>());
+  }
+
+  contraerTodo(): void {
+    if (this.hayBusqueda()) return;
+
+    this.bienesContraidos.set(new Set(this.modalidades().map((modalidad) => modalidad.idBienJuridico)));
+    this.delitosContraidos.set(new Set(this.modalidades().map((modalidad) => modalidad.idDelito)));
+  }
+
+  bienContraido(idBienJuridico: number): boolean {
+    return !this.hayBusqueda() && this.bienesContraidos().has(idBienJuridico);
+  }
+
+  delitoContraido(idDelito: number): boolean {
+    return !this.hayBusqueda() && this.delitosContraidos().has(idDelito);
   }
 
   cambiarSeleccionModalidad(idModalidadDelito: number, seleccionado: boolean): void {

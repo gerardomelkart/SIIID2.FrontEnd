@@ -38,10 +38,26 @@
         Configuración jerárquica
       </span>
 
-      <div class="semanal-buscador">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar bien jurídico, delito, subtipo o modalidad..." [ngModel]="busqueda()"
-          (ngModelChange)="buscar($event)">
+      <div class="jerarquia-herramientas">
+        <div class="controles-expansion" role="group" aria-label="Controles de expansión">
+          <button type="button" class="btn-expansion-global" [disabled]="hayBusqueda()"
+            title="Expandir todos los grupos" (click)="expandirTodo()">
+            <i class="fa-solid fa-angles-down"></i>
+            Expandir todo
+          </button>
+
+          <button type="button" class="btn-expansion-global" [disabled]="hayBusqueda()"
+            title="Contraer todos los grupos" (click)="contraerTodo()">
+            <i class="fa-solid fa-angles-up"></i>
+            Contraer todo
+          </button>
+        </div>
+
+        <div class="semanal-buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar bien jurídico, delito, subtipo o modalidad..." [ngModel]="busqueda()"
+            (ngModelChange)="buscar($event)">
+        </div>
       </div>
     </div>
 
@@ -63,6 +79,15 @@
       <section class="bien-juridico-grupo">
         <header class="bien-juridico-header">
           <div class="grupo-identidad">
+            <button type="button" class="btn-colapsar btn-colapsar-bien" [disabled]="hayBusqueda()"
+              [attr.aria-expanded]="!bienContraido(bien.idBienJuridico)"
+              [attr.aria-label]="bienContraido(bien.idBienJuridico) ? 'Expandir bien jurídico' : 'Contraer bien jurídico'"
+              [title]="hayBusqueda() ? 'Los resultados permanecen abiertos mientras busca' : bienContraido(bien.idBienJuridico) ? 'Expandir bien jurídico' : 'Contraer bien jurídico'"
+              (click)="alternarBien(bien.idBienJuridico)">
+              <i class="fa-solid" [class.fa-chevron-right]="bienContraido(bien.idBienJuridico)"
+                [class.fa-chevron-down]="!bienContraido(bien.idBienJuridico)"></i>
+            </button>
+
             <span class="bien-clave">{{ bien.claveBienJuridico }}</span>
 
             <div>
@@ -83,16 +108,28 @@
           </label>
         </header>
 
+        @if (!bienContraido(bien.idBienJuridico)) {
         @for (delito of bien.delitos; track delito.idDelito) {
         <article class="delito-grupo">
           <header class="delito-header">
-            <div>
-              <span class="nivel-etiqueta">Delito</span>
-              <h3>
-                <span class="delito-clave-header">{{ delito.claveDelito }}</span>
-                {{ delito.delito }}
-              </h3>
-              <p>{{ totalModalidadesDelito(delito.idDelito) }} modalidades</p>
+            <div class="delito-identidad">
+              <button type="button" class="btn-colapsar btn-colapsar-delito" [disabled]="hayBusqueda()"
+                [attr.aria-expanded]="!delitoContraido(delito.idDelito)"
+                [attr.aria-label]="delitoContraido(delito.idDelito) ? 'Expandir delito' : 'Contraer delito'"
+                [title]="hayBusqueda() ? 'Los resultados permanecen abiertos mientras busca' : delitoContraido(delito.idDelito) ? 'Expandir delito' : 'Contraer delito'"
+                (click)="alternarDelito(delito.idDelito)">
+                <i class="fa-solid" [class.fa-chevron-right]="delitoContraido(delito.idDelito)"
+                  [class.fa-chevron-down]="!delitoContraido(delito.idDelito)"></i>
+              </button>
+
+              <div>
+                <span class="nivel-etiqueta">Delito</span>
+                <h3>
+                  <span class="delito-clave-header">{{ delito.claveDelito }}</span>
+                  {{ delito.delito }}
+                </h3>
+                <p>{{ totalModalidadesDelito(delito.idDelito) }} modalidades</p>
+              </div>
             </div>
 
             <label class="seleccion-control seleccion-masiva"
@@ -106,6 +143,7 @@
             </label>
           </header>
 
+          @if (!delitoContraido(delito.idDelito)) {
           <div class="table-responsive">
             <table class="table table-sm semanal-table modalidades-table">
               <thead>
@@ -158,7 +196,9 @@
               </tbody>
             </table>
           </div>
+          }
         </article>
+        }
         }
       </section>
       }
