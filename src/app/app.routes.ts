@@ -47,6 +47,18 @@ export const routes: Routes = [
         data: {
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
           permiso: 'CARGA',
+          tipoCarga: 'CARGA_INICIAL',
+        },
+      },
+      {
+        path: 'actualizacion',
+        loadComponent: () =>
+          import('./pages/semanal-carga/semanal-carga').then((m) => m.SemanalCarga),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+          permiso: 'MODIFICACION',
+          tipoCarga: 'ACTUALIZACION',
         },
       },
       {

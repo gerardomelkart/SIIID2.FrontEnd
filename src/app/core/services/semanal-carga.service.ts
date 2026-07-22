@@ -22,6 +22,7 @@ export class SemanalCargaService {
     formData.append('carpetas', archivos.carpetas!);
     formData.append('delitos', archivos.delitos!);
     formData.append('victimas', archivos.victimas!);
+    formData.append('tipoCarga', periodo.tipoCarga);
     formData.append('tipoContenido', periodo.tipoContenido);
     formData.append('anioSemana', periodo.anioSemana.toString());
     formData.append('numeroSemana', periodo.numeroSemana.toString());

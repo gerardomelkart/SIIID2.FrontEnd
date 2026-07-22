@@ -2,10 +2,15 @@
   <div class="semanal-admin-header carga-header">
     <div>
       <span>Módulo semanal</span>
-      <h1>Carga semanal de incidencia delictiva</h1>
+      <h1>
+        {{ esActualizacion ? 'Actualización semanal de incidencia delictiva' : 'Carga semanal de incidencia delictiva' }}
+      </h1>
       <p>
-        Seleccione la semana; el sistema calculará automáticamente
-        todo el periodo de carga.
+        @if (esActualizacion) {
+        Seleccione una semana confirmada y cargue su versión corregida completa.
+        } @else {
+        Seleccione la semana; el sistema calculará automáticamente todo el periodo de carga.
+        }
       </p>
     </div>
 
@@ -23,7 +28,7 @@
       <section class="siiid-card carga-card">
         <div class="siiid-card-header carga-card-header">
           <i class="fa-solid fa-calendar-week"></i>
-          Periodo y archivos de la carga
+          Periodo y archivos de la {{ esActualizacion ? 'actualización' : 'carga' }}
         </div>
 
         <div class="carga-contenido">
@@ -38,10 +43,11 @@
             </div>
             <div class="paso">
               <span>3</span>
-              Confirmar carga
+              Confirmar {{ esActualizacion ? 'actualización' : 'carga' }}
             </div>
           </div>
 
+          @if (!esActualizacion) {
           <div class="seccion-titulo">
             <div>
               <strong>Tipo de carga</strong>
@@ -92,20 +98,35 @@
               </span>
             </label>
           </div>
+          } @else {
+          <div class="seccion-titulo">
+            <div>
+              <strong>Actualización de una semana confirmada</strong>
+              <p>
+                La nueva versión reemplazará la semana seleccionada y la versión anterior se conservará en el
+                histórico.
+              </p>
+            </div>
+          </div>
+          }
 
           @if (formulario().tipoContenido) {
           <div class="seccion-titulo seccion-periodo">
             <div>
               <strong>
                 {{
-                formulario().tipoContenido === 'SOLO_SEMANA'
+                esActualizacion
+                ? 'Semana a actualizar'
+                : formulario().tipoContenido === 'SOLO_SEMANA'
                 ? 'Semana a cargar'
                 : 'Periodo automático'
                 }}
               </strong>
 
               <p>
-                @if (formulario().tipoContenido === 'SOLO_SEMANA') {
+                @if (esActualizacion) {
+                Seleccione una semana confirmada del mes de corte actual.
+                } @else if (formulario().tipoContenido === 'SOLO_SEMANA') {
                 Seleccione una semana cuyo mes de corte sea el actual; los cortes anteriores ya están consolidados.
                 } @else {
                 El acumulado mensual utiliza automáticamente la semana en curso.
@@ -169,7 +190,7 @@
             <div>
               @if (formulario().tipoContenido === 'SOLO_SEMANA') {
               <span>
-                Tramo que se integrará en
+                Tramo que se {{ esActualizacion ? 'reemplazará' : 'integrará' }} en
                 {{ nombreMes(tramo.mesCorte) }}
               </span>
 
@@ -192,8 +213,7 @@
 
             @if (tramo.semanaCortada) {
             <em>
-              La semana cruza de mes; en ambos tipos de carga solo se
-              considerarán los registros del mes donde cae el último día.
+              La semana cruza de mes; solo se considerarán los registros del mes donde cae el último día.
             </em>
             }
           </div>
@@ -253,7 +273,7 @@
             <button type="button" class="btn btn-siiid btn-validar" [disabled]="!puedeValidar()"
               (click)="validarArchivos()">
               <i class="fa-solid fa-shield-halved"></i>
-              Validar carga semanal
+              Validar {{ esActualizacion ? 'actualización' : 'carga semanal' }}
             </button>
           </div>
           }
@@ -270,7 +290,7 @@
 
         <div class="ayuda-contenido">
           <p>
-            La carga semanal utiliza las mismas plantillas de carpetas,
+            La {{ esActualizacion ? 'actualización' : 'carga' }} semanal utiliza las mismas plantillas de carpetas,
             delitos y víctimas.
           </p>
 
@@ -293,10 +313,13 @@
             <i class="fa-solid fa-filter-circle-dollar"></i>
 
             <div>
-              <strong>Filtro semanal automático</strong>
+              <strong>{{ esActualizacion ? 'Reemplazo semanal controlado' : 'Filtro semanal automático' }}</strong>
               <span>
-                Los registros fuera del tramo se contabilizan como
-                excluidos y no pasan a las tablas finales.
+                @if (esActualizacion) {
+                Solo se reemplazarán los registros de la semana seleccionada; el resto del mes no cambia.
+                } @else {
+                Los registros fuera del tramo se contabilizan como excluidos y no pasan a las tablas finales.
+                }
               </span>
             </div>
           </div>
@@ -323,11 +346,11 @@
 
       <h2>
         @if (!respuestaValida()) {
-        La carga contiene inconsistencias
+        La {{ esActualizacion ? 'actualización' : 'carga' }} contiene inconsistencias
         } @else if (advertencias().length > 0) {
-        Carga válida con advertencias
+        {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
         } @else {
-        Carga semanal lista para revisar
+        {{ esActualizacion ? 'Actualización' : 'Carga semanal' }} lista para revisar
         }
       </h2>
 
@@ -372,7 +395,7 @@
     </div>
 
     <div>
-      <span>Tramo integrado</span>
+      <span>{{ esActualizacion ? 'Tramo que se reemplazará' : 'Tramo integrado' }}</span>
       <strong>
         {{ formatearFecha(periodo.fechaInicioTramo) }} al
         {{ formatearFecha(periodo.fechaFinTramo) }}
@@ -521,7 +544,7 @@
 
       <span>
         Abra el informe previo; desde ahí podrá aceptar o rechazar
-        la carga semanal.
+        la {{ esActualizacion ? 'actualización' : 'carga' }} semanal.
       </span>
     </div>
 
@@ -545,7 +568,7 @@
 <div class="procesando-overlay">
   <div class="procesando-caja">
     <div class="procesando-spinner"></div>
-    <strong>Validando carga semanal...</strong>
+    <strong>Validando {{ esActualizacion ? 'actualización' : 'carga' }} semanal...</strong>
     <span>
       Se están revisando estructura, catálogos, periodo y modalidades
       configuradas.
@@ -561,8 +584,11 @@ estado() === 'CONFIRMADO'
 ) {
 <div class="acuse-modal">
   <div class="acuse-header">
-    <span>{{ estado() === 'CONFIRMADO' ? 'Acuse confirmado de entrega semanal' : 'Informe previo de entrega semanal'
-      }}</span>
+    <span>
+      {{ estado() === 'CONFIRMADO'
+      ? (esActualizacion ? 'Acuse confirmado de actualización semanal' : 'Acuse confirmado de entrega semanal')
+      : (esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo de entrega semanal') }}
+    </span>
 
     @if (estado() === 'CONFIRMADO') {
     <button type="button" class="acuse-close" aria-label="Cerrar acuse" (click)="cerrarProcesoConfirmado()">
@@ -573,9 +599,11 @@ estado() === 'CONFIRMADO'
 
   <div class="acuse-body">
     @if (acuseConfirmadoUrl()) {
-    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse semanal confirmado"></iframe>
+    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()"
+      [title]="esActualizacion ? 'Acuse de actualización semanal confirmada' : 'Acuse semanal confirmado'"></iframe>
     } @else if (acusePrevioUrl()) {
-    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Informe previo semanal"></iframe>
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()"
+      [title]="esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo semanal'"></iframe>
     }
   </div>
 

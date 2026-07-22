@@ -28,7 +28,7 @@
       </div>
 
       <nav class="menu">
-        @if (puedeCargar()) {
+        @if (puedeCargar() || puedeModificar()) {
         <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
           <span>
             <i class="fa-solid fa-upload"></i>
@@ -45,10 +45,19 @@
         </button>
 
         @if (incidenciaAbierta()) {
+        @if (puedeCargar()) {
         <a class="menu-link level-3" routerLink="/semanal/carga" routerLinkActive="active">
           <i class="fa-solid fa-upload"></i>
           Integrar Información
         </a>
+        }
+
+        @if (puedeModificar()) {
+        <a class="menu-link level-3" routerLink="/semanal/actualizacion" routerLinkActive="active">
+          <i class="fa-solid fa-pen-to-square"></i>
+          Actualizar Información
+        </a>
+        }
         }
         }
         }

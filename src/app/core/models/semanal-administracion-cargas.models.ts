@@ -3,6 +3,7 @@ import { ConfirmarCargaResponse } from './carga.models';
 export interface SemanalCargaPendienteAdministracionItem {
   idSemanalCarga: number;
   codigoReferencia: string;
+  tipoCarga: string;
   tipoContenido: string;
   idEntidadFederativa: number | null;
   entidadFederativa: string;

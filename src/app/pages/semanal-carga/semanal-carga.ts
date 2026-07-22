@@ -1,10 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CargaValidacionError, CargaValidacionResumenItem } from '../../core/models/carga.models';
 import {
   SemanalCargaPeriodoRequest,
   SemanalCargaValidacionResponse,
+  TipoCargaSemanal,
   TipoContenidoSemanal,
 } from '../../core/models/semanal-carga.models';
 import { SemanalCargaService } from '../../core/services/semanal-carga.service';
@@ -60,8 +61,14 @@ interface VistaTramoSemanal {
 })
 export class SemanalCarga {
   private readonly semanalCargaService = inject(SemanalCargaService);
+  private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
+
+  readonly tipoCarga =
+    (this.activatedRoute.snapshot.data['tipoCarga'] as TipoCargaSemanal | undefined) ??
+    'CARGA_INICIAL';
+  readonly esActualizacion = this.tipoCarga === 'ACTUALIZACION';
 
   readonly meses = [
     { valor: 1, nombre: 'Enero' },
@@ -255,6 +262,7 @@ export class SemanalCarga {
     }
 
     const periodo: SemanalCargaPeriodoRequest = {
+      tipoCarga: this.tipoCarga,
       tipoContenido: formulario.tipoContenido,
       anioSemana: tramo.anioSemana,
       numeroSemana: tramo.numeroSemana,
@@ -284,7 +292,12 @@ export class SemanalCarga {
 
         this.estado.set('CAPTURA');
         this.errorGeneral.set(
-          obtenerMensajeErrorHttp(error, 'No fue posible validar la carga semanal.'),
+          obtenerMensajeErrorHttp(
+            error,
+            this.esActualizacion
+              ? 'No fue posible validar la actualización semanal.'
+              : 'No fue posible validar la carga semanal.',
+          ),
         );
       },
     });
@@ -369,7 +382,7 @@ export class SemanalCarga {
             this.limpiarAcusePrevio();
 
             mostrarExitoInstitucional(
-              'Carga semanal rechazada',
+              this.esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
               confirmacion.resultado.mensaje,
             ).then(() => {
               this.reiniciarFormulario();
@@ -383,7 +396,9 @@ export class SemanalCarga {
             this.limpiarAcusePrevio();
 
             mostrarExitoInstitucional(
-              'Carga enviada a revisión',
+              this.esActualizacion
+                ? 'Actualización enviada a revisión'
+                : 'Carga enviada a revisión',
               confirmacion.resultado.mensaje,
             ).then(() => {
               this.reiniciarFormulario();
@@ -398,17 +413,21 @@ export class SemanalCarga {
           this.estado.set('CONFIRMADO');
 
           mostrarExito(
-            'Carga semanal confirmada',
+            this.esActualizacion
+              ? 'Actualización semanal confirmada'
+              : 'Carga semanal confirmada',
             confirmacion.acuseDescargado
               ? undefined
-              : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
+              : `La ${this.esActualizacion ? 'actualización' : 'carga'} fue confirmada, pero no fue posible cargar el acuse confirmado.`,
           );
         },
         error: (error: unknown) => {
           this.estado.set('MOSTRANDO_ACUSE');
 
           mostrarError(
-            aceptar ? 'No fue posible confirmar la carga' : 'No fue posible rechazar la carga',
+            aceptar
+              ? `No fue posible confirmar la ${this.esActualizacion ? 'actualización' : 'carga'}`
+              : `No fue posible rechazar la ${this.esActualizacion ? 'actualización' : 'carga'}`,
             obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
           );
         },
@@ -566,7 +585,7 @@ export class SemanalCarga {
 
   private crearFormularioInicial(): SemanalCargaFormulario {
     return {
-      tipoContenido: '',
+      tipoContenido: this.esActualizacion ? 'SOLO_SEMANA' : '',
       semanaSeleccionada: '',
     };
   }

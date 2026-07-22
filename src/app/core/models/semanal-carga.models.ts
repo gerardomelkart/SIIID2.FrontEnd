@@ -5,8 +5,10 @@ import {
 } from './carga.models';
 
 export type TipoContenidoSemanal = 'SOLO_SEMANA' | 'ACUMULADO_MES';
+export type TipoCargaSemanal = 'CARGA_INICIAL' | 'ACTUALIZACION';
 
 export interface SemanalCargaPeriodoRequest {
+  tipoCarga: TipoCargaSemanal;
   tipoContenido: TipoContenidoSemanal;
   anioSemana: number;
   numeroSemana: number;
@@ -28,6 +30,7 @@ export interface SemanalPeriodoCarga {
 }
 
 export interface SemanalCargaValidacionResponse extends CargaValidacionResponse {
+  tipoCarga: TipoCargaSemanal;
   periodo: SemanalPeriodoCarga | null;
   totalCarpetasIncluidas: number;
   totalDelitosIncluidos: number;

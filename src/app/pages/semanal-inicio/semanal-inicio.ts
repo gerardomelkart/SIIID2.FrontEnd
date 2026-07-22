@@ -14,6 +14,7 @@ export class SemanalInicio {
 
   usuario = this.sessionService.usuario;
   habilitaCarga = this.sessionService.habilitaCarga;
+  habilitaModificacion = this.sessionService.habilitaModificacion;
 
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
@@ -36,6 +37,12 @@ export class SemanalInicio {
     () =>
       (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
       this.habilitaCarga(),
+  );
+
+  puedeActualizar = computed(
+    () =>
+      (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
+      this.habilitaModificacion(),
   );
 
   puedeAdministrarUsuarios = computed(() => this.esSuperUsuario());

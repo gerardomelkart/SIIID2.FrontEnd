@@ -32,6 +32,13 @@ export class SemanalLayout {
       this.sessionService.habilitaCarga(),
   );
 
+  puedeModificar = computed(
+    () =>
+      (this.usuario()?.rol === ROLES.SUPER_USUARIO ||
+        this.usuario()?.rol === ROLES.ENLACE_ESTATAL) &&
+      this.sessionService.habilitaModificacion(),
+  );
+
   puedeAdministrarDelitos = computed(
     () => this.esSuperUsuario() && this.sessionService.administraDelitos(),
   );
