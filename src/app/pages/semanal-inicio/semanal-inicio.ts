@@ -40,6 +40,8 @@ export class SemanalInicio {
 
   puedeAdministrarUsuarios = computed(() => this.esSuperUsuario());
 
+  puedeAprobarCargas = computed(() => this.esSuperUsuario());
+
   puedeAdministrarDelitos = computed(
     () => this.esSuperUsuario() && this.sessionService.administraDelitos(),
   );

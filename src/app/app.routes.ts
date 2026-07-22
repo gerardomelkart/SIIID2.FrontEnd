@@ -50,6 +50,17 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'administracion/cargas-pendientes',
+        loadComponent: () =>
+          import('./pages/semanal-aprobacion-cargas/semanal-aprobacion-cargas').then(
+            (m) => m.SemanalAprobacionCargas,
+          ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+      {
         path: 'administracion/usuarios',
         loadComponent: () =>
           import('./pages/semanal-usuarios/semanal-usuarios').then((m) => m.SemanalUsuarios),
