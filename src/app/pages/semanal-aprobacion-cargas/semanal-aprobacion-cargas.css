@@ -1,5 +1,5 @@
 .semanal-aprobacion-table {
-  min-width: 1480px;
+  min-width: 1600px;
 }
 
 .periodo-cell {
@@ -17,6 +17,11 @@
 .tipo-badge.tipo-acumulado {
   background: #f1ece2;
   color: #6c512c;
+}
+
+.tipo-badge.tipo-actualizacion {
+  background: #e8f0f8;
+  color: #245178;
 }
 
 .excluidos-desglose>div {

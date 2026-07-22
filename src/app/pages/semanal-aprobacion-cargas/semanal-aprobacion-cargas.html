@@ -1,8 +1,8 @@
 <div class="aprobacion-page">
   <header class="page-header">
     <div>
-      <h1>Aprobación de cargas semanales</h1>
-      <p>Revise los archivos enviados por los enlaces estatales antes de incorporarlos al módulo preliminar.</p>
+      <h1>Aprobación de operaciones semanales</h1>
+      <p>Revise las cargas y actualizaciones enviadas antes de incorporarlas al módulo preliminar.</p>
     </div>
 
     <div class="header-actions">
@@ -27,12 +27,12 @@
     <div class="siiid-card-header card-header-content">
       <span>
         <i class="fa-solid fa-inbox"></i>
-        Cargas semanales pendientes de revisión
+        Operaciones semanales pendientes de revisión
       </span>
 
       <div class="buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar entidad, semana, periodo o usuario..." [ngModel]="busqueda()"
+        <input type="text" placeholder="Buscar operación, entidad, semana, periodo o usuario..." [ngModel]="busqueda()"
           (ngModelChange)="buscar($event)">
       </div>
     </div>
@@ -40,7 +40,7 @@
     @if (cargando()) {
     <div class="estado-vacio">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      <span>Consultando cargas semanales pendientes...</span>
+      <span>Consultando operaciones semanales pendientes...</span>
     </div>
     } @else {
     <div class="table-responsive">
@@ -49,7 +49,8 @@
           <tr>
             <th>Entidad federativa</th>
             <th>Semana</th>
-            <th>Tipo</th>
+            <th>Operación</th>
+            <th>Contenido</th>
             <th>Tramo integrado</th>
             <th>Usuario que envió</th>
             <th>Fecha de validación</th>
@@ -70,6 +71,12 @@
                 <strong>{{ semanaTexto(carga) }}</strong>
                 <small>{{ rangoSemanaTexto(carga) }}</small>
               </div>
+            </td>
+
+            <td>
+              <span class="tipo-badge" [class.tipo-actualizacion]="esActualizacion(carga)">
+                {{ tipoCargaTexto(carga.tipoCarga) }}
+              </span>
             </td>
 
             <td>
@@ -132,10 +139,10 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="10">
+            <td colspan="11">
               <div class="estado-vacio">
                 <i class="fa-solid fa-circle-check"></i>
-                <span>No hay cargas semanales pendientes que coincidan con la búsqueda.</span>
+                <span>No hay operaciones semanales pendientes que coincidan con la búsqueda.</span>
               </div>
             </td>
           </tr>
@@ -153,7 +160,7 @@
       </div>
 
       @if (totalPaginas() > 1) {
-      <nav class="paginacion-bandeja" aria-label="Paginación de cargas semanales pendientes">
+      <nav class="paginacion-bandeja" aria-label="Paginación de operaciones semanales pendientes">
         <button type="button" class="btn-pagina" [disabled]="paginaActual() === 1"
           (click)="irPagina(paginaActual() - 1)">
           <i class="fa-solid fa-chevron-left"></i>
@@ -180,9 +187,9 @@
   <section id="detalle-carga-semanal" class="siiid-card detalle-card">
     <div class="detalle-header">
       <div>
-        <span class="detalle-eyebrow">Solicitud semanal pendiente</span>
+        <span class="detalle-eyebrow">{{ tipoCargaTexto(carga.tipoCarga) }} semanal pendiente</span>
         <h2>{{ carga.entidadFederativa }} — {{ semanaTexto(carga) }}</h2>
-        <p>{{ tipoContenidoTexto(carga.tipoContenido) }}</p>
+        <p>{{ tipoCargaTexto(carga.tipoCarga) }} · {{ tipoContenidoTexto(carga.tipoContenido) }}</p>
       </div>
 
       <button type="button" class="btn-cerrar" title="Cerrar detalle" [disabled]="hayOperacionEnCurso()"
@@ -204,12 +211,17 @@
       </div>
 
       <div class="detalle-dato">
+        <span>Tipo de operación</span>
+        <strong>{{ tipoCargaTexto(carga.tipoCarga) }}</strong>
+      </div>
+
+      <div class="detalle-dato">
         <span>Tipo de contenido</span>
         <strong>{{ tipoContenidoTexto(carga.tipoContenido) }}</strong>
       </div>
 
       <div class="detalle-dato">
-        <span>Tramo integrado</span>
+        <span>{{ esActualizacion(carga) ? 'Tramo que se reemplazará' : 'Tramo integrado' }}</span>
         <strong>{{ tramoTexto(carga) }}</strong>
       </div>
 
@@ -238,7 +250,11 @@
     <div class="totales-section-title">
       <div>
         <h3>Registros incluidos</h3>
-        <p>Información que se incorporará al aprobar la carga.</p>
+        <p>
+          {{ esActualizacion(carga)
+          ? 'Nueva versión que reemplazará la semana confirmada.'
+          : 'Información que se incorporará al aprobar la carga.' }}
+        </p>
       </div>
     </div>
 
@@ -335,14 +351,14 @@
       <div class="section-title">
         <div>
           <h3>Advertencias de validación</h3>
-          <p>Estas inconsistencias fueron aceptadas por el enlace estatal antes de enviar la carga.</p>
+          <p>Estas inconsistencias fueron aceptadas por el enlace estatal antes de enviar la operación.</p>
         </div>
       </div>
 
       @if (carga.advertencias.length === 0) {
       <div class="sin-advertencias-box">
         <i class="fa-solid fa-circle-check"></i>
-        Esta carga no contiene advertencias.
+        Esta operación no contiene advertencias.
       </div>
       } @else {
       <div class="table-responsive">
@@ -391,7 +407,7 @@
         } @else {
         <i class="fa-solid fa-check"></i>
         }
-        Aprobar carga
+        Aprobar {{ esActualizacion(carga) ? 'actualización' : 'carga' }}
       </button>
     </div>
   </section>
@@ -410,7 +426,7 @@
     </div>
 
     <iframe class="acuse-frame" [src]="acuseUrl()"
-      title="Informe previo de entrega de información semanal"></iframe>
+      title="Informe previo de operación semanal"></iframe>
 
     <div class="acuse-modal-footer">
       <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">Cerrar</button>

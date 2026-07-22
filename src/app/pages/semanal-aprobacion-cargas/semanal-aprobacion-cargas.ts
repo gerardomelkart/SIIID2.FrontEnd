@@ -68,6 +68,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         carga.codigoReferencia.toLowerCase().includes(texto) ||
         carga.usuarioCarga.toLowerCase().includes(texto) ||
         carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
+        this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
         this.tipoContenidoTexto(carga.tipoContenido).toLowerCase().includes(texto) ||
         this.semanaTexto(carga).toLowerCase().includes(texto) ||
         this.periodoCorteTexto(carga).toLowerCase().includes(texto)
@@ -247,10 +248,13 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   async aprobar(carga: SemanalCargaPendienteAdministracionItem): Promise<void> {
+    const esActualizacion = this.esActualizacion(carga);
     const confirmacion = await confirmarAccion(
-      'Aprobar carga semanal',
-      `Se incorporará definitivamente la información de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`,
-      'Aprobar carga',
+      esActualizacion ? 'Aprobar actualización semanal' : 'Aprobar carga semanal',
+      esActualizacion
+        ? `Se reemplazará la versión confirmada de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`
+        : `Se incorporará definitivamente la información de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`,
+      esActualizacion ? 'Aprobar actualización' : 'Aprobar carga',
     );
 
     if (!confirmacion.isConfirmed) return;
@@ -258,8 +262,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.procesando.set(carga.codigoReferencia);
 
     Swal.fire({
-      title: 'Aprobando carga semanal',
-      text: `Se está incorporando definitivamente la información de ${carga.entidadFederativa}. Espere un momento...`,
+      title: esActualizacion ? 'Aprobando actualización semanal' : 'Aprobando carga semanal',
+      text: esActualizacion
+        ? `Se está reemplazando la versión confirmada de ${carga.entidadFederativa}. Espere un momento...`
+        : `Se está incorporando definitivamente la información de ${carga.entidadFederativa}. Espere un momento...`,
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
@@ -274,8 +280,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         Swal.close();
 
         mostrarExitoInstitucional(
-          'Carga semanal aprobada',
-          response.mensaje || 'La información semanal fue incorporada correctamente.',
+          esActualizacion ? 'Actualización semanal aprobada' : 'Carga semanal aprobada',
+          response.mensaje ||
+            (esActualizacion
+              ? 'La información semanal fue actualizada correctamente.'
+              : 'La información semanal fue incorporada correctamente.'),
         );
 
         this.cargarPendientes();
@@ -285,7 +294,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         Swal.close();
 
         mostrarError(
-          'No fue posible aprobar la carga semanal',
+          esActualizacion
+            ? 'No fue posible aprobar la actualización semanal'
+            : 'No fue posible aprobar la carga semanal',
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
         );
 
@@ -295,9 +306,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   async rechazar(carga: SemanalCargaPendienteAdministracionItem): Promise<void> {
+    const esActualizacion = this.esActualizacion(carga);
     const resultado = await Swal.fire({
       icon: 'warning',
-      title: 'Rechazar carga semanal',
+      title: esActualizacion ? 'Rechazar actualización semanal' : 'Rechazar carga semanal',
       text: `${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
       input: 'textarea',
       inputLabel: 'Motivo del rechazo',
@@ -307,7 +319,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         'aria-label': 'Motivo del rechazo',
       },
       showCancelButton: true,
-      confirmButtonText: 'Rechazar carga',
+      confirmButtonText: esActualizacion ? 'Rechazar actualización' : 'Rechazar carga',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#235B4E',
       inputValidator: (valor) => {
@@ -331,8 +343,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.cerrarAcuse();
 
         mostrarExitoInstitucional(
-          'Carga semanal rechazada',
-          response.mensaje || 'La carga semanal fue rechazada correctamente.',
+          esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
+          response.mensaje ||
+            `La ${esActualizacion ? 'actualización' : 'carga'} semanal fue rechazada correctamente.`,
         );
 
         this.cargarPendientes();
@@ -341,7 +354,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.procesando.set(null);
 
         mostrarError(
-          'No fue posible rechazar la carga semanal',
+          esActualizacion
+            ? 'No fue posible rechazar la actualización semanal'
+            : 'No fue posible rechazar la carga semanal',
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
         );
 
@@ -351,7 +366,15 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   tipoContenidoTexto(tipoContenido: string): string {
-    return tipoContenido === 'ACUMULADO_MES' ? 'Acumulado mensual' : 'Carga semanal';
+    return tipoContenido === 'ACUMULADO_MES' ? 'Acumulado mensual' : 'Solo semana';
+  }
+
+  tipoCargaTexto(tipoCarga: string): string {
+    return tipoCarga === 'ACTUALIZACION' ? 'Actualización' : 'Carga inicial';
+  }
+
+  esActualizacion(carga: SemanalCargaPendienteAdministracionItem): boolean {
+    return carga.tipoCarga === 'ACTUALIZACION';
   }
 
   semanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
@@ -429,7 +452,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.acuseObjectUrl = pdf.objectUrl;
     this.acuseUrl.set(pdf.safeUrl);
     this.acuseTitulo.set(
-      `Informe previo semanal — ${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
+      `Informe previo de ${this.esActualizacion(carga) ? 'actualización' : 'carga'} semanal — ${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
     );
   }
 
