@@ -7,42 +7,40 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
+import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import {
-  SemanalCargaPendienteAdministracionDetalle,
-  SemanalCargaPendienteAdministracionItem,
-} from '../../core/models/semanal-administracion-cargas.models';
-import { SemanalAdministracionCargasService } from '../../core/services/semanal-administracion-cargas.service';
+  CargaPendienteAdministracionDetalle,
+  CargaPendienteAdministracionItem,
+} from '../../core/models/administracion-cargas.models';
+import { AdministracionCargasService } from '../../core/services/administracion-cargas.service';
 import {
   confirmarAccion,
   mostrarError,
   mostrarExitoInstitucional,
 } from '../../core/utils/alert.utils';
-import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import {
   obtenerMensajeErrorHttp,
   obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
 
 @Component({
-  selector: 'app-semanal-aprobacion-cargas',
+  selector: 'app-aprobacion-cargas',
   imports: [FormsModule],
-  templateUrl: './semanal-aprobacion-cargas.html',
-  styleUrls: [
-    '../aprobacion-cargas/aprobacion-cargas.css',
-    './semanal-aprobacion-cargas.css',
-  ],
+  templateUrl: './aprobacion-cargas.html',
+  styleUrl: './aprobacion-cargas.css',
 })
-export class SemanalAprobacionCargas implements OnInit, OnDestroy {
-  private readonly administracionService = inject(SemanalAdministracionCargasService);
+export class AprobacionCargas implements OnInit, OnDestroy {
+  private readonly administracionService = inject(AdministracionCargasService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private acuseObjectUrl: string | null = null;
 
-  pendientes = signal<SemanalCargaPendienteAdministracionItem[]>([]);
-  detalle = signal<SemanalCargaPendienteAdministracionDetalle | null>(null);
+  pendientes = signal<CargaPendienteAdministracionItem[]>([]);
+  detalle = signal<CargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
 
   paginaActual = signal(1);
@@ -55,12 +53,14 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   procesando = signal<string | null>(null);
 
   acuseUrl = signal<SafeResourceUrl | null>(null);
-  acuseTitulo = signal('Informe previo de entrega de información semanal');
+  acuseTitulo = signal('Informe previo de entrega de información');
 
   pendientesFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
 
-    if (!texto) return this.pendientes();
+    if (!texto) {
+      return this.pendientes();
+    }
 
     return this.pendientes().filter((carga) => {
       return (
@@ -69,9 +69,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         carga.usuarioCarga.toLowerCase().includes(texto) ||
         carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
         this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
-        this.tipoContenidoTexto(carga.tipoContenido).toLowerCase().includes(texto) ||
-        this.semanaTexto(carga).toLowerCase().includes(texto) ||
-        this.periodoCorteTexto(carga).toLowerCase().includes(texto)
+        this.periodoTexto(carga.mesCorte, carga.anioCorte).toLowerCase().includes(texto)
       );
     });
   });
@@ -88,7 +86,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   });
 
   primerRegistroVisible = computed(() => {
-    if (this.pendientesFiltrados().length === 0) return 0;
+    if (this.pendientesFiltrados().length === 0) {
+      return 0;
+    }
+
     return (this.paginaActual() - 1) * this.tamanioPagina + 1;
   });
 
@@ -109,10 +110,6 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.cargarPendientes();
   }
 
-  ngOnDestroy(): void {
-    this.cerrarAcuse();
-  }
-
   cargarPendientes(): void {
     this.cargando.set(true);
 
@@ -128,10 +125,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
         const seleccionada = this.detalle();
 
-        if (
-          seleccionada &&
-          !registros.some((item) => item.idSemanalCarga === seleccionada.idSemanalCarga)
-        ) {
+        if (seleccionada && !registros.some((item) => item.idCarga === seleccionada.idCarga)) {
           this.detalle.set(null);
           this.cerrarAcuse();
         }
@@ -142,7 +136,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar las cargas semanales pendientes',
+          'No fue posible consultar las cargas pendientes',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
@@ -155,7 +149,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   irPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginas()) return;
+    if (pagina < 1 || pagina > this.totalPaginas()) {
+      return;
+    }
+
     this.paginaActual.set(pagina);
   }
 
@@ -168,7 +165,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.cargandoDetalle.set(null);
         this.cdr.detectChanges();
 
-        document.getElementById('detalle-carga-semanal')?.scrollIntoView({
+        document.getElementById('detalle-carga')?.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
         });
@@ -190,10 +187,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
   cerrarDetalle(): void {
     this.detalle.set(null);
-    this.cerrarAcuse();
   }
 
-  descargarArchivos(carga: SemanalCargaPendienteAdministracionItem): void {
+  descargarArchivos(carga: CargaPendienteAdministracionItem): void {
     this.descargandoArchivos.set(carga.codigoReferencia);
 
     this.administracionService.descargarArchivos(carga.codigoReferencia).subscribe({
@@ -201,13 +197,13 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.descargandoArchivos.set(null);
 
         if (!response.body) {
-          mostrarError('Archivo vacío', 'La API no devolvió los archivos de la carga semanal.');
+          mostrarError('Archivo vacío', 'La API no devolvió los archivos de la carga.');
           return;
         }
 
         const nombreArchivo =
           this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
-          `ARCHIVOS_REVISION_SEMANAL_${carga.codigoReferencia}.zip`;
+          `ARCHIVOS_REVISION_${carga.codigoReferencia}.zip`;
 
         this.descargarBlob(response.body, nombreArchivo);
       },
@@ -222,15 +218,15 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
-  descargarAcuse(carga: SemanalCargaPendienteAdministracionItem): void {
+  descargarAcuse(carga: CargaPendienteAdministracionItem): void {
     this.descargandoAcuse.set(carga.codigoReferencia);
 
-    this.administracionService.descargarAcuse(carga.codigoReferencia).subscribe({
+    this.administracionService.descargarAcuse(carga.codigoReferencia, carga.tipoCarga).subscribe({
       next: (response) => {
         this.descargandoAcuse.set(null);
 
         if (!response.body) {
-          mostrarError('Informe vacío', 'La API no devolvió el informe previo semanal.');
+          mostrarError('Informe vacío', 'La API no devolvió el informe previo.');
           return;
         }
 
@@ -247,25 +243,22 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
-  async aprobar(carga: SemanalCargaPendienteAdministracionItem): Promise<void> {
-    const esActualizacion = this.esActualizacion(carga);
+  async aprobar(carga: CargaPendienteAdministracionItem): Promise<void> {
     const confirmacion = await confirmarAccion(
-      esActualizacion ? 'Aprobar actualización semanal' : 'Aprobar carga semanal',
-      esActualizacion
-        ? `Se reemplazará la versión confirmada de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`
-        : `Se incorporará definitivamente la información de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`,
-      esActualizacion ? 'Aprobar actualización' : 'Aprobar carga',
+      'Aprobar carga',
+      `Se incorporará definitivamente la información de ${carga.entidadFederativa}, correspondiente a ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}.`,
+      'Aprobar carga',
     );
 
-    if (!confirmacion.isConfirmed) return;
+    if (!confirmacion.isConfirmed) {
+      return;
+    }
 
     this.procesando.set(carga.codigoReferencia);
 
     Swal.fire({
-      title: esActualizacion ? 'Aprobando actualización semanal' : 'Aprobando carga semanal',
-      text: esActualizacion
-        ? `Se está reemplazando la versión confirmada de ${carga.entidadFederativa}. Espere un momento...`
-        : `Se está incorporando definitivamente la información de ${carga.entidadFederativa}. Espere un momento...`,
+      title: 'Aprobando carga',
+      html: `Se está incorporando definitivamente la información de <strong>${carga.entidadFederativa}</strong>.<br>Espere un momento...`,
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
@@ -276,15 +269,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
-        this.cerrarAcuse();
         Swal.close();
 
         mostrarExitoInstitucional(
-          esActualizacion ? 'Actualización semanal aprobada' : 'Carga semanal aprobada',
-          response.mensaje ||
-            (esActualizacion
-              ? 'La información semanal fue actualizada correctamente.'
-              : 'La información semanal fue incorporada correctamente.'),
+          'Carga aprobada',
+          response.mensaje || 'La información fue incorporada correctamente.',
         );
 
         this.cargarPendientes();
@@ -294,9 +283,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         Swal.close();
 
         mostrarError(
-          esActualizacion
-            ? 'No fue posible aprobar la actualización semanal'
-            : 'No fue posible aprobar la carga semanal',
+          'No fue posible aprobar la carga',
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
         );
 
@@ -305,12 +292,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
-  async rechazar(carga: SemanalCargaPendienteAdministracionItem): Promise<void> {
-    const esActualizacion = this.esActualizacion(carga);
+  async rechazar(carga: CargaPendienteAdministracionItem): Promise<void> {
     const resultado = await Swal.fire({
       icon: 'warning',
-      title: esActualizacion ? 'Rechazar actualización semanal' : 'Rechazar carga semanal',
-      text: `${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
+      title: 'Rechazar carga',
+      text: `${carga.entidadFederativa} — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
       input: 'textarea',
       inputLabel: 'Motivo del rechazo',
       inputPlaceholder: 'Describa las correcciones que debe realizar el enlace estatal...',
@@ -319,20 +305,25 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         'aria-label': 'Motivo del rechazo',
       },
       showCancelButton: true,
-      confirmButtonText: esActualizacion ? 'Rechazar actualización' : 'Rechazar carga',
+      confirmButtonText: 'Rechazar carga',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#235B4E',
+      confirmButtonColor: '#691C32',
       inputValidator: (valor) => {
         const motivo = valor?.trim() ?? '';
 
-        if (motivo.length < 5) return 'Capture un motivo de al menos 5 caracteres.';
+        if (motivo.length < 5) {
+          return 'Capture un motivo de al menos 5 caracteres.';
+        }
+
         return undefined;
       },
     });
 
     const motivo = (resultado.value as string | undefined)?.trim() ?? '';
 
-    if (!resultado.isConfirmed || !motivo) return;
+    if (!resultado.isConfirmed || !motivo) {
+      return;
+    }
 
     this.procesando.set(carga.codigoReferencia);
 
@@ -340,12 +331,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
-        this.cerrarAcuse();
 
         mostrarExitoInstitucional(
-          esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
-          response.mensaje ||
-            `La ${esActualizacion ? 'actualización' : 'carga'} semanal fue rechazada correctamente.`,
+          'Carga rechazada',
+          response.mensaje || 'La carga fue rechazada correctamente.',
         );
 
         this.cargarPendientes();
@@ -354,9 +343,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.procesando.set(null);
 
         mostrarError(
-          esActualizacion
-            ? 'No fue posible rechazar la actualización semanal'
-            : 'No fue posible rechazar la carga semanal',
+          'No fue posible rechazar la carga',
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
         );
 
@@ -365,54 +352,31 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
-  tipoContenidoTexto(tipoContenido: string): string {
-    return tipoContenido === 'ACUMULADO_MES' ? 'Acumulado mensual' : 'Solo semana';
-  }
-
   tipoCargaTexto(tipoCarga: string): string {
     return tipoCarga === 'ACTUALIZACION' ? 'Actualización' : 'Carga inicial';
   }
 
-  esActualizacion(carga: SemanalCargaPendienteAdministracionItem): boolean {
-    return carga.tipoCarga === 'ACTUALIZACION';
-  }
+  periodoTexto(mesCorte: number, anioCorte: number): string {
+    const fecha = new Date(anioCorte, mesCorte - 1, 1);
 
-  semanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    return `Semana ${carga.numeroSemana}/${carga.anioSemana}`;
-  }
+    const texto = new Intl.DateTimeFormat('es-MX', {
+      month: 'long',
+      year: 'numeric',
+    }).format(fecha);
 
-  rangoSemanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    return `${this.fechaCorta(carga.fechaInicioSemana)} al ${this.fechaCorta(carga.fechaFinSemana)}`;
-  }
-
-  tramoTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    return `${this.fechaCorta(carga.fechaInicioTramo)} al ${this.fechaCorta(carga.fechaFinTramo)}`;
-  }
-
-  periodoCorteTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    const fecha = new Date(carga.anioCorte, carga.mesCorte - 1, 1);
-    const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(fecha);
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
-  fechaCorta(fecha: string | null | undefined): string {
-    if (!fecha) return '-';
+  fechaTexto(fecha: string | null | undefined): string {
+    if (!fecha) {
+      return '-';
+    }
 
     const valor = new Date(fecha);
-    if (Number.isNaN(valor.getTime())) return '-';
 
-    return new Intl.DateTimeFormat('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(valor);
-  }
-
-  fechaHoraTexto(fecha: string | null | undefined): string {
-    if (!fecha) return '-';
-
-    const valor = new Date(fecha);
-    if (Number.isNaN(valor.getTime())) return '-';
+    if (Number.isNaN(valor.getTime())) {
+      return '-';
+    }
 
     return new Intl.DateTimeFormat('es-MX', {
       dateStyle: 'medium',
@@ -420,40 +384,13 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     }).format(valor);
   }
 
-  usuarioTexto(carga: SemanalCargaPendienteAdministracionItem): string {
+  usuarioTexto(carga: CargaPendienteAdministracionItem): string {
     return carga.nombreUsuarioCarga || carga.usuarioCarga || '-';
   }
 
   archivoTexto(archivo: string): string {
     const texto = archivo.replaceAll('_', ' ').trim().toLowerCase();
     return texto.charAt(0).toUpperCase() + texto.slice(1);
-  }
-
-  tieneExcluidos(carga: SemanalCargaPendienteAdministracionItem): boolean {
-    return (
-      carga.totalCarpetasExcluidas > 0 ||
-      carga.totalDelitosExcluidos > 0 ||
-      carga.totalVictimasExcluidas > 0
-    );
-  }
-
-  cerrarAcuse(): void {
-    revocarObjectUrl(this.acuseObjectUrl);
-    this.acuseObjectUrl = null;
-    this.acuseUrl.set(null);
-  }
-
-  private mostrarAcuse(
-    blob: Blob,
-    carga: SemanalCargaPendienteAdministracionItem,
-  ): void {
-    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseObjectUrl);
-
-    this.acuseObjectUrl = pdf.objectUrl;
-    this.acuseUrl.set(pdf.safeUrl);
-    this.acuseTitulo.set(
-      `Informe previo de ${this.esActualizacion(carga) ? 'actualización' : 'carga'} semanal — ${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
-    );
   }
 
   private descargarBlob(blob: Blob, nombreArchivo: string): void {
@@ -469,14 +406,39 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
     URL.revokeObjectURL(url);
   }
+  cerrarAcuse(): void {
+    revocarObjectUrl(this.acuseObjectUrl);
+    this.acuseObjectUrl = null;
+    this.acuseUrl.set(null);
+  }
+
+  ngOnDestroy(): void {
+    this.cerrarAcuse();
+  }
+
+  private mostrarAcuse(blob: Blob, carga: CargaPendienteAdministracionItem): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseObjectUrl);
+
+    this.acuseObjectUrl = pdf.objectUrl;
+    this.acuseUrl.set(pdf.safeUrl);
+    this.acuseTitulo.set(
+      `Informe previo — ${carga.entidadFederativa} — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
+    );
+  }
 
   private obtenerNombreArchivo(contentDisposition: string | null): string {
-    if (!contentDisposition) return '';
+    if (!contentDisposition) {
+      return '';
+    }
 
     const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
-    if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1]);
+
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
 
     const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
     return normalMatch?.[1] ?? '';
   }
 }

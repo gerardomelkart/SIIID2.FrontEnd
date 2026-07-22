@@ -1,8 +1,8 @@
 <div class="aprobacion-page">
   <header class="page-header">
     <div>
-      <h1>Aprobación de operaciones semanales</h1>
-      <p>Revise las cargas y actualizaciones enviadas antes de incorporarlas al módulo preliminar.</p>
+      <h1>Aprobación de cargas</h1>
+      <p>Revise los archivos enviados por los enlaces estatales antes de incorporarlos al sistema.</p>
     </div>
 
     <div class="header-actions">
@@ -27,12 +27,12 @@
     <div class="siiid-card-header card-header-content">
       <span>
         <i class="fa-solid fa-inbox"></i>
-        Operaciones semanales pendientes de revisión
+        Cargas pendientes de revisión
       </span>
 
       <div class="buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar operación, entidad, semana, periodo o usuario..." [ngModel]="busqueda()"
+        <input type="text" placeholder="Buscar entidad, periodo o usuario..." [ngModel]="busqueda()"
           (ngModelChange)="buscar($event)">
       </div>
     </div>
@@ -40,56 +40,37 @@
     @if (cargando()) {
     <div class="estado-vacio">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      <span>Consultando operaciones semanales pendientes...</span>
+      <span>Consultando cargas pendientes...</span>
     </div>
     } @else {
     <div class="table-responsive">
-      <table class="table table-sm aprobacion-table semanal-aprobacion-table">
+      <table class="table table-sm aprobacion-table">
         <thead>
           <tr>
             <th>Entidad federativa</th>
-            <th>Semana</th>
-            <th>Operación</th>
-            <th>Contenido</th>
-            <th>Tramo integrado</th>
+            <th>Periodo</th>
+            <th>Tipo</th>
             <th>Usuario que envió</th>
             <th>Fecha de validación</th>
-            <th>Incluidos</th>
-            <th>Excluidos</th>
+            <th>Registros</th>
             <th>Advertencias</th>
             <th class="acciones-col">Acciones</th>
           </tr>
         </thead>
 
         <tbody>
-          @for (carga of pendientesPaginados(); track carga.idSemanalCarga) {
-          <tr [class.fila-seleccionada]="detalle()?.idSemanalCarga === carga.idSemanalCarga">
-            <td><strong>{{ carga.entidadFederativa }}</strong></td>
-
+          @for (carga of pendientesPaginados(); track carga.idCarga) {
+          <tr [class.fila-seleccionada]="detalle()?.idCarga === carga.idCarga">
             <td>
-              <div class="periodo-cell">
-                <strong>{{ semanaTexto(carga) }}</strong>
-                <small>{{ rangoSemanaTexto(carga) }}</small>
-              </div>
+              <strong>{{ carga.entidadFederativa }}</strong>
             </td>
 
+            <td>{{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</td>
+
             <td>
-              <span class="tipo-badge" [class.tipo-actualizacion]="esActualizacion(carga)">
+              <span class="tipo-badge" [class.tipo-actualizacion]="carga.tipoCarga === 'ACTUALIZACION'">
                 {{ tipoCargaTexto(carga.tipoCarga) }}
               </span>
-            </td>
-
-            <td>
-              <span class="tipo-badge" [class.tipo-acumulado]="carga.tipoContenido === 'ACUMULADO_MES'">
-                {{ tipoContenidoTexto(carga.tipoContenido) }}
-              </span>
-            </td>
-
-            <td>
-              <div class="periodo-cell">
-                <strong>{{ tramoTexto(carga) }}</strong>
-                <small>{{ periodoCorteTexto(carga) }}</small>
-              </div>
             </td>
 
             <td>
@@ -99,21 +80,24 @@
               </div>
             </td>
 
-            <td>{{ fechaHoraTexto(carga.fechaValidacion) }}</td>
+            <td>{{ fechaTexto(carga.fechaValidacion) }}</td>
 
             <td>
               <div class="registros-desglose">
-                <div><span>Carpetas</span><strong>{{ carga.totalCarpetasIncluidas }}</strong></div>
-                <div><span>Delitos</span><strong>{{ carga.totalDelitosIncluidos }}</strong></div>
-                <div><span>Víctimas</span><strong>{{ carga.totalVictimasIncluidas }}</strong></div>
-              </div>
-            </td>
+                <div>
+                  <span>Carpetas</span>
+                  <strong>{{ carga.totalCarpetas }}</strong>
+                </div>
 
-            <td>
-              <div class="registros-desglose excluidos-desglose" [class.sin-excluidos]="!tieneExcluidos(carga)">
-                <div><span>Carpetas</span><strong>{{ carga.totalCarpetasExcluidas }}</strong></div>
-                <div><span>Delitos</span><strong>{{ carga.totalDelitosExcluidos }}</strong></div>
-                <div><span>Víctimas</span><strong>{{ carga.totalVictimasExcluidas }}</strong></div>
+                <div>
+                  <span>Delitos</span>
+                  <strong>{{ carga.totalDelitos }}</strong>
+                </div>
+
+                <div>
+                  <span>Víctimas</span>
+                  <strong>{{ carga.totalVictimas }}</strong>
+                </div>
               </div>
             </td>
 
@@ -125,7 +109,7 @@
               </span>
             </td>
 
-            <td class="acciones-col">
+            <td>
               <button type="button" class="btn-revisar" [disabled]="hayOperacionEnCurso()"
                 (click)="verDetalle(carga.codigoReferencia)">
                 @if (cargandoDetalle() === carga.codigoReferencia) {
@@ -139,10 +123,10 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="11">
+            <td colspan="8">
               <div class="estado-vacio">
                 <i class="fa-solid fa-circle-check"></i>
-                <span>No hay operaciones semanales pendientes que coincidan con la búsqueda.</span>
+                <span>No hay cargas pendientes de aprobación.</span>
               </div>
             </td>
           </tr>
@@ -151,7 +135,6 @@
       </table>
     </div>
     }
-
     @if (!cargando() && pendientesFiltrados().length > 0) {
     <div class="bandeja-footer">
       <div>
@@ -160,21 +143,20 @@
       </div>
 
       @if (totalPaginas() > 1) {
-      <nav class="paginacion-bandeja" aria-label="Paginación de operaciones semanales pendientes">
+      <nav class="paginacion-bandeja" aria-label="Paginación de cargas pendientes">
         <button type="button" class="btn-pagina" [disabled]="paginaActual() === 1"
-          (click)="irPagina(paginaActual() - 1)">
+          (click)="irPagina(paginaActual() - 1)" aria-label="Página anterior">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
 
         @for (pagina of paginas(); track pagina) {
-        <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina"
-          (click)="irPagina(pagina)">
+        <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina" (click)="irPagina(pagina)">
           {{ pagina }}
         </button>
         }
 
         <button type="button" class="btn-pagina" [disabled]="paginaActual() === totalPaginas()"
-          (click)="irPagina(paginaActual() + 1)">
+          (click)="irPagina(paginaActual() + 1)" aria-label="Página siguiente">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </nav>
@@ -184,12 +166,12 @@
   </section>
 
   @if (detalle(); as carga) {
-  <section id="detalle-carga-semanal" class="siiid-card detalle-card">
+  <section id="detalle-carga" class="siiid-card detalle-card">
     <div class="detalle-header">
       <div>
-        <span class="detalle-eyebrow">{{ tipoCargaTexto(carga.tipoCarga) }} semanal pendiente</span>
-        <h2>{{ carga.entidadFederativa }} — {{ semanaTexto(carga) }}</h2>
-        <p>{{ tipoCargaTexto(carga.tipoCarga) }} · {{ tipoContenidoTexto(carga.tipoContenido) }}</p>
+        <span class="detalle-eyebrow">Solicitud pendiente</span>
+        <h2>{{ carga.entidadFederativa }} — {{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</h2>
+        <p>{{ tipoCargaTexto(carga.tipoCarga) }}</p>
       </div>
 
       <button type="button" class="btn-cerrar" title="Cerrar detalle" [disabled]="hayOperacionEnCurso()"
@@ -205,29 +187,13 @@
       </div>
 
       <div class="detalle-dato">
-        <span>Semana seleccionada</span>
-        <strong>{{ semanaTexto(carga) }}</strong>
-        <small>{{ rangoSemanaTexto(carga) }}</small>
-      </div>
-
-      <div class="detalle-dato">
-        <span>Tipo de operación</span>
-        <strong>{{ tipoCargaTexto(carga.tipoCarga) }}</strong>
-      </div>
-
-      <div class="detalle-dato">
-        <span>Tipo de contenido</span>
-        <strong>{{ tipoContenidoTexto(carga.tipoContenido) }}</strong>
-      </div>
-
-      <div class="detalle-dato">
-        <span>{{ esActualizacion(carga) ? 'Tramo que se reemplazará' : 'Tramo integrado' }}</span>
-        <strong>{{ tramoTexto(carga) }}</strong>
-      </div>
-
-      <div class="detalle-dato">
         <span>Periodo de corte</span>
-        <strong>{{ periodoCorteTexto(carga) }}</strong>
+        <strong>{{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</strong>
+      </div>
+
+      <div class="detalle-dato">
+        <span>Tipo de movimiento</span>
+        <strong>{{ tipoCargaTexto(carga.tipoCarga) }}</strong>
       </div>
 
       <div class="detalle-dato">
@@ -238,23 +204,12 @@
 
       <div class="detalle-dato">
         <span>Fecha de validación</span>
-        <strong>{{ fechaHoraTexto(carga.fechaValidacion) }}</strong>
+        <strong>{{ fechaTexto(carga.fechaValidacion) }}</strong>
       </div>
 
-      <div class="detalle-dato detalle-dato-referencia">
+      <div class="detalle-dato">
         <span>Código de referencia</span>
         <strong class="codigo-referencia">{{ carga.codigoReferencia }}</strong>
-      </div>
-    </div>
-
-    <div class="totales-section-title">
-      <div>
-        <h3>Registros incluidos</h3>
-        <p>
-          {{ esActualizacion(carga)
-          ? 'Nueva versión que reemplazará la semana confirmada.'
-          : 'Información que se incorporará al aprobar la carga.' }}
-        </p>
       </div>
     </div>
 
@@ -262,24 +217,24 @@
       <div class="total-card">
         <i class="fa-solid fa-folder-open"></i>
         <div>
-          <strong>{{ carga.totalCarpetasIncluidas }}</strong>
-          <span>Carpetas incluidas</span>
+          <strong>{{ carga.totalCarpetas }}</strong>
+          <span>Carpetas</span>
         </div>
       </div>
 
       <div class="total-card">
         <i class="fa-solid fa-scale-balanced"></i>
         <div>
-          <strong>{{ carga.totalDelitosIncluidos }}</strong>
-          <span>Delitos incluidos</span>
+          <strong>{{ carga.totalDelitos }}</strong>
+          <span>Delitos</span>
         </div>
       </div>
 
       <div class="total-card">
         <i class="fa-solid fa-people-group"></i>
         <div>
-          <strong>{{ carga.totalVictimasIncluidas }}</strong>
-          <span>Víctimas incluidas</span>
+          <strong>{{ carga.totalVictimas }}</strong>
+          <span>Víctimas</span>
         </div>
       </div>
 
@@ -287,40 +242,7 @@
         <i class="fa-solid fa-triangle-exclamation"></i>
         <div>
           <strong>{{ carga.totalAdvertencias }}</strong>
-          <span>Advertencias aceptadas</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="totales-section-title excluidos-title">
-      <div>
-        <h3>Registros excluidos</h3>
-        <p>Información fuera del tramo o ya confirmada que no se incorporará nuevamente.</p>
-      </div>
-    </div>
-
-    <div class="totales-grid totales-excluidos">
-      <div class="total-card total-card-excluido" [class.sin-excluidos]="carga.totalCarpetasExcluidas === 0">
-        <i class="fa-solid fa-folder-minus"></i>
-        <div>
-          <strong>{{ carga.totalCarpetasExcluidas }}</strong>
-          <span>Carpetas excluidas</span>
-        </div>
-      </div>
-
-      <div class="total-card total-card-excluido" [class.sin-excluidos]="carga.totalDelitosExcluidos === 0">
-        <i class="fa-solid fa-scale-balanced"></i>
-        <div>
-          <strong>{{ carga.totalDelitosExcluidos }}</strong>
-          <span>Delitos excluidos</span>
-        </div>
-      </div>
-
-      <div class="total-card total-card-excluido" [class.sin-excluidos]="carga.totalVictimasExcluidas === 0">
-        <i class="fa-solid fa-user-minus"></i>
-        <div>
-          <strong>{{ carga.totalVictimasExcluidas }}</strong>
-          <span>Víctimas excluidas</span>
+          <span>Advertencias</span>
         </div>
       </div>
     </div>
@@ -351,14 +273,14 @@
       <div class="section-title">
         <div>
           <h3>Advertencias de validación</h3>
-          <p>Estas inconsistencias fueron aceptadas por el enlace estatal antes de enviar la operación.</p>
+          <p>Estas inconsistencias fueron aceptadas por el enlace estatal antes de enviar la carga.</p>
         </div>
       </div>
 
       @if (carga.advertencias.length === 0) {
       <div class="sin-advertencias-box">
         <i class="fa-solid fa-circle-check"></i>
-        Esta operación no contiene advertencias.
+        Esta carga no contiene advertencias.
       </div>
       } @else {
       <div class="table-responsive">
@@ -375,7 +297,7 @@
           </thead>
 
           <tbody>
-            @for (advertencia of carga.advertencias; track advertencia.idSemanalCargaAdvertencia) {
+            @for (advertencia of carga.advertencias; track advertencia.idCargaAdvertencia) {
             <tr>
               <td>{{ archivoTexto(advertencia.archivo) }}</td>
               <td>{{ advertencia.numeroFila ?? '-' }}</td>
@@ -407,7 +329,7 @@
         } @else {
         <i class="fa-solid fa-check"></i>
         }
-        Aprobar {{ esActualizacion(carga) ? 'actualización' : 'carga' }}
+        Aprobar carga
       </button>
     </div>
   </section>
@@ -425,11 +347,12 @@
       </button>
     </div>
 
-    <iframe class="acuse-frame" [src]="acuseUrl()"
-      title="Informe previo de operación semanal"></iframe>
+    <iframe class="acuse-frame" [src]="acuseUrl()" title="Informe previo de entrega de información"></iframe>
 
     <div class="acuse-modal-footer">
-      <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">Cerrar</button>
+      <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">
+        Cerrar
+      </button>
     </div>
   </div>
 </div>
