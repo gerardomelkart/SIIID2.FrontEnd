@@ -106,7 +106,7 @@
 
               <p>
                 @if (formulario().tipoContenido === 'SOLO_SEMANA') {
-                Seleccione la semana que desea cargar.
+                Seleccione una semana cuyo mes de corte sea el actual; los cortes anteriores ya están consolidados.
                 } @else {
                 El acumulado mensual utiliza automáticamente la semana en curso.
                 }
@@ -119,7 +119,7 @@
             <label class="campo-periodo campo-semana">
               <span>Seleccionar semana</span>
 
-              <input type="week" min="2000-W01" [max]="semanaMaxima" class="form-control"
+              <input type="week" [min]="semanaMinima" [max]="semanaMaxima" class="form-control"
                 [ngModel]="formulario().semanaSeleccionada"
                 (ngModelChange)="actualizarCampo('semanaSeleccionada', $event)" />
 

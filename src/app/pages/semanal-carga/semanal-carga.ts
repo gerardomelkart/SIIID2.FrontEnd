@@ -125,8 +125,10 @@ acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
 private acusePrevioObjectUrl: string | null = null;
 private acuseConfirmadoObjectUrl: string | null = null;
 
-  archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
-  readonly semanaMaxima = this.obtenerSemanaInput(new Date());
+archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
+private readonly fechaActual = new Date();
+readonly semanaMinima = this.obtenerSemanaInput(new Date(this.fechaActual.getFullYear(), this.fechaActual.getMonth(), 1));
+readonly semanaMaxima = this.obtenerSemanaInput(this.fechaActual);
 
   tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
   periodoValido = computed(() => this.tramoPrevisto() !== null);
@@ -570,7 +572,7 @@ private limpiarAcusePrevio(): void {
     }
     const coincidencia = /^(\d{4})-W(\d{2})$/.exec(formulario.semanaSeleccionada);
 
-    if (!coincidencia || formulario.semanaSeleccionada > this.semanaMaxima) return null;
+    if (!coincidencia || formulario.semanaSeleccionada < this.semanaMinima || formulario.semanaSeleccionada > this.semanaMaxima) return null;
 
     const anioSemana = Number(coincidencia[1]);
     const numeroSemana = Number(coincidencia[2]);
