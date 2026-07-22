@@ -1013,12 +1013,27 @@
 .acuse-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: 60px;
   background: var(--siiid-guinda);
   color: #fff;
   padding: 0 20px;
   font-size: 23px;
   font-weight: 800;
+}
+
+.acuse-close {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.acuse-close:hover {
+  opacity: 1;
 }
 
 .acuse-body {
@@ -1045,7 +1060,8 @@
 }
 
 .btn-rechazar,
-.btn-aceptar {
+.btn-aceptar,
+.btn-cerrar-final {
   width: min(420px, 42vw);
   min-height: 48px;
   border: 0;
@@ -1063,8 +1079,13 @@
   background: #198754;
 }
 
+.btn-cerrar-final {
+  background: var(--siiid-guinda);
+}
+
 .btn-rechazar:not(:disabled):hover,
-.btn-aceptar:not(:disabled):hover {
+.btn-aceptar:not(:disabled):hover,
+.btn-cerrar-final:hover {
   filter: brightness(0.92);
 }
 
@@ -1087,7 +1108,8 @@
   }
 
   .btn-rechazar,
-  .btn-aceptar {
+  .btn-aceptar,
+  .btn-cerrar-final {
     width: 100%;
   }
 }

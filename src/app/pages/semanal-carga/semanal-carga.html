@@ -561,15 +561,33 @@
 
 @if (
   estado() === 'MOSTRANDO_ACUSE' ||
-  estado() === 'CONFIRMANDO'
+  estado() === 'CONFIRMANDO' ||
+  estado() === 'CONFIRMADO'
 ) {
 <div class="acuse-modal">
   <div class="acuse-header">
-    <span>Informe previo de entrega semanal</span>
+    <span>{{ estado() === 'CONFIRMADO' ? 'Acuse confirmado de entrega semanal' : 'Informe previo de entrega semanal' }}</span>
+
+    @if (estado() === 'CONFIRMADO') {
+    <button
+      type="button"
+      class="acuse-close"
+      aria-label="Cerrar acuse"
+      (click)="cerrarProcesoConfirmado()"
+    >
+      ×
+    </button>
+    }
   </div>
 
   <div class="acuse-body">
-    @if (acusePrevioUrl()) {
+    @if (acuseConfirmadoUrl()) {
+    <iframe
+      class="acuse-frame"
+      [src]="acuseConfirmadoUrl()"
+      title="Acuse semanal confirmado"
+    ></iframe>
+    } @else if (acusePrevioUrl()) {
     <iframe
       class="acuse-frame"
       [src]="acusePrevioUrl()"
@@ -615,6 +633,17 @@
     >
       <i class="fa-solid fa-spinner fa-spin"></i>
       Procesando...
+    </button>
+    }
+
+    @if (estado() === 'CONFIRMADO') {
+    <button
+      type="button"
+      class="btn-cerrar-final"
+      (click)="cerrarProcesoConfirmado()"
+    >
+      <i class="fa-solid fa-xmark"></i>
+      Cerrar
     </button>
     }
   </div>

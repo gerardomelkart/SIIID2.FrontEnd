@@ -16,12 +16,19 @@ import {
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
-import { mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import { mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
+import { catchError, map, of, switchMap } from 'rxjs';
 
-type EstadoCargaSemanal = 'CAPTURA' | 'VALIDANDO' | 'RESULTADO' | 'MOSTRANDO_ACUSE' | 'CONFIRMANDO';
+type EstadoCargaSemanal =
+  | 'CAPTURA'
+  | 'VALIDANDO'
+  | 'RESULTADO'
+  | 'MOSTRANDO_ACUSE'
+  | 'CONFIRMANDO'
+  | 'CONFIRMADO';
 
 interface SemanalCargaFormulario {
   tipoContenido: TipoContenidoSemanal | '';
@@ -111,10 +118,12 @@ export class SemanalCarga {
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   errorGeneral = signal('');
 
-  cargandoAcusePrevio = signal(false);
-  acusePrevioUrl = signal<SafeResourceUrl | null>(null);
+cargandoAcusePrevio = signal(false);
+acusePrevioUrl = signal<SafeResourceUrl | null>(null);
+acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
 
-  private acusePrevioObjectUrl: string | null = null;
+private acusePrevioObjectUrl: string | null = null;
+private acuseConfirmadoObjectUrl: string | null = null;
 
   archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
   readonly semanaMaxima = this.obtenerSemanaInput(new Date());
@@ -130,12 +139,13 @@ export class SemanalCarga {
       this.estado() !== 'CONFIRMANDO',
   );
 
-  mostrandoResultado = computed(
-    () =>
-      this.estado() === 'RESULTADO' ||
-      this.estado() === 'MOSTRANDO_ACUSE' ||
-      this.estado() === 'CONFIRMANDO',
-  );
+mostrandoResultado = computed(
+  () =>
+    this.estado() === 'RESULTADO' ||
+    this.estado() === 'MOSTRANDO_ACUSE' ||
+    this.estado() === 'CONFIRMANDO' ||
+    this.estado() === 'CONFIRMADO',
+);
 
   respuestaValida = computed(() => this.respuesta()?.esValido === true);
 
@@ -304,45 +314,104 @@ export class SemanalCarga {
     });
   }
 
-  confirmarCarga(aceptar: boolean): void {
-    const response = this.respuesta();
+confirmarCarga(aceptar: boolean): void {
+  const response = this.respuesta();
 
-    if (!response?.esValido || !response.codigoReferencia || this.estado() === 'CONFIRMANDO') {
-      return;
-    }
+  if (!response?.esValido || !response.codigoReferencia || this.estado() === 'CONFIRMANDO') return;
 
-    this.estado.set('CONFIRMANDO');
+  const codigoReferencia = response.codigoReferencia;
 
-    this.semanalCargaService
-      .confirmarCarga({
-        codigoReferencia: response.codigoReferencia,
-        aceptar,
-      })
-      .subscribe({
-        next: (resultado) => {
-          const pendienteAprobacion = resultado.estado === 'PENDIENTE_APROBACION';
+  this.estado.set('CONFIRMANDO');
 
-          const titulo = aceptar
-            ? pendienteAprobacion
-              ? 'Carga enviada a revisión'
-              : 'Carga semanal confirmada'
-            : 'Carga semanal rechazada';
+  this.semanalCargaService
+    .confirmarCarga({
+      codigoReferencia,
+      aceptar,
+    })
+    .pipe(
+      switchMap((resultado) => {
+        if (!aceptar || resultado.estado === 'PENDIENTE_APROBACION') {
+          return of({
+            resultado,
+            acuseDescargado: false,
+            blob: null as Blob | null,
+          });
+        }
 
-          mostrarExitoInstitucional(titulo, resultado.mensaje).then(() => {
+        return this.semanalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
+          map((blob: Blob) => ({
+            resultado,
+            acuseDescargado: true,
+            blob,
+          })),
+          catchError(() =>
+            of({
+              resultado,
+              acuseDescargado: false,
+              blob: null as Blob | null,
+            }),
+          ),
+        );
+      }),
+    )
+    .subscribe({
+      next: (confirmacion) => {
+        if (!aceptar) {
+          this.limpiarAcusePrevio();
+
+          mostrarExitoInstitucional(
+            'Carga semanal rechazada',
+            confirmacion.resultado.mensaje,
+          ).then(() => {
             this.reiniciarFormulario();
             void this.router.navigateByUrl('/semanal');
           });
-        },
-        error: (error: unknown) => {
-          this.estado.set('MOSTRANDO_ACUSE');
 
-          mostrarError(
-            aceptar ? 'No fue posible confirmar la carga' : 'No fue posible rechazar la carga',
-            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          );
-        },
-      });
-  }
+          return;
+        }
+
+        if (confirmacion.resultado.estado === 'PENDIENTE_APROBACION') {
+          this.limpiarAcusePrevio();
+
+          mostrarExitoInstitucional(
+            'Carga enviada a revisión',
+            confirmacion.resultado.mensaje,
+          ).then(() => {
+            this.reiniciarFormulario();
+            void this.router.navigateByUrl('/semanal');
+          });
+
+          return;
+        }
+
+        if (confirmacion.blob) this.reemplazarAcuseConfirmado(confirmacion.blob);
+
+        this.estado.set('CONFIRMADO');
+
+        mostrarExito(
+          'Carga semanal confirmada',
+          confirmacion.acuseDescargado
+            ? undefined
+            : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
+        );
+      },
+      error: (error: unknown) => {
+        this.estado.set('MOSTRANDO_ACUSE');
+
+        mostrarError(
+          aceptar
+            ? 'No fue posible confirmar la carga'
+            : 'No fue posible rechazar la carga',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
+      },
+    });
+}
+
+cerrarProcesoConfirmado(): void {
+  this.reiniciarFormulario();
+  void this.router.navigateByUrl('/semanal');
+}
 
 volverACaptura(): void {
   if (this.estado() === 'CONFIRMANDO') return;
@@ -447,26 +516,37 @@ volverACaptura(): void {
     return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
   }
 
-  private reemplazarAcusePrevio(blob: Blob): void {
-    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
+private reemplazarAcusePrevio(blob: Blob): void {
+  const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
 
-    this.acusePrevioObjectUrl = pdf.objectUrl;
-    this.acusePrevioUrl.set(pdf.safeUrl);
-  }
+  this.acusePrevioObjectUrl = pdf.objectUrl;
+  this.acusePrevioUrl.set(pdf.safeUrl);
+}
 
-  private limpiarAcusePrevio(): void {
-    revocarObjectUrl(this.acusePrevioObjectUrl);
+private reemplazarAcuseConfirmado(blob: Blob): void {
+  const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
 
-    this.acusePrevioObjectUrl = null;
-    this.acusePrevioUrl.set(null);
-    this.cargandoAcusePrevio.set(false);
-  }
+  this.acuseConfirmadoObjectUrl = pdf.objectUrl;
+  this.acuseConfirmadoUrl.set(pdf.safeUrl);
+}
+
+private limpiarAcusePrevio(): void {
+  revocarObjectUrl(this.acusePrevioObjectUrl);
+  revocarObjectUrl(this.acuseConfirmadoObjectUrl);
+
+  this.acusePrevioObjectUrl = null;
+  this.acuseConfirmadoObjectUrl = null;
+  this.acusePrevioUrl.set(null);
+  this.acuseConfirmadoUrl.set(null);
+  this.cargandoAcusePrevio.set(false);
+}
 
   private limpiarResultado(): void {
     if (
-      this.estado() === 'VALIDANDO' ||
-      this.estado() === 'MOSTRANDO_ACUSE' ||
-      this.estado() === 'CONFIRMANDO'
+    this.estado() === 'VALIDANDO' ||
+    this.estado() === 'MOSTRANDO_ACUSE' ||
+    this.estado() === 'CONFIRMANDO' ||
+    this.estado() === 'CONFIRMADO'
     ) {
       return;
     }
