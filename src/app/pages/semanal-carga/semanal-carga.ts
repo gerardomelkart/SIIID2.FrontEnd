@@ -18,8 +18,10 @@ import {
 } from '../../core/utils/archivo-carga.utils';
 import { mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 
-type EstadoCargaSemanal = 'CAPTURA' | 'VALIDANDO' | 'RESULTADO' | 'CONFIRMANDO';
+type EstadoCargaSemanal = 'CAPTURA' | 'VALIDANDO' | 'RESULTADO' | 'MOSTRANDO_ACUSE' | 'CONFIRMANDO';
 
 interface SemanalCargaFormulario {
   tipoContenido: TipoContenidoSemanal | '';
@@ -48,6 +50,7 @@ interface VistaTramoSemanal {
 export class SemanalCarga {
   private readonly semanalCargaService = inject(SemanalCargaService);
   private readonly router = inject(Router);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly meses = [
     { valor: 1, nombre: 'Enero' },
@@ -108,6 +111,11 @@ export class SemanalCarga {
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   errorGeneral = signal('');
 
+  cargandoAcusePrevio = signal(false);
+  acusePrevioUrl = signal<SafeResourceUrl | null>(null);
+
+  private acusePrevioObjectUrl: string | null = null;
+
   archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
   readonly semanaMaxima = this.obtenerSemanaInput(new Date());
 
@@ -123,7 +131,10 @@ export class SemanalCarga {
   );
 
   mostrandoResultado = computed(
-    () => this.estado() === 'RESULTADO' || this.estado() === 'CONFIRMANDO',
+    () =>
+      this.estado() === 'RESULTADO' ||
+      this.estado() === 'MOSTRANDO_ACUSE' ||
+      this.estado() === 'CONFIRMANDO',
   );
 
   respuestaValida = computed(() => this.respuesta()?.esValido === true);
@@ -237,6 +248,7 @@ export class SemanalCarga {
     this.estado.set('VALIDANDO');
     this.respuesta.set(null);
     this.errorGeneral.set('');
+    this.limpiarAcusePrevio();
 
     this.semanalCargaService.validarArchivos(archivos, periodo).subscribe({
       next: (response) => {
@@ -255,6 +267,38 @@ export class SemanalCarga {
         this.estado.set('CAPTURA');
         this.errorGeneral.set(
           obtenerMensajeErrorHttp(error, 'No fue posible validar la carga semanal.'),
+        );
+      },
+    });
+  }
+
+  abrirAcusePrevio(): void {
+    const codigoReferencia = this.respuesta()?.codigoReferencia?.trim();
+
+    if (
+      !this.respuestaValida() ||
+      !codigoReferencia ||
+      this.cargandoAcusePrevio() ||
+      this.estado() === 'CONFIRMANDO'
+    ) {
+      return;
+    }
+
+    this.cargandoAcusePrevio.set(true);
+
+    this.semanalCargaService.descargarAcusePrevio(codigoReferencia).subscribe({
+      next: (blob) => {
+        this.reemplazarAcusePrevio(blob);
+        this.estado.set('MOSTRANDO_ACUSE');
+        this.cargandoAcusePrevio.set(false);
+      },
+      error: (error: unknown) => {
+        this.estado.set('RESULTADO');
+        this.cargandoAcusePrevio.set(false);
+
+        mostrarError(
+          'No fue posible generar el informe previo',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
     });
@@ -290,7 +334,7 @@ export class SemanalCarga {
           });
         },
         error: (error: unknown) => {
-          this.estado.set('RESULTADO');
+          this.estado.set('MOSTRANDO_ACUSE');
 
           mostrarError(
             aceptar ? 'No fue posible confirmar la carga' : 'No fue posible rechazar la carga',
@@ -305,6 +349,7 @@ export class SemanalCarga {
 
     this.respuesta.set(null);
     this.errorGeneral.set('');
+    this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
   }
 
@@ -314,6 +359,7 @@ export class SemanalCarga {
     this.respuesta.set(null);
     this.errorGeneral.set('');
     this.archivoArrastrado.set(null);
+    this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
   }
 
@@ -395,13 +441,33 @@ export class SemanalCarga {
     return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
   }
 
+  private reemplazarAcusePrevio(blob: Blob): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
+
+    this.acusePrevioObjectUrl = pdf.objectUrl;
+    this.acusePrevioUrl.set(pdf.safeUrl);
+  }
+
+  private limpiarAcusePrevio(): void {
+    revocarObjectUrl(this.acusePrevioObjectUrl);
+
+    this.acusePrevioObjectUrl = null;
+    this.acusePrevioUrl.set(null);
+    this.cargandoAcusePrevio.set(false);
+  }
+
   private limpiarResultado(): void {
-    if (this.estado() === 'VALIDANDO' || this.estado() === 'CONFIRMANDO') {
+    if (
+      this.estado() === 'VALIDANDO' ||
+      this.estado() === 'MOSTRANDO_ACUSE' ||
+      this.estado() === 'CONFIRMANDO'
+    ) {
       return;
     }
 
     this.respuesta.set(null);
     this.errorGeneral.set('');
+    this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
   }
 

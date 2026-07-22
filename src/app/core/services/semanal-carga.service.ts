@@ -16,10 +16,7 @@ export class SemanalCargaService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = API_ENDPOINTS.semanalCargas;
 
-  validarArchivos(
-    archivos: ArchivosCargaSeleccionados,
-    periodo: SemanalCargaPeriodoRequest,
-  ) {
+  validarArchivos(archivos: ArchivosCargaSeleccionados, periodo: SemanalCargaPeriodoRequest) {
     const formData = new FormData();
 
     formData.append('carpetas', archivos.carpetas!);
@@ -32,16 +29,22 @@ export class SemanalCargaService {
     formData.append('mesCorte', periodo.mesCorte.toString());
     formData.append('anioCorte', periodo.anioCorte.toString());
 
-    return this.http.post<SemanalCargaValidacionResponse>(
-      `${this.apiUrl}/validar`,
-      formData,
-    );
+    return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
   }
 
   confirmarCarga(request: ConfirmarCargaRequest) {
-    return this.http.post<ConfirmarCargaResponse>(
-      `${this.apiUrl}/confirmar`,
-      request,
-    );
+    return this.http.post<ConfirmarCargaResponse>(`${this.apiUrl}/confirmar`, request);
+  }
+
+  descargarAcusePrevio(codigoReferencia: string) {
+    return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse`, {
+      responseType: 'blob',
+    });
+  }
+
+  descargarAcuseConfirmado(codigoReferencia: string) {
+    return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse-confirmado`, {
+      responseType: 'blob',
+    });
   }
 }
