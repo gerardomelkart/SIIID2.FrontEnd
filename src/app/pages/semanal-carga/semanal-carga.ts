@@ -16,7 +16,11 @@ import {
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
-import { mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import {
+  mostrarError,
+  mostrarExito,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
@@ -118,17 +122,19 @@ export class SemanalCarga {
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   errorGeneral = signal('');
 
-cargandoAcusePrevio = signal(false);
-acusePrevioUrl = signal<SafeResourceUrl | null>(null);
-acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
+  cargandoAcusePrevio = signal(false);
+  acusePrevioUrl = signal<SafeResourceUrl | null>(null);
+  acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
 
-private acusePrevioObjectUrl: string | null = null;
-private acuseConfirmadoObjectUrl: string | null = null;
+  private acusePrevioObjectUrl: string | null = null;
+  private acuseConfirmadoObjectUrl: string | null = null;
 
-archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
-private readonly fechaActual = new Date();
-readonly semanaMinima = this.obtenerSemanaInput(new Date(this.fechaActual.getFullYear(), this.fechaActual.getMonth(), 1));
-readonly semanaMaxima = this.obtenerSemanaInput(this.fechaActual);
+  archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
+  private readonly fechaActual = new Date();
+  readonly semanaMinima = this.obtenerSemanaInput(
+    new Date(this.fechaActual.getFullYear(), this.fechaActual.getMonth(), 1),
+  );
+  readonly semanaMaxima = this.obtenerSemanaInput(this.fechaActual);
 
   tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
   periodoValido = computed(() => this.tramoPrevisto() !== null);
@@ -141,13 +147,13 @@ readonly semanaMaxima = this.obtenerSemanaInput(this.fechaActual);
       this.estado() !== 'CONFIRMANDO',
   );
 
-mostrandoResultado = computed(
-  () =>
-    this.estado() === 'RESULTADO' ||
-    this.estado() === 'MOSTRANDO_ACUSE' ||
-    this.estado() === 'CONFIRMANDO' ||
-    this.estado() === 'CONFIRMADO',
-);
+  mostrandoResultado = computed(
+    () =>
+      this.estado() === 'RESULTADO' ||
+      this.estado() === 'MOSTRANDO_ACUSE' ||
+      this.estado() === 'CONFIRMANDO' ||
+      this.estado() === 'CONFIRMADO',
+  );
 
   respuestaValida = computed(() => this.respuesta()?.esValido === true);
 
@@ -316,119 +322,118 @@ mostrandoResultado = computed(
     });
   }
 
-confirmarCarga(aceptar: boolean): void {
-  const response = this.respuesta();
+  confirmarCarga(aceptar: boolean): void {
+    const response = this.respuesta();
 
-  if (!response?.esValido || !response.codigoReferencia || this.estado() === 'CONFIRMANDO') return;
+    if (!response?.esValido || !response.codigoReferencia || this.estado() === 'CONFIRMANDO')
+      return;
 
-  const codigoReferencia = response.codigoReferencia;
+    const codigoReferencia = response.codigoReferencia;
 
-  this.estado.set('CONFIRMANDO');
+    this.estado.set('CONFIRMANDO');
 
-  this.semanalCargaService
-    .confirmarCarga({
-      codigoReferencia,
-      aceptar,
-    })
-    .pipe(
-      switchMap((resultado) => {
-        if (!aceptar || resultado.estado === 'PENDIENTE_APROBACION') {
-          return of({
-            resultado,
-            acuseDescargado: false,
-            blob: null as Blob | null,
-          });
-        }
-
-        return this.semanalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
-          map((blob: Blob) => ({
-            resultado,
-            acuseDescargado: true,
-            blob,
-          })),
-          catchError(() =>
-            of({
+    this.semanalCargaService
+      .confirmarCarga({
+        codigoReferencia,
+        aceptar,
+      })
+      .pipe(
+        switchMap((resultado) => {
+          if (!aceptar || resultado.estado === 'PENDIENTE_APROBACION') {
+            return of({
               resultado,
               acuseDescargado: false,
               blob: null as Blob | null,
-            }),
-          ),
-        );
-      }),
-    )
-    .subscribe({
-      next: (confirmacion) => {
-        if (!aceptar) {
-          this.limpiarAcusePrevio();
+            });
+          }
 
-          mostrarExitoInstitucional(
-            'Carga semanal rechazada',
-            confirmacion.resultado.mensaje,
-          ).then(() => {
-            this.reiniciarFormulario();
-            void this.router.navigateByUrl('/semanal');
-          });
+          return this.semanalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
+            map((blob: Blob) => ({
+              resultado,
+              acuseDescargado: true,
+              blob,
+            })),
+            catchError(() =>
+              of({
+                resultado,
+                acuseDescargado: false,
+                blob: null as Blob | null,
+              }),
+            ),
+          );
+        }),
+      )
+      .subscribe({
+        next: (confirmacion) => {
+          if (!aceptar) {
+            this.limpiarAcusePrevio();
 
-          return;
-        }
+            mostrarExitoInstitucional(
+              'Carga semanal rechazada',
+              confirmacion.resultado.mensaje,
+            ).then(() => {
+              this.reiniciarFormulario();
+              void this.router.navigateByUrl('/semanal');
+            });
 
-        if (confirmacion.resultado.estado === 'PENDIENTE_APROBACION') {
-          this.limpiarAcusePrevio();
+            return;
+          }
 
-          mostrarExitoInstitucional(
-            'Carga enviada a revisión',
-            confirmacion.resultado.mensaje,
-          ).then(() => {
-            this.reiniciarFormulario();
-            void this.router.navigateByUrl('/semanal');
-          });
+          if (confirmacion.resultado.estado === 'PENDIENTE_APROBACION') {
+            this.limpiarAcusePrevio();
 
-          return;
-        }
+            mostrarExitoInstitucional(
+              'Carga enviada a revisión',
+              confirmacion.resultado.mensaje,
+            ).then(() => {
+              this.reiniciarFormulario();
+              void this.router.navigateByUrl('/semanal');
+            });
 
-        if (confirmacion.blob) this.reemplazarAcuseConfirmado(confirmacion.blob);
+            return;
+          }
 
-        this.estado.set('CONFIRMADO');
+          if (confirmacion.blob) this.reemplazarAcuseConfirmado(confirmacion.blob);
 
-        mostrarExito(
-          'Carga semanal confirmada',
-          confirmacion.acuseDescargado
-            ? undefined
-            : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
-        );
-      },
-      error: (error: unknown) => {
-        this.estado.set('MOSTRANDO_ACUSE');
+          this.estado.set('CONFIRMADO');
 
-        mostrarError(
-          aceptar
-            ? 'No fue posible confirmar la carga'
-            : 'No fue posible rechazar la carga',
-          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-        );
-      },
-    });
-}
+          mostrarExito(
+            'Carga semanal confirmada',
+            confirmacion.acuseDescargado
+              ? undefined
+              : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
+          );
+        },
+        error: (error: unknown) => {
+          this.estado.set('MOSTRANDO_ACUSE');
 
-cerrarProcesoConfirmado(): void {
-  this.reiniciarFormulario();
-  void this.router.navigateByUrl('/semanal');
-}
+          mostrarError(
+            aceptar ? 'No fue posible confirmar la carga' : 'No fue posible rechazar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
+        },
+      });
+  }
 
-volverACaptura(): void {
-  if (this.estado() === 'CONFIRMANDO') return;
+  cerrarProcesoConfirmado(): void {
+    this.reiniciarFormulario();
+    void this.router.navigateByUrl('/semanal');
+  }
 
-  this.archivos.set(crearArchivosCargaVacios());
-  this.formulario.update((actual) => ({
-    ...actual,
-    semanaSeleccionada: '',
-  }));
-  this.respuesta.set(null);
-  this.errorGeneral.set('');
-  this.archivoArrastrado.set(null);
-  this.limpiarAcusePrevio();
-  this.estado.set('CAPTURA');
-}
+  volverACaptura(): void {
+    if (this.estado() === 'CONFIRMANDO') return;
+
+    this.archivos.set(crearArchivosCargaVacios());
+    this.formulario.update((actual) => ({
+      ...actual,
+      semanaSeleccionada: '',
+    }));
+    this.respuesta.set(null);
+    this.errorGeneral.set('');
+    this.archivoArrastrado.set(null);
+    this.limpiarAcusePrevio();
+    this.estado.set('CAPTURA');
+  }
 
   reiniciarFormulario(): void {
     this.archivos.set(crearArchivosCargaVacios());
@@ -518,37 +523,37 @@ volverACaptura(): void {
     return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
   }
 
-private reemplazarAcusePrevio(blob: Blob): void {
-  const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
+  private reemplazarAcusePrevio(blob: Blob): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
 
-  this.acusePrevioObjectUrl = pdf.objectUrl;
-  this.acusePrevioUrl.set(pdf.safeUrl);
-}
+    this.acusePrevioObjectUrl = pdf.objectUrl;
+    this.acusePrevioUrl.set(pdf.safeUrl);
+  }
 
-private reemplazarAcuseConfirmado(blob: Blob): void {
-  const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
+  private reemplazarAcuseConfirmado(blob: Blob): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
 
-  this.acuseConfirmadoObjectUrl = pdf.objectUrl;
-  this.acuseConfirmadoUrl.set(pdf.safeUrl);
-}
+    this.acuseConfirmadoObjectUrl = pdf.objectUrl;
+    this.acuseConfirmadoUrl.set(pdf.safeUrl);
+  }
 
-private limpiarAcusePrevio(): void {
-  revocarObjectUrl(this.acusePrevioObjectUrl);
-  revocarObjectUrl(this.acuseConfirmadoObjectUrl);
+  private limpiarAcusePrevio(): void {
+    revocarObjectUrl(this.acusePrevioObjectUrl);
+    revocarObjectUrl(this.acuseConfirmadoObjectUrl);
 
-  this.acusePrevioObjectUrl = null;
-  this.acuseConfirmadoObjectUrl = null;
-  this.acusePrevioUrl.set(null);
-  this.acuseConfirmadoUrl.set(null);
-  this.cargandoAcusePrevio.set(false);
-}
+    this.acusePrevioObjectUrl = null;
+    this.acuseConfirmadoObjectUrl = null;
+    this.acusePrevioUrl.set(null);
+    this.acuseConfirmadoUrl.set(null);
+    this.cargandoAcusePrevio.set(false);
+  }
 
   private limpiarResultado(): void {
     if (
-    this.estado() === 'VALIDANDO' ||
-    this.estado() === 'MOSTRANDO_ACUSE' ||
-    this.estado() === 'CONFIRMANDO' ||
-    this.estado() === 'CONFIRMADO'
+      this.estado() === 'VALIDANDO' ||
+      this.estado() === 'MOSTRANDO_ACUSE' ||
+      this.estado() === 'CONFIRMANDO' ||
+      this.estado() === 'CONFIRMADO'
     ) {
       return;
     }
@@ -572,7 +577,12 @@ private limpiarAcusePrevio(): void {
     }
     const coincidencia = /^(\d{4})-W(\d{2})$/.exec(formulario.semanaSeleccionada);
 
-    if (!coincidencia || formulario.semanaSeleccionada < this.semanaMinima || formulario.semanaSeleccionada > this.semanaMaxima) return null;
+    if (
+      !coincidencia ||
+      formulario.semanaSeleccionada < this.semanaMinima ||
+      formulario.semanaSeleccionada > this.semanaMaxima
+    )
+      return null;
 
     const anioSemana = Number(coincidencia[1]);
     const numeroSemana = Number(coincidencia[2]);

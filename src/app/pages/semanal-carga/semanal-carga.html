@@ -513,35 +513,30 @@
       <i class="fa-solid fa-arrow-left"></i>
       Volver a los archivos
     </button>
- } @else {
-<div>
-  <strong>
-    Revise el tramo y los conteos antes de continuar.
-  </strong>
-
-  <span>
-    Abra el informe previo; desde ahí podrá aceptar o rechazar
-    la carga semanal.
-  </span>
-</div>
-
-<div class="botones-confirmacion">
-  <button
-    type="button"
-    class="btn btn-siiid"
-    [disabled]="cargandoAcusePrevio()"
-    (click)="abrirAcusePrevio()"
-  >
-    @if (cargandoAcusePrevio()) {
-    <i class="fa-solid fa-spinner fa-spin"></i>
-    Generando informe...
     } @else {
-    <i class="fa-solid fa-file-pdf"></i>
-    Revisar informe previo
+    <div>
+      <strong>
+        Revise el tramo y los conteos antes de continuar.
+      </strong>
+
+      <span>
+        Abra el informe previo; desde ahí podrá aceptar o rechazar
+        la carga semanal.
+      </span>
+    </div>
+
+    <div class="botones-confirmacion">
+      <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio()" (click)="abrirAcusePrevio()">
+        @if (cargandoAcusePrevio()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Generando informe...
+        } @else {
+        <i class="fa-solid fa-file-pdf"></i>
+        Revisar informe previo
+        }
+      </button>
+    </div>
     }
-  </button>
-</div>
-}
   </section>
   }
 </div>
@@ -560,21 +555,17 @@
 }
 
 @if (
-  estado() === 'MOSTRANDO_ACUSE' ||
-  estado() === 'CONFIRMANDO' ||
-  estado() === 'CONFIRMADO'
+estado() === 'MOSTRANDO_ACUSE' ||
+estado() === 'CONFIRMANDO' ||
+estado() === 'CONFIRMADO'
 ) {
 <div class="acuse-modal">
   <div class="acuse-header">
-    <span>{{ estado() === 'CONFIRMADO' ? 'Acuse confirmado de entrega semanal' : 'Informe previo de entrega semanal' }}</span>
+    <span>{{ estado() === 'CONFIRMADO' ? 'Acuse confirmado de entrega semanal' : 'Informe previo de entrega semanal'
+      }}</span>
 
     @if (estado() === 'CONFIRMADO') {
-    <button
-      type="button"
-      class="acuse-close"
-      aria-label="Cerrar acuse"
-      (click)="cerrarProcesoConfirmado()"
-    >
+    <button type="button" class="acuse-close" aria-label="Cerrar acuse" (click)="cerrarProcesoConfirmado()">
       ×
     </button>
     }
@@ -582,66 +573,38 @@
 
   <div class="acuse-body">
     @if (acuseConfirmadoUrl()) {
-    <iframe
-      class="acuse-frame"
-      [src]="acuseConfirmadoUrl()"
-      title="Acuse semanal confirmado"
-    ></iframe>
+    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse semanal confirmado"></iframe>
     } @else if (acusePrevioUrl()) {
-    <iframe
-      class="acuse-frame"
-      [src]="acusePrevioUrl()"
-      title="Informe previo semanal"
-    ></iframe>
+    <iframe class="acuse-frame" [src]="acusePrevioUrl()" title="Informe previo semanal"></iframe>
     }
   </div>
 
   <div class="acuse-actions">
     @if (estado() === 'MOSTRANDO_ACUSE') {
-    <button
-      type="button"
-      class="btn-rechazar"
-      (click)="confirmarCarga(false)"
-    >
+    <button type="button" class="btn-rechazar" (click)="confirmarCarga(false)">
       <i class="fa-solid fa-xmark"></i>
       Rechazar
     </button>
 
-    <button
-      type="button"
-      class="btn-aceptar"
-      (click)="confirmarCarga(true)"
-    >
+    <button type="button" class="btn-aceptar" (click)="confirmarCarga(true)">
       <i class="fa-solid fa-check"></i>
       Aceptar
     </button>
     }
 
     @if (estado() === 'CONFIRMANDO') {
-    <button
-      type="button"
-      class="btn-rechazar btn-disabled"
-      disabled
-    >
+    <button type="button" class="btn-rechazar btn-disabled" disabled>
       Rechazar
     </button>
 
-    <button
-      type="button"
-      class="btn-aceptar btn-disabled"
-      disabled
-    >
+    <button type="button" class="btn-aceptar btn-disabled" disabled>
       <i class="fa-solid fa-spinner fa-spin"></i>
       Procesando...
     </button>
     }
 
     @if (estado() === 'CONFIRMADO') {
-    <button
-      type="button"
-      class="btn-cerrar-final"
-      (click)="cerrarProcesoConfirmado()"
-    >
+    <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
       <i class="fa-solid fa-xmark"></i>
       Cerrar
     </button>
