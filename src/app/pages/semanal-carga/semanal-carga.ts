@@ -344,14 +344,20 @@ export class SemanalCarga {
       });
   }
 
-  volverACaptura(): void {
-    if (this.estado() === 'CONFIRMANDO') return;
+volverACaptura(): void {
+  if (this.estado() === 'CONFIRMANDO') return;
 
-    this.respuesta.set(null);
-    this.errorGeneral.set('');
-    this.limpiarAcusePrevio();
-    this.estado.set('CAPTURA');
-  }
+  this.archivos.set(crearArchivosCargaVacios());
+  this.formulario.update((actual) => ({
+    ...actual,
+    semanaSeleccionada: '',
+  }));
+  this.respuesta.set(null);
+  this.errorGeneral.set('');
+  this.archivoArrastrado.set(null);
+  this.limpiarAcusePrevio();
+  this.estado.set('CAPTURA');
+}
 
   reiniciarFormulario(): void {
     this.archivos.set(crearArchivosCargaVacios());

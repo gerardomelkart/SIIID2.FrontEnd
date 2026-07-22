@@ -63,6 +63,8 @@ function crearBlobUrlDirecta(url: string): Blob {
 }
 
 function obtenerDatosAcuse(url: string): DatosAcuse | null {
+  if (/\/semanal\/cargas\//i.test(url)) return null;
+
   const match = url.match(/\/(cargas|actualizaciones)\/([^/?#]+)\/(acuse-confirmado|acuse)(?:[?#]|$)/i);
 
   if (!match) {
