@@ -1,9 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ROLES } from '../../core/constants/roles.constants';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionService } from '../../core/services/session.service';
 import { Topbar } from '../topbar/topbar';
-import { ROLES } from '../../core/constants/roles.constants';
 
 @Component({
   selector: 'app-semanal-layout',
@@ -16,22 +16,55 @@ export class SemanalLayout {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  cargaAbierta = signal(false);
+  incidenciaAbierta = signal(false);
+  administracionAbierta = signal(false);
+  sesionAbierta = signal(false);
+
   usuario = this.sessionService.usuario;
-  puedeCambiarModulo = computed(() => this.sessionService.modulos().length > 1);
+
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+
   puedeCargar = computed(
     () =>
       (this.usuario()?.rol === ROLES.SUPER_USUARIO ||
         this.usuario()?.rol === ROLES.ENLACE_ESTATAL) &&
       this.sessionService.habilitaCarga(),
   );
+
   puedeAdministrarDelitos = computed(
     () => this.esSuperUsuario() && this.sessionService.administraDelitos(),
   );
 
-  cambiarModulo(): void {
-    this.sessionService.limpiarModuloActivo();
-    void this.router.navigateByUrl('/seleccionar-modulo');
+  puedeCambiarAModuloConsolidado = computed(() =>
+    this.sessionService.modulos().some(
+      (modulo) => modulo.clave.toUpperCase() === 'MENSUAL',
+    ),
+  );
+
+  toggleCarga(): void {
+    this.cargaAbierta.update((valor) => !valor);
+
+    if (!this.cargaAbierta()) {
+      this.incidenciaAbierta.set(false);
+    }
+  }
+
+  toggleIncidencia(): void {
+    this.incidenciaAbierta.update((valor) => !valor);
+  }
+
+  toggleAdministracion(): void {
+    this.administracionAbierta.update((valor) => !valor);
+  }
+
+  toggleSesion(): void {
+    this.sesionAbierta.update((valor) => !valor);
+  }
+
+  cambiarAModuloConsolidado(): void {
+    if (!this.sessionService.seleccionarModulo('MENSUAL')) return;
+    void this.router.navigateByUrl('/');
   }
 
   cerrarSesion(): void {

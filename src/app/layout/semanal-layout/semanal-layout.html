@@ -10,7 +10,9 @@
           </div>
 
           <div class="user-info">
-            <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
+            <div class="user-name">
+              {{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}
+            </div>
 
             <div class="user-status">
               <span class="status-dot"></span>
@@ -26,48 +28,78 @@
       </div>
 
       <nav class="menu">
-        <a class="menu-link" routerLink="/semanal" routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: true }">
-          <i class="fa-solid fa-house"></i>
-          Inicio semanal
-        </a>
-
         @if (puedeCargar()) {
-        <a class="menu-link" routerLink="/semanal/carga" routerLinkActive="active">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-          Carga semanal
+        <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
+          <span>
+            <i class="fa-solid fa-upload"></i>
+            Carga de Información
+          </span>
+        </button>
+
+        @if (cargaAbierta()) {
+        <button type="button" class="menu-link menu-button level-2" (click)="toggleIncidencia()">
+          <span>
+            <i class="fa-solid fa-folder"></i>
+            Incidencia Delictiva
+          </span>
+        </button>
+
+        @if (incidenciaAbierta()) {
+        <a class="menu-link level-3" routerLink="/semanal/carga" routerLinkActive="active">
+          <i class="fa-solid fa-upload"></i>
+          Integrar Información
         </a>
+        }
+        }
         }
 
         @if (esSuperUsuario()) {
-        <a class="menu-link" routerLink="/semanal/administracion/usuarios" routerLinkActive="active">
-          <i class="fa-solid fa-users-gear"></i>
+        <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+          <span>
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            Administración
+          </span>
+        </button>
+
+        @if (administracionAbierta()) {
+        <a class="menu-link level-2" routerLink="/semanal/administracion/usuarios" routerLinkActive="active">
+          <i class="fa-solid fa-users"></i>
           Usuarios semanales
         </a>
-        }
 
         @if (puedeAdministrarDelitos()) {
-        <a class="menu-link" routerLink="/semanal/administracion/delitos" routerLinkActive="active">
+        <a class="menu-link level-2" routerLink="/semanal/administracion/delitos" routerLinkActive="active">
           <i class="fa-solid fa-list-check"></i>
           Delitos semanales
         </a>
         }
+        }
+        }
 
-        @if (puedeCambiarModulo()) {
-        <button type="button" class="menu-link menu-button" (click)="cambiarModulo()">
+        <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
+          <span>
+            <i class="fa-solid fa-user"></i>
+            Sesión
+          </span>
+        </button>
+
+        @if (sesionAbierta()) {
+        @if (puedeCambiarAModuloConsolidado()) {
+        <button type="button" class="menu-link menu-button level-2" (click)="cambiarAModuloConsolidado()">
           <span>
             <i class="fa-solid fa-repeat"></i>
-            Cambiar de módulo
+            Cambiar a Módulo consolidado
           </span>
         </button>
         }
 
-        <button type="button" class="menu-link menu-button" (click)="cerrarSesion()">
+        <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
           <span>
             <i class="fa-solid fa-power-off"></i>
-            Cerrar Sesión
+            Cerrar sesión
           </span>
         </button>
+        }
       </nav>
     </aside>
 
