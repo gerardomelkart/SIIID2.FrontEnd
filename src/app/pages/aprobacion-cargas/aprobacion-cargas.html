@@ -330,17 +330,7 @@
         </div>
       </div>
 
-      @if (cargandoDiferenciasDetalle()) {
-      <div class="cambios-admin-cargando">
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Consultando diferencias...
-      </div>
-      } @else if (errorDiferenciasDetalle()) {
-      <div class="alert alert-warning mb-0">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        {{ errorDiferenciasDetalle() }}
-      </div>
-      } @else if (diferenciasDetalle(); as diferencias) {
+      @if (diferenciasParaDetalle(carga.codigoReferencia); as diferencias) {
       <div class="table-responsive">
         <table class="table table-sm resumen-cambios-table">
           <thead>
@@ -386,10 +376,40 @@
         </table>
       </div>
 
-      @if (diferencias.detalleLimitado) {
+      <div class="cambios-admin-acciones">
+        <button type="button" class="btn-muestra-diferencias" [disabled]="cargandoDiferenciasDetalle()"
+          (click)="alternarDiferenciasDetalle(carga.codigoReferencia)">
+          @if (cargandoDiferenciasDetalle()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Consultando muestra...
+          } @else if (mostrarDiferenciasDetalle()) {
+          <i class="fa-solid fa-eye-slash"></i>
+          Ocultar muestra de diferencias
+          } @else {
+          <i class="fa-solid fa-eye"></i>
+          Ver muestra de diferencias
+          }
+        </button>
+
+        <span>Se mostrarán hasta 100 registros de cada sección.</span>
+      </div>
+
+      @if (mostrarDiferenciasDetalle()) {
+      @if (cargandoDiferenciasDetalle()) {
+      <div class="cambios-admin-cargando">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Consultando hasta 100 diferencias por sección...
+      </div>
+      } @else if (errorDiferenciasDetalle()) {
+      <div class="alert alert-warning mt-3 mb-0">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ errorDiferenciasDetalle() }}
+      </div>
+      } @else if (diferenciasDetalle(); as detalleDiferencias) {
+      @if (detalleDiferencias.detalleLimitado) {
       <div class="alert alert-info mt-3 mb-0">
-        Se muestran como máximo {{ diferencias.limitePorSeccion }} registros de cada tipo. Los conteos del resumen sí
-        corresponden al total completo.
+        Se muestran como máximo {{ detalleDiferencias.limitePorSeccion }} registros de cada sección. Los conteos del
+        resumen corresponden al total completo.
       </div>
       }
 
@@ -442,12 +462,17 @@
             </div>
           </article>
           } @empty {
-          <div class="sin-diferencias-admin">
-            No se detectaron cambios en {{ seccion.titulo.toLowerCase() }}.
-          </div>
+          <div class="sin-diferencias-admin">No se detectaron cambios en {{ seccion.titulo.toLowerCase() }}.</div>
           }
         </section>
         }
+      </div>
+      }
+      }
+      } @else {
+      <div class="cambios-admin-cargando">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Calculando resumen de cambios...
       </div>
       }
     </section>

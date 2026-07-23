@@ -69,6 +69,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   diferenciasPorReferencia = signal<Record<string, ActualizacionDiferenciasResponse>>({});
   diferenciasDetalle = signal<ActualizacionDiferenciasResponse | null>(null);
   cargandoDiferenciasDetalle = signal(false);
+  mostrarDiferenciasDetalle = signal(false);
   errorDiferenciasDetalle = signal('');
   private solicitudResumenesDiferencias = 0;
   private codigoDiferenciasDetalle = '';
@@ -129,6 +130,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   hayOperacionEnCurso = computed(() => {
     return (
       this.cargandoDetalle() !== null ||
+      this.cargandoDiferenciasDetalle() ||
       this.descargandoArchivos() !== null ||
       this.descargandoAcuse() !== null ||
       this.procesando() !== null
@@ -226,11 +228,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.administracionService.obtenerDetalle(codigoReferencia).subscribe({
       next: (response) => {
         this.detalle.set(response.detalle);
+        this.codigoDiferenciasDetalle = '';
         this.diferenciasDetalle.set(null);
+        this.cargandoDiferenciasDetalle.set(false);
+        this.mostrarDiferenciasDetalle.set(false);
         this.errorDiferenciasDetalle.set('');
-
-        if (this.esActualizacion(response.detalle))
-          this.cargarDiferenciasDetalle(response.detalle.codigoReferencia);
         this.cargandoDetalle.set(null);
         this.cdr.detectChanges();
 
@@ -259,6 +261,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.cerrarAcuse();
     this.diferenciasDetalle.set(null);
     this.cargandoDiferenciasDetalle.set(false);
+    this.mostrarDiferenciasDetalle.set(false);
     this.errorDiferenciasDetalle.set('');
     this.codigoDiferenciasDetalle = '';
   }
@@ -346,6 +349,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
+        this.mostrarDiferenciasDetalle.set(false);
         this.diferenciasDetalle.set(null);
         this.cerrarAcuse();
         Swal.close();
@@ -411,6 +415,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
+        this.mostrarDiferenciasDetalle.set(false);
         this.diferenciasDetalle.set(null);
         this.cerrarAcuse();
 
@@ -605,6 +610,23 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
   diferenciasResumen(codigoReferencia: string): ActualizacionDiferenciasResponse | null {
     return this.diferenciasPorReferencia()[codigoReferencia] ?? null;
+  }
+
+  diferenciasParaDetalle(codigoReferencia: string): ActualizacionDiferenciasResponse | null {
+    return this.diferenciasDetalle() ?? this.diferenciasResumen(codigoReferencia);
+  }
+
+  alternarDiferenciasDetalle(codigoReferencia: string): void {
+    if (this.mostrarDiferenciasDetalle()) {
+      this.mostrarDiferenciasDetalle.set(false);
+      return;
+    }
+
+    this.mostrarDiferenciasDetalle.set(true);
+
+    if (this.diferenciasDetalle() || this.cargandoDiferenciasDetalle()) return;
+
+    this.cargarDiferenciasDetalle(codigoReferencia);
   }
 
   obtenerIdentificadoresDesdeBackend(
