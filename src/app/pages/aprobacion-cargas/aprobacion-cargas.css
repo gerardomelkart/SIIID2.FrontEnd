@@ -715,7 +715,7 @@ button:disabled {
 }
 
 .cambios-admin-section {
-  margin-top: 24px;
+  margin: 24px 22px 26px;
   border-top: 1px solid #dde3e0;
   padding-top: 22px;
 }
@@ -900,4 +900,42 @@ button:disabled {
   color: #667085;
   font-size: 12px;
   text-align: center;
+}
+
+.cambios-admin-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.cambios-admin-acciones>span {
+  color: #667085;
+  font-size: 11px;
+}
+
+.btn-muestra-diferencias {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--siiid-guinda);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--siiid-guinda);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.btn-muestra-diferencias:hover:not(:disabled) {
+  background: var(--siiid-guinda);
+  color: #fff;
+}
+
+#detalle-carga,
+#detalle-carga-semanal {
+  scroll-margin-top: 24px;
 }

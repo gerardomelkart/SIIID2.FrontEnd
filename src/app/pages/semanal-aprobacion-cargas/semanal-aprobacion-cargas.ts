@@ -235,11 +235,13 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.errorDiferenciasDetalle.set('');
         this.cargandoDetalle.set(null);
         this.cdr.detectChanges();
-
-        document.getElementById('detalle-carga-semanal')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            document
+              .getElementById('detalle-carga-semanal')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+          ),
+        );
       },
       error: (error: unknown) => {
         this.cargandoDetalle.set(null);
