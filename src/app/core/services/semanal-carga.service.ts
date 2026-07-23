@@ -8,6 +8,7 @@ import {
   SemanalCargaValidacionResponse,
 } from '../models/semanal-carga.models';
 import { ArchivosCargaSeleccionados } from '../types/archivo-carga.types';
+import { ActualizacionDiferenciasResponse } from '../models/actualizacion.models';
 
 @Injectable({
   providedIn: 'root',
@@ -31,6 +32,15 @@ export class SemanalCargaService {
     formData.append('anioCorte', periodo.anioCorte.toString());
 
     return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+  }
+
+  obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 100) {
+    return this.http.get<ActualizacionDiferenciasResponse>(
+      `${this.apiUrl}/${codigoReferencia}/diferencias`,
+      {
+        params: { limitePorSeccion },
+      },
+    );
   }
 
   confirmarCarga(request: ConfirmarCargaRequest) {

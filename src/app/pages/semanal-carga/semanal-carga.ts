@@ -25,12 +25,14 @@ import {
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
+import { ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 
 type EstadoCargaSemanal =
   | 'CAPTURA'
   | 'VALIDANDO'
   | 'RESULTADO'
+  | 'MOSTRANDO_DIFERENCIAS'
   | 'MOSTRANDO_ACUSE'
   | 'CONFIRMANDO'
   | 'CONFIRMADO';
@@ -57,7 +59,11 @@ interface VistaTramoSemanal {
   selector: 'app-semanal-carga',
   imports: [FormsModule],
   templateUrl: './semanal-carga.html',
-  styleUrls: ['../semanal-usuarios/semanal-usuarios.css', './semanal-carga.css'],
+  styleUrls: [
+    '../semanal-usuarios/semanal-usuarios.css',
+    '../actualizacion/actualizacion.css',
+    './semanal-carga.css',
+  ],
 })
 export class SemanalCarga {
   private readonly semanalCargaService = inject(SemanalCargaService);
@@ -127,6 +133,8 @@ export class SemanalCarga {
   formulario = signal<SemanalCargaFormulario>(this.crearFormularioInicial());
   estado = signal<EstadoCargaSemanal>('CAPTURA');
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
+  diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
+  cargandoDiferencias = signal(false);
   errorGeneral = signal('');
 
   cargandoAcusePrevio = signal(false);
@@ -157,9 +165,18 @@ export class SemanalCarga {
   mostrandoResultado = computed(
     () =>
       this.estado() === 'RESULTADO' ||
+      this.estado() === 'MOSTRANDO_DIFERENCIAS' ||
       this.estado() === 'MOSTRANDO_ACUSE' ||
       this.estado() === 'CONFIRMANDO' ||
       this.estado() === 'CONFIRMADO',
+  );
+
+  totalDiferenciasCarpetas = computed(() => this.diferencias()?.totalCarpetas ?? 0);
+  totalDiferenciasDelitos = computed(() => this.diferencias()?.totalDelitos ?? 0);
+  totalDiferenciasVictimas = computed(() => this.diferencias()?.totalVictimas ?? 0);
+  totalDiferencias = computed(() => this.diferencias()?.totalDiferencias ?? 0);
+  mostrarDiferencias = computed(
+    () => this.estado() === 'MOSTRANDO_DIFERENCIAS' && !!this.diferencias(),
   );
 
   respuestaValida = computed(() => this.respuesta()?.esValido === true);
@@ -180,16 +197,6 @@ export class SemanalCarga {
       ...actual,
       [campo]: valor,
     }));
-
-    this.limpiarResultado();
-  }
-
-  actualizarTipoContenido(tipoContenido: TipoContenidoSemanal): void {
-    this.formulario.set({
-      tipoContenido,
-      semanaSeleccionada:
-        tipoContenido === 'ACUMULADO_MES' ? this.obtenerSemanaInput(new Date()) : '',
-    });
 
     this.limpiarResultado();
   }
@@ -279,7 +286,13 @@ export class SemanalCarga {
     this.semanalCargaService.validarArchivos(archivos, periodo).subscribe({
       next: (response) => {
         this.respuesta.set(response);
-        this.estado.set('RESULTADO');
+
+        if (!response.esValido || !this.esActualizacion || response.advertencias.length > 0) {
+          this.estado.set('RESULTADO');
+          return;
+        }
+
+        this.prepararRevisionDiferencias(response.codigoReferencia);
       },
       error: (error: unknown) => {
         const response = obtenerErrorPayload<SemanalCargaValidacionResponse>(error);
@@ -301,6 +314,68 @@ export class SemanalCarga {
         );
       },
     });
+  }
+
+  revisarDiferencias(): void {
+    const codigoReferencia = this.respuesta()?.codigoReferencia?.trim();
+
+    if (!this.esActualizacion || !this.respuestaValida() || !codigoReferencia) return;
+
+    this.prepararRevisionDiferencias(codigoReferencia);
+  }
+
+  continuarAAcusePrevio(): void {
+    const codigoReferencia = this.respuesta()?.codigoReferencia?.trim();
+
+    if (!codigoReferencia) return;
+
+    this.abrirAcusePrevio();
+  }
+
+  volverADiferencias(): void {
+    if (this.diferencias()) this.estado.set('MOSTRANDO_DIFERENCIAS');
+  }
+
+  obtenerIdentificadoresDesdeBackend(
+    campoIdentificador: string,
+    identificadorFiscalia: string,
+  ): string[] {
+    const campos = campoIdentificador
+      .split('+')
+      .map((x) => x.trim().toUpperCase())
+      .filter((x) => x.length > 0);
+    const valores = identificadorFiscalia.split('|').map((x) => x.trim());
+
+    if (campos.length === 0) return [identificadorFiscalia];
+
+    return campos.map((campo, index) => `${campo}: ${valores[index] || '-'}`);
+  }
+
+  normalizarValorDiferencia(valor: string | null): string {
+    return valor === null || valor === undefined || valor === '' ? 'Sin información' : valor;
+  }
+
+  normalizarTipoMovimiento(tipoMovimiento: string): string {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+
+    if (valor === 'NUEVO') return 'Nuevo';
+    if (valor === 'MODIFICADO') return 'Modificado';
+    if (valor === 'ELIMINADO' || valor === 'BAJA') return 'Eliminado';
+
+    return tipoMovimiento;
+  }
+
+  esMovimientoNuevo(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
+  }
+
+  esMovimientoModificado(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'MODIFICADO';
+  }
+
+  esMovimientoEliminado(tipoMovimiento: string): boolean {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+    return valor === 'ELIMINADO' || valor === 'BAJA';
   }
 
   abrirAcusePrevio(): void {
@@ -413,9 +488,7 @@ export class SemanalCarga {
           this.estado.set('CONFIRMADO');
 
           mostrarExito(
-            this.esActualizacion
-              ? 'Actualización semanal confirmada'
-              : 'Carga semanal confirmada',
+            this.esActualizacion ? 'Actualización semanal confirmada' : 'Carga semanal confirmada',
             confirmacion.acuseDescargado
               ? undefined
               : `La ${this.esActualizacion ? 'actualización' : 'carga'} fue confirmada, pero no fue posible cargar el acuse confirmado.`,
@@ -448,6 +521,7 @@ export class SemanalCarga {
       semanaSeleccionada: '',
     }));
     this.respuesta.set(null);
+    this.diferencias.set(null);
     this.errorGeneral.set('');
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
@@ -458,6 +532,7 @@ export class SemanalCarga {
     this.archivos.set(crearArchivosCargaVacios());
     this.formulario.set(this.crearFormularioInicial());
     this.respuesta.set(null);
+    this.diferencias.set(null);
     this.errorGeneral.set('');
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
@@ -527,7 +602,7 @@ export class SemanalCarga {
   }
 
   etiquetaTipoContenido(tipo: TipoContenidoSemanal | undefined): string {
-    return tipo === 'ACUMULADO_MES' ? 'Acumulado del mes' : 'Solo semana';
+    return tipo === 'SOLO_SEMANA' ? 'Solo semana' : '-';
   }
 
   nombreMes(numero: number | undefined): string {
@@ -540,6 +615,42 @@ export class SemanalCarga {
 
   resumenPorArchivo(tipo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
     return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
+  }
+
+  private prepararRevisionDiferencias(codigoReferencia: string): void {
+    if (this.cargandoDiferencias() || !codigoReferencia?.trim()) return;
+
+    this.cargandoDiferencias.set(true);
+    this.errorGeneral.set('');
+    this.diferencias.set(null);
+
+    this.semanalCargaService
+      .obtenerDiferencias(codigoReferencia, 100)
+      .pipe(finalize(() => this.cargandoDiferencias.set(false)))
+      .subscribe({
+        next: (response) => {
+          if (!response.esValido) {
+            this.estado.set('RESULTADO');
+            this.errorGeneral.set(
+              response.mensaje ||
+                'No fue posible obtener las diferencias de la actualización semanal.',
+            );
+            return;
+          }
+
+          this.diferencias.set(response);
+          this.estado.set('MOSTRANDO_DIFERENCIAS');
+        },
+        error: (error: unknown) => {
+          this.estado.set('RESULTADO');
+          this.errorGeneral.set(
+            obtenerMensajeErrorHttp(
+              error,
+              'La consulta de diferencias tardó demasiado o fue interrumpida.',
+            ),
+          );
+        },
+      });
   }
 
   private reemplazarAcusePrevio(blob: Blob): void {
@@ -578,6 +689,7 @@ export class SemanalCarga {
     }
 
     this.respuesta.set(null);
+    this.diferencias.set(null);
     this.errorGeneral.set('');
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
@@ -585,7 +697,7 @@ export class SemanalCarga {
 
   private crearFormularioInicial(): SemanalCargaFormulario {
     return {
-      tipoContenido: this.esActualizacion ? 'SOLO_SEMANA' : '',
+      tipoContenido: 'SOLO_SEMANA',
       semanaSeleccionada: '',
     };
   }

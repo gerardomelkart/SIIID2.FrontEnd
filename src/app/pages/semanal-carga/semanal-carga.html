@@ -3,7 +3,8 @@
     <div>
       <span>Módulo semanal</span>
       <h1>
-        {{ esActualizacion ? 'Actualización semanal de incidencia delictiva' : 'Carga semanal de incidencia delictiva' }}
+        {{ esActualizacion ? 'Actualización semanal de incidencia delictiva' : 'Carga semanal de incidencia delictiva'
+        }}
       </h1>
       <p>
         @if (esActualizacion) {
@@ -47,103 +48,36 @@
             </div>
           </div>
 
-          @if (!esActualizacion) {
           <div class="seccion-titulo">
             <div>
-              <strong>Tipo de carga</strong>
-              <p>
-                Indique si los archivos contienen solo la semana o el
-                acumulado del mes.
-              </p>
-            </div>
-          </div>
-
-          <div class="tipo-contenido-grid">
-            <label class="tipo-contenido-card" [class.seleccionado]="
-      formulario().tipoContenido === 'SOLO_SEMANA'
-    ">
-              <input type="radio" name="tipoContenido" value="SOLO_SEMANA" [ngModel]="formulario().tipoContenido"
-                (ngModelChange)="actualizarTipoContenido($event)" />
-
-              <span class="tipo-icono">
-                <i class="fa-solid fa-calendar-day"></i>
-              </span>
-
-              <span>
-                <strong>Carga semanal</strong>
-                <small>
-                  Los archivos contienen exclusivamente los registros de
-                  la semana seleccionada.
-                </small>
-              </span>
-            </label>
-
-            <label class="tipo-contenido-card" [class.seleccionado]="
-      formulario().tipoContenido === 'ACUMULADO_MES'
-    ">
-
-              <input type="radio" name="tipoContenido" value="ACUMULADO_MES" [ngModel]="formulario().tipoContenido"
-                (ngModelChange)="actualizarTipoContenido($event)" />
-
-              <span class="tipo-icono">
-                <i class="fa-solid fa-layer-group"></i>
-              </span>
-
-              <span>
-                <strong>Acumulado mensual</strong>
-                <small>
-                  Se toma automáticamente la semana en curso y se integran
-                  registros de semanas que todavía no tengan carga.
-                </small>
-              </span>
-            </label>
-          </div>
-          } @else {
-          <div class="seccion-titulo">
-            <div>
-              <strong>Actualización de una semana confirmada</strong>
-              <p>
-                La nueva versión reemplazará la semana seleccionada y la versión anterior se conservará en el
-                histórico.
-              </p>
-            </div>
-          </div>
-          }
-
-          @if (formulario().tipoContenido) {
-          <div class="seccion-titulo seccion-periodo">
-            <div>
-              <strong>
-                {{
-                esActualizacion
-                ? 'Semana a actualizar'
-                : formulario().tipoContenido === 'SOLO_SEMANA'
-                ? 'Semana a cargar'
-                : 'Periodo automático'
-                }}
-              </strong>
-
+              <strong>{{ esActualizacion ? 'Actualización de una semana confirmada' : 'Carga de una semana puntual'
+                }}</strong>
               <p>
                 @if (esActualizacion) {
-                Seleccione una semana confirmada del mes de corte actual.
-                } @else if (formulario().tipoContenido === 'SOLO_SEMANA') {
-                Seleccione una semana cuyo mes de corte sea el actual; los cortes anteriores ya están consolidados.
+                La nueva versión reemplazará únicamente la semana seleccionada y la versión anterior se conservará en el
+                histórico.
                 } @else {
-                El acumulado mensual utiliza automáticamente la semana en curso.
+                Los archivos deben contener la información correspondiente a la semana seleccionada.
                 }
               </p>
             </div>
           </div>
 
+          <div class="seccion-titulo seccion-periodo">
+            <div>
+              <strong>{{ esActualizacion ? 'Semana a actualizar' : 'Semana a cargar' }}</strong>
+              <p>Seleccione una semana cuyo mes de corte sea el actual; los periodos anteriores ya pertenecen al
+                consolidado.</p>
+            </div>
+          </div>
+
           <div class="periodo-grid">
-            @if (formulario().tipoContenido === 'SOLO_SEMANA') {
             <label class="campo-periodo campo-semana">
               <span>Seleccionar semana</span>
 
               <input type="week" [min]="semanaMinima" [max]="semanaMaxima" class="form-control"
                 [ngModel]="formulario().semanaSeleccionada"
                 (ngModelChange)="actualizarCampo('semanaSeleccionada', $event)" />
-
             </label>
 
             <div class="periodo-automatico">
@@ -151,25 +85,9 @@
 
               <div>
                 <strong>Cálculo automático</strong>
-                <span>
-                  Año, fechas y mes de corte se obtendrán de la semana
-                  seleccionada.
-                </span>
+                <span>Año, fechas y mes de corte se obtendrán de la semana seleccionada.</span>
               </div>
             </div>
-            } @else {
-            <div class="periodo-automatico periodo-automatico-completo">
-              <i class="fa-solid fa-calendar-check"></i>
-
-              <div>
-                <strong>Semana en curso</strong>
-                <span>
-                  No necesita seleccionar una fecha; el periodo se calculó
-                  automáticamente.
-                </span>
-              </div>
-            </div>
-            }
           </div>
 
           @if (tramoPrevisto(); as tramo) {
@@ -177,47 +95,21 @@
             <i class="fa-solid fa-calendar-check"></i>
 
             <div>
-              <span>
-                Semana {{ tramo.numeroSemana }} / {{ tramo.anioSemana }}
-              </span>
-
-              <strong>
-                {{ formatearFecha(tramo.fechaInicioSemana) }} al
-                {{ formatearFecha(tramo.fechaFinSemana) }}
-              </strong>
+              <span>Semana {{ tramo.numeroSemana }} / {{ tramo.anioSemana }}</span>
+              <strong>{{ formatearFecha(tramo.fechaInicioSemana) }} al {{ formatearFecha(tramo.fechaFinSemana)
+                }}</strong>
             </div>
 
             <div>
-              @if (formulario().tipoContenido === 'SOLO_SEMANA') {
-              <span>
-                Tramo que se {{ esActualizacion ? 'reemplazará' : 'integrará' }} en
-                {{ nombreMes(tramo.mesCorte) }}
-              </span>
-
-              <strong>
-                {{ formatearFecha(tramo.fechaInicioTramo) }} al
-                {{ formatearFecha(tramo.fechaFinTramo) }}
-              </strong>
-              } @else {
-              <span>
-                Acumulado que se revisará en
-                {{ nombreMes(tramo.mesCorte) }}
-              </span>
-
-              <strong>
-                {{ formatearFecha(tramo.fechaInicioMesCorte) }} al
-                {{ formatearFecha(tramo.fechaFinTramo) }}
-              </strong>
-              }
+              <span>Tramo que se {{ esActualizacion ? 'reemplazará' : 'integrará' }} en {{ nombreMes(tramo.mesCorte)
+                }}</span>
+              <strong>{{ formatearFecha(tramo.fechaInicioTramo) }} al {{ formatearFecha(tramo.fechaFinTramo) }}</strong>
             </div>
 
             @if (tramo.semanaCortada) {
-            <em>
-              La semana cruza de mes; solo se considerarán los registros del mes donde cae el último día.
-            </em>
+            <em>La semana cruza de mes; solo se considerarán los registros del mes donde cae el último día.</em>
             }
           </div>
-          }
           }
           @if (periodoValido()) {
           <div class="seccion-titulo seccion-archivos">
@@ -549,15 +441,29 @@
     </div>
 
     <div class="botones-confirmacion">
-      <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio()" (click)="abrirAcusePrevio()">
-        @if (cargandoAcusePrevio()) {
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Generando informe...
+      <div class="botones-confirmacion">
+        @if (esActualizacion) {
+        <button type="button" class="btn btn-siiid" [disabled]="cargandoDiferencias()" (click)="revisarDiferencias()">
+          @if (cargandoDiferencias()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Cargando diferencias...
+          } @else {
+          <i class="fa-solid fa-code-compare"></i>
+          {{ advertencias().length > 0 ? 'Aceptar y revisar cambios' : 'Revisar diferencias' }}
+          }
+        </button>
         } @else {
-        <i class="fa-solid fa-file-pdf"></i>
-        Revisar informe previo
+        <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio()" (click)="abrirAcusePrevio()">
+          @if (cargandoAcusePrevio()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Generando informe...
+          } @else {
+          <i class="fa-solid fa-file-pdf"></i>
+          Revisar informe previo
+          }
+        </button>
         }
-      </button>
+      </div>
     </div>
     }
   </section>
@@ -573,6 +479,315 @@
       Se están revisando estructura, catálogos, periodo y modalidades
       configuradas.
     </span>
+  </div>
+</div>
+}
+
+@if (mostrarDiferencias()) {
+<div class="diferencias-modal">
+  <div class="diferencias-header">
+    <span>Revisión de diferencias de actualización</span>
+  </div>
+
+  <div class="diferencias-body">
+    <div class="diferencias-resumen">
+      <div class="diferencia-card">
+        <div class="diferencia-numero">{{ totalDiferenciasCarpetas() }}</div>
+        <div class="diferencia-label">Carpetas con cambios</div>
+      </div>
+
+      <div class="diferencia-card">
+        <div class="diferencia-numero">{{ totalDiferenciasDelitos() }}</div>
+        <div class="diferencia-label">Delitos con cambios</div>
+      </div>
+
+      <div class="diferencia-card">
+        <div class="diferencia-numero">{{ totalDiferenciasVictimas() }}</div>
+        <div class="diferencia-label">Víctimas con cambios</div>
+      </div>
+
+      <div class="diferencia-card diferencia-total">
+        <div class="diferencia-numero">{{ totalDiferencias() }}</div>
+        <div class="diferencia-label">Total de registros con cambios</div>
+      </div>
+    </div>
+
+    <div class="diferencias-mensaje">
+      Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
+      <strong>OK, continuar al informe previo</strong>.
+    </div>
+
+    <div class="diferencias-grid">
+      <div class="diferencias-section">
+        <div class="diferencias-title">Carpetas</div>
+
+        @for (item of diferencias()?.carpetas ?? []; track $index) {
+        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
+          <div class="diferencia-registro-head">
+            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+            <div class="identificadores">
+              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
+              id) {
+              <span>{{ id }}</span>
+              }
+            </div>
+          </div>
+
+          @if (esMovimientoNuevo(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion nuevo-texto">
+            <i class="fa-solid fa-circle-plus"></i>
+            Este registro será agregado a la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se agregará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion eliminado-texto">
+            <i class="fa-solid fa-trash-can"></i>
+            Este registro será eliminado de la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se eliminará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo modificado</th>
+                <th>Valor anterior</th>
+                <th>Valor nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+        } @empty {
+        <div class="sin-diferencias">Sin diferencias en carpetas.</div>
+        }
+      </div>
+
+      <div class="diferencias-section">
+        <div class="diferencias-title">Delitos</div>
+
+        @for (item of diferencias()?.delitos ?? []; track $index) {
+        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
+          <div class="diferencia-registro-head">
+            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+            <div class="identificadores">
+              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
+              id) {
+              <span>{{ id }}</span>
+              }
+            </div>
+          </div>
+
+          @if (esMovimientoNuevo(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion nuevo-texto">
+            <i class="fa-solid fa-circle-plus"></i>
+            Este registro será agregado a la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se agregará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion eliminado-texto">
+            <i class="fa-solid fa-trash-can"></i>
+            Este registro será eliminado de la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se eliminará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo modificado</th>
+                <th>Valor anterior</th>
+                <th>Valor nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+        } @empty {
+        <div class="sin-diferencias">Sin diferencias en delitos.</div>
+        }
+      </div>
+
+      <div class="diferencias-section">
+        <div class="diferencias-title">Víctimas</div>
+
+        @for (item of diferencias()?.victimas ?? []; track $index) {
+        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
+          <div class="diferencia-registro-head">
+            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+            <div class="identificadores">
+              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
+              id) {
+              <span>{{ id }}</span>
+              }
+            </div>
+          </div>
+
+          @if (esMovimientoNuevo(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion nuevo-texto">
+            <i class="fa-solid fa-circle-plus"></i>
+            Este registro será agregado a la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se agregará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+          <div class="movimiento-descripcion eliminado-texto">
+            <i class="fa-solid fa-trash-can"></i>
+            Este registro será eliminado de la información activa.
+          </div>
+
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Valor que se eliminará</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <table class="table table-sm table-bordered diferencias-campos-table">
+            <thead>
+              <tr>
+                <th>Campo modificado</th>
+                <th>Valor anterior</th>
+                <th>Valor nuevo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (campo of item.camposModificados; track $index) {
+              <tr>
+                <td class="campo-nombre">{{ campo.campo }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+          }
+        </div>
+        } @empty {
+        <div class="sin-diferencias">Sin diferencias en víctimas.</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="diferencias-actions diferencias-actions-ok">
+    <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
+      OK, continuar al informe previo
+    </button>
   </div>
 </div>
 }
@@ -613,6 +828,12 @@ estado() === 'CONFIRMADO'
       <i class="fa-solid fa-xmark"></i>
       Rechazar
     </button>
+
+    @if (esActualizacion && diferencias()) {
+    <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
+      Volver a diferencias
+    </button>
+    }
 
     <button type="button" class="btn-aceptar" (click)="confirmarCarga(true)">
       <i class="fa-solid fa-check"></i>

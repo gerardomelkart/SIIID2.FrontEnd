@@ -4,7 +4,7 @@ import {
   ConfirmarCargaResponse,
 } from './carga.models';
 
-export type TipoContenidoSemanal = 'SOLO_SEMANA' | 'ACUMULADO_MES';
+export type TipoContenidoSemanal = 'SOLO_SEMANA';
 export type TipoCargaSemanal = 'CARGA_INICIAL' | 'ACTUALIZACION';
 
 export interface SemanalCargaPeriodoRequest {
