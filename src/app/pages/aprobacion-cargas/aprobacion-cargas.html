@@ -47,13 +47,62 @@
       <table class="table table-sm aprobacion-table">
         <thead>
           <tr>
-            <th>Entidad federativa</th>
-            <th>Periodo</th>
-            <th>Tipo</th>
-            <th>Usuario que envió</th>
-            <th>Fecha de validación</th>
-            <th>Registros</th>
-            <th>Advertencias</th>
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'entidad'"
+                (click)="ordenarPor('entidad')">
+                Entidad federativa
+                <i [class]="'fa-solid ' + iconoOrden('entidad')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'periodo'"
+                (click)="ordenarPor('periodo')">
+                Periodo
+                <i [class]="'fa-solid ' + iconoOrden('periodo')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'tipo'"
+                (click)="ordenarPor('tipo')">
+                Tipo
+                <i [class]="'fa-solid ' + iconoOrden('tipo')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'usuario'"
+                (click)="ordenarPor('usuario')">
+                Usuario que envió
+                <i [class]="'fa-solid ' + iconoOrden('usuario')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'fecha'"
+                (click)="ordenarPor('fecha')">
+                Fecha de validación
+                <i [class]="'fa-solid ' + iconoOrden('fecha')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'registros'"
+                (click)="ordenarPor('registros')">
+                Registros
+                <i [class]="'fa-solid ' + iconoOrden('registros')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'advertencias'"
+                (click)="ordenarPor('advertencias')">
+                Advertencias
+                <i [class]="'fa-solid ' + iconoOrden('advertencias')"></i>
+              </button>
+            </th>
+
             <th class="acciones-col">Acciones</th>
           </tr>
         </thead>

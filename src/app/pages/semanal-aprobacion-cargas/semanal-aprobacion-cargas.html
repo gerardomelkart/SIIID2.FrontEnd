@@ -47,14 +47,70 @@
       <table class="table table-sm aprobacion-table semanal-aprobacion-table">
         <thead>
           <tr>
-            <th>Entidad federativa</th>
-            <th>Semana</th>
-            <th>Operación</th>
-            <th>Tramo</th>
-            <th>Usuario que envió</th>
-            <th>Fecha de validación</th>
-            <th>Registros</th>
-            <th>Advertencias</th>
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'entidad'"
+                (click)="ordenarPor('entidad')">
+                Entidad federativa
+                <i [class]="'fa-solid ' + iconoOrden('entidad')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'semana'"
+                (click)="ordenarPor('semana')">
+                Semana
+                <i [class]="'fa-solid ' + iconoOrden('semana')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'operacion'"
+                (click)="ordenarPor('operacion')">
+                Operación
+                <i [class]="'fa-solid ' + iconoOrden('operacion')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'tramo'"
+                (click)="ordenarPor('tramo')">
+                Tramo
+                <i [class]="'fa-solid ' + iconoOrden('tramo')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'usuario'"
+                (click)="ordenarPor('usuario')">
+                Usuario que envió
+                <i [class]="'fa-solid ' + iconoOrden('usuario')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'fecha'"
+                (click)="ordenarPor('fecha')">
+                Fecha de validación
+                <i [class]="'fa-solid ' + iconoOrden('fecha')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'registros'"
+                (click)="ordenarPor('registros')">
+                Registros
+                <i [class]="'fa-solid ' + iconoOrden('registros')"></i>
+              </button>
+            </th>
+
+            <th>
+              <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'advertencias'"
+                (click)="ordenarPor('advertencias')">
+                Advertencias
+                <i [class]="'fa-solid ' + iconoOrden('advertencias')"></i>
+              </button>
+            </th>
+
             <th class="acciones-col">Acciones</th>
           </tr>
         </thead>

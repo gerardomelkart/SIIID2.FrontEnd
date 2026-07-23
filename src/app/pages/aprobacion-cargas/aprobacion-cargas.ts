@@ -27,6 +27,16 @@ import {
   obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
 
+type DireccionOrden = 'asc' | 'desc';
+type ColumnaOrdenMensual =
+  | 'entidad'
+  | 'periodo'
+  | 'tipo'
+  | 'usuario'
+  | 'fecha'
+  | 'registros'
+  | 'advertencias';
+
 @Component({
   selector: 'app-aprobacion-cargas',
   imports: [FormsModule],
@@ -43,6 +53,9 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   detalle = signal<CargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
 
+  columnaOrden = signal<ColumnaOrdenMensual>('fecha');
+  direccionOrden = signal<DireccionOrden>('desc');
+
   paginaActual = signal(1);
   readonly tamanioPagina = 10;
 
@@ -57,21 +70,19 @@ export class AprobacionCargas implements OnInit, OnDestroy {
 
   pendientesFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
+    const registros = texto
+      ? this.pendientes().filter(
+          (carga) =>
+            carga.entidadFederativa.toLowerCase().includes(texto) ||
+            carga.codigoReferencia.toLowerCase().includes(texto) ||
+            carga.usuarioCarga.toLowerCase().includes(texto) ||
+            carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
+            this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
+            this.periodoTexto(carga.mesCorte, carga.anioCorte).toLowerCase().includes(texto),
+        )
+      : [...this.pendientes()];
 
-    if (!texto) {
-      return this.pendientes();
-    }
-
-    return this.pendientes().filter((carga) => {
-      return (
-        carga.entidadFederativa.toLowerCase().includes(texto) ||
-        carga.codigoReferencia.toLowerCase().includes(texto) ||
-        carga.usuarioCarga.toLowerCase().includes(texto) ||
-        carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
-        this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
-        this.periodoTexto(carga.mesCorte, carga.anioCorte).toLowerCase().includes(texto)
-      );
-    });
+    return registros.sort((a, b) => this.compararCargas(a, b));
   });
 
   totalPaginas = computed(() =>
@@ -146,6 +157,22 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   buscar(valor: string): void {
     this.busqueda.set(valor);
     this.paginaActual.set(1);
+  }
+
+  ordenarPor(columna: ColumnaOrdenMensual): void {
+    if (this.columnaOrden() === columna)
+      this.direccionOrden.update((direccion) => (direccion === 'asc' ? 'desc' : 'asc'));
+    else {
+      this.columnaOrden.set(columna);
+      this.direccionOrden.set('asc');
+    }
+
+    this.paginaActual.set(1);
+  }
+
+  iconoOrden(columna: ColumnaOrdenMensual): string {
+    if (this.columnaOrden() !== columna) return 'fa-sort';
+    return this.direccionOrden() === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
   }
 
   irPagina(pagina: number): void {
@@ -440,5 +467,55 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
 
     return normalMatch?.[1] ?? '';
+  }
+
+  private compararCargas(
+    a: CargaPendienteAdministracionItem,
+    b: CargaPendienteAdministracionItem,
+  ): number {
+    let resultado = 0;
+
+    switch (this.columnaOrden()) {
+      case 'entidad':
+        resultado = this.compararTexto(a.entidadFederativa, b.entidadFederativa);
+        break;
+      case 'periodo':
+        resultado = a.anioCorte * 100 + a.mesCorte - (b.anioCorte * 100 + b.mesCorte);
+        break;
+      case 'tipo':
+        resultado = this.compararTexto(
+          this.tipoCargaTexto(a.tipoCarga),
+          this.tipoCargaTexto(b.tipoCarga),
+        );
+        break;
+      case 'usuario':
+        resultado = this.compararTexto(this.usuarioTexto(a), this.usuarioTexto(b));
+        break;
+      case 'fecha':
+        resultado = this.fechaOrden(a.fechaValidacion) - this.fechaOrden(b.fechaValidacion);
+        break;
+      case 'registros':
+        resultado =
+          a.totalCarpetas +
+          a.totalDelitos +
+          a.totalVictimas -
+          (b.totalCarpetas + b.totalDelitos + b.totalVictimas);
+        break;
+      case 'advertencias':
+        resultado = a.totalAdvertencias - b.totalAdvertencias;
+        break;
+    }
+
+    if (resultado === 0) resultado = a.idCarga - b.idCarga;
+    return this.direccionOrden() === 'asc' ? resultado : -resultado;
+  }
+
+  private compararTexto(a: string, b: string): number {
+    return (a ?? '').localeCompare(b ?? '', 'es', { sensitivity: 'base', numeric: true });
+  }
+
+  private fechaOrden(fecha: string): number {
+    const valor = new Date(fecha).getTime();
+    return Number.isNaN(valor) ? 0 : valor;
   }
 }
