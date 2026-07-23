@@ -6,7 +6,8 @@ import {
   ConfirmarCargaResponse,
   SemanalCargaPeriodoRequest,
   SemanalCargaValidacionResponse,
-  SemanalSemanaActualizacionResponse,
+  SemanalSemanaDisponibilidadResponse,
+  TipoCargaSemanal,
 } from '../models/semanal-carga.models';
 import { ArchivosCargaSeleccionados } from '../types/archivo-carga.types';
 import { ActualizacionDiferenciasResponse } from '../models/actualizacion.models';
@@ -35,11 +36,12 @@ export class SemanalCargaService {
     return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
   }
 
-  validarSemanaActualizacion(anioSemana: number, numeroSemana: number) {
-    return this.http.get<SemanalSemanaActualizacionResponse>(
-      `${this.apiUrl}/actualizacion/disponibilidad`,
+  validarSemana(tipoCarga: TipoCargaSemanal, anioSemana: number, numeroSemana: number) {
+    return this.http.get<SemanalSemanaDisponibilidadResponse>(
+      `${this.apiUrl}/semana/disponibilidad`,
       {
         params: {
+          tipoCarga,
           anioSemana: anioSemana.toString(),
           numeroSemana: numeroSemana.toString(),
         },

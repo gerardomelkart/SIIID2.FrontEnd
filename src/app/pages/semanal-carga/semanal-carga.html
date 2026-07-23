@@ -18,7 +18,7 @@
     @if (mostrandoResultado()) {
     <div class="referencia-carga">
       <span>Referencia</span>
-      <strong>{{ respuesta()?.codigoReferencia }}</strong>
+      <strong>{{ codigoReferenciaOperacion() }}</strong>
     </div>
     }
   </div>
@@ -111,19 +111,73 @@
             }
           </div>
           }
-          @if (esActualizacion && validandoSemanaActualizacion()) {
+          @if (validandoSemana()) {
           <div class="alert alert-info mb-0 mt-3">
             <i class="fa-solid fa-spinner fa-spin"></i>
-            Comprobando si la semana tiene información confirmada disponible...
+            Comprobando la disponibilidad de la semana seleccionada...
           </div>
           }
 
-          @if (esActualizacion && errorSemanaActualizacion()) {
+          @if (errorSemana()) {
           <div class="alert alert-danger mb-0 mt-3">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            {{ errorSemanaActualizacion() }}
+            {{ errorSemana() }}
           </div>
           }
+
+          @if (estadoSemana(); as disponibilidad) {
+          @if (!disponibilidad.disponible) {
+          <div class="alert alert-warning mb-0 mt-3">
+            <div>
+              <strong>
+                @if (disponibilidad.puedeResolverPendiente) {
+                Operación pendiente por resolver
+                } @else if (disponibilidad.estadoPendiente === 'PENDIENTE_APROBACION') {
+                Operación en revisión administrativa
+                } @else if (disponibilidad.tieneCargaConfirmada) {
+                Semana confirmada previamente
+                } @else {
+                Semana no disponible
+                }
+              </strong>
+
+              <div>{{ disponibilidad.mensaje }}</div>
+
+              @if (disponibilidad.codigoReferenciaPendiente) {
+              <div class="mt-1">
+                Referencia:
+                <strong>{{ disponibilidad.codigoReferenciaPendiente }}</strong>
+              </div>
+              }
+            </div>
+
+            @if (disponibilidad.puedeResolverPendiente || disponibilidad.debeUsarActualizacion) {
+            <div class="mt-3 d-flex gap-2">
+              @if (disponibilidad.puedeResolverPendiente) {
+              <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
+                (click)="resolverPendiente()">
+                @if (cargandoAcusePrevio() || cargandoDiferencias()) {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Abriendo...
+                } @else {
+                <i class="fa-solid fa-file-signature"></i>
+                Resolver pendiente
+                }
+              </button>
+              }
+
+              @if (disponibilidad.debeUsarActualizacion) {
+              <button type="button" class="btn btn-siiid" (click)="irAActualizacionSemanal()">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                Ir a actualización semanal
+              </button>
+              }
+            </div>
+            }
+          </div>
+          }
+          }
+
           @if (periodoListoParaArchivos()) {
           <div class="seccion-titulo seccion-archivos">
             <div>

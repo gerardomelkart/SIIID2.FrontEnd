@@ -69,7 +69,6 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         carga.usuarioCarga.toLowerCase().includes(texto) ||
         carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
         this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
-        this.tipoContenidoTexto(carga.tipoContenido).toLowerCase().includes(texto) ||
         this.semanaTexto(carga).toLowerCase().includes(texto) ||
         this.periodoCorteTexto(carga).toLowerCase().includes(texto)
       );

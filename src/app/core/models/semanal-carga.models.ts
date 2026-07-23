@@ -40,13 +40,19 @@ export interface SemanalCargaValidacionResponse extends CargaValidacionResponse 
   totalVictimasExcluidas: number;
 }
 
-export interface SemanalSemanaActualizacionResponse {
+export interface SemanalSemanaDisponibilidadResponse {
   esValido: boolean;
   disponible: boolean;
+  tieneCargaConfirmada: boolean;
+  existeOperacionPendiente: boolean;
   codigo: string;
   mensaje: string;
   codigoReferenciaPendiente: string | null;
   estadoPendiente: string | null;
+  tipoCargaPendiente: TipoCargaSemanal | null;
+  pendientePropia: boolean;
+  puedeResolverPendiente: boolean;
+  debeUsarActualizacion: boolean;
 }
 
 export type { ConfirmarCargaRequest, ConfirmarCargaResponse };

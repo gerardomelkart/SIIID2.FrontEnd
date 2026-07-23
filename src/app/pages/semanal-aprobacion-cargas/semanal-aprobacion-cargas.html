@@ -50,12 +50,10 @@
             <th>Entidad federativa</th>
             <th>Semana</th>
             <th>Operación</th>
-            <th>Contenido</th>
-            <th>Tramo integrado</th>
+            <th>Tramo</th>
             <th>Usuario que envió</th>
             <th>Fecha de validación</th>
-            <th>Incluidos</th>
-            <th>Excluidos</th>
+            <th>Registros</th>
             <th>Advertencias</th>
             <th class="acciones-col">Acciones</th>
           </tr>
@@ -76,12 +74,6 @@
             <td>
               <span class="tipo-badge" [class.tipo-actualizacion]="esActualizacion(carga)">
                 {{ tipoCargaTexto(carga.tipoCarga) }}
-              </span>
-            </td>
-
-            <td>
-              <span class="tipo-badge" [class.tipo-acumulado]="carga.tipoContenido === 'ACUMULADO_MES'">
-                {{ tipoContenidoTexto(carga.tipoContenido) }}
               </span>
             </td>
 
@@ -110,14 +102,6 @@
             </td>
 
             <td>
-              <div class="registros-desglose excluidos-desglose" [class.sin-excluidos]="!tieneExcluidos(carga)">
-                <div><span>Carpetas</span><strong>{{ carga.totalCarpetasExcluidas }}</strong></div>
-                <div><span>Delitos</span><strong>{{ carga.totalDelitosExcluidos }}</strong></div>
-                <div><span>Víctimas</span><strong>{{ carga.totalVictimasExcluidas }}</strong></div>
-              </div>
-            </td>
-
-            <td>
               <span class="advertencias-chip" [class.sin-advertencias]="carga.totalAdvertencias === 0">
                 <i class="fa-solid" [class.fa-triangle-exclamation]="carga.totalAdvertencias > 0"
                   [class.fa-circle-check]="carga.totalAdvertencias === 0"></i>
@@ -139,7 +123,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="11">
+            <td colspan="9">
               <div class="estado-vacio">
                 <i class="fa-solid fa-circle-check"></i>
                 <span>No hay operaciones semanales pendientes que coincidan con la búsqueda.</span>
