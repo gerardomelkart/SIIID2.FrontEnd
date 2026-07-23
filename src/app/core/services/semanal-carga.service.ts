@@ -33,21 +33,22 @@ export class SemanalCargaService {
     formData.append('mesCorte', periodo.mesCorte.toString());
     formData.append('anioCorte', periodo.anioCorte.toString());
 
+    if (periodo.idEntidadFederativa !== null && periodo.idEntidadFederativa !== undefined) formData.append('idEntidadFederativa', periodo.idEntidadFederativa.toString());
+
     return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
   }
 
-  validarSemana(tipoCarga: TipoCargaSemanal, anioSemana: number, numeroSemana: number) {
-    return this.http.get<SemanalSemanaDisponibilidadResponse>(
-      `${this.apiUrl}/semana/disponibilidad`,
-      {
-        params: {
-          tipoCarga,
-          anioSemana: anioSemana.toString(),
-          numeroSemana: numeroSemana.toString(),
-        },
-      },
-    );
-  }
+validarSemana(tipoCarga: TipoCargaSemanal, anioSemana: number, numeroSemana: number, idEntidadFederativa: number | null = null) {
+  const params: Record<string, string> = {
+    tipoCarga,
+    anioSemana: anioSemana.toString(),
+    numeroSemana: numeroSemana.toString(),
+  };
+
+  if (idEntidadFederativa !== null) params['idEntidadFederativa'] = idEntidadFederativa.toString();
+
+  return this.http.get<SemanalSemanaDisponibilidadResponse>(`${this.apiUrl}/semana/disponibilidad`, { params });
+}
 
   obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 100) {
     return this.http.get<ActualizacionDiferenciasResponse>(

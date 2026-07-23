@@ -209,6 +209,14 @@
   gap: 12px;
 }
 
+.periodo-grid.periodo-grid-entidad {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.periodo-grid.periodo-grid-entidad .periodo-automatico {
+  grid-column: 1 / -1;
+}
+
 .campo-periodo span {
   display: block;
   margin-bottom: 5px;
@@ -217,7 +225,8 @@
   font-weight: 900;
 }
 
-.campo-periodo .form-control {
+.campo-periodo .form-control:focus,
+.campo-periodo .form-select:focus {
   min-height: 46px;
   border-radius: 0;
   font-size: 14px;

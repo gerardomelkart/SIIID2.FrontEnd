@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CargaValidacionError, CargaValidacionResumenItem } from '../../core/models/carga.models';
@@ -28,6 +28,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { catchError, finalize, map, of, switchMap } from 'rxjs';
 import { ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
+import { CatalogosService } from '../../core/services/catalogos.service';
+import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
+import { SessionService } from '../../core/services/session.service';
+import { ROLES } from '../../core/constants/roles.constants';
 
 type EstadoCargaSemanal =
   | 'CAPTURA'
@@ -66,8 +70,10 @@ interface VistaTramoSemanal {
     './semanal-carga.css',
   ],
 })
-export class SemanalCarga {
+export class SemanalCarga implements OnInit {
   private readonly semanalCargaService = inject(SemanalCargaService);
+  private readonly sessionService = inject(SessionService);
+  private readonly catalogosService = inject(CatalogosService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
@@ -76,6 +82,14 @@ export class SemanalCarga {
     (this.activatedRoute.snapshot.data['tipoCarga'] as TipoCargaSemanal | undefined) ??
     'CARGA_INICIAL';
   readonly esActualizacion = this.tipoCarga === 'ACTUALIZACION';
+
+  readonly usuario = this.sessionService.usuario;
+  readonly esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+  readonly mostrarSelectorEntidad = computed(() => this.esActualizacion && this.esSuperUsuario());
+
+  idEntidadFederativa = signal('');
+  entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
+  cargandoEntidades = signal(false);
 
   readonly meses = [
     { valor: 1, nombre: 'Enero' },
@@ -159,10 +173,19 @@ export class SemanalCarga {
   tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
   periodoValido = computed(() => this.tramoPrevisto() !== null);
 
-  periodoListoParaArchivos = computed(() => this.periodoValido() && this.estadoSemana()?.disponible === true);
-  codigoReferenciaOperacion = computed(() => this.estadoSemana()?.codigoReferenciaPendiente?.trim() || this.respuesta()?.codigoReferencia?.trim() || '');
+  periodoListoParaArchivos = computed(
+    () => this.periodoValido() && this.estadoSemana()?.disponible === true,
+  );
+  codigoReferenciaOperacion = computed(
+    () =>
+      this.estadoSemana()?.codigoReferenciaPendiente?.trim() ||
+      this.respuesta()?.codigoReferencia?.trim() ||
+      '',
+  );
   puedeResolverPendiente = computed(() => this.estadoSemana()?.puedeResolverPendiente === true);
-  debeUsarActualizacion = computed(() => !this.esActualizacion && this.estadoSemana()?.debeUsarActualizacion === true);
+  debeUsarActualizacion = computed(
+    () => !this.esActualizacion && this.estadoSemana()?.debeUsarActualizacion === true,
+  );
 
   puedeValidar = computed(
     () =>
@@ -199,22 +222,41 @@ export class SemanalCarga {
     ...this.advertencias(),
   ]);
 
-actualizarCampo<K extends keyof SemanalCargaFormulario>(campo: K, valor: SemanalCargaFormulario[K]): void {
-  this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
-  this.limpiarResultado();
+  ngOnInit(): void {
+    if (this.mostrarSelectorEntidad()) this.cargarEntidadesFederativas();
+  }
 
-  if (campo !== 'semanaSeleccionada') return;
+  onEntidadChange(valor: string): void {
+    this.idEntidadFederativa.set(valor);
+    this.solicitudValidacionSemana++;
+    this.validandoSemana.set(false);
+    this.estadoSemana.set(null);
+    this.errorSemana.set('');
+    this.archivos.set(crearArchivosCargaVacios());
+    this.formulario.update((actual) => ({ ...actual, semanaSeleccionada: '' }));
+    this.limpiarResultado();
+  }
 
-  this.solicitudValidacionSemana++;
-  this.validandoSemana.set(false);
-  this.estadoSemana.set(null);
-  this.errorSemana.set('');
-  this.archivos.set(crearArchivosCargaVacios());
+  actualizarCampo<K extends keyof SemanalCargaFormulario>(
+    campo: K,
+    valor: SemanalCargaFormulario[K],
+  ): void {
+    this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
+    this.limpiarResultado();
 
-  const tramo = this.tramoPrevisto();
+    if (campo !== 'semanaSeleccionada') return;
 
-  if (tramo) this.validarDisponibilidadSemana(tramo, this.solicitudValidacionSemana);
-}
+    this.solicitudValidacionSemana++;
+    this.validandoSemana.set(false);
+    this.estadoSemana.set(null);
+    this.errorSemana.set('');
+    this.archivos.set(crearArchivosCargaVacios());
+
+    const tramo = this.tramoPrevisto();
+
+    if (this.mostrarSelectorEntidad() && !this.idEntidadFederativa()) return;
+    if (tramo) this.validarDisponibilidadSemana(tramo, this.solicitudValidacionSemana);
+  }
 
   seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
     const archivo = obtenerArchivoDesdeEvento(event);
@@ -291,6 +333,9 @@ actualizarCampo<K extends keyof SemanalCargaFormulario>(campo: K, valor: Semanal
       fechaInicioSemana: this.formatearFechaApi(tramo.fechaInicioSemana),
       mesCorte: tramo.mesCorte,
       anioCorte: tramo.anioCorte,
+      idEntidadFederativa: this.mostrarSelectorEntidad()
+        ? Number(this.idEntidadFederativa())
+        : null,
     };
 
     this.estado.set('VALIDANDO');
@@ -332,37 +377,37 @@ actualizarCampo<K extends keyof SemanalCargaFormulario>(campo: K, valor: Semanal
   }
 
   resolverPendiente(): void {
-  const disponibilidad = this.estadoSemana();
-  const codigoReferencia = this.codigoReferenciaOperacion();
+    const disponibilidad = this.estadoSemana();
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
-  if (!disponibilidad?.puedeResolverPendiente || !codigoReferencia) return;
+    if (!disponibilidad?.puedeResolverPendiente || !codigoReferencia) return;
 
-  if (disponibilidad.tipoCargaPendiente === 'ACTUALIZACION') {
-    this.prepararRevisionDiferencias(codigoReferencia);
-    return;
+    if (disponibilidad.tipoCargaPendiente === 'ACTUALIZACION') {
+      this.prepararRevisionDiferencias(codigoReferencia);
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
   }
 
-  this.abrirAcusePrevio(codigoReferencia);
-}
+  irAActualizacionSemanal(): void {
+    void this.router.navigateByUrl('/semanal/actualizacion');
+  }
 
-irAActualizacionSemanal(): void {
-  void this.router.navigateByUrl('/semanal/actualizacion');
-}
+  revisarDiferencias(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
-revisarDiferencias(): void {
-  const codigoReferencia = this.codigoReferenciaOperacion();
+    if (!this.esActualizacion || !codigoReferencia) return;
 
-  if (!this.esActualizacion || !codigoReferencia) return;
+    this.prepararRevisionDiferencias(codigoReferencia);
+  }
+  continuarAAcusePrevio(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
-  this.prepararRevisionDiferencias(codigoReferencia);
-}
-continuarAAcusePrevio(): void {
-  const codigoReferencia = this.codigoReferenciaOperacion();
+    if (!codigoReferencia) return;
 
-  if (!codigoReferencia) return;
-
-  this.abrirAcusePrevio(codigoReferencia);
-}
+    this.abrirAcusePrevio(codigoReferencia);
+  }
 
   volverADiferencias(): void {
     if (this.diferencias()) this.estado.set('MOSTRANDO_DIFERENCIAS');
@@ -410,7 +455,7 @@ continuarAAcusePrevio(): void {
     return valor === 'ELIMINADO' || valor === 'BAJA';
   }
 
-    abrirAcusePrevio(codigoReferencia = this.codigoReferenciaOperacion()): void {
+  abrirAcusePrevio(codigoReferencia = this.codigoReferenciaOperacion()): void {
     if (!codigoReferencia || this.cargandoAcusePrevio() || this.estado() === 'CONFIRMANDO') return;
 
     this.cargandoAcusePrevio.set(true);
@@ -491,7 +536,9 @@ continuarAAcusePrevio(): void {
             this.limpiarAcusePrevio();
 
             mostrarExitoInstitucional(
-              this.esActualizacion ? 'Actualización enviada a revisión' : 'Carga enviada a revisión',
+              this.esActualizacion
+                ? 'Actualización enviada a revisión'
+                : 'Carga enviada a revisión',
               confirmacion.resultado.mensaje,
             ).then(() => {
               this.reiniciarFormulario();
@@ -640,31 +687,60 @@ continuarAAcusePrevio(): void {
     return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
   }
 
-private validarDisponibilidadSemana(tramo: VistaTramoSemanal, solicitud: number): void {
-  this.validandoSemana.set(true);
+  private validarDisponibilidadSemana(tramo: VistaTramoSemanal, solicitud: number): void {
+    this.validandoSemana.set(true);
 
-  this.semanalCargaService
-    .validarSemana(this.tipoCarga, tramo.anioSemana, tramo.numeroSemana)
-    .pipe(finalize(() => {
-      if (solicitud === this.solicitudValidacionSemana) this.validandoSemana.set(false);
-    }))
-    .subscribe({
-      next: (response: SemanalSemanaDisponibilidadResponse) => {
-        if (solicitud !== this.solicitudValidacionSemana) return;
+    this.semanalCargaService
+      .validarSemana(
+        this.tipoCarga,
+        tramo.anioSemana,
+        tramo.numeroSemana,
+        this.mostrarSelectorEntidad() ? Number(this.idEntidadFederativa()) : null,
+      )
+      .pipe(
+        finalize(() => {
+          if (solicitud === this.solicitudValidacionSemana) this.validandoSemana.set(false);
+        }),
+      )
+      .subscribe({
+        next: (response: SemanalSemanaDisponibilidadResponse) => {
+          if (solicitud !== this.solicitudValidacionSemana) return;
 
-        this.estadoSemana.set(response);
-        this.errorSemana.set('');
-      },
-      error: (error: unknown) => {
-        if (solicitud !== this.solicitudValidacionSemana) return;
+          this.estadoSemana.set(response);
+          this.errorSemana.set('');
+        },
+        error: (error: unknown) => {
+          if (solicitud !== this.solicitudValidacionSemana) return;
 
-        const response = obtenerErrorPayload<SemanalSemanaDisponibilidadResponse>(error);
+          const response = obtenerErrorPayload<SemanalSemanaDisponibilidadResponse>(error);
 
-        this.estadoSemana.set(response ?? null);
-        this.errorSemana.set(response?.mensaje || obtenerMensajeErrorHttp(error, 'No fue posible comprobar la disponibilidad de la semana.'));
-      },
-    });
-}
+          this.estadoSemana.set(response ?? null);
+          this.errorSemana.set(
+            response?.mensaje ||
+              obtenerMensajeErrorHttp(
+                error,
+                'No fue posible comprobar la disponibilidad de la semana.',
+              ),
+          );
+        },
+      });
+  }
+
+  private cargarEntidadesFederativas(): void {
+    this.cargandoEntidades.set(true);
+    this.errorSemana.set('');
+
+    this.catalogosService
+      .obtenerEntidadesFederativas()
+      .pipe(finalize(() => this.cargandoEntidades.set(false)))
+      .subscribe({
+        next: (response) => this.entidadesFederativas.set(response),
+        error: (error: unknown) =>
+          this.errorSemana.set(
+            obtenerMensajeErrorHttp(error, 'No fue posible cargar las entidades federativas.'),
+          ),
+      });
+  }
 
   private prepararRevisionDiferencias(codigoReferencia: string): void {
     if (this.cargandoDiferencias() || !codigoReferencia?.trim()) return;

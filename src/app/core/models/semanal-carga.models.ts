@@ -15,6 +15,7 @@ export interface SemanalCargaPeriodoRequest {
   fechaInicioSemana: string;
   mesCorte: number;
   anioCorte: number;
+  idEntidadFederativa?: number | null;
 }
 
 export interface SemanalPeriodoCarga {

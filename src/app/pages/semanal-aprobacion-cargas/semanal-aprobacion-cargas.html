@@ -151,8 +151,7 @@
         </button>
 
         @for (pagina of paginas(); track pagina) {
-        <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina"
-          (click)="irPagina(pagina)">
+        <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina" (click)="irPagina(pagina)">
           {{ pagina }}
         </button>
         }
@@ -273,13 +272,6 @@
           <strong>{{ carga.totalAdvertencias }}</strong>
           <span>Advertencias aceptadas</span>
         </div>
-      </div>
-    </div>
-
-    <div class="totales-section-title excluidos-title">
-      <div>
-        <h3>Registros excluidos</h3>
-        <p>Información fuera del tramo o ya confirmada que no se incorporará nuevamente.</p>
       </div>
     </div>
 
@@ -409,8 +401,7 @@
       </button>
     </div>
 
-    <iframe class="acuse-frame" [src]="acuseUrl()"
-      title="Informe previo de operación semanal"></iframe>
+    <iframe class="acuse-frame" [src]="acuseUrl()" title="Informe previo de operación semanal"></iframe>
 
     <div class="acuse-modal-footer">
       <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">Cerrar</button>
