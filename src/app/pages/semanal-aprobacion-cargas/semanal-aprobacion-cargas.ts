@@ -25,6 +25,12 @@ import {
   obtenerMensajeErrorHttp,
   obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
+import {
+  ActualizacionDiferenciaRegistro,
+  ActualizacionDiferenciasResponse,
+} from '../../core/models/actualizacion.models';
+import { SemanalCargaService } from '../../core/services/semanal-carga.service';
+import { catchError, forkJoin, map, of } from 'rxjs';
 
 type DireccionOrden = 'asc' | 'desc';
 type ColumnaOrdenSemanal =
@@ -37,6 +43,12 @@ type ColumnaOrdenSemanal =
   | 'registros'
   | 'advertencias';
 
+interface SeccionDiferenciasAdmin {
+  clave: string;
+  titulo: string;
+  registros: ActualizacionDiferenciaRegistro[];
+}
+
 @Component({
   selector: 'app-semanal-aprobacion-cargas',
   imports: [FormsModule],
@@ -45,6 +57,7 @@ type ColumnaOrdenSemanal =
 })
 export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   private readonly administracionService = inject(SemanalAdministracionCargasService);
+  private readonly semanalCargaService = inject(SemanalCargaService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private acuseObjectUrl: string | null = null;
@@ -52,6 +65,13 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   pendientes = signal<SemanalCargaPendienteAdministracionItem[]>([]);
   detalle = signal<SemanalCargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
+
+  diferenciasPorReferencia = signal<Record<string, ActualizacionDiferenciasResponse>>({});
+  diferenciasDetalle = signal<ActualizacionDiferenciasResponse | null>(null);
+  cargandoDiferenciasDetalle = signal(false);
+  errorDiferenciasDetalle = signal('');
+  private solicitudResumenesDiferencias = 0;
+  private codigoDiferenciasDetalle = '';
 
   columnaOrden = signal<ColumnaOrdenSemanal>('fecha');
   direccionOrden = signal<DireccionOrden>('desc');
@@ -115,6 +135,18 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     );
   });
 
+  seccionesDiferenciasDetalle = computed<SeccionDiferenciasAdmin[]>(() => {
+    const diferencias = this.diferenciasDetalle();
+
+    if (!diferencias) return [];
+
+    return [
+      { clave: 'carpetas', titulo: 'Carpetas', registros: diferencias.carpetas },
+      { clave: 'delitos', titulo: 'Delitos', registros: diferencias.delitos },
+      { clave: 'victimas', titulo: 'Víctimas', registros: diferencias.victimas },
+    ];
+  });
+
   ngOnInit(): void {
     this.cargarPendientes();
   }
@@ -124,6 +156,8 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   cargarPendientes(): void {
+    this.solicitudResumenesDiferencias++;
+    this.diferenciasPorReferencia.set({});
     this.cargando.set(true);
 
     this.administracionService.obtenerPendientes().subscribe({
@@ -131,6 +165,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         const registros = response.registros ?? [];
 
         this.pendientes.set(registros);
+        this.cargarResumenesDiferencias(registros);
 
         if (this.paginaActual() > this.totalPaginas()) {
           this.paginaActual.set(this.totalPaginas());
@@ -191,6 +226,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.administracionService.obtenerDetalle(codigoReferencia).subscribe({
       next: (response) => {
         this.detalle.set(response.detalle);
+        this.diferenciasDetalle.set(null);
+        this.errorDiferenciasDetalle.set('');
+
+        if (this.esActualizacion(response.detalle))
+          this.cargarDiferenciasDetalle(response.detalle.codigoReferencia);
         this.cargandoDetalle.set(null);
         this.cdr.detectChanges();
 
@@ -217,6 +257,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   cerrarDetalle(): void {
     this.detalle.set(null);
     this.cerrarAcuse();
+    this.diferenciasDetalle.set(null);
+    this.cargandoDiferenciasDetalle.set(false);
+    this.errorDiferenciasDetalle.set('');
+    this.codigoDiferenciasDetalle = '';
   }
 
   descargarArchivos(carga: SemanalCargaPendienteAdministracionItem): void {
@@ -302,6 +346,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
+        this.diferenciasDetalle.set(null);
         this.cerrarAcuse();
         Swal.close();
 
@@ -366,6 +411,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       next: (response) => {
         this.procesando.set(null);
         this.detalle.set(null);
+        this.diferenciasDetalle.set(null);
         this.cerrarAcuse();
 
         mostrarExitoInstitucional(
@@ -556,5 +602,118 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   private fechaOrden(fecha: string): number {
     const valor = new Date(fecha).getTime();
     return Number.isNaN(valor) ? 0 : valor;
+  }
+  diferenciasResumen(codigoReferencia: string): ActualizacionDiferenciasResponse | null {
+    return this.diferenciasPorReferencia()[codigoReferencia] ?? null;
+  }
+
+  obtenerIdentificadoresDesdeBackend(
+    campoIdentificador: string,
+    identificadorFiscalia: string,
+  ): string[] {
+    const campos = campoIdentificador
+      .split('+')
+      .map((x) => x.trim().toUpperCase())
+      .filter((x) => x.length > 0);
+    const valores = identificadorFiscalia.split('|').map((x) => x.trim());
+
+    if (campos.length === 0) return [identificadorFiscalia];
+
+    return campos.map((campo, index) => `${campo}: ${valores[index] || '-'}`);
+  }
+
+  normalizarValorDiferencia(valor: string | null): string {
+    return valor === null || valor === undefined || valor === '' ? 'Sin información' : valor;
+  }
+
+  normalizarTipoMovimiento(tipoMovimiento: string): string {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+
+    if (valor === 'NUEVO') return 'Nuevo';
+    if (valor === 'MODIFICADO') return 'Modificado';
+    if (valor === 'ELIMINADO' || valor === 'BAJA') return 'Eliminado';
+
+    return tipoMovimiento;
+  }
+
+  esMovimientoNuevo(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
+  }
+
+  esMovimientoModificado(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'MODIFICADO';
+  }
+
+  esMovimientoEliminado(tipoMovimiento: string): boolean {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+    return valor === 'ELIMINADO' || valor === 'BAJA';
+  }
+
+  private cargarResumenesDiferencias(registros: SemanalCargaPendienteAdministracionItem[]): void {
+    const solicitud = ++this.solicitudResumenesDiferencias;
+    const actualizaciones = registros.filter((carga) => this.esActualizacion(carga));
+
+    if (actualizaciones.length === 0) {
+      this.diferenciasPorReferencia.set({});
+      return;
+    }
+
+    forkJoin(
+      actualizaciones.map((carga) =>
+        this.semanalCargaService.obtenerDiferencias(carga.codigoReferencia, 1).pipe(
+          map((response) => ({ codigoReferencia: carga.codigoReferencia, response })),
+          catchError(() =>
+            of({
+              codigoReferencia: carga.codigoReferencia,
+              response: null as ActualizacionDiferenciasResponse | null,
+            }),
+          ),
+        ),
+      ),
+    ).subscribe((resultados) => {
+      if (solicitud !== this.solicitudResumenesDiferencias) return;
+
+      const mapa: Record<string, ActualizacionDiferenciasResponse> = {};
+
+      for (const resultado of resultados) {
+        if (resultado.response?.esValido) mapa[resultado.codigoReferencia] = resultado.response;
+      }
+
+      this.diferenciasPorReferencia.set(mapa);
+    });
+  }
+
+  private cargarDiferenciasDetalle(codigoReferencia: string): void {
+    this.codigoDiferenciasDetalle = codigoReferencia;
+    this.cargandoDiferenciasDetalle.set(true);
+    this.errorDiferenciasDetalle.set('');
+
+    this.semanalCargaService.obtenerDiferencias(codigoReferencia, 100).subscribe({
+      next: (response) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+
+        if (!response.esValido) {
+          this.errorDiferenciasDetalle.set(
+            response.mensaje || 'No fue posible consultar las diferencias.',
+          );
+          return;
+        }
+
+        this.diferenciasDetalle.set(response);
+      },
+      error: (error: unknown) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+        this.errorDiferenciasDetalle.set(
+          obtenerMensajeErrorHttp(
+            error,
+            'No fue posible consultar las diferencias de la actualización semanal.',
+          ),
+        );
+      },
+    });
   }
 }

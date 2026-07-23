@@ -154,6 +154,31 @@
                 <div><span>Carpetas</span><strong>{{ carga.totalCarpetasIncluidas }}</strong></div>
                 <div><span>Delitos</span><strong>{{ carga.totalDelitosIncluidos }}</strong></div>
                 <div><span>Víctimas</span><strong>{{ carga.totalVictimasIncluidas }}</strong></div>
+                @if (esActualizacion(carga)) {
+                @if (diferenciasResumen(carga.codigoReferencia); as diferencias) {
+                <div class="registros-cambios-separador"></div>
+
+                <div class="movimiento-resumen movimiento-nuevo">
+                  <span>Nuevos</span>
+                  <strong>{{ diferencias.resumenTotal.nuevos }}</strong>
+                </div>
+
+                <div class="movimiento-resumen movimiento-modificado">
+                  <span>Modificados</span>
+                  <strong>{{ diferencias.resumenTotal.modificados }}</strong>
+                </div>
+
+                <div class="movimiento-resumen movimiento-eliminado">
+                  <span>Eliminados</span>
+                  <strong>{{ diferencias.resumenTotal.eliminados }}</strong>
+                </div>
+                } @else {
+                <div class="registros-cambios-cargando">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  Calculando cambios...
+                </div>
+                }
+                }
               </div>
             </td>
 
@@ -330,6 +355,138 @@
         </div>
       </div>
     </div>
+
+    @if (esActualizacion(carga)) {
+    <section class="cambios-admin-section">
+      <div class="cambios-admin-title">
+        <div>
+          <h3>Resumen de cambios</h3>
+          <p>Comparación entre la información confirmada y la nueva versión enviada.</p>
+        </div>
+      </div>
+
+      @if (cargandoDiferenciasDetalle()) {
+      <div class="cambios-admin-cargando">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Consultando diferencias...
+      </div>
+      } @else if (errorDiferenciasDetalle()) {
+      <div class="alert alert-warning mb-0">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ errorDiferenciasDetalle() }}
+      </div>
+      } @else if (diferenciasDetalle(); as diferencias) {
+      <div class="table-responsive">
+        <table class="table table-sm resumen-cambios-table">
+          <thead>
+            <tr>
+              <th>Tipo de registro</th>
+              <th>Nuevos</th>
+              <th>Modificados</th>
+              <th>Eliminados</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <th>Carpetas</th>
+              <td>{{ diferencias.resumenCarpetas.nuevos }}</td>
+              <td>{{ diferencias.resumenCarpetas.modificados }}</td>
+              <td>{{ diferencias.resumenCarpetas.eliminados }}</td>
+            </tr>
+
+            <tr>
+              <th>Delitos</th>
+              <td>{{ diferencias.resumenDelitos.nuevos }}</td>
+              <td>{{ diferencias.resumenDelitos.modificados }}</td>
+              <td>{{ diferencias.resumenDelitos.eliminados }}</td>
+            </tr>
+
+            <tr>
+              <th>Víctimas</th>
+              <td>{{ diferencias.resumenVictimas.nuevos }}</td>
+              <td>{{ diferencias.resumenVictimas.modificados }}</td>
+              <td>{{ diferencias.resumenVictimas.eliminados }}</td>
+            </tr>
+          </tbody>
+
+          <tfoot>
+            <tr>
+              <th>Total</th>
+              <th>{{ diferencias.resumenTotal.nuevos }}</th>
+              <th>{{ diferencias.resumenTotal.modificados }}</th>
+              <th>{{ diferencias.resumenTotal.eliminados }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      @if (diferencias.detalleLimitado) {
+      <div class="alert alert-info mt-3 mb-0">
+        Se muestran como máximo {{ diferencias.limitePorSeccion }} registros de cada tipo. Los conteos del resumen sí
+        corresponden al total completo.
+      </div>
+      }
+
+      <div class="diferencias-admin-grid">
+        @for (seccion of seccionesDiferenciasDetalle(); track seccion.clave) {
+        <section class="diferencias-admin-seccion">
+          <div class="diferencias-admin-seccion-title">
+            <h4>{{ seccion.titulo }}</h4>
+            <span>{{ seccion.registros.length }} mostrados</span>
+          </div>
+
+          @for (item of seccion.registros; track $index) {
+          <article class="diferencia-admin-registro"
+            [class.movimiento-nuevo-card]="esMovimientoNuevo(item.tipoMovimiento)"
+            [class.movimiento-modificado-card]="esMovimientoModificado(item.tipoMovimiento)"
+            [class.movimiento-eliminado-card]="esMovimientoEliminado(item.tipoMovimiento)">
+            <div class="diferencia-admin-registro-head">
+              <span class="movimiento-admin-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+              <div class="identificadores-admin">
+                @for (identificador of obtenerIdentificadoresDesdeBackend(item.campoIdentificador,
+                item.identificadorFiscalia); track identificador) {
+                <span>{{ identificador }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered diferencias-admin-table">
+                <thead>
+                  <tr>
+                    <th>Campo</th>
+                    <th>Valor anterior</th>
+                    <th>Valor nuevo</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (campo of item.camposModificados; track $index) {
+                  <tr>
+                    <td class="campo-admin-nombre">{{ campo.campo }}</td>
+                    <td>{{ esMovimientoNuevo(item.tipoMovimiento) ? '—' : normalizarValorDiferencia(campo.valorAnterior)
+                      }}</td>
+                    <td>{{ esMovimientoEliminado(item.tipoMovimiento) ? '—' :
+                      normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </article>
+          } @empty {
+          <div class="sin-diferencias-admin">
+            No se detectaron cambios en {{ seccion.titulo.toLowerCase() }}.
+          </div>
+          }
+        </section>
+        }
+      </div>
+      }
+    </section>
+    }
 
     <div class="descargas-row">
       <button type="button" class="btn-descarga btn-zip" [disabled]="hayOperacionEnCurso()"

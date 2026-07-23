@@ -22,6 +22,12 @@ export interface ActualizacionAnioDisponibleItem {
   meses: ActualizacionMesDisponibleItem[];
 }
 
+export interface ActualizacionDiferenciasResumen {
+  nuevos: number;
+  modificados: number;
+  eliminados: number;
+}
+
 export interface ActualizacionDiferenciasResponse {
   esValido: boolean;
   codigoReferencia: string;
@@ -33,6 +39,11 @@ export interface ActualizacionDiferenciasResponse {
   totalDiferencias: number;
   limitePorSeccion: number;
   detalleLimitado: boolean;
+
+  resumenCarpetas: ActualizacionDiferenciasResumen;
+  resumenDelitos: ActualizacionDiferenciasResumen;
+  resumenVictimas: ActualizacionDiferenciasResumen;
+  resumenTotal: ActualizacionDiferenciasResumen;
 
   carpetas: ActualizacionDiferenciaRegistro[];
   delitos: ActualizacionDiferenciaRegistro[];
