@@ -935,7 +935,7 @@ button:disabled {
   color: #fff;
 }
 
-#detalle-carga,
-#detalle-carga-semanal {
-  scroll-margin-top: 24px;
+#resolucion-carga,
+#resolucion-carga-semanal {
+  scroll-margin-bottom: 20px;
 }

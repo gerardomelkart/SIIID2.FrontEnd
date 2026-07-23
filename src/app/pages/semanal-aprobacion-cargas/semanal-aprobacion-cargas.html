@@ -579,7 +579,7 @@
       }
     </div>
 
-    <div class="resolucion-row">
+    <div id="resolucion-carga-semanal" class="resolucion-row">
       <button type="button" class="btn-rechazar" [disabled]="hayOperacionEnCurso()" (click)="rechazar(carga)">
         @if (procesando() === carga.codigoReferencia) {
         <i class="fa-solid fa-spinner fa-spin"></i>

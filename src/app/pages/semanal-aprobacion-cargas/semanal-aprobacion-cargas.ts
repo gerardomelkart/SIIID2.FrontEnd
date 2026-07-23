@@ -238,8 +238,8 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         requestAnimationFrame(() =>
           requestAnimationFrame(() =>
             document
-              .getElementById('detalle-carga-semanal')
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+              .getElementById('resolucion-carga-semanal')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
           ),
         );
       },

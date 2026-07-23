@@ -236,8 +236,8 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         requestAnimationFrame(() =>
           requestAnimationFrame(() =>
             document
-              .getElementById('detalle-carga')
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+              .getElementById('resolucion-carga')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
           ),
         );
       },
