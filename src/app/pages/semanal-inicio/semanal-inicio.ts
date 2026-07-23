@@ -19,6 +19,12 @@ export class SemanalInicio {
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
 
+  esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
+
+  puedeConsultarEnvios = computed(
+    () => this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta(),
+  );
+
   nombreUsuario = computed(() => {
     return this.usuario()?.nombre || this.usuario()?.usuario || 'Usuario';
   });
@@ -34,15 +40,11 @@ export class SemanalInicio {
   });
 
   puedeCargar = computed(
-    () =>
-      (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
-      this.habilitaCarga(),
+    () => (this.esSuperUsuario() || this.esEnlaceEstatal()) && this.habilitaCarga(),
   );
 
   puedeActualizar = computed(
-    () =>
-      (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
-      this.habilitaModificacion(),
+    () => (this.esSuperUsuario() || this.esEnlaceEstatal()) && this.habilitaModificacion(),
   );
 
   puedeAdministrarUsuarios = computed(() => this.esSuperUsuario());

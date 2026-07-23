@@ -38,7 +38,7 @@
         }
       </div>
 
-      <div class="status-label">Carga semanal y acumulado</div>
+      <div class="status-label">Carga semanal</div>
     </div>
 
     <div class="status-card" [class.status-card-activo]="habilitaModificacion()"
@@ -78,7 +78,7 @@
 
         <div>
           <strong>Integrar información</strong>
-          <span>Carga semanal y acumulado mensual de incidencia delictiva.</span>
+          <span>Carga puntual de información correspondiente a una semana.</span>
         </div>
       </a>
       } @else {
@@ -100,7 +100,20 @@
       <div class="quick-placeholder" aria-hidden="true"></div>
       }
 
+      @if (puedeConsultarEnvios()) {
+      <a class="quick-link" routerLink="/semanal/informes/envios">
+        <div class="quick-icon">
+          <i class="fa-solid fa-paper-plane"></i>
+        </div>
+
+        <div>
+          <strong>Consultar envíos</strong>
+          <span>Histórico de operaciones semanales, acuses, archivos y resoluciones.</span>
+        </div>
+      </a>
+      } @else {
       <div class="quick-placeholder" aria-hidden="true"></div>
+      }
 
       <div class="quick-placeholder" aria-hidden="true"></div>
       <div class="quick-placeholder" aria-hidden="true"></div>

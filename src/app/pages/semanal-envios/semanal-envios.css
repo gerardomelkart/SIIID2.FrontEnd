@@ -1,0 +1,9 @@
+.semanal-envios-table {
+  min-width: 980px;
+}
+
+.motivo-rechazo {
+  z-index: 30;
+  width: min(360px, 80vw);
+  white-space: normal;
+}

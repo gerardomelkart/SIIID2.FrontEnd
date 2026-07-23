@@ -224,6 +224,29 @@ export class SemanalCarga implements OnInit {
 
   ngOnInit(): void {
     if (this.mostrarSelectorEntidad()) this.cargarEntidadesFederativas();
+
+    const codigoReferencia = this.activatedRoute.snapshot.queryParamMap.get('resolver')?.trim();
+
+    if (!codigoReferencia) return;
+
+    this.estadoSemana.set({
+      esValido: true,
+      disponible: false,
+      tieneCargaConfirmada: this.esActualizacion,
+      existeOperacionPendiente: true,
+      codigo: 'SEMANAL_PENDIENTE_DESDE_CONSULTA',
+      mensaje: 'Operación semanal pendiente seleccionada desde la consulta de envíos.',
+      codigoReferenciaPendiente: codigoReferencia,
+      estadoPendiente: this.esActualizacion
+        ? 'VALIDADO_PENDIENTE_ACTUALIZACION'
+        : 'VALIDADO_PENDIENTE',
+      tipoCargaPendiente: this.tipoCarga,
+      pendientePropia: true,
+      puedeResolverPendiente: true,
+      debeUsarActualizacion: false,
+    });
+
+    queueMicrotask(() => this.resolverPendiente());
   }
 
   onEntidadChange(valor: string): void {

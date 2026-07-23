@@ -62,6 +62,31 @@
         }
         }
 
+        @if (puedeConsultarEnvios()) {
+        <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+          <span>
+            <i class="fa-solid fa-bars"></i>
+            Informes
+          </span>
+        </button>
+
+        @if (informesAbiertos()) {
+        <button type="button" class="menu-link menu-button level-2" (click)="toggleInformesIncidencia()">
+          <span>
+            <i class="fa-solid fa-folder"></i>
+            Informes de Incidencia Delictiva
+          </span>
+        </button>
+
+        @if (informesIncidenciaAbierta()) {
+        <a class="menu-link level-3" routerLink="/semanal/informes/envios" routerLinkActive="active">
+          <i class="fa-solid fa-paper-plane"></i>
+          Consultar Envíos
+        </a>
+        }
+        }
+        }
+
         @if (esSuperUsuario()) {
         <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
           <span>

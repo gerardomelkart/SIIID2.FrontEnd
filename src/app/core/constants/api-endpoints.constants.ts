@@ -15,5 +15,6 @@ export const API_ENDPOINTS = {
   semanalDelitos: `${API_BASE_URL}/semanal/delitos`,
   semanalCargas: `${API_BASE_URL}/semanal/cargas`,
   semanalAdministracionCargas: `${API_BASE_URL}/semanal/administracion/cargas-pendientes`,
+  semanalEnvios: `${API_BASE_URL}/semanal/envios`,
 } as const;
 

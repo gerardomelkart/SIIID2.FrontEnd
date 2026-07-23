@@ -19,11 +19,20 @@ export class SemanalLayout {
   cargaAbierta = signal(false);
   incidenciaAbierta = signal(false);
   administracionAbierta = signal(false);
+  informesAbiertos = signal(false);
+  informesIncidenciaAbierta = signal(false);
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
 
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+
+  puedeConsultarEnvios = computed(
+    () =>
+      this.usuario()?.rol === ROLES.SUPER_USUARIO ||
+      this.usuario()?.rol === ROLES.ENLACE_ESTATAL ||
+      this.usuario()?.rol === ROLES.CONSULTA,
+  );
 
   puedeCargar = computed(
     () =>
@@ -44,9 +53,7 @@ export class SemanalLayout {
   );
 
   puedeCambiarAModuloConsolidado = computed(() =>
-    this.sessionService.modulos().some(
-      (modulo) => modulo.clave.toUpperCase() === 'MENSUAL',
-    ),
+    this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'MENSUAL'),
   );
 
   toggleCarga(): void {
@@ -61,8 +68,14 @@ export class SemanalLayout {
     this.incidenciaAbierta.update((valor) => !valor);
   }
 
-  toggleAdministracion(): void {
-    this.administracionAbierta.update((valor) => !valor);
+  toggleInformes(): void {
+    this.informesAbiertos.update((valor) => !valor);
+
+    if (!this.informesAbiertos()) this.informesIncidenciaAbierta.set(false);
+  }
+
+  toggleInformesIncidencia(): void {
+    this.informesIncidenciaAbierta.update((valor) => !valor);
   }
 
   toggleSesion(): void {
