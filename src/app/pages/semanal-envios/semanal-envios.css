@@ -2,6 +2,11 @@
   min-width: 980px;
 }
 
+.corte-selector .corte-selector-controls select {
+  width: 210px !important;
+  min-width: 210px;
+}
+
 .motivo-rechazo {
   z-index: 30;
   width: min(360px, 80vw);
