@@ -410,22 +410,8 @@ continuarAAcusePrevio(): void {
     return valor === 'ELIMINADO' || valor === 'BAJA';
   }
 
-  abrirAcusePrevio(codigoReferencia = this.codigoReferenciaOperacion()): void {
-  if (!codigoReferencia || this.cargandoAcusePrevio() || this.estado() === 'CONFIRMANDO') return;
-
-  this.cargandoAcusePrevio.set(true);
-
-  this.semanalCargaService.descargarAcusePrevio(codigoReferencia).subscribe({
-    const codigoReferencia = this.respuesta()?.codigoReferencia?.trim();
-
-    if (
-      !this.respuestaValida() ||
-      !codigoReferencia ||
-      this.cargandoAcusePrevio() ||
-      this.estado() === 'CONFIRMANDO'
-    ) {
-      return;
-    }
+    abrirAcusePrevio(codigoReferencia = this.codigoReferenciaOperacion()): void {
+    if (!codigoReferencia || this.cargandoAcusePrevio() || this.estado() === 'CONFIRMANDO') return;
 
     this.cargandoAcusePrevio.set(true);
 
@@ -436,7 +422,7 @@ continuarAAcusePrevio(): void {
         this.cargandoAcusePrevio.set(false);
       },
       error: (error: unknown) => {
-        this.estado.set('RESULTADO');
+        this.estado.set(this.respuesta() ? 'RESULTADO' : 'CAPTURA');
         this.cargandoAcusePrevio.set(false);
 
         mostrarError(
@@ -447,10 +433,97 @@ continuarAAcusePrevio(): void {
     });
   }
 
-confirmarCarga(aceptar: boolean): void {
-  const codigoReferencia = this.codigoReferenciaOperacion();
+  confirmarCarga(aceptar: boolean): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
 
-  if (!codigoReferencia || this.estado() === 'CONFIRMANDO') return;
+    if (!codigoReferencia || this.estado() === 'CONFIRMANDO') return;
+
+    this.estado.set('CONFIRMANDO');
+
+    this.semanalCargaService
+      .confirmarCarga({
+        codigoReferencia,
+        aceptar,
+      })
+      .pipe(
+        switchMap((resultado) => {
+          if (!aceptar || resultado.estado === 'PENDIENTE_APROBACION') {
+            return of({
+              resultado,
+              acuseDescargado: false,
+              blob: null as Blob | null,
+            });
+          }
+
+          return this.semanalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
+            map((blob: Blob) => ({
+              resultado,
+              acuseDescargado: true,
+              blob,
+            })),
+            catchError(() =>
+              of({
+                resultado,
+                acuseDescargado: false,
+                blob: null as Blob | null,
+              }),
+            ),
+          );
+        }),
+      )
+      .subscribe({
+        next: (confirmacion) => {
+          if (!aceptar) {
+            this.limpiarAcusePrevio();
+
+            mostrarExitoInstitucional(
+              this.esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
+              confirmacion.resultado.mensaje,
+            ).then(() => {
+              this.reiniciarFormulario();
+              void this.router.navigateByUrl('/semanal');
+            });
+
+            return;
+          }
+
+          if (confirmacion.resultado.estado === 'PENDIENTE_APROBACION') {
+            this.limpiarAcusePrevio();
+
+            mostrarExitoInstitucional(
+              this.esActualizacion ? 'Actualización enviada a revisión' : 'Carga enviada a revisión',
+              confirmacion.resultado.mensaje,
+            ).then(() => {
+              this.reiniciarFormulario();
+              void this.router.navigateByUrl('/semanal');
+            });
+
+            return;
+          }
+
+          if (confirmacion.blob) this.reemplazarAcuseConfirmado(confirmacion.blob);
+
+          this.estado.set('CONFIRMADO');
+
+          mostrarExito(
+            this.esActualizacion ? 'Actualización semanal confirmada' : 'Carga semanal confirmada',
+            confirmacion.acuseDescargado
+              ? undefined
+              : `La ${this.esActualizacion ? 'actualización' : 'carga'} fue confirmada, pero no fue posible cargar el acuse confirmado.`,
+          );
+        },
+        error: (error: unknown) => {
+          this.estado.set('MOSTRANDO_ACUSE');
+
+          mostrarError(
+            aceptar
+              ? `No fue posible confirmar la ${this.esActualizacion ? 'actualización' : 'carga'}`
+              : `No fue posible rechazar la ${this.esActualizacion ? 'actualización' : 'carga'}`,
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
+        },
+      });
+  }
 
   cerrarProcesoConfirmado(): void {
     this.reiniciarFormulario();
@@ -461,17 +534,13 @@ confirmarCarga(aceptar: boolean): void {
     if (this.estado() === 'CONFIRMANDO') return;
 
     this.archivos.set(crearArchivosCargaVacios());
-    this.formulario.update((actual) => ({
-      ...actual,
-      semanaSeleccionada: '',
-    }));
+    this.formulario.update((actual) => ({ ...actual, semanaSeleccionada: '' }));
     this.respuesta.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
-    this.solicitudValidacionSemana++;
     this.solicitudValidacionSemana++;
     this.validandoSemana.set(false);
     this.estadoSemana.set(null);
@@ -487,7 +556,6 @@ confirmarCarga(aceptar: boolean): void {
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
-    this.solicitudValidacionSemana++;
     this.solicitudValidacionSemana++;
     this.validandoSemana.set(false);
     this.estadoSemana.set(null);
