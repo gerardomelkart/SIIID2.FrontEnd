@@ -78,6 +78,10 @@ export class SemanalLayout {
     this.informesIncidenciaAbierta.update((valor) => !valor);
   }
 
+  toggleAdministracion(): void {
+    this.administracionAbierta.update((valor) => !valor);
+  }
+
   toggleSesion(): void {
     this.sesionAbierta.update((valor) => !valor);
   }
