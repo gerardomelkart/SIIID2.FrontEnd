@@ -7,6 +7,7 @@ import {
   SemanalCargaValidacionResponse,
   TipoCargaSemanal,
   TipoContenidoSemanal,
+  SemanalSemanaActualizacionResponse,
 } from '../../core/models/semanal-carga.models';
 import { SemanalCargaService } from '../../core/services/semanal-carga.service';
 import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/archivo-carga.types';
@@ -135,6 +136,10 @@ export class SemanalCarga {
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
   diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
   cargandoDiferencias = signal(false);
+validandoSemanaActualizacion = signal(false);
+semanaDisponibleActualizacion = signal(false);
+errorSemanaActualizacion = signal('');
+private solicitudValidacionSemana = 0;
   errorGeneral = signal('');
 
   cargandoAcusePrevio = signal(false);
@@ -154,10 +159,12 @@ export class SemanalCarga {
   tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
   periodoValido = computed(() => this.tramoPrevisto() !== null);
 
+  periodoListoParaArchivos = computed(() => this.periodoValido() && (!this.esActualizacion || this.semanaDisponibleActualizacion()));
+
   puedeValidar = computed(
     () =>
       tieneTresArchivosSeleccionados(this.archivos()) &&
-      this.periodoValido() &&
+      this.periodoListoParaArchivos() &&
       this.estado() !== 'VALIDANDO' &&
       this.estado() !== 'CONFIRMANDO',
   );
@@ -189,17 +196,21 @@ export class SemanalCarga {
     ...this.advertencias(),
   ]);
 
-  actualizarCampo<K extends keyof SemanalCargaFormulario>(
-    campo: K,
-    valor: SemanalCargaFormulario[K],
-  ): void {
-    this.formulario.update((actual) => ({
-      ...actual,
-      [campo]: valor,
-    }));
+actualizarCampo<K extends keyof SemanalCargaFormulario>(campo: K, valor: SemanalCargaFormulario[K]): void {
+  this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
+  this.limpiarResultado();
 
-    this.limpiarResultado();
-  }
+  if (campo !== 'semanaSeleccionada') return;
+
+  this.solicitudValidacionSemana++;
+  this.archivos.set(crearArchivosCargaVacios());
+  this.semanaDisponibleActualizacion.set(false);
+  this.errorSemanaActualizacion.set('');
+
+  const tramo = this.tramoPrevisto();
+
+  if (this.esActualizacion && tramo) this.validarDisponibilidadSemana(tramo, this.solicitudValidacionSemana);
+}
 
   seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
     const archivo = obtenerArchivoDesdeEvento(event);
@@ -526,6 +537,10 @@ export class SemanalCarga {
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
+    this.solicitudValidacionSemana++;
+this.validandoSemanaActualizacion.set(false);
+this.semanaDisponibleActualizacion.set(false);
+this.errorSemanaActualizacion.set('');
   }
 
   reiniciarFormulario(): void {
@@ -537,6 +552,10 @@ export class SemanalCarga {
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
+    this.solicitudValidacionSemana++;
+this.validandoSemanaActualizacion.set(false);
+this.semanaDisponibleActualizacion.set(false);
+this.errorSemanaActualizacion.set('');
   }
 
   totalRecibido(tipo: ArchivoCargaTipo): number {
@@ -616,6 +635,34 @@ export class SemanalCarga {
   resumenPorArchivo(tipo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
     return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], tipo);
   }
+
+  private validarDisponibilidadSemana(tramo: VistaTramoSemanal, solicitud: number): void {
+  this.validandoSemanaActualizacion.set(true);
+
+  this.semanalCargaService
+    .validarSemanaActualizacion(tramo.anioSemana, tramo.numeroSemana)
+    .pipe(finalize(() => {
+      if (solicitud === this.solicitudValidacionSemana) this.validandoSemanaActualizacion.set(false);
+    }))
+    .subscribe({
+      next: (response: SemanalSemanaActualizacionResponse) => {
+        if (solicitud !== this.solicitudValidacionSemana) return;
+
+        this.semanaDisponibleActualizacion.set(response.disponible);
+
+        if (response.disponible) return;
+
+        const referencia = response.codigoReferenciaPendiente ? ` Referencia: ${response.codigoReferenciaPendiente}.` : '';
+        this.errorSemanaActualizacion.set(`${response.mensaje}${referencia}`);
+      },
+      error: (error: unknown) => {
+        if (solicitud !== this.solicitudValidacionSemana) return;
+
+        this.semanaDisponibleActualizacion.set(false);
+        this.errorSemanaActualizacion.set(obtenerMensajeErrorHttp(error, 'No fue posible comprobar si la semana está disponible para actualización.'));
+      },
+    });
+}
 
   private prepararRevisionDiferencias(codigoReferencia: string): void {
     if (this.cargandoDiferencias() || !codigoReferencia?.trim()) return;

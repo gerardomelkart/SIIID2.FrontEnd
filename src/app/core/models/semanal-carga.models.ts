@@ -40,4 +40,13 @@ export interface SemanalCargaValidacionResponse extends CargaValidacionResponse 
   totalVictimasExcluidas: number;
 }
 
+export interface SemanalSemanaActualizacionResponse {
+  esValido: boolean;
+  disponible: boolean;
+  codigo: string;
+  mensaje: string;
+  codigoReferenciaPendiente: string | null;
+  estadoPendiente: string | null;
+}
+
 export type { ConfirmarCargaRequest, ConfirmarCargaResponse };
