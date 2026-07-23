@@ -275,32 +275,6 @@
       </div>
     </div>
 
-    <div class="totales-grid totales-excluidos">
-      <div class="total-card total-card-excluido" [class.sin-excluidos]="carga.totalCarpetasExcluidas === 0">
-        <i class="fa-solid fa-folder-minus"></i>
-        <div>
-          <strong>{{ carga.totalCarpetasExcluidas }}</strong>
-          <span>Carpetas excluidas</span>
-        </div>
-      </div>
-
-      <div class="total-card total-card-excluido" [class.sin-excluidos]="carga.totalDelitosExcluidos === 0">
-        <i class="fa-solid fa-scale-balanced"></i>
-        <div>
-          <strong>{{ carga.totalDelitosExcluidos }}</strong>
-          <span>Delitos excluidos</span>
-        </div>
-      </div>
-
-      <div class="total-card total-card-excluido" [class.sin-excluidos]="carga.totalVictimasExcluidas === 0">
-        <i class="fa-solid fa-user-minus"></i>
-        <div>
-          <strong>{{ carga.totalVictimasExcluidas }}</strong>
-          <span>Víctimas excluidas</span>
-        </div>
-      </div>
-    </div>
-
     <div class="descargas-row">
       <button type="button" class="btn-descarga btn-zip" [disabled]="hayOperacionEnCurso()"
         (click)="descargarArchivos(carga)">
