@@ -10,6 +10,10 @@
   grid-template-columns: 280px 280px 1fr;
 }
 
+.semanal-planos-toolbar.semanal-planos-toolbar-super {
+  grid-template-columns: 240px 240px 280px 1fr;
+}
+
 .sabanas-hero {
   background: linear-gradient(135deg, #edf5f2 0%, #ffffff 100%);
   border-bottom-color: #cfe0da;
@@ -32,8 +36,16 @@
   border-top-color: var(--siiid-guinda);
 }
 
-@media (max-width: 980px) {
-  .semanal-planos-toolbar {
+@media (max-width: 1200px) {
+  .semanal-planos-toolbar,
+  .semanal-planos-toolbar.semanal-planos-toolbar-super {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .semanal-planos-toolbar,
+  .semanal-planos-toolbar.semanal-planos-toolbar-super {
     grid-template-columns: 1fr;
   }
 }

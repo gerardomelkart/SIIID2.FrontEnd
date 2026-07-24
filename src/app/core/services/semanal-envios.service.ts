@@ -21,7 +21,6 @@ export class SemanalEnviosService {
 
   crearTicketDescargaAcuses(anioSemana: number, numeroSemana: number) {
     const params = new HttpParams().set('anioSemana', anioSemana).set('numeroSemana', numeroSemana);
-
     return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/acuses/ticket`, null, { params });
   }
 
@@ -29,9 +28,8 @@ export class SemanalEnviosService {
     return `${API_BASE_URL}/semanal/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
-  crearTicketDescargaPlanos(anioCorte: number, mesCorte: number, tipo: string) {
-    const params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte).set('tipo', tipo);
-
+  crearTicketDescargaPlanos(anioCorte: number, mesCorte: number, tipo: string, modo: string) {
+    const params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte).set('tipo', tipo).set('modo', modo);
     return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/planos/ticket`, null, { params });
   }
 

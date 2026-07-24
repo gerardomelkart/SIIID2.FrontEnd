@@ -7,6 +7,7 @@ import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 type TipoPlanoSemanal = 'COMPLETA' | 'ESTATALES' | 'MUNICIPALES';
+type ModoPlanoSemanal = 'CONFIRMADO' | 'PREVIO' | 'MIXTO';
 
 @Component({
   selector: 'app-semanal-planos',
@@ -24,6 +25,7 @@ export class SemanalPlanos {
 
   anioCorte = signal(new Date().getFullYear());
   mesCorte = signal(new Date().getMonth() + 1);
+  modoPlano = signal<ModoPlanoSemanal>('CONFIRMADO');
   descargandoPlano = signal<TipoPlanoSemanal | null>(null);
   descargaEnProceso = computed(() => this.descargandoPlano() !== null);
 
@@ -49,6 +51,7 @@ export class SemanalPlanos {
   descargarPlanos(tipo: TipoPlanoSemanal): void {
     const anioCorte = Number(this.anioCorte());
     const mesCorte = Number(this.mesCorte());
+    const modo: ModoPlanoSemanal = this.esSuperUsuario() ? this.modoPlano() : 'CONFIRMADO';
 
     if (!Number.isInteger(anioCorte) || anioCorte < 2000 || anioCorte > 2100) {
       mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
@@ -62,7 +65,7 @@ export class SemanalPlanos {
 
     this.descargandoPlano.set(tipo);
 
-    this.semanalEnviosService.crearTicketDescargaPlanos(anioCorte, mesCorte, tipo).subscribe({
+    this.semanalEnviosService.crearTicketDescargaPlanos(anioCorte, mesCorte, tipo, modo).subscribe({
       next: (response) => {
         if (!response.ticket) {
           this.descargandoPlano.set(null);

@@ -29,7 +29,7 @@
 
         <p>
           @if (esSuperUsuario()) {
-          Genere los planos nacionales con la información semanal confirmada del año y mes seleccionados.
+          Genere planos nacionales por año, mes y tipo de información.
           } @else {
           Descargue los planos semanales confirmados correspondientes a:
           <strong>{{ entidadUsuario() }}</strong>.
@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <div class="sabanas-toolbar semanal-planos-toolbar">
+    <div class="sabanas-toolbar semanal-planos-toolbar" [class.semanal-planos-toolbar-super]="esSuperUsuario()">
       <div class="sabana-year-card">
         <div class="sabana-year-label">
           <i class="fa-solid fa-calendar-days"></i>
@@ -50,8 +50,8 @@
             <i class="fa-solid fa-minus"></i>
           </button>
 
-          <input type="number" class="sabana-year-input" min="2000" max="2100"
-            [disabled]="descargaEnProceso()" [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" />
+          <input type="number" class="sabana-year-input" min="2000" max="2100" [disabled]="descargaEnProceso()"
+            [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" />
 
           <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()" (click)="ajustarAnio(1)">
             <i class="fa-solid fa-plus"></i>
@@ -73,9 +73,35 @@
         </select>
 
         <small class="sabana-mode-help">
-          Los conteos se colocarán únicamente en la columna correspondiente al mes seleccionado.
+          El Excel mostrará Semana 1, Semana 2, Semana 3 y las demás semanas que intersecten el mes.
         </small>
       </div>
+
+      @if (esSuperUsuario()) {
+      <div class="sabana-mode-card">
+        <div class="sabana-year-label">
+          <i class="fa-solid fa-layer-group"></i>
+          Tipo de plano
+        </div>
+
+        <select class="form-select" [disabled]="descargaEnProceso()" [ngModel]="modoPlano()"
+          (ngModelChange)="modoPlano.set($event)">
+          <option value="CONFIRMADO">Plano confirmado</option>
+          <option value="PREVIO">Plano previo</option>
+          <option value="MIXTO">Plano mixto</option>
+        </select>
+
+        <small class="sabana-mode-help">
+          @if (modoPlano() === 'CONFIRMADO') {
+          Usa únicamente cargas y actualizaciones confirmadas.
+          } @else if (modoPlano() === 'PREVIO') {
+          En una semana con pendientes utiliza únicamente las cargas pendientes de esa semana.
+          } @else {
+          Sustituye el confirmado únicamente para la entidad y semana que tenga información pendiente.
+          }
+        </small>
+      </div>
+      }
 
       <div class="sabana-info-card">
         <div class="sabana-info-badge">
@@ -84,10 +110,10 @@
         </div>
 
         <ul>
-          <li><strong>Fuente:</strong> únicamente tablas finales del módulo semanal.</li>
-          <li><strong>Estado:</strong> cargas y actualizaciones confirmadas.</li>
-          <li><strong>Periodo:</strong> año y mes de corte seleccionados.</li>
-          <li><strong>Semanas cruzadas:</strong> sólo se considera el tramo correspondiente al mes.</li>
+          <li><strong>Columnas:</strong> Semana 1, Semana 2, Semana 3 y las restantes del mes.</li>
+          <li><strong>Periodo:</strong> año y mes seleccionados.</li>
+          <li><strong>Semanas cruzadas:</strong> sólo se contabiliza el tramo perteneciente al mes.</li>
+          <li><strong>Fuente:</strong> tablas finales o temporales según el tipo de plano.</li>
         </ul>
       </div>
     </div>
