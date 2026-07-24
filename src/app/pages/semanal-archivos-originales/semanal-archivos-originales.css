@@ -1,0 +1,23 @@
+.originales-table {
+  min-width: 1120px;
+}
+
+.originales-table thead th {
+  border-color: #19463c;
+}
+
+.originales-table thead th.sortable:hover {
+  background: #19463c !important;
+}
+
+.semana-original {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.semana-original small {
+  color: #6b7280;
+  font-size: 11px;
+}

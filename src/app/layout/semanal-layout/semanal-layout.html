@@ -89,6 +89,12 @@
           <i class="fa-solid fa-chart-simple"></i>
           Reporte de Cargas
         </a>
+        @if (esSuperUsuario()) {
+        <a class="menu-link level-3" routerLink="/semanal/informes/originales" routerLinkActive="active">
+          <i class="fa-solid fa-box-archive"></i>
+          Archivos originales
+        </a>
+        }
         }
         }
         }

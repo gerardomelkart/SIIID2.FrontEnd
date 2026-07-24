@@ -12,3 +12,7 @@
   width: min(360px, 80vw);
   white-space: normal;
 }
+
+.reporte-table thead th.sortable:hover {
+  background: #19463c !important;
+}

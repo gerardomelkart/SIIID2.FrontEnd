@@ -81,7 +81,17 @@ export const routes: Routes = [
           roles: [ROLES.SUPER_USUARIO],
         },
       },
-
+      {
+        path: 'informes/originales',
+        loadComponent: () =>
+          import('./pages/semanal-archivos-originales/semanal-archivos-originales').then(
+            (m) => m.SemanalArchivosOriginales,
+          ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
       {
         path: 'administracion/cargas-pendientes',
         loadComponent: () =>
