@@ -1,0 +1,198 @@
+<div class="informes-page">
+  <div class="informes-header">
+    <div>
+      <h1>Informes</h1>
+      <p>Monitoreo de intentos y cargas semanales por entidad federativa.</p>
+    </div>
+
+    <div class="rol-chip">
+      <i class="fa-solid fa-user-shield"></i>
+      {{ usuario()?.rol }}
+    </div>
+  </div>
+
+  <section class="siiid-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-chart-simple"></i>
+        Reporte de cargas por entidad
+      </span>
+
+      <div class="reporte-actions">
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary"
+          [disabled]="cargando()"
+          (click)="cargarReporte()">
+          @if (cargando()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-rotate"></i>
+          }
+          Actualizar
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary"
+          [disabled]="cargando() || exportandoExcel()"
+          (click)="exportarExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+
+          <input
+            type="text"
+            placeholder="Buscar carga..."
+            [ngModel]="busqueda()"
+            (ngModelChange)="buscar($event)">
+        </div>
+      </div>
+    </div>
+
+    <div class="corte-selector">
+      <div class="corte-selector-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Semana consultada
+      </div>
+
+      <div class="corte-selector-controls">
+        <select
+          class="form-select form-select-sm"
+          [ngModel]="semanaSeleccionada()"
+          (ngModelChange)="semanaSeleccionada.set($event); cambiarSemana()">
+          @for (semana of semanas(); track semana.anioSemana + '-' + semana.numeroSemana) {
+          <option
+            [value]="semana.anioSemana + '-' + semana.numeroSemana.toString().padStart(2, '0')">
+            {{ semana.semana }}
+          </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm reporte-table semanal-envios-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenarPor('entidadFederativa')">
+              Entidad federativa
+              <i [class]="iconoOrden('entidadFederativa')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('claveEntidad')">
+              Cve. entidad
+              <i [class]="iconoOrden('claveEntidad')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('semana')">
+              Semana
+              <i [class]="iconoOrden('semana')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('intentos')">
+              Intentos
+              <i [class]="iconoOrden('intentos')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('ordenCarga')">
+              Ranking
+              <i [class]="iconoOrden('ordenCarga')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('estatusUltimoIntento')">
+              Estatus
+              <i [class]="iconoOrden('estatusUltimoIntento')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('fechaCargaActualizacionTexto')">
+              Fecha de carga/actualización
+              <i [class]="iconoOrden('fechaCargaActualizacionTexto')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('fechaAprobacionTexto')">
+              Fecha de aprobación
+              <i [class]="iconoOrden('fechaAprobacionTexto')"></i>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (
+            carga of cargasPaginadas();
+            track carga.idEntidadFederativa + '-' + carga.anioSemana + '-' + carga.numeroSemana
+          ) {
+          <tr>
+            <td>{{ carga.entidadFederativa }}</td>
+            <td>{{ carga.claveEntidad }}</td>
+            <td>{{ carga.semana }}</td>
+
+            <td>
+              <span class="intentos-chip">{{ carga.intentos }}</span>
+            </td>
+
+            <td>
+              <span class="folio-chip">{{ ordenCarga(carga) }}</span>
+            </td>
+
+            <td>
+              <span
+                class="estatus-badge"
+                [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
+                [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
+                [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
+                {{ etiquetaEstatus(carga) }}
+              </span>
+            </td>
+
+            <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
+            <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8" class="text-center p-4">
+              No se encontraron cargas semanales.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <span>
+        Mostrando {{ cargasPaginadas().length }} de
+        {{ cargasFiltradas().length }} registros
+      </span>
+
+      <div class="pagination-actions">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaActual() === 1"
+          (click)="cambiarPagina(paginaActual() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">
+          {{ paginaActual() }} / {{ totalPaginas() }}
+        </span>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaActual() === totalPaginas()"
+          (click)="cambiarPagina(paginaActual() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

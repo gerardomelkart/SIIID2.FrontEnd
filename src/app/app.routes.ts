@@ -71,6 +71,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'informes/cargas',
+        loadComponent: () =>
+          import('./pages/semanal-reporte-cargas/semanal-reporte-cargas').then(
+            (m) => m.SemanalReporteCargas,
+          ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+
+      {
         path: 'administracion/cargas-pendientes',
         loadComponent: () =>
           import('./pages/semanal-aprobacion-cargas/semanal-aprobacion-cargas').then(
