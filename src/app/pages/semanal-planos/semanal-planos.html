@@ -1,0 +1,155 @@
+<div class="informes-page semanal-planos-page">
+  <div class="informes-header">
+    <div>
+      <h1>Informes</h1>
+      <p>Generación de planos estadísticos con información preliminar del módulo semanal.</p>
+    </div>
+
+    <div class="rol-chip">
+      <i class="fa-solid fa-user-shield"></i>
+      {{ usuario()?.rol }}
+    </div>
+  </div>
+
+  <section class="siiid-card sabanas-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-table"></i>
+        Planos estadísticos
+      </span>
+    </div>
+
+    <div class="sabanas-hero">
+      <div class="sabanas-hero-icon">
+        <i class="fa-solid fa-file-zipper"></i>
+      </div>
+
+      <div class="sabanas-hero-text">
+        <h2>Descarga de planos estadísticos semanales</h2>
+
+        <p>
+          @if (esSuperUsuario()) {
+          Genere los planos nacionales con la información semanal confirmada del año y mes seleccionados.
+          } @else {
+          Descargue los planos semanales confirmados correspondientes a:
+          <strong>{{ entidadUsuario() }}</strong>.
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="sabanas-toolbar semanal-planos-toolbar">
+      <div class="sabana-year-card">
+        <div class="sabana-year-label">
+          <i class="fa-solid fa-calendar-days"></i>
+          Año de corte
+        </div>
+
+        <div class="sabana-year-input-group">
+          <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()" (click)="ajustarAnio(-1)">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+
+          <input type="number" class="sabana-year-input" min="2000" max="2100"
+            [disabled]="descargaEnProceso()" [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" />
+
+          <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()" (click)="ajustarAnio(1)">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="sabana-mode-card">
+        <div class="sabana-year-label">
+          <i class="fa-solid fa-calendar"></i>
+          Mes de corte
+        </div>
+
+        <select class="form-select" [disabled]="descargaEnProceso()" [ngModel]="mesCorte()"
+          (ngModelChange)="mesCorte.set(+$event)">
+          @for (mes of meses; track mes.numero) {
+          <option [value]="mes.numero">{{ mes.nombre }}</option>
+          }
+        </select>
+
+        <small class="sabana-mode-help">
+          Los conteos se colocarán únicamente en la columna correspondiente al mes seleccionado.
+        </small>
+      </div>
+
+      <div class="sabana-info-card">
+        <div class="sabana-info-badge">
+          <i class="fa-solid fa-circle-info"></i>
+          Información incluida
+        </div>
+
+        <ul>
+          <li><strong>Fuente:</strong> únicamente tablas finales del módulo semanal.</li>
+          <li><strong>Estado:</strong> cargas y actualizaciones confirmadas.</li>
+          <li><strong>Periodo:</strong> año y mes de corte seleccionados.</li>
+          <li><strong>Semanas cruzadas:</strong> sólo se considera el tramo correspondiente al mes.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sabanas-grid">
+      <button type="button" class="sabana-option sabana-option-primary" [disabled]="descargaEnProceso()"
+        (click)="descargarPlanos('COMPLETA')">
+        <div class="sabana-option-icon">
+          @if (descargandoPlano() === 'COMPLETA') {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-layer-group"></i>
+          }
+        </div>
+
+        <div class="sabana-option-body">
+          <strong>Plano estadístico</strong>
+          <small>Incluye los cuatro archivos estadísticos del periodo seleccionado.</small>
+        </div>
+      </button>
+
+      <button type="button" class="sabana-option" [disabled]="descargaEnProceso()"
+        (click)="descargarPlanos('ESTATALES')">
+        <div class="sabana-option-icon">
+          @if (descargandoPlano() === 'ESTATALES') {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-map"></i>
+          }
+        </div>
+
+        <div class="sabana-option-body">
+          <strong>Plano estatal</strong>
+          <small>Descarga estatal delitos y estatal víctimas.</small>
+        </div>
+      </button>
+
+      <button type="button" class="sabana-option" [disabled]="descargaEnProceso()"
+        (click)="descargarPlanos('MUNICIPALES')">
+        <div class="sabana-option-icon">
+          @if (descargandoPlano() === 'MUNICIPALES') {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-city"></i>
+          }
+        </div>
+
+        <div class="sabana-option-body">
+          <strong>Plano municipal</strong>
+          <small>Descarga municipal delitos y municipal víctimas.</small>
+        </div>
+      </button>
+    </div>
+
+    @if (descargandoPlano()) {
+    <div class="sabana-loading">
+      <div class="sabana-loading-box">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <strong>Generando planos semanales...</strong>
+        <span>La generación puede tardar algunos minutos dependiendo del volumen de información.</span>
+      </div>
+    </div>
+    }
+  </section>
+</div>

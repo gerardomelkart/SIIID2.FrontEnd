@@ -1,0 +1,39 @@
+:host {
+  display: block;
+}
+
+.semanal-planos-page {
+  --siiid-guinda: #19463c;
+}
+
+.semanal-planos-toolbar {
+  grid-template-columns: 280px 280px 1fr;
+}
+
+.sabanas-hero {
+  background: linear-gradient(135deg, #edf5f2 0%, #ffffff 100%);
+  border-bottom-color: #cfe0da;
+}
+
+.sabanas-hero-icon {
+  box-shadow: 0 10px 22px rgba(25, 70, 60, .22);
+}
+
+.sabana-option {
+  border-left-color: #a9c6bc;
+}
+
+.sabana-option-icon {
+  background: #edf5f2;
+}
+
+.sabana-loading-box {
+  border-color: #cfe0da;
+  border-top-color: var(--siiid-guinda);
+}
+
+@media (max-width: 980px) {
+  .semanal-planos-toolbar {
+    grid-template-columns: 1fr;
+  }
+}

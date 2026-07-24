@@ -7,7 +7,7 @@ import {
   SemanalReporteCargasResponse,
 } from '../models/semanal-reporte-cargas.models';
 
-interface SemanalAcusesTicketResponse {
+interface SemanalTicketResponse {
   esValido: boolean;
   ticket: string;
 }
@@ -22,20 +22,27 @@ export class SemanalEnviosService {
   crearTicketDescargaAcuses(anioSemana: number, numeroSemana: number) {
     const params = new HttpParams().set('anioSemana', anioSemana).set('numeroSemana', numeroSemana);
 
-    return this.http.post<SemanalAcusesTicketResponse>(`${this.apiUrl}/acuses/ticket`, null, {
-      params,
-    });
+    return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/acuses/ticket`, null, { params });
   }
 
   obtenerUrlDescargaAcuses(ticket: string): string {
     return `${API_BASE_URL}/semanal/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
+  crearTicketDescargaPlanos(anioCorte: number, mesCorte: number, tipo: string) {
+    const params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte).set('tipo', tipo);
+
+    return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/planos/ticket`, null, { params });
+  }
+
+  obtenerUrlDescargaPlanos(ticket: string): string {
+    return `${API_BASE_URL}/semanal/envios/planos/descargar?ticket=${encodeURIComponent(ticket)}`;
+  }
+
   obtenerEnvios(filtro: SemanalEnviosFiltro = {}) {
     let params = new HttpParams();
 
-    if (filtro.idEntidadFederativa)
-      params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
+    if (filtro.idEntidadFederativa) params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
     if (filtro.anioSemana) params = params.set('anioSemana', filtro.anioSemana);
     if (filtro.numeroSemana) params = params.set('numeroSemana', filtro.numeroSemana);
     if (filtro.tipoCarga) params = params.set('tipoCarga', filtro.tipoCarga);
@@ -44,21 +51,14 @@ export class SemanalEnviosService {
     return this.http.get<SemanalEnviosResponse>(this.apiUrl, { params });
   }
 
-    obtenerReporteCargas(filtro: SemanalReporteCargasFiltro = {}) {
+  obtenerReporteCargas(filtro: SemanalReporteCargasFiltro = {}) {
     let params = new HttpParams();
 
-    if (filtro.idEntidadFederativa)
-      params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
+    if (filtro.idEntidadFederativa) params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
+    if (filtro.anioSemana) params = params.set('anioSemana', filtro.anioSemana);
+    if (filtro.numeroSemana) params = params.set('numeroSemana', filtro.numeroSemana);
 
-    if (filtro.anioSemana)
-      params = params.set('anioSemana', filtro.anioSemana);
-
-    if (filtro.numeroSemana)
-      params = params.set('numeroSemana', filtro.numeroSemana);
-
-    return this.http.get<SemanalReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, {
-      params,
-    });
+    return this.http.get<SemanalReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
   descargarArchivos(codigoReferencia: string) {

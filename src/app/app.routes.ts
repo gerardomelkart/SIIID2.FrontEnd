@@ -70,6 +70,16 @@ export const routes: Routes = [
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
         },
       },
+
+      {
+        path: 'informes/planos',
+        loadComponent: () =>
+          import('./pages/semanal-planos/semanal-planos').then((m) => m.SemanalPlanos),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+        },
+      },
       {
         path: 'informes/cargas',
         loadComponent: () =>
