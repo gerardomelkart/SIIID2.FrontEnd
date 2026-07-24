@@ -51,7 +51,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   paginaActual = signal(1);
   tamanioPagina = 10;
-  orden = signal<EstadoOrden<CampoOrden>>({ campo: 'fecha', direccion: 'desc' });
+  orden = signal<EstadoOrden<CampoOrden> | null>(null);
 
   descargandoAcuse = signal<string | null>(null);
   descargandoArchivos = signal<string | null>(null);
@@ -374,7 +374,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       case 'clave':
         return envio.claveEntidad;
       case 'fecha':
-        return envio.fechaEnvioTexto;
+        return envio.fechaMovimiento;
       case 'semana':
         return envio.anioSemana * 100 + envio.numeroSemana;
       case 'usuario':
