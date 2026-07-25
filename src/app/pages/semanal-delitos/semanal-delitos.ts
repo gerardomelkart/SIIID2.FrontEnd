@@ -23,7 +23,7 @@ interface BienJuridicoSemanalAgrupado {
   selector: 'app-semanal-delitos',
   imports: [FormsModule],
   templateUrl: './semanal-delitos.html',
-  styleUrls: ['../semanal-usuarios/semanal-usuarios.css', './semanal-delitos.css'],
+  styleUrl: './semanal-delitos.css',
 })
 export class SemanalDelitos implements OnInit {
   private readonly semanalDelitosService = inject(SemanalDelitosService);

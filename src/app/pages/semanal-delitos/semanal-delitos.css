@@ -5,6 +5,93 @@
   display: block;
 }
 
+.semanal-admin-header span {
+  color: var(--semanal-dorado);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.semanal-admin-header h1 {
+  margin: 3px 0;
+  color: var(--semanal-verde);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.semanal-admin-header p {
+  margin: 0;
+  color: #667085;
+  font-weight: 700;
+}
+
+.semanal-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.resumen-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-left: 6px solid var(--semanal-verde);
+  padding: 16px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .1);
+}
+
+.resumen-card strong {
+  display: block;
+  color: var(--semanal-verde);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.resumen-card span {
+  display: block;
+  margin-top: 7px;
+  color: #444;
+  font-weight: 800;
+}
+
+.semanal-card {
+  overflow: hidden;
+}
+
+.semanal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.semanal-buscador {
+  width: 380px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #777;
+  padding: 0 10px;
+}
+
+.semanal-buscador input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 13px;
+}
+
+.semanal-mensaje {
+  padding: 28px;
+  text-align: center;
+  color: #667085;
+  font-weight: 700;
+}
+
 .delitos-header-row {
   display: flex;
   align-items: flex-end;
