@@ -15,6 +15,9 @@ export interface UsuarioListadoItem {
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
+  habilitaCargaSemanal: boolean;
+  habilitaModificacionSemanal: boolean;
+  administraDelitosSemanal: boolean;
   activo: boolean;
 }
 
@@ -90,9 +93,52 @@ export interface EditarUsuarioRequest {
   administraDelitosSemanal: boolean;
 }
 
+export interface CrearUsuarioSemanalRequest {
+  usuario: string;
+  password: string;
+  nombre: string;
+  primerApellido: string;
+  segundoApellido: string | null;
+  correoElectronico: string;
+  rfc: string;
+  curp: string;
+  telefonoContacto: string | null;
+  idEntidadFederativa: number | null;
+  rol: string;
+  habilitaSemanal: boolean;
+  habilitaCargaSemanal: boolean;
+  habilitaModificacionSemanal: boolean;
+  administraDelitosSemanal: boolean;
+}
+
+export interface EditarUsuarioSemanalRequest {
+  usuario: string;
+  nuevaPassword: string | null;
+  nombre: string;
+  primerApellido: string;
+  segundoApellido: string | null;
+  correoElectronico: string;
+  rfc: string;
+  curp: string;
+  telefonoContacto: string | null;
+  idEntidadFederativa: number | null;
+  rol: string;
+  habilitaSemanal: boolean;
+  habilitaCargaSemanal: boolean;
+  habilitaModificacionSemanal: boolean;
+  administraDelitosSemanal: boolean;
+}
+
 export interface ReactivarUsuarioRequest {
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
+}
+
+export interface ReactivarUsuarioSemanalRequest {
+  habilitaSemanal: boolean;
+  habilitaCargaSemanal: boolean;
+  habilitaModificacionSemanal: boolean;
+  administraDelitosSemanal: boolean;
 }
 
 export interface UsuarioOperacionResponse {

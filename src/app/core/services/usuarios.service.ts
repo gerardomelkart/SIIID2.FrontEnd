@@ -5,9 +5,12 @@ import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import {
   ActualizarPermisosSemanalesRequest,
   CrearUsuarioRequest,
+  CrearUsuarioSemanalRequest,
   EditarUsuarioRequest,
+  EditarUsuarioSemanalRequest,
   PermisosGlobalesUsuariosRequest,
   ReactivarUsuarioRequest,
+  ReactivarUsuarioSemanalRequest,
   UsuarioDetalleResponse,
   UsuarioOperacionResponse,
   UsuariosListadoResponse,
@@ -23,7 +26,6 @@ export class UsuariosService {
 
   obtenerUsuarios(incluirInactivos: boolean) {
     const params = new HttpParams().set('incluirInactivos', incluirInactivos);
-
     return this.http.get<UsuariosListadoResponse>(this.apiUrl, { params });
   }
 
@@ -35,15 +37,20 @@ export class UsuariosService {
     return this.http.post<UsuarioOperacionResponse>(this.apiUrl, request);
   }
 
+  crearUsuarioSemanal(request: CrearUsuarioSemanalRequest) {
+    return this.http.post<UsuarioOperacionResponse>(`${this.apiUrl}/semanal`, request);
+  }
+
   editarUsuario(idUsuario: number, request: EditarUsuarioRequest) {
     return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`, request);
   }
 
+  editarUsuarioSemanal(idUsuario: number, request: EditarUsuarioSemanalRequest) {
+    return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/semanal`, request);
+  }
+
   actualizarPermisosSemanales(idUsuario: number, request: ActualizarPermisosSemanalesRequest) {
-    return this.http.put<UsuarioOperacionResponse>(
-      `${this.apiUrl}/${idUsuario}/permisos-semanales`,
-      request,
-    );
+    return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/permisos-semanales`, request);
   }
 
   desactivarUsuario(idUsuario: number) {
@@ -51,10 +58,11 @@ export class UsuariosService {
   }
 
   reactivarUsuario(idUsuario: number, request: ReactivarUsuarioRequest) {
-    return this.http.put<UsuarioOperacionResponse>(
-      `${this.apiUrl}/${idUsuario}/reactivar`,
-      request,
-    );
+    return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/reactivar`, request);
+  }
+
+  reactivarUsuarioSemanal(idUsuario: number, request: ReactivarUsuarioSemanalRequest) {
+    return this.http.put<UsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/reactivar-semanal`, request);
   }
 
   actualizarPermisosGlobales(request: PermisosGlobalesUsuariosRequest) {

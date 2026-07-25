@@ -1,185 +1,370 @@
-<div class="semanal-admin">
-  <div class="semanal-admin-header">
+<div class="admin-page">
+  <div class="admin-header">
     <div>
-      <span>Administración semanal</span>
-      <h1>Usuarios del módulo semanal</h1>
-      <p>Habilitación de acceso y permisos exclusivos del seguimiento semanal.</p>
+      <h1>Administración de usuarios</h1>
+      <p>Gestión de cuentas, roles, entidad federativa y permisos exclusivos del módulo preliminar.</p>
+    </div>
+
+    <button type="button" class="btn btn-siiid" (click)="abrirNuevoUsuario()">
+      <i class="fa-solid fa-user-plus"></i>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <div class="admin-kpis">
+    <div class="kpi-card">
+      <div class="kpi-value">{{ totalUsuarios() }}</div>
+      <div class="kpi-label">Usuarios registrados</div>
+    </div>
+
+    <div class="kpi-card kpi-ok">
+      <div class="kpi-value">{{ totalActivos() }}</div>
+      <div class="kpi-label">Activos</div>
+    </div>
+
+    <div class="kpi-card kpi-warn">
+      <div class="kpi-value">{{ totalInactivos() }}</div>
+      <div class="kpi-label">Inactivos</div>
+    </div>
+
+    <div class="kpi-card kpi-gold">
+      <div class="kpi-value">{{ totalConSemanal() }}</div>
+      <div class="kpi-label">Con acceso preliminar</div>
     </div>
   </div>
 
-  <div class="semanal-resumen">
-    <div class="resumen-card">
-      <strong>{{ totalUsuarios() }}</strong>
-      <span>Usuarios activos</span>
-    </div>
-
-    <div class="resumen-card resumen-activo">
-      <strong>{{ totalConSemanal() }}</strong>
-      <span>Con acceso semanal</span>
-    </div>
-
-    <div class="resumen-card resumen-inactivo">
-      <strong>{{ totalSinSemanal() }}</strong>
-      <span>Sin acceso semanal</span>
-    </div>
-  </div>
-
-  <section class="siiid-card semanal-card">
-    <div class="siiid-card-header semanal-card-header">
+  <div class="siiid-card usuarios-card">
+    <div class="siiid-card-header usuarios-card-header">
       <span>
-        <i class="fa-solid fa-users-gear"></i>
-        Configuración semanal por usuario
+        <i class="fa-solid fa-users"></i>
+        Usuarios del módulo preliminar
       </span>
 
-      <div class="semanal-buscador">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar usuario, nombre, rol o entidad..." [ngModel]="busqueda()"
-          (ngModelChange)="buscarUsuarios($event)">
+      <div class="usuarios-tools">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()"
+          (click)="exportarUsuariosExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
+
+        <label class="ver-inactivos">
+          <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)">
+          Ver inactivos
+        </label>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar por nombre, usuario, correo, rol o entidad..." [ngModel]="busqueda()"
+            (ngModelChange)="buscarUsuarios($event)">
+        </div>
       </div>
     </div>
 
-    @if (cargandoUsuarios()) {
-    <div class="semanal-mensaje">
+    @if (cargando()) {
+    <div class="usuarios-mensaje">
       <i class="fa-solid fa-spinner fa-spin"></i>
       Cargando usuarios...
     </div>
     } @else {
     <div class="table-responsive">
-      <table class="table table-sm semanal-table">
+      <table class="table table-sm usuarios-table">
         <thead>
           <tr>
-            <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">Nombre <i
-                [class]="iconoOrdenUsuarios('nombreCompleto')"></i></th>
-            <th class="sortable" (click)="ordenarUsuariosPor('usuario')">Usuario <i
-                [class]="iconoOrdenUsuarios('usuario')"></i></th>
-            <th class="sortable" (click)="ordenarUsuariosPor('rol')">Rol <i [class]="iconoOrdenUsuarios('rol')"></i>
+            <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
+              Nombre
+              <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
             </th>
-            <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">Entidad <i
-                [class]="iconoOrdenUsuarios('entidadFederativa')"></i></th>
-            <th class="sortable" (click)="ordenarUsuariosPor('habilitaSemanal')">Acceso semanal <i
-                [class]="iconoOrdenUsuarios('habilitaSemanal')"></i></th>
-            <th>Acción</th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
+              Usuario
+              <i [class]="iconoOrdenUsuarios('usuario')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('correoElectronico')">
+              Correo
+              <i [class]="iconoOrdenUsuarios('correoElectronico')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('rol')">
+              Rol
+              <i [class]="iconoOrdenUsuarios('rol')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
+              Entidad
+              <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaSemanal')">
+              Acceso
+              <i [class]="iconoOrdenUsuarios('habilitaSemanal')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaCargaSemanal')">
+              Carga
+              <i [class]="iconoOrdenUsuarios('habilitaCargaSemanal')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaModificacionSemanal')">
+              Modificación
+              <i [class]="iconoOrdenUsuarios('habilitaModificacionSemanal')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarUsuariosPor('activo')">
+              Estado
+              <i [class]="iconoOrdenUsuarios('activo')"></i>
+            </th>
+
+            <th class="acciones-col">Acciones</th>
           </tr>
         </thead>
 
         <tbody>
-          @for (usuario of usuariosFiltrados(); track usuario.idUsuario) {
+          @for (usuario of usuariosPaginados(); track usuario.idUsuario) {
           <tr>
-            <td class="usuario-nombre">{{ usuario.nombreCompleto }}</td>
+            <td><div class="usuario-nombre">{{ usuario.nombreCompleto }}</div></td>
             <td>{{ usuario.usuario }}</td>
+            <td>{{ usuario.correoElectronico }}</td>
             <td><span class="rol-badge">{{ usuario.rol }}</span></td>
             <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
+
             <td>
-              <span class="semanal-badge" [class.semanal-on]="usuario.habilitaSemanal"
-                [class.semanal-off]="!usuario.habilitaSemanal">
-                {{ usuario.habilitaSemanal ? 'HABILITADO' : 'NO HABILITADO' }}
+              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaSemanal"
+                [class.permiso-off]="!usuario.habilitaSemanal">
+                {{ usuario.habilitaSemanal ? 'Sí' : 'No' }}
               </span>
             </td>
+
             <td>
-              <button type="button" class="btn-configurar" [disabled]="cargandoDetalle()"
-                (click)="abrirPermisos(usuario)">
-                <i class="fa-solid fa-sliders"></i>
-                Configurar
-              </button>
+              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaCargaSemanal"
+                [class.permiso-off]="!usuario.habilitaCargaSemanal">
+                {{ usuario.habilitaCargaSemanal ? 'Sí' : 'No' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaModificacionSemanal"
+                [class.permiso-off]="!usuario.habilitaModificacionSemanal">
+                {{ usuario.habilitaModificacionSemanal ? 'Sí' : 'No' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="estado-badge" [class.estado-activo]="usuario.activo"
+                [class.estado-inactivo]="!usuario.activo">
+                {{ usuario.activo ? 'ACTIVO' : 'INACTIVO' }}
+              </span>
+            </td>
+
+            <td>
+              <div class="acciones">
+                <button type="button" class="btn-icon btn-edit" [class.btn-disabled]="!usuario.activo"
+                  [title]="usuario.activo ? 'Editar' : 'Reactive el usuario antes de editar'"
+                  (click)="abrirEditarUsuario(usuario)">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+
+                <button type="button" class="btn-icon btn-toggle" [class.btn-disabled]="!puedeCambiarEstado(usuario)"
+                  [title]="motivoBloqueoEstado(usuario)" (click)="cambiarEstado(usuario)">
+                  <i class="fa-solid" [class.fa-toggle-on]="usuario.activo"
+                    [class.fa-toggle-off]="!usuario.activo"></i>
+                </button>
+              </div>
             </td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="semanal-mensaje">No se encontraron usuarios.</td>
+            <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
           </tr>
           }
         </tbody>
       </table>
     </div>
     }
-  </section>
+
+    @if (usuariosFiltrados().length > 0) {
+    <div class="pagination-row">
+      <span>Mostrando {{ usuariosPaginados().length }} de {{ usuariosFiltrados().length }} usuarios</span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaUsuarios() === 1"
+          (click)="cambiarPaginaUsuarios(paginaUsuarios() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaUsuarios() }} / {{ totalPaginasUsuarios() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaUsuarios() === totalPaginasUsuarios()"
+          (click)="cambiarPaginaUsuarios(paginaUsuarios() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
+  </div>
 </div>
 
-@if (panelAbierto()) {
-<div class="semanal-backdrop" (click)="cerrarPanel()"></div>
+@if (modalAbierto()) {
+<div class="drawer-backdrop" (click)="cerrarModal()"></div>
 
-<aside class="semanal-panel">
-  <div class="panel-header">
+<aside class="usuario-drawer">
+  <div class="drawer-header">
     <div>
-      <span>Permisos semanales</span>
-      <h2>{{ usuarioSeleccionado()?.nombre }} {{ usuarioSeleccionado()?.primerApellido }}</h2>
-      <p>{{ usuarioSeleccionado()?.usuario }} · {{ usuarioSeleccionado()?.rol }}</p>
+      <h2>{{ modoFormulario() === 'NUEVO' ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+      <p>{{ modoFormulario() === 'NUEVO' ? 'Registrar una nueva cuenta con acceso al módulo preliminar.' :
+        'Modificar datos generales y permisos del módulo preliminar.' }}</p>
     </div>
 
-    <button type="button" (click)="cerrarPanel()">×</button>
+    <button type="button" class="drawer-close" (click)="cerrarModal()">×</button>
   </div>
 
-  <div class="panel-body">
-    <div class="usuario-resumen">
-      <span>Entidad federativa</span>
-      <strong>{{ usuarioSeleccionado()?.entidadFederativa || 'Nacional' }}</strong>
+  <div class="drawer-body">
+    <div class="form-grid">
+      <div class="form-group span-2">
+        <label>Nombre(s) <span>*</span></label>
+        <input class="form-control form-control-sm" placeholder="Ingresa nombre" [ngModel]="formulario().nombre"
+          (ngModelChange)="actualizarCampo('nombre', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>Primer apellido <span>*</span></label>
+        <input class="form-control form-control-sm" placeholder="Ingresa primer apellido"
+          [ngModel]="formulario().primerApellido" (ngModelChange)="actualizarCampo('primerApellido', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>Segundo apellido</label>
+        <input class="form-control form-control-sm" placeholder="Ingresa segundo apellido"
+          [ngModel]="formulario().segundoApellido" (ngModelChange)="actualizarCampo('segundoApellido', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>RFC <span>*</span></label>
+        <input class="form-control form-control-sm" placeholder="Ingresa RFC" [ngModel]="formulario().rfc"
+          (ngModelChange)="actualizarCampo('rfc', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>CURP <span>*</span></label>
+        <input class="form-control form-control-sm" placeholder="Ingresa CURP" [ngModel]="formulario().curp"
+          (ngModelChange)="actualizarCampo('curp', $event)">
+      </div>
+
+      <div class="form-group span-2">
+        <label>Correo electrónico <span>*</span></label>
+        <input class="form-control form-control-sm" placeholder="Ingresa correo"
+          [ngModel]="formulario().correoElectronico" (ngModelChange)="actualizarCampo('correoElectronico', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input class="form-control form-control-sm" placeholder="Teléfono de contacto"
+          [ngModel]="formulario().telefonoContacto" (ngModelChange)="actualizarCampo('telefonoContacto', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>Usuario <span>*</span></label>
+        <input class="form-control form-control-sm" placeholder="Nombre de usuario" [ngModel]="formulario().usuario"
+          (ngModelChange)="actualizarCampo('usuario', $event)">
+      </div>
+
+      <div class="form-group">
+        <label>Rol <span>*</span></label>
+        <select class="form-select form-select-sm" [ngModel]="formulario().rol"
+          (ngModelChange)="actualizarCampo('rol', $event)">
+          <option value="">Seleccione rol...</option>
+          @for (rol of roles(); track rol.idRol) {
+          <option [value]="rol.rol">{{ rol.rol }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Entidad federativa</label>
+        <select class="form-select form-select-sm" [disabled]="formulario().rol === 'SUPER_USUARIO'"
+          [ngModel]="formulario().idEntidadFederativa"
+          (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
+          <option value="">Seleccione entidad...</option>
+          @for (entidad of entidades(); track entidad.idEntidadFederativa) {
+          <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group span-2">
+        <label>Contraseña {{ modoFormulario() === 'NUEVO' ? '*' : '' }}</label>
+        <input class="form-control form-control-sm" type="password" autocomplete="new-password"
+          placeholder="Ingresa contraseña" [ngModel]="formulario().password"
+          (ngModelChange)="actualizarCampo('password', $event)">
+
+        @if (modoFormulario() === 'EDITAR') {
+        <small>
+          Déjala vacía para conservar la contraseña actual. Si capturas una nueva, el usuario deberá cambiarla en su
+          siguiente inicio de sesión.
+        </small>
+        } @else {
+        <small>El usuario deberá cambiar esta contraseña en su primer inicio de sesión.</small>
+        }
+      </div>
     </div>
 
-    <div class="permisos-semanales">
-      <label class="permiso-principal">
-        <div>
-          <strong>Acceso al módulo semanal</strong>
-          <span>Permite que el usuario ingrese al seguimiento semanal.</span>
-        </div>
+    <div class="permisos-panel">
+      <div>
+        <strong>Permisos del módulo preliminar</strong>
+        <p>Estos cambios no modifican los permisos del módulo consolidado.</p>
+      </div>
 
-        <input type="checkbox" [disabled]="esUsuarioActualSeleccionado()" [ngModel]="formulario().habilitaSemanal"
+      <label class="switch-row">
+        <span>Acceso al módulo preliminar</span>
+        <input type="checkbox" [disabled]="esUsuarioActualFormulario()" [ngModel]="formulario().habilitaSemanal"
           (ngModelChange)="actualizarCampo('habilitaSemanal', $event)">
       </label>
 
-      @if (esUsuarioActualSeleccionado()) {
-      <div class="permiso-nota">
-        No puede deshabilitar su propio acceso semanal.
-      </div>
+      @if (esUsuarioActualFormulario()) {
+      <div class="permiso-nota">No puede deshabilitar su propio acceso al módulo preliminar.</div>
       }
 
       @if (formulario().habilitaSemanal) {
-      <label class="permiso-row">
-        <div>
-          <strong>Carga semanal</strong>
-          <span>Permite integrar información del periodo semanal.</span>
-        </div>
-
-        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'"
+      <label class="switch-row">
+        <span>Carga semanal</span>
+        <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'"
           [ngModel]="formulario().habilitaCargaSemanal"
           (ngModelChange)="actualizarCampo('habilitaCargaSemanal', $event)">
       </label>
 
-      <label class="permiso-row">
-        <div>
-          <strong>Modificación semanal</strong>
-          <span>Permite actualizar información semanal registrada.</span>
-        </div>
-
-        <input type="checkbox" [disabled]="usuarioSeleccionado()?.rol === 'CONSULTA'"
+      <label class="switch-row">
+        <span>Modificación semanal</span>
+        <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'"
           [ngModel]="formulario().habilitaModificacionSemanal"
           (ngModelChange)="actualizarCampo('habilitaModificacionSemanal', $event)">
       </label>
 
-      @if (usuarioSeleccionado()?.rol === 'SUPER_USUARIO') {
-      <label class="permiso-row">
-        <div>
-          <strong>Administración de delitos</strong>
-          <span>Permite configurar los delitos que serán reportados semanalmente.</span>
-        </div>
-
+      @if (formulario().rol === 'SUPER_USUARIO') {
+      <label class="switch-row">
+        <span>Administración de delitos semanales</span>
         <input type="checkbox" [ngModel]="formulario().administraDelitosSemanal"
           (ngModelChange)="actualizarCampo('administraDelitosSemanal', $event)">
       </label>
       }
 
-      @if (usuarioSeleccionado()?.rol === 'CONSULTA') {
-      <div class="permiso-nota">
-        El rol CONSULTA tendrá acceso semanal únicamente para consulta.
-      </div>
+      @if (formulario().rol === 'CONSULTA') {
+      <div class="permiso-nota">El rol CONSULTA tendrá acceso al módulo únicamente para consulta.</div>
       }
       }
     </div>
   </div>
 
-  <div class="panel-actions">
-    <button type="button" class="btn btn-secondary" [disabled]="guardando()" (click)="cerrarPanel()">Cancelar</button>
-    <button type="button" class="btn btn-siiid" [disabled]="guardando()" (click)="guardarPermisos()">
-      {{ guardando() ? 'Guardando...' : 'Guardar permisos' }}
+  <div class="drawer-actions">
+    <button type="button" class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
+
+    <button type="button" class="btn btn-siiid" (click)="guardarUsuario()"
+      [disabled]="guardando() || !formularioValido()">
+      {{ guardando() ? 'Guardando...' : 'Guardar usuario' }}
     </button>
   </div>
 </aside>
