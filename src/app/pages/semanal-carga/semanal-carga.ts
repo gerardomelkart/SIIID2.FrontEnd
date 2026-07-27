@@ -65,7 +65,6 @@ interface VistaTramoSemanal {
   imports: [FormsModule],
   templateUrl: './semanal-carga.html',
   styleUrls: [
-    '../semanal-usuarios/semanal-usuarios.css',
     '../actualizacion/actualizacion.css',
     './semanal-carga.css',
   ],

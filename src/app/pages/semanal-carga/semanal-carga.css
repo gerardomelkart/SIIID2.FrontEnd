@@ -1,6 +1,46 @@
 :host {
   --siiid-guinda-dark: #10312b;
   display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.semanal-carga {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.semanal-carga .row,
+.semanal-carga [class*="col-"] {
+  min-width: 0;
+}
+
+.semanal-admin-header span {
+  color: var(--siiid-dorado);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.semanal-admin-header h1 {
+  margin: 3px 0;
+  color: var(--siiid-guinda);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.semanal-admin-header p {
+  margin: 0;
+  color: #667085;
+  font-weight: 700;
+}
+
+.semanal-carga .table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .carga-header {
@@ -1120,5 +1160,21 @@
   .btn-aceptar,
   .btn-cerrar-final {
     width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .carga-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .referencia-carga {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .semanal-admin-header h1 {
+    font-size: 24px;
   }
 }
