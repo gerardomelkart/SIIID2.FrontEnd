@@ -6,9 +6,7 @@
       </div>
 
       <div class="user-info">
-        <div class="user-name">
-          {{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}
-        </div>
+        <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
 
         <div class="user-status">
           <span class="status-dot"></span>
@@ -33,27 +31,18 @@
     </button>
 
     @if (cargaAbierta()) {
-    <button type="button" class="menu-link menu-button level-2" (click)="toggleIncidencia()">
-      <span>
-        <i class="fa-solid fa-folder"></i>
-        Incidencia Delictiva
-      </span>
-    </button>
-
-    @if (incidenciaAbierta()) {
     @if (habilitaCarga()) {
-    <a class="menu-link level-3" routerLink="/carga-inicial" routerLinkActive="active">
+    <a class="menu-link level-2" routerLink="/carga-inicial" routerLinkActive="active">
       <i class="fa-solid fa-upload"></i>
       Integrar Información
     </a>
     }
 
     @if (habilitaModificacion()) {
-    <a class="menu-link level-3" routerLink="/actualizacion" routerLinkActive="active">
+    <a class="menu-link level-2" routerLink="/actualizacion" routerLinkActive="active">
       <i class="fa-solid fa-arrows-rotate"></i>
       Actualizar Información
     </a>
-    }
     }
     }
     }
@@ -67,42 +56,32 @@
     </button>
 
     @if (informesAbierto()) {
-    <button type="button" class="menu-link menu-button level-2" (click)="toggleInformesIncidencia()">
-      <span>
-        <i class="fa-solid fa-folder"></i>
-        Informes de Incidencia Delictiva
-      </span>
-    </button>
-
-    @if (informesIncidenciaAbierta()) {
     @if (puedeVerReporteEnvios()) {
-    <a class="menu-link level-3" routerLink="/informes/envios" routerLinkActive="active">
+    <a class="menu-link level-2" routerLink="/informes/envios" routerLinkActive="active">
       <i class="fa-solid fa-paper-plane"></i>
       Consultar Envíos
     </a>
     }
 
     @if (puedeVerReporteCargas()) {
-    <a class="menu-link level-3" routerLink="/informes/cargas" routerLinkActive="active">
+    <a class="menu-link level-2" routerLink="/informes/cargas" routerLinkActive="active">
       <i class="fa-solid fa-chart-simple"></i>
       Reporte de Cargas
     </a>
     }
 
     @if (puedeVerSabanas()) {
-    <a class="menu-link level-3" routerLink="/informes/sabanas" routerLinkActive="active">
+    <a class="menu-link level-2" routerLink="/informes/sabanas" routerLinkActive="active">
       <i class="fa-solid fa-table"></i>
       Planos estadísticos
     </a>
     }
 
     @if (puedeVerArchivosOriginales()) {
-    <a class="menu-link level-3" routerLink="/informes/originales" routerLinkActive="active">
+    <a class="menu-link level-2" routerLink="/informes/originales" routerLinkActive="active">
       <i class="fa-solid fa-box-archive"></i>
       Archivos originales
     </a>
-    }
-
     }
     }
     }
@@ -133,29 +112,29 @@
     }
     }
 
-<button type="button" class="menu-link menu-button" (click)="toggleSesion()">
-  <span>
-    <i class="fa-solid fa-user"></i>
-    Sesión
-  </span>
-</button>
+    <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
+      <span>
+        <i class="fa-solid fa-user"></i>
+        Sesión
+      </span>
+    </button>
 
-@if (sesionAbierta()) {
-@if (puedeCambiarAModuloPreliminar()) {
-<button type="button" class="menu-link menu-button level-2" (click)="cambiarAModuloPreliminar()">
-  <span>
-    <i class="fa-solid fa-repeat"></i>
-    Ir a Módulo preliminar
-  </span>
-</button>
-}
+    @if (sesionAbierta()) {
+    @if (puedeCambiarAModuloPreliminar()) {
+    <button type="button" class="menu-link menu-button level-2" (click)="cambiarAModuloPreliminar()">
+      <span>
+        <i class="fa-solid fa-repeat"></i>
+        Ir a Módulo preliminar
+      </span>
+    </button>
+    }
 
-<button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
-  <span>
-    <i class="fa-solid fa-power-off"></i>
-    Cerrar sesión
-  </span>
-</button>
-}
+    <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
+      <span>
+        <i class="fa-solid fa-power-off"></i>
+        Cerrar sesión
+      </span>
+    </button>
+    }
   </nav>
 </aside>

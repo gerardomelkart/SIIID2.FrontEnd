@@ -17,7 +17,6 @@ export class SemanalLayout {
   private readonly router = inject(Router);
 
   cargaAbierta = signal(false);
-  incidenciaAbierta = signal(false);
   administracionAbierta = signal(false);
   informesAbiertos = signal(false);
   informesIncidenciaAbierta = signal(false);
@@ -58,14 +57,6 @@ export class SemanalLayout {
 
   toggleCarga(): void {
     this.cargaAbierta.update((valor) => !valor);
-
-    if (!this.cargaAbierta()) {
-      this.incidenciaAbierta.set(false);
-    }
-  }
-
-  toggleIncidencia(): void {
-    this.incidenciaAbierta.update((valor) => !valor);
   }
 
   toggleInformes(): void {

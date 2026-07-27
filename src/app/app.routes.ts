@@ -123,6 +123,17 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'administracion/configuracion',
+        loadComponent: () =>
+          import('./pages/semanal-configuracion/semanal-configuracion').then(
+            (m) => m.SemanalConfiguracion,
+          ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+      {
         path: 'administracion/delitos',
         loadComponent: () =>
           import('./pages/semanal-delitos/semanal-delitos').then((m) => m.SemanalDelitos),

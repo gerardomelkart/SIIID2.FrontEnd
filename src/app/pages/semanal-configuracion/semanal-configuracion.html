@@ -1,0 +1,258 @@
+<div class="config-page">
+  <div class="admin-header">
+    <div>
+      <h1>Configuración de módulos</h1>
+      <p>Control global y por entidad para carga y actualización del módulo preliminar.</p>
+    </div>
+  </div>
+
+  <div class="config-grid">
+    <section class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-globe"></i>
+        Configuración global semanal
+      </div>
+
+      <div class="config-body">
+        <div class="config-info">
+          <strong>Aplicación general</strong>
+          <p>Se aplicará únicamente a usuarios activos que ya tengan acceso al módulo preliminar.</p>
+        </div>
+
+        <div class="config-switch-list">
+          <label class="module-switch">
+            <div>
+              <strong>Carga semanal</strong>
+              <span>Permite integrar archivos correspondientes a una semana.</span>
+            </div>
+
+            <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
+          </label>
+
+          <label class="module-switch">
+            <div>
+              <strong>Actualización semanal</strong>
+              <span>Permite reemplazar información semanal previamente confirmada.</span>
+            </div>
+
+            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
+              (ngModelChange)="cambiarModificacionGlobal($event)">
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-siiid mt-3" [disabled]="guardandoGlobal()"
+          (click)="guardarConfiguracionGlobal()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          {{ guardandoGlobal() ? 'Guardando...' : 'Guardar configuración global' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-map-location-dot"></i>
+        Resumen por entidad
+      </div>
+
+      <div class="config-body">
+        <div class="mini-stat">
+          <div>
+            <span>{{ totalEntidades() }}</span>
+            Entidades
+          </div>
+
+          <div>
+            <span>{{ totalEntidadesCargaActiva() }}</span>
+            Con carga activada
+          </div>
+
+          <div>
+            <span>{{ totalEntidadesModificacionActiva() }}</span>
+            Con actualización activada
+          </div>
+        </div>
+
+        <div class="config-note">
+          El acceso general al módulo preliminar se administra desde Usuarios semanales.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="siiid-card mt-4">
+    <div class="siiid-card-header usuarios-card-header">
+      <span>
+        <i class="fa-solid fa-table-list"></i>
+        Configuración semanal por entidad
+      </span>
+
+      <div class="usuarios-tools">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()"
+          (click)="exportarConfiguracionExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar entidad..." [ngModel]="busquedaEntidad()"
+            (ngModelChange)="buscarEntidades($event)">
+        </div>
+      </div>
+    </div>
+
+    @if (cargando()) {
+    <div class="text-center p-4">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Cargando configuración...
+    </div>
+    } @else {
+    <div class="table-responsive">
+      <table class="table table-sm entidad-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenarEntidadesPor('entidadFederativa')">
+              Entidad federativa
+              <i [class]="iconoOrdenEntidades('entidadFederativa')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarEntidadesPor('usuariosCarga')">
+              Carga semanal
+              <i [class]="iconoOrdenEntidades('usuariosCarga')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarEntidadesPor('usuariosModificacion')">
+              Actualización semanal
+              <i [class]="iconoOrdenEntidades('usuariosModificacion')"></i>
+            </th>
+
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (entidad of entidadesPaginadas(); track entidad.idEntidadFederativa) {
+          <tr>
+            <td><strong>{{ entidad.entidadFederativa }}</strong></td>
+
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="entidad.estadoCarga === 'ACTIVO'"
+                [class.estado-config-inactivo]="entidad.estadoCarga === 'INACTIVO'"
+                [class.estado-config-mixto]="entidad.estadoCarga === 'MIXTO'">
+                {{ etiquetaEstado(entidad.estadoCarga) }}
+              </span>
+
+              <div class="config-subtexto">{{ entidad.usuariosCarga }} de {{ entidad.totalUsuarios }} usuarios</div>
+            </td>
+
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="entidad.estadoModificacion === 'ACTIVO'"
+                [class.estado-config-inactivo]="entidad.estadoModificacion === 'INACTIVO'"
+                [class.estado-config-mixto]="entidad.estadoModificacion === 'MIXTO'">
+                {{ etiquetaEstado(entidad.estadoModificacion) }}
+              </span>
+
+              <div class="config-subtexto">{{ entidad.usuariosModificacion }} de {{ entidad.totalUsuarios }} usuarios</div>
+            </td>
+
+            <td>
+              <button type="button" class="btn btn-sm btn-secondary" (click)="abrirPermisosEntidad(entidad)">
+                Administrar permisos
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="4" class="text-center p-4">No se encontraron entidades.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    @if (entidadesFiltradas().length > 0) {
+    <div class="pagination-row">
+      <span>Mostrando {{ entidadesPaginadas().length }} de {{ entidadesFiltradas().length }} entidades</span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaEntidades() === 1"
+          (click)="cambiarPaginaEntidades(paginaEntidades() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaEntidades() }} / {{ totalPaginasEntidades() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaEntidades() === totalPaginasEntidades()"
+          (click)="cambiarPaginaEntidades(paginaEntidades() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
+  </section>
+</div>
+
+@if (modalEntidadAbierto()) {
+<div class="drawer-backdrop" (click)="cerrarPermisosEntidad()"></div>
+
+<aside class="permisos-entidad-drawer">
+  <div class="drawer-header">
+    <div>
+      <h2>Permisos semanales por entidad</h2>
+      <p>{{ entidadSeleccionada()?.entidadFederativa }}</p>
+    </div>
+
+    <button type="button" class="drawer-close" (click)="cerrarPermisosEntidad()">×</button>
+  </div>
+
+  <div class="drawer-body">
+    <div class="config-info">
+      <strong>Usuarios con acceso al módulo preliminar</strong>
+      <p>Ajusta únicamente carga y actualización semanal. Los permisos mensuales no serán modificados.</p>
+    </div>
+
+    <div class="usuarios-permisos-list">
+      @for (usuario of usuariosEntidad(); track usuario.idUsuario) {
+      <div class="usuario-permiso-card" [class.usuario-bloqueado]="usuario.bloqueado">
+        <div class="usuario-permiso-info">
+          <strong>{{ usuario.nombreCompleto }}</strong>
+          <span>{{ usuario.usuario }} · {{ usuario.rol }}</span>
+        </div>
+
+        <label class="permiso-mini-switch">
+          <span>Carga</span>
+          <input type="checkbox" [disabled]="usuario.bloqueado || guardandoEntidad()" [ngModel]="usuario.habilitaCarga"
+            (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
+        </label>
+
+        <label class="permiso-mini-switch">
+          <span>Actualización</span>
+          <input type="checkbox" [disabled]="usuario.bloqueado || guardandoEntidad()"
+            [ngModel]="usuario.habilitaModificacion"
+            (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
+        </label>
+      </div>
+      } @empty {
+      <div class="sin-usuarios-entidad">No hay usuarios activos con acceso al módulo preliminar.</div>
+      }
+    </div>
+  </div>
+
+  <div class="drawer-actions">
+    <button type="button" class="btn btn-secondary" [disabled]="guardandoEntidad()" (click)="cerrarPermisosEntidad()">
+      Cancelar
+    </button>
+
+    <button type="button" class="btn btn-siiid" [disabled]="guardandoEntidad() || !hayCambiosEntidad()"
+      (click)="guardarPermisosEntidad()">
+      {{ guardandoEntidad() ? 'Guardando...' : 'Guardar permisos' }}
+    </button>
+  </div>
+</aside>
+}

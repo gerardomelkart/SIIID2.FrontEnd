@@ -16,10 +16,8 @@ export class Sidebar {
   private readonly router = inject(Router);
 
   cargaAbierta = signal(false);
-  incidenciaAbierta = signal(false);
 
   informesAbierto = signal(false);
-  informesIncidenciaAbierta = signal(false);
 
   administracionAbierta = signal(false);
 
@@ -63,26 +61,10 @@ export class Sidebar {
 
   toggleCarga(): void {
     this.cargaAbierta.update((valor) => !valor);
-
-    if (!this.cargaAbierta()) {
-      this.incidenciaAbierta.set(false);
-    }
-  }
-
-  toggleIncidencia(): void {
-    this.incidenciaAbierta.update((valor) => !valor);
   }
 
   toggleInformes(): void {
     this.informesAbierto.update((valor) => !valor);
-
-    if (!this.informesAbierto()) {
-      this.informesIncidenciaAbierta.set(false);
-    }
-  }
-
-  toggleInformesIncidencia(): void {
-    this.informesIncidenciaAbierta.update((valor) => !valor);
   }
 
   toggleAdministracion(): void {

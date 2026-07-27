@@ -2,6 +2,7 @@
   width: 318px;
   min-height: calc(100vh - 90px);
   background: #ffffff;
+  border-top: 5px solid var(--siiid-dorado);
   border-right: 1px solid #e5e5e5;
   color: #111;
 }
@@ -84,6 +85,11 @@
   font-size: 12px;
 }
 
+.system-info span {
+  color: var(--siiid-guinda);
+  font-weight: 900;
+}
+
 .system-info strong {
   color: var(--siiid-guinda);
   font-size: 12px;
@@ -93,7 +99,12 @@
   padding-top: 4px;
 }
 
+.menu-link:first-child {
+  margin-top: 4px;
+}
+
 .menu-link {
+  font-weight: 700;
   width: 100%;
   min-height: 32px;
   padding-top: 7px;
