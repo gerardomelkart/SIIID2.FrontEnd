@@ -2,7 +2,7 @@
   <div class="admin-header">
     <div>
       <h1>Configuración de módulos</h1>
-      <p>Control global y por entidad para carga y actualización del módulo preliminar.</p>
+      <p>Control global y por entidad para acceso, carga y actualización del módulo preliminar.</p>
     </div>
   </div>
 
@@ -16,17 +16,28 @@
       <div class="config-body">
         <div class="config-info">
           <strong>Aplicación general</strong>
-          <p>Se aplicará únicamente a usuarios activos que ya tengan acceso al módulo preliminar.</p>
+          <p>Se aplicará a todos los usuarios activos. Tu propio acceso al módulo preliminar no podrá deshabilitarse.</p>
         </div>
 
         <div class="config-switch-list">
+          <label class="module-switch">
+            <div>
+              <strong>Acceso al módulo preliminar</strong>
+              <span>Permite incluir o excluir usuarios del módulo semanal.</span>
+            </div>
+
+            <input type="checkbox" [ngModel]="habilitaSemanalGlobal()"
+              (ngModelChange)="cambiarAccesoGlobal($event)">
+          </label>
+
           <label class="module-switch">
             <div>
               <strong>Carga semanal</strong>
               <span>Permite integrar archivos correspondientes a una semana.</span>
             </div>
 
-            <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
+            <input type="checkbox" [disabled]="!habilitaSemanalGlobal()"
+              [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
           </label>
 
           <label class="module-switch">
@@ -35,7 +46,8 @@
               <span>Permite reemplazar información semanal previamente confirmada.</span>
             </div>
 
-            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
+            <input type="checkbox" [disabled]="!habilitaSemanalGlobal()"
+              [ngModel]="habilitaModificacionGlobal()"
               (ngModelChange)="cambiarModificacionGlobal($event)">
           </label>
         </div>
@@ -62,6 +74,11 @@
           </div>
 
           <div>
+            <span>{{ totalEntidadesAccesoActivo() }}</span>
+            Con acceso activo
+          </div>
+
+          <div>
             <span>{{ totalEntidadesCargaActiva() }}</span>
             Con carga activada
           </div>
@@ -73,7 +90,7 @@
         </div>
 
         <div class="config-note">
-          El acceso general al módulo preliminar se administra desde Usuarios semanales.
+          Los usuarios de CONSULTA pueden tener acceso al módulo, pero no permisos de carga ni actualización.
         </div>
       </div>
     </section>
@@ -120,6 +137,11 @@
               <i [class]="iconoOrdenEntidades('entidadFederativa')"></i>
             </th>
 
+            <th class="sortable" (click)="ordenarEntidadesPor('usuariosAcceso')">
+              Acceso preliminar
+              <i [class]="iconoOrdenEntidades('usuariosAcceso')"></i>
+            </th>
+
             <th class="sortable" (click)="ordenarEntidadesPor('usuariosCarga')">
               Carga semanal
               <i [class]="iconoOrdenEntidades('usuariosCarga')"></i>
@@ -140,13 +162,27 @@
             <td><strong>{{ entidad.entidadFederativa }}</strong></td>
 
             <td>
+              <span class="estado-config" [class.estado-config-activo]="entidad.estadoAcceso === 'ACTIVO'"
+                [class.estado-config-inactivo]="entidad.estadoAcceso === 'INACTIVO'"
+                [class.estado-config-mixto]="entidad.estadoAcceso === 'MIXTO'">
+                {{ etiquetaEstado(entidad.estadoAcceso) }}
+              </span>
+
+              <div class="config-subtexto">
+                {{ entidad.usuariosAcceso }} de {{ entidad.totalUsuarios }} usuarios
+              </div>
+            </td>
+
+            <td>
               <span class="estado-config" [class.estado-config-activo]="entidad.estadoCarga === 'ACTIVO'"
                 [class.estado-config-inactivo]="entidad.estadoCarga === 'INACTIVO'"
                 [class.estado-config-mixto]="entidad.estadoCarga === 'MIXTO'">
                 {{ etiquetaEstado(entidad.estadoCarga) }}
               </span>
 
-              <div class="config-subtexto">{{ entidad.usuariosCarga }} de {{ entidad.totalUsuarios }} usuarios</div>
+              <div class="config-subtexto">
+                {{ entidad.usuariosCarga }} de {{ entidad.totalUsuariosOperativos }} usuarios operativos
+              </div>
             </td>
 
             <td>
@@ -156,7 +192,9 @@
                 {{ etiquetaEstado(entidad.estadoModificacion) }}
               </span>
 
-              <div class="config-subtexto">{{ entidad.usuariosModificacion }} de {{ entidad.totalUsuarios }} usuarios</div>
+              <div class="config-subtexto">
+                {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuariosOperativos }} usuarios operativos
+              </div>
             </td>
 
             <td>
@@ -167,7 +205,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="4" class="text-center p-4">No se encontraron entidades.</td>
+            <td colspan="5" class="text-center p-4">No se encontraron entidades.</td>
           </tr>
           }
         </tbody>
@@ -213,43 +251,63 @@
 
   <div class="drawer-body">
     <div class="config-info">
-      <strong>Usuarios con acceso al módulo preliminar</strong>
-      <p>Ajusta únicamente carga y actualización semanal. Los permisos mensuales no serán modificados.</p>
+      <strong>Usuarios activos de la entidad</strong>
+      <p>Ajusta acceso, carga y actualización del módulo preliminar. Los permisos mensuales no serán modificados.</p>
     </div>
 
     <div class="usuarios-permisos-list">
       @for (usuario of usuariosEntidad(); track usuario.idUsuario) {
-      <div class="usuario-permiso-card" [class.usuario-bloqueado]="usuario.bloqueado">
+      <div class="usuario-permiso-card" [class.usuario-sin-acceso]="!usuario.habilitaSemanal">
         <div class="usuario-permiso-info">
           <strong>{{ usuario.nombreCompleto }}</strong>
           <span>{{ usuario.usuario }} · {{ usuario.rol }}</span>
+
+          @if (usuario.esUsuarioActual) {
+          <small>Tu propio acceso no puede deshabilitarse.</small>
+          }
+
+          @if (usuario.bloqueaOperacion) {
+          <small>El rol CONSULTA no puede cargar ni actualizar.</small>
+          }
         </div>
 
         <label class="permiso-mini-switch">
+          <span>Acceso</span>
+          <input type="checkbox" [disabled]="usuario.esUsuarioActual || guardandoEntidad()"
+            [ngModel]="usuario.habilitaSemanal"
+            (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaSemanal', $event)">
+        </label>
+
+        <label class="permiso-mini-switch">
           <span>Carga</span>
-          <input type="checkbox" [disabled]="usuario.bloqueado || guardandoEntidad()" [ngModel]="usuario.habilitaCarga"
+          <input type="checkbox"
+            [disabled]="!usuario.habilitaSemanal || usuario.bloqueaOperacion || guardandoEntidad()"
+            [ngModel]="usuario.habilitaCarga"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
         </label>
 
         <label class="permiso-mini-switch">
           <span>Actualización</span>
-          <input type="checkbox" [disabled]="usuario.bloqueado || guardandoEntidad()"
+          <input type="checkbox"
+            [disabled]="!usuario.habilitaSemanal || usuario.bloqueaOperacion || guardandoEntidad()"
             [ngModel]="usuario.habilitaModificacion"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
         </label>
       </div>
       } @empty {
-      <div class="sin-usuarios-entidad">No hay usuarios activos con acceso al módulo preliminar.</div>
+      <div class="sin-usuarios-entidad">No hay usuarios activos en esta entidad.</div>
       }
     </div>
   </div>
 
   <div class="drawer-actions">
-    <button type="button" class="btn btn-secondary" [disabled]="guardandoEntidad()" (click)="cerrarPermisosEntidad()">
+    <button type="button" class="btn btn-secondary" [disabled]="guardandoEntidad()"
+      (click)="cerrarPermisosEntidad()">
       Cancelar
     </button>
 
-    <button type="button" class="btn btn-siiid" [disabled]="guardandoEntidad() || !hayCambiosEntidad()"
+    <button type="button" class="btn btn-siiid"
+      [disabled]="guardandoEntidad() || !hayCambiosEntidad()"
       (click)="guardarPermisosEntidad()">
       {{ guardandoEntidad() ? 'Guardando...' : 'Guardar permisos' }}
     </button>

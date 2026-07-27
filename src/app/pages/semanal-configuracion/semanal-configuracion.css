@@ -1,0 +1,40 @@
+.usuario-permiso-card {
+  grid-template-columns: minmax(220px, 1fr) 120px 120px 150px;
+}
+
+.usuario-sin-acceso {
+  border-left-color: #6c757d;
+  background: #fafafa;
+}
+
+.usuario-permiso-info small {
+  display: block;
+  margin-top: 4px;
+  color: #8a5b00;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.entidad-table {
+  min-width: 1050px;
+}
+
+@media (max-width: 1050px) {
+  .usuario-permiso-card {
+    grid-template-columns: minmax(220px, 1fr) 1fr 1fr;
+  }
+
+  .usuario-permiso-info {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .usuario-permiso-card {
+    grid-template-columns: 1fr;
+  }
+
+  .usuario-permiso-info {
+    grid-column: auto;
+  }
+}

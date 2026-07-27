@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 
@@ -16,42 +17,87 @@ export class SemanalInicio {
   habilitaCarga = this.sessionService.habilitaCarga;
   habilitaModificacion = this.sessionService.habilitaModificacion;
 
-  esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
-  esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
-
-  esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
-
-  puedeConsultarEnvios = computed(
-    () => this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta(),
+  esSuperUsuario = computed(
+    () => this.usuario()?.rol === ROLES.SUPER_USUARIO,
   );
 
-  nombreUsuario = computed(() => {
-    return this.usuario()?.nombre || this.usuario()?.usuario || 'Usuario';
-  });
+  esEnlaceEstatal = computed(
+    () => this.usuario()?.rol === ROLES.ENLACE_ESTATAL,
+  );
 
-  entidadUsuario = computed(() => {
-    return this.usuario()?.entidadFederativa || 'Nacional';
-  });
+  esConsulta = computed(
+    () => this.usuario()?.rol === ROLES.CONSULTA,
+  );
+
+  nombreUsuario = computed(
+    () => this.usuario()?.nombre || this.usuario()?.usuario || 'Usuario',
+  );
+
+  entidadUsuario = computed(
+    () => this.usuario()?.entidadFederativa || 'Nacional',
+  );
 
   rolDescripcion = computed(() => {
-    if (this.esSuperUsuario()) return 'Administrador general del sistema';
-    if (this.esEnlaceEstatal()) return 'Enlace estatal';
+    if (this.esSuperUsuario()) {
+      return 'Administrador general del sistema';
+    }
+
+    if (this.esEnlaceEstatal()) {
+      return 'Enlace estatal';
+    }
+
     return 'Usuario de consulta';
   });
 
   puedeCargar = computed(
-    () => (this.esSuperUsuario() || this.esEnlaceEstatal()) && this.habilitaCarga(),
+    () =>
+      (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
+      this.habilitaCarga(),
   );
 
   puedeActualizar = computed(
-    () => (this.esSuperUsuario() || this.esEnlaceEstatal()) && this.habilitaModificacion(),
+    () =>
+      (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
+      this.habilitaModificacion(),
   );
 
-  puedeAdministrarUsuarios = computed(() => this.esSuperUsuario());
+  puedeConsultarEnvios = computed(
+    () =>
+      this.esSuperUsuario() ||
+      this.esEnlaceEstatal() ||
+      this.esConsulta(),
+  );
 
-  puedeAprobarCargas = computed(() => this.esSuperUsuario());
+  puedeVerReporteCargas = computed(
+    () => this.esSuperUsuario(),
+  );
+
+  puedeVerPlanos = computed(
+    () =>
+      this.esSuperUsuario() ||
+      this.esEnlaceEstatal() ||
+      this.esConsulta(),
+  );
+
+  puedeVerArchivosOriginales = computed(
+    () => this.esSuperUsuario(),
+  );
+
+  puedeAprobarCargas = computed(
+    () => this.esSuperUsuario(),
+  );
+
+  puedeAdministrarUsuarios = computed(
+    () => this.esSuperUsuario(),
+  );
+
+  puedeAdministrarConfiguracion = computed(
+    () => this.esSuperUsuario(),
+  );
 
   puedeAdministrarDelitos = computed(
-    () => this.esSuperUsuario() && this.sessionService.administraDelitos(),
+    () =>
+      this.esSuperUsuario() &&
+      this.sessionService.administraDelitos(),
   );
 }
