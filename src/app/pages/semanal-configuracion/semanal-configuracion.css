@@ -2,6 +2,59 @@
   grid-template-columns: minmax(220px, 1fr) 120px 120px 150px;
 }
 
+.permiso-mini-switch {
+  min-height: 58px;
+  margin: 0;
+  padding: 9px 10px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  justify-content: start;
+  gap: 9px;
+  border: 1px solid #d8dde3;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.permiso-mini-switch:hover {
+  border-color: var(--siiid-guinda);
+  background: #f8faf9;
+}
+
+.permiso-mini-switch input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.permiso-mini-switch span {
+  display: block;
+  min-width: 0;
+}
+
+.permiso-mini-switch strong {
+  display: block;
+  color: #222;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.permiso-mini-switch small {
+  display: block;
+  margin-top: 3px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.permiso-mini-switch:has(input:disabled) {
+  cursor: not-allowed;
+  background: #f4f4f4;
+  opacity: .7;
+}
+
 .usuario-sin-acceso {
   border-left-color: #6c757d;
   background: #fafafa;
