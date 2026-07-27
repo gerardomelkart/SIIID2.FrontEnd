@@ -154,6 +154,13 @@
                 </button>
                 }
 
+                @if (envio.puedeResolverPendiente) {
+                <button type="button" class="btn-icon btn-view" title="Resolver operación pendiente"
+                  [disabled]="operacionEnCurso()" (click)="resolverPendiente(envio)">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                }
+
                 @if (envio.esRechazadoAdministrador) {
                 <details class="position-relative">
                   <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
