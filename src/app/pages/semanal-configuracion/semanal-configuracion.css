@@ -1,44 +1,57 @@
 .usuario-permiso-card {
-  grid-template-columns: minmax(220px, 1fr) 95px 95px 125px;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 16px;
 }
 
-.permiso-mini-switch {
-  min-height: 42px;
-  margin: 0;
-  padding: 8px 10px;
+.usuario-permisos-grid {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 22px;
+  flex-wrap: nowrap;
+}
+
+.usuario-permiso-card .permiso-mini-switch {
+  min-height: auto;
+  margin: 0;
+  padding: 4px 0;
+  display: inline-flex;
+  align-items: center;
   justify-content: flex-start;
-  gap: 8px;
-  border: 1px solid #d8dde3;
-  border-radius: 4px;
-  background: #fff;
+  gap: 7px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.permiso-mini-switch:hover {
-  border-color: #9ca3af;
-  background: #f8f9fa;
+.usuario-permiso-card .permiso-mini-switch:hover {
+  border: 0;
+  background: transparent;
 }
 
-.permiso-mini-switch input {
+.usuario-permiso-card .permiso-mini-switch input {
   width: 18px;
   height: 18px;
   margin: 0;
   flex: 0 0 auto;
 }
 
-.permiso-mini-switch span {
+.usuario-permiso-card .permiso-mini-switch span {
   color: #222;
   font-size: 13px;
   font-weight: 800;
-  white-space: nowrap;
+  line-height: 1;
 }
 
-.permiso-mini-switch:has(input:disabled) {
+.usuario-permiso-card .permiso-mini-switch:has(input:disabled) {
   cursor: not-allowed;
-  background: #f4f4f4;
-  opacity: .65;
+  background: transparent;
+  opacity: .5;
 }
 
 .usuario-sin-acceso {
@@ -58,26 +71,25 @@
   min-width: 1050px;
 }
 
-@media (max-width: 1050px) {
-  .usuario-permiso-card {
-    grid-template-columns: minmax(220px, 1fr) 1fr 1fr;
-  }
-
-  .usuario-permiso-info {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 760px) {
-  .usuario-permiso-card {
-    grid-template-columns: 1fr;
-  }
-
-  .usuario-permiso-info {
-    grid-column: auto;
-  }
-}
-
 .entidad-table thead th.sortable:hover {
   background: var(--siiid-guinda) !important;
+}
+
+@media (max-width: 900px) {
+  .usuario-permiso-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .usuario-permisos-grid {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .usuario-permisos-grid {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
 }
