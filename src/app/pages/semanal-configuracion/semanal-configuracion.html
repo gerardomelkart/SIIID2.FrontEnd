@@ -283,15 +283,20 @@
         </label>
 
         <label class="permiso-mini-switch">
+          <input type="checkbox" [disabled]="usuario.esUsuarioActual || guardandoEntidad()"
+            [ngModel]="usuario.habilitaSemanal"
+            (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaSemanal', $event)">
+
+          <span>Acceso</span>
+        </label>
+
+        <label class="permiso-mini-switch">
           <input type="checkbox"
             [disabled]="!usuario.habilitaSemanal || usuario.bloqueaOperacion || guardandoEntidad()"
             [ngModel]="usuario.habilitaCarga"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
 
-          <span>
-            <strong>Carga</strong>
-            <small>Integrar archivos</small>
-          </span>
+          <span>Carga</span>
         </label>
 
         <label class="permiso-mini-switch">
@@ -300,10 +305,7 @@
             [ngModel]="usuario.habilitaModificacion"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
 
-          <span>
-            <strong>Actualización</strong>
-            <small>Corregir cargas</small>
-          </span>
+          <span>Actualización</span>
         </label>
       </div>
       } @empty {

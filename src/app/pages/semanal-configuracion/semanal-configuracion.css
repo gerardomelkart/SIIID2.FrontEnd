@@ -1,16 +1,15 @@
 .usuario-permiso-card {
-  grid-template-columns: minmax(220px, 1fr) 120px 120px 150px;
+  grid-template-columns: minmax(220px, 1fr) 95px 95px 125px;
 }
 
 .permiso-mini-switch {
-  min-height: 58px;
+  min-height: 42px;
   margin: 0;
-  padding: 9px 10px;
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  padding: 8px 10px;
+  display: flex;
   align-items: center;
-  justify-content: start;
-  gap: 9px;
+  justify-content: flex-start;
+  gap: 8px;
   border: 1px solid #d8dde3;
   border-radius: 4px;
   background: #fff;
@@ -18,41 +17,28 @@
 }
 
 .permiso-mini-switch:hover {
-  border-color: var(--siiid-guinda);
-  background: #f8faf9;
+  border-color: #9ca3af;
+  background: #f8f9fa;
 }
 
 .permiso-mini-switch input {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   margin: 0;
+  flex: 0 0 auto;
 }
 
 .permiso-mini-switch span {
-  display: block;
-  min-width: 0;
-}
-
-.permiso-mini-switch strong {
-  display: block;
   color: #222;
   font-size: 13px;
-  line-height: 1.2;
-}
-
-.permiso-mini-switch small {
-  display: block;
-  margin-top: 3px;
-  color: #667085;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .permiso-mini-switch:has(input:disabled) {
   cursor: not-allowed;
   background: #f4f4f4;
-  opacity: .7;
+  opacity: .65;
 }
 
 .usuario-sin-acceso {
@@ -90,4 +76,8 @@
   .usuario-permiso-info {
     grid-column: auto;
   }
+}
+
+.entidad-table thead th.sortable:hover {
+  background: var(--siiid-guinda) !important;
 }
