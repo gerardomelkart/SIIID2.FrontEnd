@@ -1,6 +1,12 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { confirmarAccion, mostrarAdvertenciaHtml, mostrarError, mostrarExitoInstitucional, mostrarInfo } from '../../core/utils/alert.utils';
+import {
+  confirmarAccion,
+  mostrarAdvertenciaHtml,
+  mostrarError,
+  mostrarExitoInstitucional,
+  mostrarInfo,
+} from '../../core/utils/alert.utils';
 import { forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { ROLES } from '../../core/constants/roles.constants';
@@ -80,7 +86,6 @@ export class Configuracion implements OnInit {
   paginaEntidades = signal(1);
   readonly tamanioPaginaEntidades = 10;
 
-  habilitaMensualGlobal = signal(true);
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
 
@@ -118,8 +123,12 @@ export class Configuracion implements OnInit {
       const primero = lista[0];
       const usuariosOperativos = lista.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
       const usuariosAcceso = lista.filter((usuario) => usuario.habilitaMensual).length;
-      const usuariosCarga = usuariosOperativos.filter((usuario) => usuario.habilitaMensual && usuario.habilitaCarga).length;
-      const usuariosModificacion = usuariosOperativos.filter((usuario) => usuario.habilitaMensual && usuario.habilitaModificacion).length;
+      const usuariosCarga = usuariosOperativos.filter(
+        (usuario) => usuario.habilitaMensual && usuario.habilitaCarga,
+      ).length;
+      const usuariosModificacion = usuariosOperativos.filter(
+        (usuario) => usuario.habilitaMensual && usuario.habilitaModificacion,
+      ).length;
 
       resultado.push({
         idEntidadFederativa: primero.idEntidadFederativa,
@@ -131,7 +140,10 @@ export class Configuracion implements OnInit {
         usuariosModificacion,
         estadoAcceso: this.obtenerEstadoPermiso(usuariosAcceso, lista.length),
         estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, usuariosOperativos.length),
-        estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, usuariosOperativos.length),
+        estadoModificacion: this.obtenerEstadoPermiso(
+          usuariosModificacion,
+          usuariosOperativos.length,
+        ),
       });
     });
 
@@ -259,7 +271,7 @@ export class Configuracion implements OnInit {
   guardarConfiguracionGlobal(): void {
     confirmarAccion(
       'Actualizar permisos globales',
-      'Esta acción actualizará acceso, carga y actualización del módulo consolidado. Tu propio acceso y el de usuarios sin acceso al preliminar permanecerán habilitados.',
+      'Esta acción actualizará carga y actualización para todos los usuarios activos con acceso al módulo consolidado, excepto usuarios con rol CONSULTA.',
       'Sí, actualizar',
     ).then((result) => {
       if (!result.isConfirmed) {
@@ -270,7 +282,6 @@ export class Configuracion implements OnInit {
 
       this.usuariosService
         .actualizarPermisosGlobales({
-          habilitaMensual: this.habilitaMensualGlobal(),
           habilitaCarga: this.habilitaCargaGlobal(),
           habilitaModificacion: this.habilitaModificacionGlobal(),
         })
@@ -294,25 +305,12 @@ export class Configuracion implements OnInit {
     });
   }
 
-  cambiarAccesoGlobal(valor: boolean): void {
-    this.habilitaMensualGlobal.set(valor);
-
-    if (!valor) {
-      this.habilitaCargaGlobal.set(false);
-      this.habilitaModificacionGlobal.set(false);
-    }
-  }
-
   cambiarCargaGlobal(valor: boolean): void {
     this.habilitaCargaGlobal.set(valor);
-
-    if (valor) this.habilitaMensualGlobal.set(true);
   }
 
   cambiarModificacionGlobal(valor: boolean): void {
     this.habilitaModificacionGlobal.set(valor);
-
-    if (valor) this.habilitaMensualGlobal.set(true);
   }
 
   etiquetaEstado(estado: 'ACTIVO' | 'INACTIVO' | 'MIXTO'): string {
@@ -349,7 +347,9 @@ export class Configuracion implements OnInit {
         bloqueaOperacion: usuario.rol === ROLES.CONSULTA,
         esUsuarioActual: usuario.idUsuario === idUsuarioActual,
       }))
-      .sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto, 'es', { sensitivity: 'base' }));
+      .sort((a, b) =>
+        a.nombreCompleto.localeCompare(b.nombreCompleto, 'es', { sensitivity: 'base' }),
+      );
 
     this.entidadSeleccionada.set(entidad);
     this.usuariosEntidad.set(usuariosEntidad);
@@ -366,7 +366,11 @@ export class Configuracion implements OnInit {
     this.usuariosEntidad.set([]);
   }
 
-  cambiarPermisoUsuarioEntidad(idUsuario: number, permiso: 'habilitaMensual' | 'habilitaCarga' | 'habilitaModificacion', valor: boolean): void {
+  cambiarPermisoUsuarioEntidad(
+    idUsuario: number,
+    permiso: 'habilitaMensual' | 'habilitaCarga' | 'habilitaModificacion',
+    valor: boolean,
+  ): void {
     this.usuariosEntidad.update((usuarios) =>
       usuarios.map((usuario) => {
         if (usuario.idUsuario !== idUsuario) {
@@ -445,8 +449,12 @@ export class Configuracion implements OnInit {
             const request = this.construirRequestEditarUsuario(
               detalleResponse.usuario,
               usuarioPermiso.habilitaMensual,
-              usuarioPermiso.habilitaMensual && !usuarioPermiso.bloqueaOperacion && usuarioPermiso.habilitaCarga,
-              usuarioPermiso.habilitaMensual && !usuarioPermiso.bloqueaOperacion && usuarioPermiso.habilitaModificacion,
+              usuarioPermiso.habilitaMensual &&
+                !usuarioPermiso.bloqueaOperacion &&
+                usuarioPermiso.habilitaCarga,
+              usuarioPermiso.habilitaMensual &&
+                !usuarioPermiso.bloqueaOperacion &&
+                usuarioPermiso.habilitaModificacion,
             );
 
             return this.usuariosService.editarUsuario(usuarioPermiso.idUsuario, request);
@@ -501,7 +509,12 @@ export class Configuracion implements OnInit {
     });
   }
 
-  private construirRequestEditarUsuario(usuario: UsuarioDetalle, habilitaMensual: boolean, habilitaCarga: boolean, habilitaModificacion: boolean): EditarUsuarioRequest {
+  private construirRequestEditarUsuario(
+    usuario: UsuarioDetalle,
+    habilitaMensual: boolean,
+    habilitaCarga: boolean,
+    habilitaModificacion: boolean,
+  ): EditarUsuarioRequest {
     return {
       usuario: usuario.usuario,
       nuevaPassword: null,
@@ -538,21 +551,19 @@ export class Configuracion implements OnInit {
 
     return 'MIXTO';
   }
-
+  
   private sincronizarSwitchesGlobales(usuarios: UsuarioListadoItem[]): void {
-    const usuariosActivos = usuarios.filter((usuario) => usuario.activo);
+    const usuariosOperativosConAcceso = usuarios.filter(
+      (usuario) => usuario.activo && usuario.rol !== ROLES.CONSULTA && usuario.habilitaMensual,
+    );
 
-    if (usuariosActivos.length === 0) {
-      this.habilitaMensualGlobal.set(false);
+    if (usuariosOperativosConAcceso.length === 0) {
       this.habilitaCargaGlobal.set(false);
       this.habilitaModificacionGlobal.set(false);
       return;
     }
 
-    const usuariosOperativos = usuariosActivos.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
-
-    this.habilitaMensualGlobal.set(usuariosActivos.every((usuario) => usuario.habilitaMensual));
-    this.habilitaCargaGlobal.set(usuariosOperativos.length > 0 && usuariosOperativos.every((usuario) => usuario.habilitaMensual && usuario.habilitaCarga));
-    this.habilitaModificacionGlobal.set(usuariosOperativos.length > 0 && usuariosOperativos.every((usuario) => usuario.habilitaMensual && usuario.habilitaModificacion));
+    this.habilitaCargaGlobal.set(usuariosOperativosConAcceso.every((usuario) => usuario.habilitaCarga));
+    this.habilitaModificacionGlobal.set(usuariosOperativosConAcceso.every((usuario) => usuario.habilitaModificacion));
   }
 }

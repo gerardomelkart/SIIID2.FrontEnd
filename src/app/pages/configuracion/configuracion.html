@@ -2,7 +2,7 @@
   <div class="admin-header">
     <div>
       <h1>Configuración de módulos</h1>
-      <p>Control global y por entidad para acceso, carga y actualización del módulo consolidado.</p>
+      <p>Control global de carga y actualización, y control individual del acceso al módulo consolidado.</p>
     </div>
   </div>
 
@@ -16,26 +16,17 @@
       <div class="config-body">
         <div class="config-info">
           <strong>Aplicación general</strong>
-          <p>Estos switches funcionan como regla global para habilitar o bloquear módulos del sistema.</p>
+          <p>Estos switches habilitan o bloquean la carga y la actualización para los usuarios operativos con acceso al
+            consolidado.</p>
         </div>
 
         <div class="config-switch-list">
           <label class="module-switch">
             <div>
-              <strong>Acceso al módulo consolidado</strong>
-              <span>Permite incluir o excluir usuarios del módulo mensual.</span>
-            </div>
-            <input type="checkbox" [ngModel]="habilitaMensualGlobal()"
-              (ngModelChange)="cambiarAccesoGlobal($event)">
-          </label>
-
-          <label class="module-switch">
-            <div>
               <strong>Carga de información</strong>
               <span>Permite el envío de archivos de carga inicial.</span>
             </div>
-            <input type="checkbox" [disabled]="!habilitaMensualGlobal()" [ngModel]="habilitaCargaGlobal()"
-              (ngModelChange)="cambiarCargaGlobal($event)">
+            <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
           </label>
 
           <label class="module-switch">
@@ -43,8 +34,7 @@
               <strong>Actualización de información</strong>
               <span>Permite modificar periodos previamente confirmados.</span>
             </div>
-            <input type="checkbox" [disabled]="!habilitaMensualGlobal()"
-              [ngModel]="habilitaModificacionGlobal()"
+            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
               (ngModelChange)="cambiarModificacionGlobal($event)">
           </label>
         </div>
@@ -70,7 +60,7 @@
             Entidades
           </div>
 
-                    <div>
+          <div>
             <span>{{ totalEntidadesAccesoActivo() }}</span>
             Con acceso activo
           </div>
@@ -128,7 +118,7 @@
               <i [class]="iconoOrdenEntidades('entidadFederativa')"></i>
             </th>
 
-                        <th class="sortable" (click)="ordenarEntidadesPor('usuariosAcceso')">
+            <th class="sortable" (click)="ordenarEntidadesPor('usuariosAcceso')">
               Acceso consolidado
               <i [class]="iconoOrdenEntidades('usuariosAcceso')"></i>
             </th>
@@ -152,14 +142,14 @@
           <tr>
             <td><strong>{{ entidad.entidadFederativa }}</strong></td>
 
-                        <td>
+            <td>
               <span class="estado-config" [class.estado-config-activo]="entidad.estadoAcceso === 'ACTIVO'"
                 [class.estado-config-inactivo]="entidad.estadoAcceso === 'INACTIVO'"
                 [class.estado-config-mixto]="entidad.estadoAcceso === 'MIXTO'">
                 {{ etiquetaEstado(entidad.estadoAcceso) }}
               </span>
               <div class="config-subtexto">
-                {{ entidad.usuariosAcceso }} de {{ entidad.totalUsuariosOperativos }}usuarios
+                {{ entidad.usuariosAcceso }} de {{ entidad.totalUsuarios }} usuarios
               </div>
             </td>
 
@@ -240,7 +230,8 @@
     <div class="config-info">
       <strong>Usuarios activos de la entidad</strong>
       <p>
-        Ajusta permisos individuales de carga inicial y actualización. Los usuarios de consulta permanecen bloqueados.
+        Ajusta el acceso al consolidado y los permisos individuales de carga inicial y actualización. Los usuarios de
+        consulta no pueden cargar ni actualizar.
       </p>
     </div>
 
@@ -274,16 +265,14 @@
 
         <label class="permiso-mini-switch">
           <span>Carga</span>
-          <input type="checkbox"
-            [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
+          <input type="checkbox" [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
             [ngModel]="usuario.habilitaCarga"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
         </label>
 
         <label class="permiso-mini-switch">
           <span>Actualización</span>
-          <input type="checkbox"
-            [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
+          <input type="checkbox" [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
             [ngModel]="usuario.habilitaModificacion"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
         </label>
