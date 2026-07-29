@@ -49,6 +49,7 @@ interface UsuarioForm {
   password: string;
   rol: string;
   idEntidadFederativa: string;
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
@@ -63,6 +64,7 @@ type CampoOrdenUsuarios =
   | 'correoElectronico'
   | 'rol'
   | 'entidadFederativa'
+  | 'habilitaMensual'
   | 'habilitaCarga'
   | 'habilitaModificacion'
   | 'activo';
@@ -163,6 +165,10 @@ export class CrudRegistros implements OnInit {
       return false;
     }
 
+    if (!form.habilitaMensual && !form.habilitaSemanal) {
+      return false;
+    }
+
     return true;
   });
 
@@ -181,6 +187,10 @@ export class CrudRegistros implements OnInit {
 
   esUsuarioActual(usuario: UsuarioListadoItem): boolean {
     return usuario.idUsuario === this.usuarioActual()?.idUsuario;
+  }
+
+  esUsuarioActualFormulario(): boolean {
+    return this.modoFormulario() === 'EDITAR' && this.formulario().idUsuario === this.usuarioActual()?.idUsuario;
   }
 
   ordenarUsuariosPor(campo: CampoOrdenUsuarios): void {
@@ -215,6 +225,7 @@ export class CrudRegistros implements OnInit {
         Correo: usuario.correoElectronico,
         Rol: usuario.rol,
         Entidad: usuario.entidadFederativa || 'Nacional',
+        'Acceso consolidado': usuario.habilitaMensual ? 'Sí' : 'No',
         'Carga mensual': usuario.habilitaCarga ? 'Sí' : 'No',
         'Modificación mensual': usuario.habilitaModificacion ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
@@ -404,6 +415,7 @@ export class CrudRegistros implements OnInit {
     this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
 
     if (campo === 'rol') this.normalizarPermisosPorRol(valor as string);
+    if (campo === 'habilitaMensual' && valor === false) this.normalizarPermisosMensuales();
     if (campo === 'habilitaSemanal' && valor === false) this.normalizarPermisosSemanales();
   }
 
@@ -420,6 +432,7 @@ export class CrudRegistros implements OnInit {
       telefonoContacto: this.valorNullable(form.telefonoContacto),
       idEntidadFederativa: this.obtenerEntidadParaRequest(form),
       rol: form.rol,
+      habilitaMensual: form.habilitaMensual,
       habilitaCarga: form.habilitaCarga,
       habilitaModificacion: form.habilitaModificacion,
       habilitaSemanal: form.habilitaSemanal,
@@ -453,6 +466,7 @@ export class CrudRegistros implements OnInit {
       telefonoContacto: this.valorNullable(form.telefonoContacto),
       idEntidadFederativa: this.obtenerEntidadParaRequest(form),
       rol: form.rol,
+      habilitaMensual: form.habilitaMensual,
       habilitaCarga: form.habilitaCarga,
       habilitaModificacion: form.habilitaModificacion,
       habilitaSemanal: form.habilitaSemanal,
@@ -503,6 +517,7 @@ export class CrudRegistros implements OnInit {
 
       this.usuariosService
         .reactivarUsuario(usuario.idUsuario, {
+          habilitaMensual: usuario.habilitaMensual,
           habilitaCarga: usuario.habilitaCarga,
           habilitaModificacion: usuario.habilitaModificacion,
         })
@@ -561,6 +576,7 @@ export class CrudRegistros implements OnInit {
       password: '',
       rol: usuario.rol ?? '',
       idEntidadFederativa: usuario.idEntidadFederativa?.toString() ?? '',
+      habilitaMensual: usuario.habilitaMensual,
       habilitaCarga: usuario.habilitaCarga,
       habilitaModificacion: usuario.habilitaModificacion,
       habilitaSemanal: usuario.habilitaSemanal ?? false,
@@ -584,6 +600,7 @@ export class CrudRegistros implements OnInit {
       password: '',
       rol: '',
       idEntidadFederativa: '',
+      habilitaMensual: true,
       habilitaCarga: true,
       habilitaModificacion: true,
       habilitaSemanal: false,
@@ -610,8 +627,8 @@ export class CrudRegistros implements OnInit {
   private normalizarPermisosPorRol(rol: string): void {
     this.formulario.update((actual) => ({
       ...actual,
-      habilitaCarga: rol === ROLES.CONSULTA ? false : actual.habilitaCarga,
-      habilitaModificacion: rol === ROLES.CONSULTA ? false : actual.habilitaModificacion,
+      habilitaCarga: actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaCarga : false,
+      habilitaModificacion: actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaModificacion : false,
       habilitaCargaSemanal:
         actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
       habilitaModificacionSemanal:
@@ -622,6 +639,14 @@ export class CrudRegistros implements OnInit {
         actual.habilitaSemanal && rol === ROLES.SUPER_USUARIO
           ? actual.administraDelitosSemanal
           : false,
+    }));
+  }
+
+  private normalizarPermisosMensuales(): void {
+    this.formulario.update((actual) => ({
+      ...actual,
+      habilitaCarga: false,
+      habilitaModificacion: false,
     }));
   }
 

@@ -92,6 +92,11 @@
               <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
             </th>
 
+            <th class="sortable" (click)="ordenarUsuariosPor('habilitaMensual')">
+              Acceso
+              <i [class]="iconoOrdenUsuarios('habilitaMensual')"></i>
+            </th>
+
             <th class="sortable" (click)="ordenarUsuariosPor('habilitaCarga')">
               Carga
               <i [class]="iconoOrdenUsuarios('habilitaCarga')"></i>
@@ -123,6 +128,12 @@
               <span class="rol-badge">{{ usuario.rol }}</span>
             </td>
             <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
+            <td>
+              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaMensual"
+                [class.permiso-off]="!usuario.habilitaMensual">
+                {{ usuario.habilitaMensual ? 'Sí' : 'No' }}
+              </span>
+            </td>
             <td>
               <span class="permiso-badge" [class.permiso-on]="usuario.habilitaCarga"
                 [class.permiso-off]="!usuario.habilitaCarga">
@@ -156,7 +167,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="9" class="text-center p-4">No se encontraron usuarios.</td>
+                        <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
           </tr>
           }
         </tbody>
@@ -293,10 +304,21 @@
 
     <div class="permisos-panel">
       <div>
-        <strong>Permisos operativos</strong>
-        <p>Habilita los módulos que este usuario podrá operar.</p>
+        <strong>Permisos del módulo consolidado</strong>
+        <p>Estos cambios no modifican los permisos del módulo preliminar.</p>
       </div>
 
+      <label class="switch-row">
+        <span>Acceso al módulo consolidado</span>
+        <input type="checkbox" [disabled]="esUsuarioActualFormulario()" [ngModel]="formulario().habilitaMensual"
+          (ngModelChange)="actualizarCampo('habilitaMensual', $event)">
+      </label>
+
+      @if (esUsuarioActualFormulario()) {
+      <div class="permiso-nota">No puede deshabilitar su propio acceso al módulo consolidado.</div>
+      }
+
+      @if (formulario().habilitaMensual) {
       <label class="switch-row">
         <span>Carga de información</span>
         <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'" [ngModel]="formulario().habilitaCarga"
@@ -309,7 +331,17 @@
           [ngModel]="formulario().habilitaModificacion"
           (ngModelChange)="actualizarCampo('habilitaModificacion', $event)">
       </label>
+
+      @if (formulario().rol === 'CONSULTA') {
+      <div class="permiso-nota">El rol CONSULTA tendrá acceso al módulo únicamente para consulta.</div>
+      }
+      }
+
+      @if (!formulario().habilitaMensual && !formulario().habilitaSemanal) {
+      <div class="permiso-nota">Debe habilitar al menos un módulo para el usuario.</div>
+      }
     </div>
+    
   </div>
 
   <div class="drawer-actions">

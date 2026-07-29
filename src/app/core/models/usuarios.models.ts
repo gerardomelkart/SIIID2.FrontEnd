@@ -12,6 +12,7 @@ export interface UsuarioListadoItem {
   rol: string;
   idEntidadFederativa: number | null;
   entidadFederativa: string | null;
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
@@ -42,6 +43,7 @@ export interface UsuarioDetalle {
   entidadFederativa: string | null;
   idRol: number;
   rol: string;
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
@@ -65,6 +67,7 @@ export interface CrearUsuarioRequest {
   telefonoContacto: string | null;
   idEntidadFederativa: number | null;
   rol: string;
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
@@ -85,6 +88,7 @@ export interface EditarUsuarioRequest {
   telefonoContacto: string | null;
   idEntidadFederativa: number | null;
   rol: string;
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
@@ -130,6 +134,7 @@ export interface EditarUsuarioSemanalRequest {
 }
 
 export interface ReactivarUsuarioRequest {
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
 }
