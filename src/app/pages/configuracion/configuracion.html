@@ -2,7 +2,7 @@
   <div class="admin-header">
     <div>
       <h1>Configuración de módulos</h1>
-      <p>Control global y por entidad para habilitar carga inicial y actualización de información.</p>
+      <p>Control global y por entidad para acceso, carga y actualización del módulo consolidado.</p>
     </div>
   </div>
 
@@ -22,10 +22,20 @@
         <div class="config-switch-list">
           <label class="module-switch">
             <div>
+              <strong>Acceso al módulo consolidado</strong>
+              <span>Permite incluir o excluir usuarios del módulo mensual.</span>
+            </div>
+            <input type="checkbox" [ngModel]="habilitaMensualGlobal()"
+              (ngModelChange)="cambiarAccesoGlobal($event)">
+          </label>
+
+          <label class="module-switch">
+            <div>
               <strong>Carga de información</strong>
               <span>Permite el envío de archivos de carga inicial.</span>
             </div>
-            <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
+            <input type="checkbox" [disabled]="!habilitaMensualGlobal()" [ngModel]="habilitaCargaGlobal()"
+              (ngModelChange)="cambiarCargaGlobal($event)">
           </label>
 
           <label class="module-switch">
@@ -33,7 +43,8 @@
               <strong>Actualización de información</strong>
               <span>Permite modificar periodos previamente confirmados.</span>
             </div>
-            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
+            <input type="checkbox" [disabled]="!habilitaMensualGlobal()"
+              [ngModel]="habilitaModificacionGlobal()"
               (ngModelChange)="cambiarModificacionGlobal($event)">
           </label>
         </div>
@@ -57,6 +68,11 @@
           <div>
             <span>{{ totalEntidades() }}</span>
             Entidades
+          </div>
+
+                    <div>
+            <span>{{ totalEntidadesAccesoActivo() }}</span>
+            Con acceso activo
           </div>
 
           <div>
@@ -112,6 +128,11 @@
               <i [class]="iconoOrdenEntidades('entidadFederativa')"></i>
             </th>
 
+                        <th class="sortable" (click)="ordenarEntidadesPor('usuariosAcceso')">
+              Acceso consolidado
+              <i [class]="iconoOrdenEntidades('usuariosAcceso')"></i>
+            </th>
+
             <th class="sortable" (click)="ordenarEntidadesPor('usuariosCarga')">
               Carga de archivos
               <i [class]="iconoOrdenEntidades('usuariosCarga')"></i>
@@ -131,6 +152,17 @@
           <tr>
             <td><strong>{{ entidad.entidadFederativa }}</strong></td>
 
+                        <td>
+              <span class="estado-config" [class.estado-config-activo]="entidad.estadoAcceso === 'ACTIVO'"
+                [class.estado-config-inactivo]="entidad.estadoAcceso === 'INACTIVO'"
+                [class.estado-config-mixto]="entidad.estadoAcceso === 'MIXTO'">
+                {{ etiquetaEstado(entidad.estadoAcceso) }}
+              </span>
+              <div class="config-subtexto">
+                {{ entidad.usuariosAcceso }} de {{ entidad.totalUsuariosOperativos }}usuarios
+              </div>
+            </td>
+
             <td>
               <span class="estado-config" [class.estado-config-activo]="entidad.estadoCarga === 'ACTIVO'"
                 [class.estado-config-inactivo]="entidad.estadoCarga === 'INACTIVO'"
@@ -138,7 +170,7 @@
                 {{ etiquetaEstado(entidad.estadoCarga) }}
               </span>
               <div class="config-subtexto">
-                {{ entidad.usuariosCarga }} de {{ entidad.totalUsuarios }} usuarios
+                {{ entidad.usuariosCarga }} de {{ entidad.totalUsuariosOperativos }} usuarios
               </div>
             </td>
 
@@ -149,7 +181,7 @@
                 {{ etiquetaEstado(entidad.estadoModificacion) }}
               </span>
               <div class="config-subtexto">
-                {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuarios }} usuarios
+                {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuariosOperativos }} usuarios
               </div>
             </td>
             <td>
@@ -160,7 +192,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="4" class="text-center p-4">No se encontraron entidades.</td>
+            <td colspan="5" class="text-center p-4">No se encontraron entidades.</td>
           </tr>
           }
         </tbody>
@@ -214,21 +246,44 @@
 
     <div class="usuarios-permisos-list">
       @for (usuario of usuariosEntidad(); track usuario.idUsuario) {
-      <div class="usuario-permiso-card" [class.usuario-bloqueado]="usuario.bloqueado">
+      <div class="usuario-permiso-card" [class.usuario-sin-acceso]="!usuario.habilitaMensual">
         <div class="usuario-permiso-info">
           <strong>{{ usuario.nombreCompleto }}</strong>
           <span>{{ usuario.usuario }} · {{ usuario.rol }}</span>
+
+          @if (usuario.esUsuarioActual) {
+          <small>Tu propio acceso al consolidado no puede deshabilitarse.</small>
+          }
+
+          @if (!usuario.habilitaSemanal) {
+          <small>Debe conservar el consolidado porque no tiene acceso al preliminar.</small>
+          }
+
+          @if (usuario.bloqueaOperacion) {
+          <small>El rol CONSULTA no puede cargar ni actualizar.</small>
+          }
         </div>
 
         <label class="permiso-mini-switch">
+          <span>Acceso</span>
+          <input type="checkbox"
+            [disabled]="guardandoEntidad() || (usuario.habilitaMensual && (usuario.esUsuarioActual || !usuario.habilitaSemanal))"
+            [ngModel]="usuario.habilitaMensual"
+            (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaMensual', $event)">
+        </label>
+
+        <label class="permiso-mini-switch">
           <span>Carga</span>
-          <input type="checkbox" [disabled]="usuario.bloqueado || guardandoEntidad()" [ngModel]="usuario.habilitaCarga"
+          <input type="checkbox"
+            [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
+            [ngModel]="usuario.habilitaCarga"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
         </label>
 
         <label class="permiso-mini-switch">
           <span>Actualización</span>
-          <input type="checkbox" [disabled]="usuario.bloqueado || guardandoEntidad()"
+          <input type="checkbox"
+            [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
             [ngModel]="usuario.habilitaModificacion"
             (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
         </label>

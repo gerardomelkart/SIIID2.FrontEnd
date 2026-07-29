@@ -161,6 +161,7 @@ export interface UsuarioValidacionError {
 }
 
 export interface PermisosGlobalesUsuariosRequest {
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
 }

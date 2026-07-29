@@ -248,7 +248,7 @@
 
 .usuario-permiso-card {
   display: grid;
-  grid-template-columns: 1fr 130px 160px;
+  grid-template-columns: 1fr 105px 130px 160px;
   align-items: center;
   gap: 12px;
   border: 1px solid #ddd;
@@ -268,10 +268,17 @@
   font-size: 12px;
 }
 
-.usuario-bloqueado {
-  opacity: .65;
+.usuario-sin-acceso {
   border-left-color: #6c757d;
   background: #f8f8f8;
+}
+
+.usuario-permiso-info small {
+  display: block;
+  margin-top: 4px;
+  color: #8a5b00;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .permiso-mini-switch {
@@ -353,4 +360,8 @@
 .page-indicator {
   font-weight: 700;
   color: #6d213c;
+}
+
+.entidad-table {
+  min-width: 1050px;
 }

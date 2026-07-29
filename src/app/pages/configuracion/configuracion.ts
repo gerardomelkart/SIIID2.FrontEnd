@@ -21,15 +21,17 @@ import {
 } from '../../core/utils/sort.utils';
 
 import { UsuariosService } from '../../core/services/usuarios.service';
+import { SessionService } from '../../core/services/session.service';
 
 interface ConfiguracionEntidad {
   idEntidadFederativa: number | null;
   entidadFederativa: string;
   totalUsuarios: number;
+  totalUsuariosOperativos: number;
+  usuariosAcceso: number;
   usuariosCarga: number;
   usuariosModificacion: number;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
+  estadoAcceso: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
   estadoCarga: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
   estadoModificacion: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
 }
@@ -40,17 +42,23 @@ interface UsuarioPermisoEntidad {
   nombreCompleto: string;
   rol: string;
   entidadFederativa: string;
+  habilitaMensualOriginal: boolean;
   habilitaCargaOriginal: boolean;
   habilitaModificacionOriginal: boolean;
+  habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
-  bloqueado: boolean;
+  habilitaSemanal: boolean;
+  bloqueaOperacion: boolean;
+  esUsuarioActual: boolean;
 }
 
 type CampoOrdenConfiguracionEntidad =
   | 'entidadFederativa'
+  | 'estadoAcceso'
   | 'estadoCarga'
   | 'estadoModificacion'
+  | 'usuariosAcceso'
   | 'usuariosCarga'
   | 'usuariosModificacion'
   | 'totalUsuarios';
@@ -63,6 +71,7 @@ type CampoOrdenConfiguracionEntidad =
 })
 export class Configuracion implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
+  private readonly sessionService = inject(SessionService);
 
   cargando = signal(false);
   guardandoGlobal = signal(false);
@@ -71,6 +80,7 @@ export class Configuracion implements OnInit {
   paginaEntidades = signal(1);
   readonly tamanioPaginaEntidades = 10;
 
+  habilitaMensualGlobal = signal(true);
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
 
@@ -85,6 +95,8 @@ export class Configuracion implements OnInit {
 
   usuarios = signal<UsuarioListadoItem[]>([]);
 
+  usuarioActual = this.sessionService.usuario;
+
   entidadesConfiguracion = computed<ConfiguracionEntidad[]>(() => {
     const grupos = new Map<string, UsuarioListadoItem[]>();
 
@@ -93,12 +105,9 @@ export class Configuracion implements OnInit {
         continue;
       }
 
-      if (usuario.rol === ROLES.CONSULTA) {
-        continue;
-      }
-
       const key = usuario.idEntidadFederativa?.toString() ?? 'NACIONAL';
       const lista = grupos.get(key) ?? [];
+
       lista.push(usuario);
       grupos.set(key, lista);
     }
@@ -107,22 +116,25 @@ export class Configuracion implements OnInit {
 
     grupos.forEach((lista) => {
       const primero = lista[0];
-
-      const usuariosCarga = lista.filter((x) => x.habilitaCarga).length;
-      const usuariosModificacion = lista.filter((x) => x.habilitaModificacion).length;
+      const usuariosOperativos = lista.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
+      const usuariosAcceso = lista.filter((usuario) => usuario.habilitaMensual).length;
+      const usuariosCarga = usuariosOperativos.filter((usuario) => usuario.habilitaMensual && usuario.habilitaCarga).length;
+      const usuariosModificacion = usuariosOperativos.filter((usuario) => usuario.habilitaMensual && usuario.habilitaModificacion).length;
 
       resultado.push({
         idEntidadFederativa: primero.idEntidadFederativa,
         entidadFederativa: primero.entidadFederativa || 'Nacional',
         totalUsuarios: lista.length,
+        totalUsuariosOperativos: usuariosOperativos.length,
+        usuariosAcceso,
         usuariosCarga,
         usuariosModificacion,
-        habilitaCarga: usuariosCarga === lista.length,
-        habilitaModificacion: usuariosModificacion === lista.length,
-        estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, lista.length),
-        estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, lista.length),
+        estadoAcceso: this.obtenerEstadoPermiso(usuariosAcceso, lista.length),
+        estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, usuariosOperativos.length),
+        estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, usuariosOperativos.length),
       });
     });
+
     return resultado;
   });
 
@@ -148,6 +160,10 @@ export class Configuracion implements OnInit {
   );
 
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
+
+  totalEntidadesAccesoActivo = computed(() => {
+    return this.entidadesConfiguracion().filter((x) => x.estadoAcceso === 'ACTIVO').length;
+  });
 
   totalEntidadesCargaActiva = computed(() => {
     return this.entidadesConfiguracion().filter((x) => x.estadoCarga === 'ACTIVO').length;
@@ -212,10 +228,12 @@ export class Configuracion implements OnInit {
     try {
       const filas = this.entidadesFiltradas().map((entidad) => ({
         'Entidad federativa': entidad.entidadFederativa,
+        'Acceso al módulo consolidado': this.etiquetaEstado(entidad.estadoAcceso),
+        'Usuarios con acceso': `${entidad.usuariosAcceso} de ${entidad.totalUsuarios}`,
         'Carga de archivos': this.etiquetaEstado(entidad.estadoCarga),
-        'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuarios}`,
+        'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuariosOperativos}`,
         Actualización: this.etiquetaEstado(entidad.estadoModificacion),
-        'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuarios}`,
+        'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuariosOperativos}`,
       }));
 
       const exportado = await exportarFilasExcel(
@@ -241,7 +259,7 @@ export class Configuracion implements OnInit {
   guardarConfiguracionGlobal(): void {
     confirmarAccion(
       'Actualizar permisos globales',
-      'Esta acción actualizará carga y modificación para todos los usuarios activos permitidos.',
+      'Esta acción actualizará acceso, carga y actualización del módulo consolidado. Tu propio acceso y el de usuarios sin acceso al preliminar permanecerán habilitados.',
       'Sí, actualizar',
     ).then((result) => {
       if (!result.isConfirmed) {
@@ -252,6 +270,7 @@ export class Configuracion implements OnInit {
 
       this.usuariosService
         .actualizarPermisosGlobales({
+          habilitaMensual: this.habilitaMensualGlobal(),
           habilitaCarga: this.habilitaCargaGlobal(),
           habilitaModificacion: this.habilitaModificacionGlobal(),
         })
@@ -275,12 +294,25 @@ export class Configuracion implements OnInit {
     });
   }
 
+  cambiarAccesoGlobal(valor: boolean): void {
+    this.habilitaMensualGlobal.set(valor);
+
+    if (!valor) {
+      this.habilitaCargaGlobal.set(false);
+      this.habilitaModificacionGlobal.set(false);
+    }
+  }
+
   cambiarCargaGlobal(valor: boolean): void {
     this.habilitaCargaGlobal.set(valor);
+
+    if (valor) this.habilitaMensualGlobal.set(true);
   }
 
   cambiarModificacionGlobal(valor: boolean): void {
     this.habilitaModificacionGlobal.set(valor);
+
+    if (valor) this.habilitaMensualGlobal.set(true);
   }
 
   etiquetaEstado(estado: 'ACTIVO' | 'INACTIVO' | 'MIXTO'): string {
@@ -296,6 +328,8 @@ export class Configuracion implements OnInit {
   }
 
   abrirPermisosEntidad(entidad: ConfiguracionEntidad): void {
+    const idUsuarioActual = this.usuarioActual()?.idUsuario ?? null;
+
     const usuariosEntidad = this.usuarios()
       .filter((usuario) => usuario.activo)
       .filter((usuario) => usuario.idEntidadFederativa === entidad.idEntidadFederativa)
@@ -305,12 +339,17 @@ export class Configuracion implements OnInit {
         nombreCompleto: usuario.nombreCompleto,
         rol: usuario.rol,
         entidadFederativa: usuario.entidadFederativa || 'Nacional',
+        habilitaMensualOriginal: usuario.habilitaMensual,
         habilitaCargaOriginal: usuario.habilitaCarga,
         habilitaModificacionOriginal: usuario.habilitaModificacion,
+        habilitaMensual: usuario.habilitaMensual,
         habilitaCarga: usuario.habilitaCarga,
         habilitaModificacion: usuario.habilitaModificacion,
-        bloqueado: usuario.rol === ROLES.CONSULTA,
-      }));
+        habilitaSemanal: usuario.habilitaSemanal,
+        bloqueaOperacion: usuario.rol === ROLES.CONSULTA,
+        esUsuarioActual: usuario.idUsuario === idUsuarioActual,
+      }))
+      .sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto, 'es', { sensitivity: 'base' }));
 
     this.entidadSeleccionada.set(entidad);
     this.usuariosEntidad.set(usuariosEntidad);
@@ -327,19 +366,33 @@ export class Configuracion implements OnInit {
     this.usuariosEntidad.set([]);
   }
 
-  cambiarPermisoUsuarioEntidad(
-    idUsuario: number,
-    permiso: 'habilitaCarga' | 'habilitaModificacion',
-    valor: boolean,
-  ): void {
+  cambiarPermisoUsuarioEntidad(idUsuario: number, permiso: 'habilitaMensual' | 'habilitaCarga' | 'habilitaModificacion', valor: boolean): void {
     this.usuariosEntidad.update((usuarios) =>
       usuarios.map((usuario) => {
-        if (usuario.idUsuario !== idUsuario || usuario.bloqueado) {
+        if (usuario.idUsuario !== idUsuario) {
+          return usuario;
+        }
+
+        if (permiso === 'habilitaMensual') {
+          if (!valor && (usuario.esUsuarioActual || !usuario.habilitaSemanal)) {
+            return usuario;
+          }
+
+          return {
+            ...usuario,
+            habilitaMensual: valor,
+            habilitaCarga: valor ? usuario.habilitaCarga : false,
+            habilitaModificacion: valor ? usuario.habilitaModificacion : false,
+          };
+        }
+
+        if (usuario.bloqueaOperacion) {
           return usuario;
         }
 
         return {
           ...usuario,
+          habilitaMensual: valor ? true : usuario.habilitaMensual,
           [permiso]: valor,
         };
       }),
@@ -349,19 +402,19 @@ export class Configuracion implements OnInit {
   hayCambiosEntidad(): boolean {
     return this.usuariosEntidad().some(
       (usuario) =>
+        usuario.habilitaMensual !== usuario.habilitaMensualOriginal ||
         usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
         usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
     );
   }
 
   guardarPermisosEntidad(): void {
-    const usuariosModificados = this.usuariosEntidad()
-      .filter((usuario) => !usuario.bloqueado)
-      .filter(
-        (usuario) =>
-          usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-          usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
-      );
+    const usuariosModificados = this.usuariosEntidad().filter(
+      (usuario) =>
+        usuario.habilitaMensual !== usuario.habilitaMensualOriginal ||
+        usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
+    );
 
     if (usuariosModificados.length === 0) {
       mostrarInfo('Sin cambios', 'No hay cambios por guardar.');
@@ -391,8 +444,9 @@ export class Configuracion implements OnInit {
 
             const request = this.construirRequestEditarUsuario(
               detalleResponse.usuario,
-              usuarioPermiso.habilitaCarga,
-              usuarioPermiso.habilitaModificacion,
+              usuarioPermiso.habilitaMensual,
+              usuarioPermiso.habilitaMensual && !usuarioPermiso.bloqueaOperacion && usuarioPermiso.habilitaCarga,
+              usuarioPermiso.habilitaMensual && !usuarioPermiso.bloqueaOperacion && usuarioPermiso.habilitaModificacion,
             );
 
             return this.usuariosService.editarUsuario(usuarioPermiso.idUsuario, request);
@@ -447,7 +501,7 @@ export class Configuracion implements OnInit {
     });
   }
 
-  private construirRequestEditarUsuario(usuario: UsuarioDetalle, habilitaCarga: boolean, habilitaModificacion: boolean): EditarUsuarioRequest {
+  private construirRequestEditarUsuario(usuario: UsuarioDetalle, habilitaMensual: boolean, habilitaCarga: boolean, habilitaModificacion: boolean): EditarUsuarioRequest {
     return {
       usuario: usuario.usuario,
       nuevaPassword: null,
@@ -460,7 +514,7 @@ export class Configuracion implements OnInit {
       telefonoContacto: usuario.telefonoContacto,
       idEntidadFederativa: usuario.idEntidadFederativa,
       rol: usuario.rol,
-      habilitaMensual: usuario.habilitaMensual,
+      habilitaMensual,
       habilitaCarga,
       habilitaModificacion,
       habilitaSemanal: usuario.habilitaSemanal,
@@ -486,15 +540,19 @@ export class Configuracion implements OnInit {
   }
 
   private sincronizarSwitchesGlobales(usuarios: UsuarioListadoItem[]): void {
-    const usuariosOperativos = usuarios.filter((x) => x.activo && x.rol !== ROLES.CONSULTA);
+    const usuariosActivos = usuarios.filter((usuario) => usuario.activo);
 
-    if (usuariosOperativos.length === 0) {
+    if (usuariosActivos.length === 0) {
+      this.habilitaMensualGlobal.set(false);
       this.habilitaCargaGlobal.set(false);
       this.habilitaModificacionGlobal.set(false);
       return;
     }
 
-    this.habilitaCargaGlobal.set(usuariosOperativos.every((x) => x.habilitaCarga));
-    this.habilitaModificacionGlobal.set(usuariosOperativos.every((x) => x.habilitaModificacion));
+    const usuariosOperativos = usuariosActivos.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
+
+    this.habilitaMensualGlobal.set(usuariosActivos.every((usuario) => usuario.habilitaMensual));
+    this.habilitaCargaGlobal.set(usuariosOperativos.length > 0 && usuariosOperativos.every((usuario) => usuario.habilitaMensual && usuario.habilitaCarga));
+    this.habilitaModificacionGlobal.set(usuariosOperativos.length > 0 && usuariosOperativos.every((usuario) => usuario.habilitaMensual && usuario.habilitaModificacion));
   }
 }
