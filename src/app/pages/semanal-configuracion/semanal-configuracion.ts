@@ -66,10 +66,7 @@ type CampoOrdenConfiguracionSemanal =
   selector: 'app-semanal-configuracion',
   imports: [FormsModule],
   templateUrl: './semanal-configuracion.html',
-  styleUrls: [
-    '../configuracion/configuracion.css',
-    './semanal-configuracion.css',
-  ],
+  styleUrls: ['../configuracion/configuracion.css', './semanal-configuracion.css'],
 })
 export class SemanalConfiguracion implements OnInit {
   private readonly usuariosService = inject(UsuariosService);
@@ -85,7 +82,6 @@ export class SemanalConfiguracion implements OnInit {
   paginaEntidades = signal(1);
   readonly tamanioPaginaEntidades = 10;
 
-  habilitaSemanalGlobal = signal(true);
   habilitaCargaGlobal = signal(true);
   habilitaModificacionGlobal = signal(true);
 
@@ -161,42 +157,29 @@ export class SemanalConfiguracion implements OnInit {
   entidadesPaginadas = computed(() => {
     const inicio = (this.paginaEntidades() - 1) * this.tamanioPaginaEntidades;
 
-    return this.entidadesFiltradas().slice(
-      inicio,
-      inicio + this.tamanioPaginaEntidades,
-    );
+    return this.entidadesFiltradas().slice(inicio, inicio + this.tamanioPaginaEntidades);
   });
 
   totalPaginasEntidades = computed(() =>
-    Math.max(
-      1,
-      Math.ceil(
-        this.entidadesFiltradas().length / this.tamanioPaginaEntidades,
-      ),
-    ),
+    Math.max(1, Math.ceil(this.entidadesFiltradas().length / this.tamanioPaginaEntidades)),
   );
 
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
 
   totalEntidadesAccesoActivo = computed(
     () =>
-      this.entidadesConfiguracion().filter(
-        (entidad) => entidad.estadoAcceso === 'ACTIVO',
-      ).length,
+      this.entidadesConfiguracion().filter((entidad) => entidad.estadoAcceso === 'ACTIVO').length,
   );
 
   totalEntidadesCargaActiva = computed(
     () =>
-      this.entidadesConfiguracion().filter(
-        (entidad) => entidad.estadoCarga === 'ACTIVO',
-      ).length,
+      this.entidadesConfiguracion().filter((entidad) => entidad.estadoCarga === 'ACTIVO').length,
   );
 
   totalEntidadesModificacionActiva = computed(
     () =>
-      this.entidadesConfiguracion().filter(
-        (entidad) => entidad.estadoModificacion === 'ACTIVO',
-      ).length,
+      this.entidadesConfiguracion().filter((entidad) => entidad.estadoModificacion === 'ACTIVO')
+        .length,
   );
 
   ngOnInit(): void {
@@ -246,25 +229,12 @@ export class SemanalConfiguracion implements OnInit {
     this.paginaEntidades.set(pagina);
   }
 
-  cambiarAccesoGlobal(valor: boolean): void {
-    this.habilitaSemanalGlobal.set(valor);
-
-    if (!valor) {
-      this.habilitaCargaGlobal.set(false);
-      this.habilitaModificacionGlobal.set(false);
-    }
-  }
-
   cambiarCargaGlobal(valor: boolean): void {
     this.habilitaCargaGlobal.set(valor);
-
-    if (valor) this.habilitaSemanalGlobal.set(true);
   }
 
   cambiarModificacionGlobal(valor: boolean): void {
     this.habilitaModificacionGlobal.set(valor);
-
-    if (valor) this.habilitaSemanalGlobal.set(true);
   }
 
   etiquetaEstado(estado: 'ACTIVO' | 'INACTIVO' | 'MIXTO'): string {
@@ -280,15 +250,11 @@ export class SemanalConfiguracion implements OnInit {
     try {
       const filas = this.entidadesFiltradas().map((entidad) => ({
         'Entidad federativa': entidad.entidadFederativa,
-        'Acceso al módulo preliminar': this.etiquetaEstado(
-          entidad.estadoAcceso,
-        ),
+        'Acceso al módulo preliminar': this.etiquetaEstado(entidad.estadoAcceso),
         'Usuarios con acceso': `${entidad.usuariosAcceso} de ${entidad.totalUsuarios}`,
         'Carga semanal': this.etiquetaEstado(entidad.estadoCarga),
         'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuariosOperativos}`,
-        'Actualización semanal': this.etiquetaEstado(
-          entidad.estadoModificacion,
-        ),
+        'Actualización semanal': this.etiquetaEstado(entidad.estadoModificacion),
         'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuariosOperativos}`,
       }));
 
@@ -310,64 +276,34 @@ export class SemanalConfiguracion implements OnInit {
 
   guardarConfiguracionGlobal(): void {
     const usuariosObjetivo = this.usuarios().filter(
-      (usuario) => usuario.activo,
+      (usuario) => usuario.activo && usuario.rol !== ROLES.CONSULTA && usuario.habilitaSemanal,
     );
 
     if (usuariosObjetivo.length === 0) {
       mostrarInfo(
-        'Sin usuarios activos',
-        'No existen usuarios activos para actualizar.',
+        'Sin usuarios operativos',
+        'No existen usuarios operativos con acceso al módulo preliminar para actualizar.',
       );
 
       return;
     }
 
-    const deshabilitaAcceso = !this.habilitaSemanalGlobal();
-    const mensaje = deshabilitaAcceso
-      ? `Se retirará el acceso al módulo preliminar a los usuarios activos. Tu propio acceso permanecerá habilitado.`
-      : `Se actualizarán acceso, carga y actualización semanal de ${usuariosObjetivo.length} usuario(s).`;
-
     confirmarAccion(
       'Actualizar configuración semanal global',
-      mensaje,
+      `Se actualizarán carga y actualización semanal de ${usuariosObjetivo.length} usuario(s) operativo(s) con acceso al módulo preliminar.`,
       'Sí, actualizar',
     ).then((result) => {
       if (!result.isConfirmed) return;
 
       this.guardandoGlobal.set(true);
 
-      const idUsuarioActual = this.usuarioActual()?.idUsuario ?? null;
-
-      const operaciones = usuariosObjetivo.map((usuario) => {
-        const esUsuarioActual = usuario.idUsuario === idUsuarioActual;
-
-        const habilitaSemanal =
-          deshabilitaAcceso && esUsuarioActual
-            ? true
-            : this.habilitaSemanalGlobal();
-
-        const usuarioOperativo = usuario.rol !== ROLES.CONSULTA;
-
-        const habilitaCargaSemanal =
-          habilitaSemanal &&
-          usuarioOperativo &&
-          this.habilitaCargaGlobal();
-
-        const habilitaModificacionSemanal =
-          habilitaSemanal &&
-          usuarioOperativo &&
-          this.habilitaModificacionGlobal();
-
-        const administraDelitosSemanal = habilitaSemanal
-          ? usuario.administraDelitosSemanal
-          : false;
-
-        return this.usuariosService
+      const operaciones = usuariosObjetivo.map((usuario) =>
+        this.usuariosService
           .actualizarPermisosSemanales(usuario.idUsuario, {
-            habilitaSemanal,
-            habilitaCargaSemanal,
-            habilitaModificacionSemanal,
-            administraDelitosSemanal,
+            habilitaSemanal: usuario.habilitaSemanal,
+            habilitaCargaSemanal: this.habilitaCargaGlobal(),
+            habilitaModificacionSemanal: this.habilitaModificacionGlobal(),
+            administraDelitosSemanal: usuario.administraDelitosSemanal,
           })
           .pipe(
             catchError((error) =>
@@ -381,16 +317,14 @@ export class SemanalConfiguracion implements OnInit {
                 idUsuario: usuario.idUsuario,
               }),
             ),
-          );
-      });
+          ),
+      );
 
       forkJoin(operaciones).subscribe({
         next: (resultados) => {
           this.guardandoGlobal.set(false);
 
-          const errores = resultados.filter(
-            (resultado) => !resultado.esValido,
-          );
+          const errores = resultados.filter((resultado) => !resultado.esValido);
 
           if (errores.length > 0) {
             mostrarAdvertenciaHtml(
@@ -402,9 +336,7 @@ export class SemanalConfiguracion implements OnInit {
             return;
           }
 
-          mostrarExitoInstitucional(
-            'Configuración semanal actualizada',
-          );
+          mostrarExitoInstitucional('Configuración semanal actualizada');
 
           this.cargarUsuarios();
         },
@@ -425,10 +357,7 @@ export class SemanalConfiguracion implements OnInit {
 
     const usuariosEntidad = this.usuarios()
       .filter((usuario) => usuario.activo)
-      .filter(
-        (usuario) =>
-          usuario.idEntidadFederativa === entidad.idEntidadFederativa,
-      )
+      .filter((usuario) => usuario.idEntidadFederativa === entidad.idEntidadFederativa)
       .map((usuario) => ({
         idUsuario: usuario.idUsuario,
         usuario: usuario.usuario,
@@ -436,8 +365,7 @@ export class SemanalConfiguracion implements OnInit {
         rol: usuario.rol,
         habilitaSemanalOriginal: usuario.habilitaSemanal,
         habilitaCargaOriginal: usuario.habilitaCargaSemanal,
-        habilitaModificacionOriginal:
-          usuario.habilitaModificacionSemanal,
+        habilitaModificacionOriginal: usuario.habilitaModificacionSemanal,
         habilitaSemanal: usuario.habilitaSemanal,
         habilitaCarga: usuario.habilitaCargaSemanal,
         habilitaModificacion: usuario.habilitaModificacionSemanal,
@@ -466,10 +394,7 @@ export class SemanalConfiguracion implements OnInit {
 
   cambiarPermisoUsuarioEntidad(
     idUsuario: number,
-    permiso:
-      | 'habilitaSemanal'
-      | 'habilitaCarga'
-      | 'habilitaModificacion',
+    permiso: 'habilitaSemanal' | 'habilitaCarga' | 'habilitaModificacion',
     valor: boolean,
   ): void {
     this.usuariosEntidad.update((usuarios) =>
@@ -483,9 +408,7 @@ export class SemanalConfiguracion implements OnInit {
             ...usuario,
             habilitaSemanal: valor,
             habilitaCarga: valor ? usuario.habilitaCarga : false,
-            habilitaModificacion: valor
-              ? usuario.habilitaModificacion
-              : false,
+            habilitaModificacion: valor ? usuario.habilitaModificacion : false,
           };
         }
 
@@ -503,22 +426,18 @@ export class SemanalConfiguracion implements OnInit {
   hayCambiosEntidad(): boolean {
     return this.usuariosEntidad().some(
       (usuario) =>
-        usuario.habilitaSemanal !==
-          usuario.habilitaSemanalOriginal ||
+        usuario.habilitaSemanal !== usuario.habilitaSemanalOriginal ||
         usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-        usuario.habilitaModificacion !==
-          usuario.habilitaModificacionOriginal,
+        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
     );
   }
 
   guardarPermisosEntidad(): void {
     const usuariosModificados = this.usuariosEntidad().filter(
       (usuario) =>
-        usuario.habilitaSemanal !==
-          usuario.habilitaSemanalOriginal ||
+        usuario.habilitaSemanal !== usuario.habilitaSemanalOriginal ||
         usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-        usuario.habilitaModificacion !==
-          usuario.habilitaModificacionOriginal,
+        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
     );
 
     if (usuariosModificados.length === 0) {
@@ -538,14 +457,10 @@ export class SemanalConfiguracion implements OnInit {
 
       const operaciones = usuariosModificados.map((usuario) => {
         const habilitaCargaSemanal =
-          usuario.habilitaSemanal &&
-          !usuario.bloqueaOperacion &&
-          usuario.habilitaCarga;
+          usuario.habilitaSemanal && !usuario.bloqueaOperacion && usuario.habilitaCarga;
 
         const habilitaModificacionSemanal =
-          usuario.habilitaSemanal &&
-          !usuario.bloqueaOperacion &&
-          usuario.habilitaModificacion;
+          usuario.habilitaSemanal && !usuario.bloqueaOperacion && usuario.habilitaModificacion;
 
         const administraDelitosSemanal = usuario.habilitaSemanal
           ? usuario.administraDelitosSemanal
@@ -577,9 +492,7 @@ export class SemanalConfiguracion implements OnInit {
         next: (resultados) => {
           this.guardandoEntidad.set(false);
 
-          const errores = resultados.filter(
-            (resultado) => !resultado.esValido,
-          );
+          const errores = resultados.filter((resultado) => !resultado.esValido);
 
           if (errores.length > 0) {
             mostrarAdvertenciaHtml(
@@ -591,9 +504,7 @@ export class SemanalConfiguracion implements OnInit {
             return;
           }
 
-          mostrarExitoInstitucional(
-            'Configuración semanal actualizada',
-          );
+          mostrarExitoInstitucional('Configuración semanal actualizada');
 
           this.cerrarPermisosEntidad();
           this.cargarUsuarios();
@@ -620,45 +531,23 @@ export class SemanalConfiguracion implements OnInit {
     return 'MIXTO';
   }
 
-  private sincronizarSwitchesGlobales(
-    usuarios: UsuarioListadoItem[],
-  ): void {
-    const usuariosActivos = usuarios.filter(
-      (usuario) => usuario.activo,
+  private sincronizarSwitchesGlobales(usuarios: UsuarioListadoItem[]): void {
+    const usuariosOperativosConAcceso = usuarios.filter(
+      (usuario) => usuario.activo && usuario.rol !== ROLES.CONSULTA && usuario.habilitaSemanal,
     );
 
-    if (usuariosActivos.length === 0) {
-      this.habilitaSemanalGlobal.set(false);
+    if (usuariosOperativosConAcceso.length === 0) {
       this.habilitaCargaGlobal.set(false);
       this.habilitaModificacionGlobal.set(false);
-
       return;
     }
 
-    const usuariosOperativos = usuariosActivos.filter(
-      (usuario) => usuario.rol !== ROLES.CONSULTA,
-    );
-
-    this.habilitaSemanalGlobal.set(
-      usuariosActivos.every((usuario) => usuario.habilitaSemanal),
-    );
-
     this.habilitaCargaGlobal.set(
-      usuariosOperativos.length > 0 &&
-        usuariosOperativos.every(
-          (usuario) =>
-            usuario.habilitaSemanal &&
-            usuario.habilitaCargaSemanal,
-        ),
+      usuariosOperativosConAcceso.every((usuario) => usuario.habilitaCargaSemanal),
     );
 
     this.habilitaModificacionGlobal.set(
-      usuariosOperativos.length > 0 &&
-        usuariosOperativos.every(
-          (usuario) =>
-            usuario.habilitaSemanal &&
-            usuario.habilitaModificacionSemanal,
-        ),
+      usuariosOperativosConAcceso.every((usuario) => usuario.habilitaModificacionSemanal),
     );
   }
 }

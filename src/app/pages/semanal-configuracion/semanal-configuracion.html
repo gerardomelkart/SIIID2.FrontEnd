@@ -2,7 +2,7 @@
   <div class="admin-header">
     <div>
       <h1>Configuración de módulos</h1>
-      <p>Control global y por entidad para acceso, carga y actualización del módulo preliminar.</p>
+      <p>Control global de carga y actualización, y control individual del acceso al módulo preliminar.</p>
     </div>
   </div>
 
@@ -16,28 +16,18 @@
       <div class="config-body">
         <div class="config-info">
           <strong>Aplicación general</strong>
-          <p>Se aplicará a todos los usuarios activos. Tu propio acceso al módulo preliminar no podrá deshabilitarse.</p>
+          <p>Estos switches habilitan o bloquean la carga y la actualización para los usuarios operativos con acceso al
+            módulo preliminar.</p>
         </div>
 
         <div class="config-switch-list">
-          <label class="module-switch">
-            <div>
-              <strong>Acceso al módulo preliminar</strong>
-              <span>Permite incluir o excluir usuarios del módulo semanal.</span>
-            </div>
-
-            <input type="checkbox" [ngModel]="habilitaSemanalGlobal()"
-              (ngModelChange)="cambiarAccesoGlobal($event)">
-          </label>
-
           <label class="module-switch">
             <div>
               <strong>Carga semanal</strong>
               <span>Permite integrar archivos correspondientes a una semana.</span>
             </div>
 
-            <input type="checkbox" [disabled]="!habilitaSemanalGlobal()"
-              [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
+            <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
           </label>
 
           <label class="module-switch">
@@ -46,8 +36,7 @@
               <span>Permite reemplazar información semanal previamente confirmada.</span>
             </div>
 
-            <input type="checkbox" [disabled]="!habilitaSemanalGlobal()"
-              [ngModel]="habilitaModificacionGlobal()"
+            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
               (ngModelChange)="cambiarModificacionGlobal($event)">
           </label>
         </div>
@@ -306,13 +295,11 @@
   </div>
 
   <div class="drawer-actions">
-    <button type="button" class="btn btn-secondary" [disabled]="guardandoEntidad()"
-      (click)="cerrarPermisosEntidad()">
+    <button type="button" class="btn btn-secondary" [disabled]="guardandoEntidad()" (click)="cerrarPermisosEntidad()">
       Cancelar
     </button>
 
-    <button type="button" class="btn btn-siiid"
-      [disabled]="guardandoEntidad() || !hayCambiosEntidad()"
+    <button type="button" class="btn btn-siiid" [disabled]="guardandoEntidad() || !hayCambiosEntidad()"
       (click)="guardarPermisosEntidad()">
       {{ guardandoEntidad() ? 'Guardando...' : 'Guardar permisos' }}
     </button>
