@@ -460,6 +460,7 @@ export class Configuracion implements OnInit {
       telefonoContacto: usuario.telefonoContacto,
       idEntidadFederativa: usuario.idEntidadFederativa,
       rol: usuario.rol,
+      habilitaMensual: usuario.habilitaMensual,
       habilitaCarga,
       habilitaModificacion,
       habilitaSemanal: usuario.habilitaSemanal,
