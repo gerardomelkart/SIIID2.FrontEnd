@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
 import {
+  SemanalCargaBloqueAdministracionItem,
   SemanalCargaPendienteAdministracionDetalle,
   SemanalCargaPendienteAdministracionItem,
 } from '../../core/models/semanal-administracion-cargas.models';
@@ -100,6 +101,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
             carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
             this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
             this.semanaTexto(carga).toLowerCase().includes(texto) ||
+            this.tramoTexto(carga).toLowerCase().includes(texto) ||
             this.periodoCorteTexto(carga).toLowerCase().includes(texto),
         )
       : [...this.pendientes()];
@@ -457,23 +459,48 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   semanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    return `Semana ${carga.numeroSemana}/${carga.anioSemana}`;
+    const semanas = Array.from(new Map(this.bloquesCarga(carga).map((bloque) => [`${bloque.anioSemana}-${bloque.numeroSemana}`, `${bloque.numeroSemana}/${bloque.anioSemana}`])).values());
+    return semanas.length === 1 ? `Semana ${semanas[0]}` : `Semanas ${semanas.join(', ')}`;
   }
 
   rangoSemanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    return `${this.fechaCorta(carga.fechaInicioSemana)} al ${this.fechaCorta(carga.fechaFinSemana)}`;
+    const bloques = this.bloquesCarga(carga);
+    return `${this.fechaCorta(bloques[0].fechaInicioSemana)} al ${this.fechaCorta(bloques[bloques.length - 1].fechaFinSemana)}`;
   }
 
   tramoTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    return `${this.fechaCorta(carga.fechaInicioTramo)} al ${this.fechaCorta(carga.fechaFinTramo)}`;
+    const bloques = this.bloquesCarga(carga);
+    return `${this.fechaCorta(bloques[0].fechaInicioTramo)} al ${this.fechaCorta(bloques[bloques.length - 1].fechaFinTramo)}`;
   }
 
   periodoCorteTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    const fecha = new Date(carga.anioCorte, carga.mesCorte - 1, 1);
-    const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(
-      fecha,
-    );
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
+    return Array.from(new Map(this.bloquesCarga(carga).map((bloque) => {
+      const fecha = new Date(bloque.anioCorte, bloque.mesCorte - 1, 1);
+      const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(fecha);
+      return [`${bloque.anioCorte}-${bloque.mesCorte}`, texto.charAt(0).toUpperCase() + texto.slice(1)];
+    })).values()).join(', ');
+  }
+
+  bloquesCarga(carga: SemanalCargaPendienteAdministracionItem): SemanalCargaBloqueAdministracionItem[] {
+    const bloques = carga.bloques?.length
+      ? [...carga.bloques]
+      : [{
+          idSemanalCarga: carga.idSemanalCarga,
+          anioSemana: carga.anioSemana,
+          numeroSemana: carga.numeroSemana,
+          fechaInicioSemana: carga.fechaInicioSemana,
+          fechaFinSemana: carga.fechaFinSemana,
+          anioCorte: carga.anioCorte,
+          mesCorte: carga.mesCorte,
+          fechaInicioTramo: carga.fechaInicioTramo,
+          fechaFinTramo: carga.fechaFinTramo,
+          totalCarpetas: carga.totalCarpetasIncluidas,
+          totalDelitos: carga.totalDelitosIncluidos,
+          totalVictimas: carga.totalVictimasIncluidas,
+          reemplazaInformacion: carga.tipoCarga === 'ACTUALIZACION',
+        }];
+
+    return bloques.sort((a, b) => this.fechaOrden(a.fechaInicioSemana) - this.fechaOrden(b.fechaInicioSemana) || a.anioCorte * 100 + a.mesCorte - (b.anioCorte * 100 + b.mesCorte));
   }
 
   fechaCorta(fecha: string | null | undefined): string {
@@ -569,7 +596,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         resultado = this.compararTexto(a.entidadFederativa, b.entidadFederativa);
         break;
       case 'semana':
-        resultado = a.anioSemana * 100 + a.numeroSemana - (b.anioSemana * 100 + b.numeroSemana);
+        resultado = this.fechaOrden(this.bloquesCarga(a)[0].fechaInicioSemana) - this.fechaOrden(this.bloquesCarga(b)[0].fechaInicioSemana);
         break;
       case 'operacion':
         resultado = this.compararTexto(
@@ -578,7 +605,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         );
         break;
       case 'tramo':
-        resultado = this.fechaOrden(a.fechaInicioTramo) - this.fechaOrden(b.fechaInicioTramo);
+        resultado = this.fechaOrden(this.bloquesCarga(a)[0].fechaInicioTramo) - this.fechaOrden(this.bloquesCarga(b)[0].fechaInicioTramo);
         break;
       case 'usuario':
         resultado = this.compararTexto(this.usuarioTexto(a), this.usuarioTexto(b));

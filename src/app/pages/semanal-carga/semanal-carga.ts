@@ -77,14 +77,17 @@ export class SemanalCarga implements OnInit {
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
 
-  readonly tipoCarga =
-    (this.activatedRoute.snapshot.data['tipoCarga'] as TipoCargaSemanal | undefined) ??
-    'CARGA_INICIAL';
-  readonly esActualizacion = this.tipoCarga === 'ACTUALIZACION';
+  get tipoCarga(): TipoCargaSemanal {
+    return this.respuesta()?.tipoCarga ?? this.estadoSemana()?.tipoCargaPendiente ?? 'CARGA_INICIAL';
+  }
+
+  get esActualizacion(): boolean {
+    return this.tipoCarga === 'ACTUALIZACION';
+  }
 
   readonly usuario = this.sessionService.usuario;
   readonly esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
-  readonly mostrarSelectorEntidad = computed(() => this.esActualizacion && this.esSuperUsuario());
+  readonly mostrarSelectorEntidad = computed(() => false);
 
   idEntidadFederativa = signal('');
   entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
@@ -172,9 +175,8 @@ export class SemanalCarga implements OnInit {
   tramoPrevisto = computed(() => this.calcularTramo(this.formulario()));
   periodoValido = computed(() => this.tramoPrevisto() !== null);
 
-  periodoListoParaArchivos = computed(
-    () => this.periodoValido() && this.estadoSemana()?.disponible === true,
-  );
+  periodoListoParaArchivos = computed(() => this.periodoValido());
+
   codigoReferenciaOperacion = computed(
     () =>
       this.estadoSemana()?.codigoReferenciaPendiente?.trim() ||
@@ -222,24 +224,23 @@ export class SemanalCarga implements OnInit {
   ]);
 
   ngOnInit(): void {
-    if (this.mostrarSelectorEntidad()) this.cargarEntidadesFederativas();
-
     const codigoReferencia = this.activatedRoute.snapshot.queryParamMap.get('resolver')?.trim();
 
     if (!codigoReferencia) return;
 
+    const tipoCargaPendiente: TipoCargaSemanal = this.activatedRoute.snapshot.queryParamMap.get('tipoCarga') === 'ACTUALIZACION' ? 'ACTUALIZACION' : 'CARGA_INICIAL';
+    const esActualizacionPendiente = tipoCargaPendiente === 'ACTUALIZACION';
+
     this.estadoSemana.set({
       esValido: true,
       disponible: false,
-      tieneCargaConfirmada: this.esActualizacion,
+      tieneCargaConfirmada: esActualizacionPendiente,
       existeOperacionPendiente: true,
       codigo: 'SEMANAL_PENDIENTE_DESDE_CONSULTA',
       mensaje: 'Operación semanal pendiente seleccionada desde la consulta de envíos.',
       codigoReferenciaPendiente: codigoReferencia,
-      estadoPendiente: this.esActualizacion
-        ? 'VALIDADO_PENDIENTE_ACTUALIZACION'
-        : 'VALIDADO_PENDIENTE',
-      tipoCargaPendiente: this.tipoCarga,
+      estadoPendiente: esActualizacionPendiente ? 'VALIDADO_PENDIENTE_ACTUALIZACION' : 'VALIDADO_PENDIENTE',
+      tipoCargaPendiente,
       pendientePropia: true,
       puedeResolverPendiente: true,
       debeUsarActualizacion: false,
@@ -348,16 +349,14 @@ export class SemanalCarga implements OnInit {
     }
 
     const periodo: SemanalCargaPeriodoRequest = {
-      tipoCarga: this.tipoCarga,
+      tipoCarga: 'CARGA_INICIAL',
       tipoContenido: formulario.tipoContenido,
       anioSemana: tramo.anioSemana,
       numeroSemana: tramo.numeroSemana,
       fechaInicioSemana: this.formatearFechaApi(tramo.fechaInicioSemana),
       mesCorte: tramo.mesCorte,
       anioCorte: tramo.anioCorte,
-      idEntidadFederativa: this.mostrarSelectorEntidad()
-        ? Number(this.idEntidadFederativa())
-        : null,
+      idEntidadFederativa: null,
     };
 
     this.estado.set('VALIDANDO');
@@ -413,7 +412,7 @@ export class SemanalCarga implements OnInit {
   }
 
   irAActualizacionSemanal(): void {
-    void this.router.navigateByUrl('/semanal/actualizacion');
+    void this.router.navigateByUrl('/semanal/carga');
   }
 
   revisarDiferencias(): void {
@@ -603,7 +602,7 @@ export class SemanalCarga implements OnInit {
     if (this.estado() === 'CONFIRMANDO') return;
 
     this.archivos.set(crearArchivosCargaVacios());
-    this.formulario.update((actual) => ({ ...actual, semanaSeleccionada: '' }));
+    this.formulario.set(this.crearFormularioInicial());
     this.respuesta.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
@@ -694,7 +693,9 @@ export class SemanalCarga implements OnInit {
   }
 
   etiquetaTipoContenido(tipo: TipoContenidoSemanal | undefined): string {
-    return tipo === 'SOLO_SEMANA' ? 'Solo semana' : '-';
+    if (tipo === 'ACUMULADO_MES') return 'Acumulado mensual';
+    if (tipo === 'SOLO_SEMANA') return 'Solo semana';
+    return '-';
   }
 
   nombreMes(numero: number | undefined): string {
@@ -844,8 +845,8 @@ export class SemanalCarga implements OnInit {
 
   private crearFormularioInicial(): SemanalCargaFormulario {
     return {
-      tipoContenido: 'SOLO_SEMANA',
-      semanaSeleccionada: '',
+      tipoContenido: 'ACUMULADO_MES',
+      semanaSeleccionada: this.obtenerSemanaInput(new Date()),
     };
   }
 

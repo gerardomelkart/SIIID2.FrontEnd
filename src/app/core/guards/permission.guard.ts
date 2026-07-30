@@ -6,7 +6,7 @@ import { SessionService } from '../services/session.service';
 
 interface PermissionRouteData {
   roles?: RolSistema[];
-  permiso?: 'CARGA' | 'MODIFICACION' | 'ADMINISTRA_DELITOS';
+  permiso?: 'CARGA' | 'MODIFICACION' | 'OPERACION_SEMANAL' | 'ADMINISTRA_DELITOS';
 }
 
 export const permissionGuard: CanActivateFn = (route) => {
@@ -36,6 +36,19 @@ export const permissionGuard: CanActivateFn = (route) => {
 
   if (data.permiso === 'MODIFICACION' && !sessionService.habilitaModificacion()) {
     mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de actualización.');
+
+    return false;
+  }
+
+  if (
+    data.permiso === 'OPERACION_SEMANAL' &&
+    !sessionService.habilitaCarga() &&
+    !sessionService.habilitaModificacion()
+  ) {
+    mostrarAccesoDenegado(
+      router,
+      'No tiene habilitados permisos para integrar información semanal.',
+    );
 
     return false;
   }

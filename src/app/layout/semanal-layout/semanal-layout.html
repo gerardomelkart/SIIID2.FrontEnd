@@ -35,19 +35,10 @@
         </button>
 
         @if (cargaAbierta()) {
-        @if (puedeCargar()) {
         <a class="menu-link level-2" routerLink="/semanal/carga" routerLinkActive="active">
           <i class="fa-solid fa-upload"></i>
-          Integrar Información
+          Integrar información
         </a>
-        }
-
-        @if (puedeModificar()) {
-        <a class="menu-link level-2" routerLink="/semanal/actualizacion" routerLinkActive="active">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          Actualizar Información
-        </a>
-        }
         }
         }
 

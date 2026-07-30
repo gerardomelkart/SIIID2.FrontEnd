@@ -1,5 +1,21 @@
 import { ConfirmarCargaResponse } from './carga.models';
 
+export interface SemanalCargaBloqueAdministracionItem {
+  idSemanalCarga: number;
+  anioSemana: number;
+  numeroSemana: number;
+  fechaInicioSemana: string;
+  fechaFinSemana: string;
+  anioCorte: number;
+  mesCorte: number;
+  fechaInicioTramo: string;
+  fechaFinTramo: string;
+  totalCarpetas: number;
+  totalDelitos: number;
+  totalVictimas: number;
+  reemplazaInformacion: boolean;
+}
+
 export interface SemanalCargaPendienteAdministracionItem {
   idSemanalCarga: number;
   codigoReferencia: string;
@@ -26,6 +42,7 @@ export interface SemanalCargaPendienteAdministracionItem {
   totalDelitosExcluidos: number;
   totalVictimasExcluidas: number;
   totalAdvertencias: number;
+  bloques: SemanalCargaBloqueAdministracionItem[];
 }
 
 export interface SemanalCargaAdvertenciaAdministracionItem {

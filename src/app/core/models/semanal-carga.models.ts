@@ -4,7 +4,7 @@ import {
   ConfirmarCargaResponse,
 } from './carga.models';
 
-export type TipoContenidoSemanal = 'SOLO_SEMANA';
+export type TipoContenidoSemanal = 'SOLO_SEMANA' | 'ACUMULADO_MES';
 export type TipoCargaSemanal = 'CARGA_INICIAL' | 'ACTUALIZACION';
 
 export interface SemanalCargaPeriodoRequest {
@@ -30,9 +30,32 @@ export interface SemanalPeriodoCarga {
   anioCorte: number;
 }
 
+export interface SemanalVentanaCarga {
+  fechaMinimaPermitida: string;
+  fechaMaximaPermitida: string;
+  permiteMesAnterior: boolean;
+}
+
+export interface SemanalCargaBloque {
+  anioSemana: number;
+  numeroSemana: number;
+  fechaInicioSemana: string;
+  fechaFinSemana: string;
+  anioCorte: number;
+  mesCorte: number;
+  fechaInicioTramo: string;
+  fechaFinTramo: string;
+  totalCarpetas: number;
+  totalDelitos: number;
+  totalVictimas: number;
+  reemplazaInformacion: boolean;
+}
+
 export interface SemanalCargaValidacionResponse extends CargaValidacionResponse {
   tipoCarga: TipoCargaSemanal;
   periodo: SemanalPeriodoCarga | null;
+  ventana: SemanalVentanaCarga | null;
+  bloques: SemanalCargaBloque[];
   totalCarpetasIncluidas: number;
   totalDelitosIncluidos: number;
   totalVictimasIncluidas: number;

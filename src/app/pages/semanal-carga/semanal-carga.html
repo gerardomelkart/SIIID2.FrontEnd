@@ -2,17 +2,9 @@
   <div class="semanal-admin-header carga-header">
     <div>
       <span>Módulo semanal</span>
-      <h1>
-        {{ esActualizacion ? 'Actualización semanal de incidencia delictiva' : 'Carga semanal de incidencia delictiva'
-        }}
-      </h1>
-      <p>
-        @if (esActualizacion) {
-        Seleccione una semana confirmada y cargue su versión corregida completa.
-        } @else {
-        Seleccione la semana; el sistema calculará automáticamente todo el periodo de carga.
-        }
-      </p>
+      <h1>Integración acumulativa de incidencia delictiva</h1>
+      <p>Cargue los tres archivos; el sistema detectará automáticamente las semanas nuevas y los bloques que reemplazan
+        información confirmada.</p>
     </div>
 
     @if (mostrandoResultado()) {
@@ -29,70 +21,48 @@
       <section class="siiid-card carga-card">
         <div class="siiid-card-header carga-card-header">
           <i class="fa-solid fa-calendar-week"></i>
-          Periodo y archivos de la {{ esActualizacion ? 'actualización' : 'carga' }}
+          Archivos de la operación acumulativa
         </div>
 
         <div class="carga-contenido">
           <div class="pasos-carga">
             <div class="paso activo">
               <span>1</span>
-              Definir corte
+              Seleccionar archivos
             </div>
+
             <div class="paso">
               <span>2</span>
-              Validar archivos
+              Validar información
             </div>
+
             <div class="paso">
               <span>3</span>
-              Confirmar {{ esActualizacion ? 'actualización' : 'carga' }}
+              Confirmar operación
             </div>
           </div>
 
           <div class="seccion-titulo">
             <div>
-              <strong>{{ esActualizacion ? 'Actualización de una semana confirmada' : 'Carga de una semana puntual'
-                }}</strong>
-              <p>
-                @if (esActualizacion) {
-                La nueva versión reemplazará únicamente la semana seleccionada y la versión anterior se conservará en el
-                histórico.
-                } @else {
-                Los archivos deben contener la información correspondiente a la semana seleccionada.
-                }
-              </p>
+              <strong>Carga acumulativa</strong>
+              <p>Los archivos pueden contener el acumulado permitido del mes o únicamente la información más reciente.
+                La API clasificará cada bloque como nuevo o reemplazo.</p>
             </div>
           </div>
 
           <div class="seccion-titulo seccion-periodo">
             <div>
-              <strong>{{ esActualizacion ? 'Semana a actualizar' : 'Semana a cargar' }}</strong>
-              <p>Seleccione una semana cuyo mes de corte sea el actual; los periodos anteriores ya pertenecen al
-                consolidado.</p>
+              <strong>Periodo calculado automáticamente</strong>
+              <p>No debe seleccionar una semana. La fecha de inicio de cada carpeta determina los bloques que integrará
+                la operación.</p>
             </div>
           </div>
 
-          <div class="periodo-grid" [class.periodo-grid-entidad]="mostrarSelectorEntidad()">
-            @if (mostrarSelectorEntidad()) {
-            <label class="campo-periodo">
-              <span>Entidad federativa</span>
-
-              <select class="form-select" [ngModel]="idEntidadFederativa()" [disabled]="cargandoEntidades()"
-                (ngModelChange)="onEntidadChange($event)">
-                <option value="">{{ cargandoEntidades() ? 'Cargando entidades...' : 'Seleccione entidad...' }}</option>
-
-                @for (entidad of entidadesFederativas(); track entidad.idEntidadFederativa) {
-                <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
-                }
-              </select>
-            </label>
-            }
+          <div class="periodo-grid">
             <label class="campo-periodo campo-semana">
-              <span>Seleccionar semana</span>
+              <span>Semana técnica de referencia</span>
 
-              <input type="week" [min]="semanaMinima" [max]="semanaMaxima" class="form-control"
-                [disabled]="mostrarSelectorEntidad() && !idEntidadFederativa()"
-                [ngModel]="formulario().semanaSeleccionada"
-                (ngModelChange)="actualizarCampo('semanaSeleccionada', $event)" />
+              <input type="week" class="form-control" [disabled]="true" [ngModel]="formulario().semanaSeleccionada" />
             </label>
 
             <div class="periodo-automatico">
@@ -100,7 +70,8 @@
 
               <div>
                 <strong>Cálculo automático</strong>
-                <span>Año, fechas y mes de corte se obtendrán de la semana seleccionada.</span>
+                <span>La ventana permitida se calcula con la fecha actual; los bloques reales se obtienen de los
+                  archivos.</span>
               </div>
             </div>
           </div>
@@ -110,19 +81,18 @@
             <i class="fa-solid fa-calendar-check"></i>
 
             <div>
-              <span>Semana {{ tramo.numeroSemana }} / {{ tramo.anioSemana }}</span>
+              <span>Referencia {{ tramo.numeroSemana }} / {{ tramo.anioSemana }}</span>
               <strong>{{ formatearFecha(tramo.fechaInicioSemana) }} al {{ formatearFecha(tramo.fechaFinSemana)
                 }}</strong>
             </div>
 
             <div>
-              <span>Tramo que se {{ esActualizacion ? 'reemplazará' : 'integrará' }} en {{ nombreMes(tramo.mesCorte)
-                }}</span>
+              <span>Corte técnico de {{ nombreMes(tramo.mesCorte) }}</span>
               <strong>{{ formatearFecha(tramo.fechaInicioTramo) }} al {{ formatearFecha(tramo.fechaFinTramo) }}</strong>
             </div>
 
             @if (tramo.semanaCortada) {
-            <em>La semana cruza de mes; solo se considerarán los registros del mes donde cae el último día.</em>
+            <em>La referencia cruza de mes; la API aplicará la ventana excepcional correspondiente.</em>
             }
           </div>
           }
@@ -247,7 +217,7 @@
             <button type="button" class="btn btn-siiid btn-validar" [disabled]="!puedeValidar()"
               (click)="validarArchivos()">
               <i class="fa-solid fa-shield-halved"></i>
-              Validar {{ esActualizacion ? 'actualización' : 'carga semanal' }}
+              Validar carga acumulativa
             </button>
           </div>
           }
@@ -263,10 +233,7 @@
         </div>
 
         <div class="ayuda-contenido">
-          <p>
-            La {{ esActualizacion ? 'actualización' : 'carga' }} semanal utiliza las mismas plantillas de carpetas,
-            delitos y víctimas.
-          </p>
+          <p>La carga acumulativa utiliza las mismas plantillas de carpetas, delitos y víctimas.</p>
 
           <div class="plantillas-lista">
             @for (archivo of tiposArchivo; track archivo.tipo) {
@@ -287,14 +254,9 @@
             <i class="fa-solid fa-filter-circle-dollar"></i>
 
             <div>
-              <strong>{{ esActualizacion ? 'Reemplazo semanal controlado' : 'Filtro semanal automático' }}</strong>
-              <span>
-                @if (esActualizacion) {
-                Solo se reemplazarán los registros de la semana seleccionada; el resto del mes no cambia.
-                } @else {
-                Los registros fuera del tramo se contabilizan como excluidos y no pasan a las tablas finales.
-                }
-              </span>
+              <strong>Detección automática por bloque</strong>
+              <span>Los bloques confirmados se reemplazan de forma versionada; los bloques no existentes se integran
+                como información nueva.</span>
             </div>
           </div>
         </div>
@@ -344,44 +306,79 @@
     </div>
   </section>
 
-  @if (respuesta()?.periodo; as periodo) {
+  @if (respuesta()?.ventana; as ventana) {
   <section class="periodo-confirmado">
     <div>
       <span>Tipo de contenido</span>
-      <strong>
-        {{ etiquetaTipoContenido(periodo.tipoContenido) }}
-      </strong>
+      <strong>{{ etiquetaTipoContenido(respuesta()?.periodo?.tipoContenido) }}</strong>
     </div>
 
     <div>
-      <span>Semana</span>
-      <strong>
-        {{ periodo.numeroSemana }} / {{ periodo.anioSemana }}
-      </strong>
+      <span>Operación detectada</span>
+      <strong>{{ esActualizacion ? 'Actualización acumulativa' : 'Carga acumulativa inicial' }}</strong>
     </div>
 
     <div>
-      <span>Semana completa</span>
-      <strong>
-        {{ formatearFecha(periodo.fechaInicioSemana) }} al
-        {{ formatearFecha(periodo.fechaFinSemana) }}
-      </strong>
+      <span>Ventana permitida</span>
+      <strong>{{ formatearFecha(ventana.fechaMinimaPermitida) }} al {{ formatearFecha(ventana.fechaMaximaPermitida)
+        }}</strong>
     </div>
 
     <div>
-      <span>{{ esActualizacion ? 'Tramo que se reemplazará' : 'Tramo integrado' }}</span>
-      <strong>
-        {{ formatearFecha(periodo.fechaInicioTramo) }} al
-        {{ formatearFecha(periodo.fechaFinTramo) }}
-      </strong>
+      <span>Bloques detectados</span>
+      <strong>{{ respuesta()?.bloques?.length ?? 0 }}</strong>
+    </div>
+  </section>
+  }
+
+  @if (respuesta()?.bloques; as bloques) {
+  <section class="siiid-card detalle-card">
+    <div class="siiid-card-header carga-card-header">
+      <i class="fa-solid fa-layer-group"></i>
+      Bloques que integrará la operación
     </div>
 
-    <div>
-      <span>Mes de corte</span>
-      <strong>
-        {{ nombreMes(periodo.mesCorte) }}
-        {{ periodo.anioCorte }}
-      </strong>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0 detalle-tabla">
+        <thead>
+          <tr>
+            <th>Semana</th>
+            <th>Corte</th>
+            <th>Tramo</th>
+            <th>Carpetas</th>
+            <th>Delitos</th>
+            <th>Víctimas</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (bloque of bloques; track bloque.fechaInicioSemana + '-' + bloque.anioCorte + '-' + bloque.mesCorte) {
+          <tr>
+            <td>
+              <strong>{{ bloque.numeroSemana }}/{{ bloque.anioSemana }}</strong>
+              <div>{{ formatearFecha(bloque.fechaInicioSemana) }} al {{ formatearFecha(bloque.fechaFinSemana) }}</div>
+            </td>
+
+            <td>{{ nombreMes(bloque.mesCorte) }} {{ bloque.anioCorte }}</td>
+            <td>{{ formatearFecha(bloque.fechaInicioTramo) }} al {{ formatearFecha(bloque.fechaFinTramo) }}</td>
+            <td>{{ bloque.totalCarpetas }}</td>
+            <td>{{ bloque.totalDelitos }}</td>
+            <td>{{ bloque.totalVictimas }}</td>
+
+            <td>
+              <span class="detalle-tipo" [class.tipo-advertencia]="bloque.reemplazaInformacion">
+                {{ bloque.reemplazaInformacion ? 'REEMPLAZAR' : 'INTEGRAR' }}
+              </span>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" class="text-center">No se detectaron bloques dentro de la ventana permitida.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
   </section>
   }

@@ -3,7 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ROLES } from '../../core/constants/roles.constants';
-import { SemanalEnvioItem } from '../../core/models/semanal-envios.models';
+import { SemanalEnvioBloqueItem, SemanalEnvioItem } from '../../core/models/semanal-envios.models';
 import { SemanalEnviosService } from '../../core/services/semanal-envios.service';
 import { SessionService } from '../../core/services/session.service';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
@@ -74,9 +74,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     const semanaSeleccionada = this.semanaEnvioSeleccionada();
 
     const registros = this.envios().filter((envio) => {
-      const keySemana = `${envio.anioSemana}-${envio.numeroSemana.toString().padStart(2, '0')}`;
-
-      if (semanaSeleccionada && keySemana !== semanaSeleccionada) return false;
+      if (semanaSeleccionada && !this.contieneSemana(envio, semanaSeleccionada)) return false;
       if (!texto) return true;
 
       return (
@@ -274,11 +272,10 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   resolverPendiente(envio: SemanalEnvioItem): void {
     if (!envio.puedeResolverPendiente) return;
 
-    const ruta = envio.tipoCarga === 'ACTUALIZACION' ? '/semanal/actualizacion' : '/semanal/carga';
-
-    void this.router.navigate([ruta], {
+    void this.router.navigate(['/semanal/carga'], {
       queryParams: {
         resolver: envio.codigoReferencia,
+        tipoCarga: envio.tipoCarga,
       },
     });
   }
@@ -321,11 +318,12 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   }
 
   semanaTexto(envio: SemanalEnvioItem): string {
-    return `Semana ${envio.numeroSemana}/${envio.anioSemana}`;
+    return envio.semana || `Semana ${envio.numeroSemana}/${envio.anioSemana}`;
   }
 
   rangoSemanaTexto(envio: SemanalEnvioItem): string {
-    return `${this.fechaCorta(envio.fechaInicioSemana)} al ${this.fechaCorta(envio.fechaFinSemana)}`;
+    const bloques = [...this.obtenerBloques(envio)].sort((a, b) => new Date(a.fechaInicioSemana).getTime() - new Date(b.fechaInicioSemana).getTime());
+    return `${this.fechaCorta(bloques[0].fechaInicioSemana)} al ${this.fechaCorta(bloques[bloques.length - 1].fechaFinSemana)}`;
   }
 
   fechaCorta(fecha: string | null): string {
@@ -376,7 +374,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       case 'fecha':
         return envio.fechaMovimiento;
       case 'semana':
-        return envio.anioSemana * 100 + envio.numeroSemana;
+        return Math.max(...this.obtenerBloques(envio).map((bloque) => bloque.anioSemana * 100 + bloque.numeroSemana));
       case 'usuario':
         return envio.usuarioCarga;
       case 'estado':
@@ -412,14 +410,16 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     const mapa = new Map<string, SemanaEnvio>();
 
     for (const registro of registros) {
-      const key = `${registro.anioSemana}-${registro.numeroSemana.toString().padStart(2, '0')}`;
+      for (const bloque of this.obtenerBloques(registro)) {
+        const key = `${bloque.anioSemana}-${bloque.numeroSemana.toString().padStart(2, '0')}`;
 
-      if (!mapa.has(key)) {
-        mapa.set(key, {
-          anioSemana: registro.anioSemana,
-          numeroSemana: registro.numeroSemana,
-          semana: registro.semana,
-        });
+        if (!mapa.has(key)) {
+          mapa.set(key, {
+            anioSemana: bloque.anioSemana,
+            numeroSemana: bloque.numeroSemana,
+            semana: `Semana ${bloque.numeroSemana}/${bloque.anioSemana}`,
+          });
+        }
       }
     }
 
@@ -448,4 +448,29 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       );
     }
   }
+
+    private contieneSemana(envio: SemanalEnvioItem, semanaSeleccionada: string): boolean {
+    return this.obtenerBloques(envio).some((bloque) => `${bloque.anioSemana}-${bloque.numeroSemana.toString().padStart(2, '0')}` === semanaSeleccionada);
+  }
+
+  private obtenerBloques(envio: SemanalEnvioItem): SemanalEnvioBloqueItem[] {
+    return envio.bloques?.length
+      ? envio.bloques
+      : [{
+          idSemanalCarga: envio.idSemanalCarga,
+          anioSemana: envio.anioSemana,
+          numeroSemana: envio.numeroSemana,
+          fechaInicioSemana: envio.fechaInicioSemana,
+          fechaFinSemana: envio.fechaFinSemana,
+          anioCorte: envio.anioCorte,
+          mesCorte: envio.mesCorte,
+          fechaInicioTramo: envio.fechaInicioTramo,
+          fechaFinTramo: envio.fechaFinTramo,
+          totalCarpetas: envio.totalCarpetasIncluidas,
+          totalDelitos: envio.totalDelitosIncluidos,
+          totalVictimas: envio.totalVictimasIncluidas,
+          reemplazaInformacion: envio.tipoCarga === 'ACTUALIZACION',
+        }];
+  }
+  
 }

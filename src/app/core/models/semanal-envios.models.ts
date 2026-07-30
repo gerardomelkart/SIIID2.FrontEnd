@@ -1,5 +1,21 @@
 import { TipoCargaSemanal } from './semanal-carga.models';
 
+export interface SemanalEnvioBloqueItem {
+  idSemanalCarga: number;
+  anioSemana: number;
+  numeroSemana: number;
+  fechaInicioSemana: string;
+  fechaFinSemana: string;
+  anioCorte: number;
+  mesCorte: number;
+  fechaInicioTramo: string;
+  fechaFinTramo: string;
+  totalCarpetas: number;
+  totalDelitos: number;
+  totalVictimas: number;
+  reemplazaInformacion: boolean;
+}
+
 export interface SemanalEnvioItem {
   idSemanalCarga: number;
   codigoReferencia: string;
@@ -37,6 +53,7 @@ export interface SemanalEnvioItem {
   endpointArchivos: string;
   fechaEnvioTexto: string;
   semana: string;
+  bloques: SemanalEnvioBloqueItem[];
   esRechazadoAdministrador: boolean;
   tieneStagingDisponible: boolean;
   fechaRechazoTexto: string;

@@ -269,7 +269,7 @@
       </div>
 
       <div class="detalle-dato">
-        <span>Semana seleccionada</span>
+        <span>Semanas detectadas</span>
         <strong>{{ semanaTexto(carga) }}</strong>
         <small>{{ rangoSemanaTexto(carga) }}</small>
       </div>
@@ -285,7 +285,7 @@
       </div>
 
       <div class="detalle-dato">
-        <span>{{ esActualizacion(carga) ? 'Tramo que se reemplazará' : 'Tramo integrado' }}</span>
+        <span>Rango de tramos</span>
         <strong>{{ tramoTexto(carga) }}</strong>
       </div>
 
@@ -309,6 +309,43 @@
         <span>Código de referencia</span>
         <strong class="codigo-referencia">{{ carga.codigoReferencia }}</strong>
       </div>
+    </div>
+
+        <div class="totales-section-title">
+      <div>
+        <h3>Bloques de la operación</h3>
+        <p>Cada bloque se integrará como información nueva o reemplazará únicamente su tramo confirmado.</p>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm aprobacion-table semanal-aprobacion-table">
+        <thead>
+          <tr>
+            <th>Semana</th>
+            <th>Corte</th>
+            <th>Tramo</th>
+            <th>Carpetas</th>
+            <th>Delitos</th>
+            <th>Víctimas</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (bloque of bloquesCarga(carga); track bloque.fechaInicioSemana + '-' + bloque.anioCorte + '-' + bloque.mesCorte) {
+          <tr>
+            <td>{{ bloque.numeroSemana }}/{{ bloque.anioSemana }}</td>
+            <td>{{ bloque.mesCorte.toString().padStart(2, '0') }}/{{ bloque.anioCorte }}</td>
+            <td>{{ fechaCorta(bloque.fechaInicioTramo) }} al {{ fechaCorta(bloque.fechaFinTramo) }}</td>
+            <td>{{ bloque.totalCarpetas }}</td>
+            <td>{{ bloque.totalDelitos }}</td>
+            <td>{{ bloque.totalVictimas }}</td>
+            <td>{{ bloque.reemplazaInformacion ? 'Reemplazar' : 'Integrar' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
 
     <div class="totales-section-title">

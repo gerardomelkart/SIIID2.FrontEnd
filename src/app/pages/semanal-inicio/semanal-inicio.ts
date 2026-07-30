@@ -49,16 +49,10 @@ export class SemanalInicio {
     return 'Usuario de consulta';
   });
 
-  puedeCargar = computed(
+  puedeIntegrar = computed(
     () =>
       (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
-      this.habilitaCarga(),
-  );
-
-  puedeActualizar = computed(
-    () =>
-      (this.esSuperUsuario() || this.esEnlaceEstatal()) &&
-      this.habilitaModificacion(),
+      (this.habilitaCarga() || this.habilitaModificacion()),
   );
 
   puedeConsultarEnvios = computed(
