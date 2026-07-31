@@ -1,10 +1,9 @@
 <div class="semanal-carga">
   <div class="semanal-admin-header carga-header">
     <div>
-      <span>Módulo semanal</span>
+      <span>Módulo preliminar</span>
       <h1>Integración acumulativa de incidencia delictiva</h1>
-      <p>Cargue los tres archivos; el sistema detectará automáticamente las semanas nuevas y los bloques que reemplazan
-        información confirmada.</p>
+      <p>Cargue los tres archivos acumulados del mes en curso; el sistema identificará internamente la información nueva y la que reemplaza versiones preliminares anteriores.</p>
     </div>
 
     @if (mostrandoResultado()) {
@@ -45,8 +44,7 @@
           <div class="seccion-titulo">
             <div>
               <strong>Carga acumulativa</strong>
-              <p>Los archivos pueden contener el acumulado permitido del mes o únicamente la información más reciente.
-                La API clasificará cada bloque como nuevo o reemplazo.</p>
+              <p>Los archivos deben contener la información acumulada del mes en curso hasta la fecha actual.</p>
             </div>
           </div>
 
@@ -76,23 +74,29 @@
             </div>
           </div>
 
+          <div class="seccion-titulo seccion-periodo">
+            <div>
+              <strong>Periodo calculado automáticamente</strong>
+              <p>La operación corresponde al acumulado del mes en curso hasta la fecha actual.</p>
+            </div>
+          </div>
+
           @if (tramoPrevisto(); as tramo) {
           <div class="tramo-preview" [class.tramo-cortado]="tramo.semanaCortada">
             <i class="fa-solid fa-calendar-check"></i>
 
             <div>
-              <span>Referencia {{ tramo.numeroSemana }} / {{ tramo.anioSemana }}</span>
-              <strong>{{ formatearFecha(tramo.fechaInicioSemana) }} al {{ formatearFecha(tramo.fechaFinSemana)
-                }}</strong>
+              <span>Periodo preliminar</span>
+              <strong>{{ nombreMes(tramo.mesCorte) }} {{ tramo.anioCorte }}</strong>
             </div>
 
             <div>
-              <span>Corte técnico de {{ nombreMes(tramo.mesCorte) }}</span>
+              <span>Información acumulada permitida</span>
               <strong>{{ formatearFecha(tramo.fechaInicioTramo) }} al {{ formatearFecha(tramo.fechaFinTramo) }}</strong>
             </div>
 
             @if (tramo.semanaCortada) {
-            <em>La referencia cruza de mes; la API aplicará la ventana excepcional correspondiente.</em>
+            <em>Durante el cruce de mes, la API asignará internamente cada registro al corte mensual que corresponda.</em>
             }
           </div>
           }
@@ -254,9 +258,8 @@
             <i class="fa-solid fa-filter-circle-dollar"></i>
 
             <div>
-              <strong>Detección automática por bloque</strong>
-              <span>Los bloques confirmados se reemplazan de forma versionada; los bloques no existentes se integran
-                como información nueva.</span>
+              <strong>Procesamiento acumulativo</strong>
+              <span>La información anterior del mismo periodo se reemplazará de forma versionada y los registros nuevos se integrarán al preliminar mensual.</span>
             </div>
           </div>
         </div>
@@ -286,7 +289,7 @@
         } @else if (advertencias().length > 0) {
         {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
         } @else {
-        {{ esActualizacion ? 'Actualización' : 'Carga semanal' }} lista para revisar
+        {{ esActualizacion ? 'Actualización acumulativa' : 'Carga acumulativa' }} lista para revisar
         }
       </h2>
 
@@ -309,76 +312,18 @@
   @if (respuesta()?.ventana; as ventana) {
   <section class="periodo-confirmado">
     <div>
-      <span>Tipo de contenido</span>
-      <strong>{{ etiquetaTipoContenido(respuesta()?.periodo?.tipoContenido) }}</strong>
+      <span>Periodo reportado</span>
+      <strong>{{ nombreMes(respuesta()?.periodo?.mesCorte) }} {{ respuesta()?.periodo?.anioCorte }}</strong>
     </div>
 
     <div>
       <span>Operación detectada</span>
-      <strong>{{ esActualizacion ? 'Actualización acumulativa' : 'Carga acumulativa inicial' }}</strong>
+      <strong>{{ esActualizacion ? 'Actualización preliminar acumulativa' : 'Carga preliminar acumulativa' }}</strong>
     </div>
 
     <div>
-      <span>Ventana permitida</span>
-      <strong>{{ formatearFecha(ventana.fechaMinimaPermitida) }} al {{ formatearFecha(ventana.fechaMaximaPermitida)
-        }}</strong>
-    </div>
-
-    <div>
-      <span>Bloques detectados</span>
-      <strong>{{ respuesta()?.bloques?.length ?? 0 }}</strong>
-    </div>
-  </section>
-  }
-
-  @if (respuesta()?.bloques; as bloques) {
-  <section class="siiid-card detalle-card">
-    <div class="siiid-card-header carga-card-header">
-      <i class="fa-solid fa-layer-group"></i>
-      Bloques que integrará la operación
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-sm mb-0 detalle-tabla">
-        <thead>
-          <tr>
-            <th>Semana</th>
-            <th>Corte</th>
-            <th>Tramo</th>
-            <th>Carpetas</th>
-            <th>Delitos</th>
-            <th>Víctimas</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (bloque of bloques; track bloque.fechaInicioSemana + '-' + bloque.anioCorte + '-' + bloque.mesCorte) {
-          <tr>
-            <td>
-              <strong>{{ bloque.numeroSemana }}/{{ bloque.anioSemana }}</strong>
-              <div>{{ formatearFecha(bloque.fechaInicioSemana) }} al {{ formatearFecha(bloque.fechaFinSemana) }}</div>
-            </td>
-
-            <td>{{ nombreMes(bloque.mesCorte) }} {{ bloque.anioCorte }}</td>
-            <td>{{ formatearFecha(bloque.fechaInicioTramo) }} al {{ formatearFecha(bloque.fechaFinTramo) }}</td>
-            <td>{{ bloque.totalCarpetas }}</td>
-            <td>{{ bloque.totalDelitos }}</td>
-            <td>{{ bloque.totalVictimas }}</td>
-
-            <td>
-              <span class="detalle-tipo" [class.tipo-advertencia]="bloque.reemplazaInformacion">
-                {{ bloque.reemplazaInformacion ? 'REEMPLAZAR' : 'INTEGRAR' }}
-              </span>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="7" class="text-center">No se detectaron bloques dentro de la ventana permitida.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
+      <span>Ventana procesada</span>
+      <strong>{{ formatearFecha(ventana.fechaMinimaPermitida) }} al {{ formatearFecha(ventana.fechaMaximaPermitida) }}</strong>
     </div>
   </section>
   }

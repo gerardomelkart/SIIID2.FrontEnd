@@ -851,60 +851,30 @@ export class SemanalCarga implements OnInit {
   }
 
   private calcularTramo(formulario: SemanalCargaFormulario): VistaTramoSemanal | null {
-    if (!formulario.tipoContenido) {
-      return null;
-    }
-    const coincidencia = /^(\d{4})-W(\d{2})$/.exec(formulario.semanaSeleccionada);
+    if (formulario.tipoContenido !== 'ACUMULADO_MES') return null;
 
-    if (
-      !coincidencia ||
-      formulario.semanaSeleccionada < this.semanaMinima ||
-      formulario.semanaSeleccionada > this.semanaMaxima
-    )
-      return null;
+    const fechaActual = new Date();
+    const semanaActual = this.obtenerSemanaIso(fechaActual);
+    const fechaInicioSemana = this.obtenerInicioSemanaIso(semanaActual.anio, semanaActual.numero);
 
-    const anioSemana = Number(coincidencia[1]);
-    const numeroSemana = Number(coincidencia[2]);
-
-    if (anioSemana < 2000 || anioSemana > 2100 || numeroSemana < 1 || numeroSemana > 53) {
-      return null;
-    }
-
-    const fechaInicioSemana = this.obtenerInicioSemanaIso(anioSemana, numeroSemana);
-
-    if (
-      !fechaInicioSemana ||
-      fechaInicioSemana < new Date(2000, 0, 1) ||
-      fechaInicioSemana > new Date(2100, 11, 25)
-    ) {
-      return null;
-    }
+    if (!fechaInicioSemana) return null;
 
     const fechaFinSemana = this.sumarDias(fechaInicioSemana, 6);
-    const mesCorte = fechaFinSemana.getMonth() + 1;
-    const anioCorte = fechaFinSemana.getFullYear();
-
-    const fechaInicioMes = new Date(anioCorte, mesCorte - 1, 1);
-    const fechaFinMes = new Date(anioCorte, mesCorte, 0);
-
-    const fechaInicioTramo =
-      fechaInicioSemana > fechaInicioMes ? fechaInicioSemana : fechaInicioMes;
-
-    const fechaFinTramo = fechaFinSemana < fechaFinMes ? fechaFinSemana : fechaFinMes;
+    const fechaInicioMes = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 1);
 
     return {
-      anioSemana,
-      numeroSemana,
+      anioSemana: semanaActual.anio,
+      numeroSemana: semanaActual.numero,
       fechaInicioSemana,
       fechaFinSemana,
-      fechaInicioTramo,
-      fechaFinTramo,
+      fechaInicioTramo: fechaInicioMes,
+      fechaFinTramo: fechaActual,
       fechaInicioMesCorte: fechaInicioMes,
-      mesCorte,
-      anioCorte,
+      mesCorte: fechaActual.getMonth() + 1,
+      anioCorte: fechaActual.getFullYear(),
       semanaCortada:
-        fechaInicioSemana.getMonth() !== fechaFinSemana.getMonth() ||
-        fechaInicioSemana.getFullYear() !== fechaFinSemana.getFullYear(),
+        fechaInicioSemana.getMonth() !== fechaActual.getMonth() ||
+        fechaInicioSemana.getFullYear() !== fechaActual.getFullYear(),
     };
   }
 
