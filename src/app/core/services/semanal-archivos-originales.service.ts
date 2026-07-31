@@ -14,13 +14,10 @@ export class SemanalArchivosOriginalesService {
     return this.http.get<SemanalArchivosOriginalesResponse>(this.apiUrl);
   }
 
-  descargarArchivosOriginales(idEntidadFederativa: number) {
-    return this.http.get(
-      `${this.apiUrl}/${idEntidadFederativa}`,
-      {
-        responseType: 'blob',
-        observe: 'response',
-      },
-    );
+  descargarArchivosOriginales(idEntidadFederativa: number, idUsuarioCarga: number) {
+    return this.http.get(`${this.apiUrl}/${idEntidadFederativa}/${idUsuarioCarga}`, {
+      responseType: 'blob',
+      observe: 'response',
+    });
   }
 }

@@ -4,16 +4,12 @@
       <h1>Archivos originales</h1>
 
       <p>
-        Descarga de los últimos archivos originales semanales recibidos por entidad federativa.
-        Solo se conserva el último paquete recibido por entidad.
+        Descarga de los últimos archivos originales preliminares recibidos por entidad y usuario.
+        Solo se conserva el último paquete recibido por cada usuario.
       </p>
     </div>
 
-    <button
-      type="button"
-      class="btn btn-sm btn-secondary"
-      [disabled]="cargando()"
-      (click)="cargarArchivos()">
+    <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarArchivos()">
       @if (cargando()) {
       <i class="fa-solid fa-spinner fa-spin"></i>
       } @else {
@@ -27,16 +23,13 @@
     <div class="siiid-card-header originales-card-header">
       <span>
         <i class="fa-solid fa-box-archive"></i>
-        Últimos archivos originales semanales por entidad
+        Últimos archivos originales preliminares por entidad y usuario
       </span>
 
       <div class="buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
 
-        <input
-          type="text"
-          placeholder="Buscar entidad, semana, código o archivo..."
-          [ngModel]="busqueda()"
+        <input type="text" placeholder="Buscar entidad, usuario, periodo, código o archivo..." [ngModel]="busqueda()"
           (ngModelChange)="cambiarBusqueda($event)">
       </div>
     </div>
@@ -50,44 +43,32 @@
       <table class="table table-sm originales-table">
         <thead>
           <tr>
-            <th
-              class="sortable"
-              (click)="ordenarPor('entidad')">
-              Entidad
-              <i [class]="iconoOrden('entidad')"></i>
+            <th class="sortable" (click)="ordenarPor('usuario')">
+              Usuario
+              <i [class]="iconoOrden('usuario')"></i>
             </th>
 
-            <th
-              class="sortable"
-              (click)="ordenarPor('movimiento')">
+            <th class="sortable" (click)="ordenarPor('movimiento')">
               Último movimiento
               <i [class]="iconoOrden('movimiento')"></i>
             </th>
 
-            <th
-              class="sortable"
-              (click)="ordenarPor('semana')">
+            <th class="sortable" (click)="ordenarPor('semana')">
               Semana
               <i [class]="iconoOrden('semana')"></i>
             </th>
 
-            <th
-              class="sortable"
-              (click)="ordenarPor('codigoReferencia')">
+            <th class="sortable" (click)="ordenarPor('codigoReferencia')">
               Código referencia
               <i [class]="iconoOrden('codigoReferencia')"></i>
             </th>
 
-            <th
-              class="sortable"
-              (click)="ordenarPor('fechaGuardado')">
+            <th class="sortable" (click)="ordenarPor('fechaGuardado')">
               Fecha guardado
               <i [class]="iconoOrden('fechaGuardado')"></i>
             </th>
 
-            <th
-              class="sortable"
-              (click)="ordenarPor('archivos')">
+            <th class="sortable" (click)="ordenarPor('archivos')">
               Archivos
               <i [class]="iconoOrden('archivos')"></i>
             </th>
@@ -98,13 +79,13 @@
 
         <tbody>
           @for (
-            item of archivosPaginados();
-            track item.idEntidadFederativa
+          item of archivosPaginados();
+          track item.idEntidadFederativa + '-' + item.idUsuarioCarga
           ) {
           <tr>
             <td>
               <strong>
-                {{ entidadTexto(item) }}
+                {{ usuarioTexto(item) }}
               </strong>
             </td>
 
@@ -139,8 +120,8 @@
             <td>
               <div class="archivo-lista">
                 @for (
-                  archivo of item.archivos;
-                  track archivo.rutaRelativa
+                archivo of item.archivos;
+                track archivo.rutaRelativa
                 ) {
                 <div class="archivo-item">
                   <div>
@@ -167,15 +148,10 @@
             </td>
 
             <td class="text-center">
-              <button
-                type="button"
-                class="btn btn-sm btn-success"
-                [disabled]="descargandoEntidad() !== null"
+              <button type="button" class="btn btn-sm btn-success" [disabled]="descargandoOperacion() !== null"
                 (click)="descargar(item)">
-                @if (
-                  descargandoEntidad() ===
-                  item.idEntidadFederativa
-                ) {
+                @if (descargandoOperacion() === item.idEntidadFederativa + '-' + item.idUsuarioCarga)
+                {
                 <i class="fa-solid fa-spinner fa-spin"></i>
                 } @else {
                 <i class="fa-solid fa-file-zipper"></i>
@@ -187,9 +163,7 @@
           </tr>
           } @empty {
           <tr>
-            <td
-              colspan="7"
-              class="text-center p-4">
+            <td colspan="8" class="text-center p-4">
               @if (cargando()) {
               Consultando archivos originales semanales...
               } @else {
@@ -207,43 +181,28 @@
         Mostrando
         {{ primerRegistroVisible() }}-{{ ultimoRegistroVisible() }}
         de {{ archivosFiltrados().length }} resultados.
-
         {{ archivos().length }}
-        entidades con respaldo disponible.
+        paquetes por entidad y usuario disponibles.
       </div>
 
       @if (totalPaginas() > 1) {
-      <nav
-        class="paginacion-originales"
-        aria-label="Paginación de archivos originales semanales">
-        <button
-          type="button"
-          class="btn-pagina"
-          [disabled]="paginaActual() === 1"
-          (click)="irPagina(paginaActual() - 1)"
-          aria-label="Página anterior">
+      <nav class="paginacion-originales" aria-label="Paginación de archivos originales semanales">
+        <button type="button" class="btn-pagina" [disabled]="paginaActual() === 1"
+          (click)="irPagina(paginaActual() - 1)" aria-label="Página anterior">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
 
         @for (
-          pagina of paginas();
-          track pagina
+        pagina of paginas();
+        track pagina
         ) {
-        <button
-          type="button"
-          class="btn-pagina"
-          [class.activa]="paginaActual() === pagina"
-          (click)="irPagina(pagina)">
+        <button type="button" class="btn-pagina" [class.activa]="paginaActual() === pagina" (click)="irPagina(pagina)">
           {{ pagina }}
         </button>
         }
 
-        <button
-          type="button"
-          class="btn-pagina"
-          [disabled]="paginaActual() === totalPaginas()"
-          (click)="irPagina(paginaActual() + 1)"
-          aria-label="Página siguiente">
+        <button type="button" class="btn-pagina" [disabled]="paginaActual() === totalPaginas()"
+          (click)="irPagina(paginaActual() + 1)" aria-label="Página siguiente">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </nav>

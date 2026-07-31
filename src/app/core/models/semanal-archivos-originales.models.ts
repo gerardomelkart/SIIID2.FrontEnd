@@ -8,6 +8,7 @@ export interface SemanalArchivoOriginalItem {
 
 export interface SemanalArchivosOriginalesResumen {
   idEntidadFederativa: number;
+  idUsuarioCarga: number;
   codigoReferencia: string;
   tipoMovimiento: string;
   tipoContenido: string;
