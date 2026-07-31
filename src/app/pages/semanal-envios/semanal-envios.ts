@@ -3,7 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ROLES } from '../../core/constants/roles.constants';
-import { SemanalEnvioBloqueItem, SemanalEnvioItem } from '../../core/models/semanal-envios.models';
+import { SemanalEnvioItem } from '../../core/models/semanal-envios.models';
 import { SemanalEnviosService } from '../../core/services/semanal-envios.service';
 import { SessionService } from '../../core/services/session.service';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
@@ -18,13 +18,20 @@ import {
   ordenarPorEstado,
 } from '../../core/utils/sort.utils';
 
-interface SemanaEnvio {
-  anioSemana: number;
-  numeroSemana: number;
-  semana: string;
+interface PeriodoEnvio {
+  clave: string;
+  anioCorte: number;
+  mesCorte: number;
+  periodo: string;
 }
 
-type CampoOrden = 'entidad' | 'clave' | 'fecha' | 'semana' | 'usuario' | 'estado';
+interface UsuarioEnvio {
+  idUsuarioCarga: number;
+  usuarioCarga: string;
+  nombreUsuarioCarga: string;
+}
+
+type CampoOrden = 'entidad' | 'clave' | 'fecha' | 'periodo' | 'usuario' | 'estado';
 
 @Component({
   selector: 'app-semanal-envios',
@@ -45,8 +52,9 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   cargando = signal(false);
   busqueda = signal('');
 
-  semanasEnvio = signal<SemanaEnvio[]>([]);
-  semanaEnvioSeleccionada = signal('');
+  periodosEnvio = signal<PeriodoEnvio[]>([]);
+  periodoEnvioSeleccionado = signal('');
+  idUsuarioSeleccionado = signal<number | null>(null);
   descargandoAcuses = signal(false);
 
   paginaActual = signal(1);
@@ -58,8 +66,26 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   exportandoExcel = signal(false);
 
   acuseUrl = signal<SafeResourceUrl | null>(null);
-  acuseTitulo = signal('Informe semanal');
+  acuseTitulo = signal('Informe preliminar');
   private acuseObjectUrl: string | null = null;
+
+  usuariosEnvio = computed<UsuarioEnvio[]>(() => {
+    const mapa = new Map<number, UsuarioEnvio>();
+
+    for (const envio of this.envios()) {
+      if (!mapa.has(envio.idUsuarioCarga)) {
+        mapa.set(envio.idUsuarioCarga, {
+          idUsuarioCarga: envio.idUsuarioCarga,
+          usuarioCarga: envio.usuarioCarga,
+          nombreUsuarioCarga: envio.nombreUsuarioCarga,
+        });
+      }
+    }
+
+    return Array.from(mapa.values()).sort((a, b) =>
+      a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', { sensitivity: 'base' }),
+    );
+  });
 
   operacionEnCurso = computed(
     () =>
@@ -71,18 +97,37 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   enviosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
-    const semanaSeleccionada = this.semanaEnvioSeleccionada();
+    const periodoSeleccionado = this.periodoEnvioSeleccionado();
+    const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
 
     const registros = this.envios().filter((envio) => {
-      if (semanaSeleccionada && !this.contieneSemana(envio, semanaSeleccionada)) return false;
+      if (periodoSeleccionado) {
+        const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+
+        if (
+          envio.anioCorte !== Number(anioTexto) ||
+          envio.mesCorte !== Number(mesTexto)
+        ) {
+          return false;
+        }
+      }
+
+      if (
+        idUsuarioSeleccionado &&
+        envio.idUsuarioCarga !== idUsuarioSeleccionado
+      ) {
+        return false;
+      }
+
       if (!texto) return true;
 
       return (
         envio.entidadFederativa.toLowerCase().includes(texto) ||
         envio.claveEntidad.toLowerCase().includes(texto) ||
         envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
-        envio.semana.toLowerCase().includes(texto) ||
+        this.periodoTexto(envio).toLowerCase().includes(texto) ||
         envio.usuarioCarga.toLowerCase().includes(texto) ||
+        envio.nombreUsuarioCarga.toLowerCase().includes(texto) ||
         envio.codigoReferencia.toLowerCase().includes(texto) ||
         envio.tipoCarga.toLowerCase().includes(texto) ||
         envio.estado.toLowerCase().includes(texto) ||
@@ -120,7 +165,17 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         const registros = response.registros ?? [];
 
         this.envios.set(registros);
-        this.sincronizarSemanasEnvio(registros);
+        this.sincronizarPeriodosEnvio(registros);
+
+        const usuarioSeleccionado = this.idUsuarioSeleccionado();
+
+        if (
+          usuarioSeleccionado &&
+          !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado)
+        ) {
+          this.idUsuarioSeleccionado.set(null);
+        }
+
         this.paginaActual.set(1);
         this.cargando.set(false);
       },
@@ -128,61 +183,71 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar los envíos semanales',
+          'No fue posible consultar los envíos preliminares',
           await obtenerMensajeErrorHttpAsync(error, 'Revise la conexión con la API.'),
         );
       },
     });
   }
 
-  descargarAcusesSemana(): void {
-    const semana = this.semanaEnvioSeleccionada();
-    const [anioTexto, numeroTexto] = semana.split('-');
-    const anioSemana = Number(anioTexto);
-    const numeroSemana = Number(numeroTexto);
+  descargarAcusesPeriodo(): void {
+    const periodo = this.periodoEnvioSeleccionado();
+    const [anioTexto, mesTexto] = periodo.split('-');
+    const anioCorte = Number(anioTexto);
+    const mesCorte = Number(mesTexto);
 
     if (
-      !Number.isInteger(anioSemana) ||
-      !Number.isInteger(numeroSemana) ||
-      numeroSemana < 1 ||
-      numeroSemana > 53
+      !Number.isInteger(anioCorte) ||
+      !Number.isInteger(mesCorte) ||
+      mesCorte < 1 ||
+      mesCorte > 12
     ) {
-      mostrarAdvertencia('Semana inválida', 'Seleccione una semana válida.');
+      mostrarAdvertencia('Periodo inválido', 'Seleccione un periodo mensual válido.');
       return;
     }
 
     this.descargandoAcuses.set(true);
 
-    this.semanalEnviosService.crearTicketDescargaAcuses(anioSemana, numeroSemana).subscribe({
-      next: (response) => {
-        if (!response.ticket) {
+    this.semanalEnviosService
+      .crearTicketDescargaAcuses(
+        anioCorte,
+        mesCorte,
+        null,
+        this.esSuperUsuario() ? this.idUsuarioSeleccionado() : null,
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.ticket) {
+            this.descargandoAcuses.set(false);
+            mostrarAdvertencia(
+              'Descarga no disponible',
+              'La API no devolvió un ticket de descarga.',
+            );
+            return;
+          }
+
+          const url = this.semanalEnviosService.obtenerUrlDescargaAcuses(response.ticket);
+          const iframe = document.createElement('iframe');
+
+          iframe.src = url;
+          iframe.style.display = 'none';
+
+          document.body.appendChild(iframe);
           this.descargandoAcuses.set(false);
-          mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
-          return;
-        }
 
-        const url = this.semanalEnviosService.obtenerUrlDescargaAcuses(response.ticket);
-        const iframe = document.createElement('iframe');
+          setTimeout(() => {
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+          }, 60000);
+        },
+        error: async (error: unknown) => {
+          this.descargandoAcuses.set(false);
 
-        iframe.src = url;
-        iframe.style.display = 'none';
-
-        document.body.appendChild(iframe);
-        this.descargandoAcuses.set(false);
-
-        setTimeout(() => {
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }, 60000);
-      },
-      error: async (error: unknown) => {
-        this.descargandoAcuses.set(false);
-
-        mostrarError(
-          'No fue posible descargar los acuses',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-        );
-      },
-    });
+          mostrarError(
+            'No fue posible descargar los acuses',
+            await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+          );
+        },
+      });
   }
 
   buscarEnvios(valor: string): void {
@@ -190,9 +255,10 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     this.paginaActual.set(1);
   }
 
-  cambiarSemanaEnvios(): void {
+  cambiarFiltros(): void {
     this.paginaActual.set(1);
   }
+
   ordenarPor(campo: CampoOrden): void {
     this.orden.set(alternarOrden(this.orden(), campo));
     this.paginaActual.set(1);
@@ -217,16 +283,20 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         this.descargandoAcuse.set(null);
 
         if (!response.body) {
-          mostrarError('Informe vacío', 'La API no devolvió el informe semanal.');
+          mostrarError('Informe vacío', 'La API no devolvió el informe preliminar.');
           return;
         }
 
-        const pdf = crearSafeBlobUrl(response.body, this.sanitizer, this.acuseObjectUrl);
+        const pdf = crearSafeBlobUrl(
+          response.body,
+          this.sanitizer,
+          this.acuseObjectUrl,
+        );
 
         this.acuseObjectUrl = pdf.objectUrl;
         this.acuseUrl.set(pdf.safeUrl);
         this.acuseTitulo.set(
-          `${envio.esConfirmado ? 'Acuse' : 'Informe previo'} — ${envio.entidadFederativa} — ${this.semanaTexto(envio)}`,
+          `${envio.esConfirmado ? 'Acuse' : 'Informe previo'} — ${envio.entidadFederativa} — ${envio.usuarioCarga} — ${this.periodoTexto(envio)}`,
         );
       },
       error: async (error: unknown) => {
@@ -248,13 +318,13 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         this.descargandoArchivos.set(null);
 
         if (!response.body) {
-          mostrarError('Archivo vacío', 'La API no devolvió archivos semanales.');
+          mostrarError('Archivo vacío', 'La API no devolvió archivos preliminares.');
           return;
         }
 
         const nombre =
           this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
-          `ARCHIVOS_${envio.codigoReferencia}.zip`;
+          `ARCHIVOS_PRELIMINARES_${envio.codigoReferencia}.zip`;
 
         this.descargarBlob(response.body, nombre);
       },
@@ -287,19 +357,22 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       const filas = this.enviosFiltrados().map((envio) => ({
         'Entidad federativa': envio.entidadFederativa,
         'Cve. entidad': envio.claveEntidad,
+        Usuario: envio.usuarioCarga,
+        'Nombre del usuario': envio.nombreUsuarioCarga,
+        Periodo: this.periodoTexto(envio),
         'Fecha de envío': envio.fechaEnvioTexto,
-        Semana: envio.semana,
-        'Usuario envío': envio.usuarioCarga,
         Estatus: envio.estadoTexto,
       }));
 
       const exportado = await exportarFilasExcel(
         filas,
-        'consulta_envios_semanales.xlsx',
-        'Envios semanales',
+        'consulta_envios_preliminares.xlsx',
+        'Envíos preliminares',
       );
 
-      if (!exportado) mostrarError('Sin registros', 'No existen envíos para exportar.');
+      if (!exportado) {
+        mostrarError('Sin registros', 'No existen envíos para exportar.');
+      }
     } catch {
       mostrarError('No fue posible exportar', 'Intente nuevamente.');
     } finally {
@@ -313,56 +386,19 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     this.acuseUrl.set(null);
   }
 
-  tipoCargaTexto(tipoCarga: string): string {
-    return tipoCarga === 'ACTUALIZACION' ? 'Actualización' : 'Carga inicial';
+  periodoTexto(envio: SemanalEnvioItem): string {
+    return envio.periodo || this.crearPeriodoTexto(envio.anioCorte, envio.mesCorte);
   }
 
-  semanaTexto(envio: SemanalEnvioItem): string {
-    return envio.semana || `Semana ${envio.numeroSemana}/${envio.anioSemana}`;
-  }
+  usuarioTexto(envio: SemanalEnvioItem): string {
+    if (
+      envio.nombreUsuarioCarga &&
+      envio.nombreUsuarioCarga !== envio.usuarioCarga
+    ) {
+      return `${envio.usuarioCarga} - ${envio.nombreUsuarioCarga}`;
+    }
 
-  rangoSemanaTexto(envio: SemanalEnvioItem): string {
-    const bloques = [...this.obtenerBloques(envio)].sort((a, b) => new Date(a.fechaInicioSemana).getTime() - new Date(b.fechaInicioSemana).getTime());
-    return `${this.fechaCorta(bloques[0].fechaInicioSemana)} al ${this.fechaCorta(bloques[bloques.length - 1].fechaFinSemana)}`;
-  }
-
-  fechaCorta(fecha: string | null): string {
-    if (!fecha) return '-';
-
-    const valor = new Date(fecha);
-    if (Number.isNaN(valor.getTime())) return '-';
-
-    return new Intl.DateTimeFormat('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(valor);
-  }
-
-  fechaHoraTexto(fecha: string | null): string {
-    if (!fecha) return '-';
-
-    const valor = new Date(fecha);
-    if (Number.isNaN(valor.getTime())) return '-';
-
-    return new Intl.DateTimeFormat('es-MX', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(valor);
-  }
-
-  totalRegistros(envio: SemanalEnvioItem): number {
-    return (
-      envio.totalCarpetasIncluidas + envio.totalDelitosIncluidos + envio.totalVictimasIncluidas
-    );
-  }
-
-  esEstadoConfirmado(envio: SemanalEnvioItem): boolean {
-    return envio.esConfirmado;
-  }
-
-  esEstadoPendiente(envio: SemanalEnvioItem): boolean {
-    return envio.esPendiente;
+    return envio.usuarioCarga;
   }
 
   private obtenerValorOrden(envio: SemanalEnvioItem, campo: CampoOrden): ValorOrden {
@@ -373,8 +409,8 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         return envio.claveEntidad;
       case 'fecha':
         return envio.fechaMovimiento;
-      case 'semana':
-        return Math.max(...this.obtenerBloques(envio).map((bloque) => bloque.anioSemana * 100 + bloque.numeroSemana));
+      case 'periodo':
+        return envio.anioCorte * 100 + envio.mesCorte;
       case 'usuario':
         return envio.usuarioCarga;
       case 'estado':
@@ -400,77 +436,58 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     if (!contentDisposition) return '';
 
     const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
     if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1]);
 
     const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
     return normalMatch?.[1] ?? '';
   }
 
-  private sincronizarSemanasEnvio(registros: SemanalEnvioItem[]): void {
-    const mapa = new Map<string, SemanaEnvio>();
+  private sincronizarPeriodosEnvio(registros: SemanalEnvioItem[]): void {
+    const mapa = new Map<string, PeriodoEnvio>();
 
     for (const registro of registros) {
-      for (const bloque of this.obtenerBloques(registro)) {
-        const key = `${bloque.anioSemana}-${bloque.numeroSemana.toString().padStart(2, '0')}`;
+      const clave =
+        `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
 
-        if (!mapa.has(key)) {
-          mapa.set(key, {
-            anioSemana: bloque.anioSemana,
-            numeroSemana: bloque.numeroSemana,
-            semana: `Semana ${bloque.numeroSemana}/${bloque.anioSemana}`,
-          });
-        }
+      if (!mapa.has(clave)) {
+        mapa.set(clave, {
+          clave,
+          anioCorte: registro.anioCorte,
+          mesCorte: registro.mesCorte,
+          periodo: this.periodoTexto(registro),
+        });
       }
     }
 
-    const semanas = Array.from(mapa.values()).sort(
-      (a, b) => b.anioSemana * 100 + b.numeroSemana - (a.anioSemana * 100 + a.numeroSemana),
+    const periodos = Array.from(mapa.values()).sort(
+      (a, b) =>
+        b.anioCorte * 100 +
+        b.mesCorte -
+        (a.anioCorte * 100 + a.mesCorte),
     );
 
-    this.semanasEnvio.set(semanas);
+    this.periodosEnvio.set(periodos);
 
-    if (semanas.length === 0) {
-      this.semanaEnvioSeleccionada.set('');
+    if (periodos.length === 0) {
+      this.periodoEnvioSeleccionado.set('');
       return;
     }
 
-    const seleccionada = this.semanaEnvioSeleccionada();
-    const existeSeleccionada = semanas.some(
-      (semana) =>
-        `${semana.anioSemana}-${semana.numeroSemana.toString().padStart(2, '0')}` === seleccionada,
-    );
+    const seleccionada = this.periodoEnvioSeleccionado();
 
-    if (!existeSeleccionada) {
-      const primera = semanas[0];
-
-      this.semanaEnvioSeleccionada.set(
-        `${primera.anioSemana}-${primera.numeroSemana.toString().padStart(2, '0')}`,
-      );
+    if (!periodos.some((periodo) => periodo.clave === seleccionada)) {
+      this.periodoEnvioSeleccionado.set(periodos[0].clave);
     }
   }
 
-    private contieneSemana(envio: SemanalEnvioItem, semanaSeleccionada: string): boolean {
-    return this.obtenerBloques(envio).some((bloque) => `${bloque.anioSemana}-${bloque.numeroSemana.toString().padStart(2, '0')}` === semanaSeleccionada);
-  }
+  private crearPeriodoTexto(anioCorte: number, mesCorte: number): string {
+    const fecha = new Date(anioCorte, mesCorte - 1, 1);
+    const periodo = new Intl.DateTimeFormat('es-MX', {
+      month: 'long',
+      year: 'numeric',
+    }).format(fecha);
 
-  private obtenerBloques(envio: SemanalEnvioItem): SemanalEnvioBloqueItem[] {
-    return envio.bloques?.length
-      ? envio.bloques
-      : [{
-          idSemanalCarga: envio.idSemanalCarga,
-          anioSemana: envio.anioSemana,
-          numeroSemana: envio.numeroSemana,
-          fechaInicioSemana: envio.fechaInicioSemana,
-          fechaFinSemana: envio.fechaFinSemana,
-          anioCorte: envio.anioCorte,
-          mesCorte: envio.mesCorte,
-          fechaInicioTramo: envio.fechaInicioTramo,
-          fechaFinTramo: envio.fechaFinTramo,
-          totalCarpetas: envio.totalCarpetasIncluidas,
-          totalDelitos: envio.totalDelitosIncluidos,
-          totalVictimas: envio.totalVictimasIncluidas,
-          reemplazaInformacion: envio.tipoCarga === 'ACTUALIZACION',
-        }];
+    return periodo.charAt(0).toUpperCase() + periodo.slice(1);
   }
-  
 }

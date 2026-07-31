@@ -2,7 +2,7 @@
   <div class="informes-header">
     <div>
       <h1>Informes</h1>
-      <p>Monitoreo de intentos y cargas semanales por entidad federativa.</p>
+      <p>Monitoreo de intentos y cargas preliminares por entidad, usuario y periodo mensual.</p>
     </div>
 
     <div class="rol-chip">
@@ -15,12 +15,11 @@
     <div class="siiid-card-header reporte-card-header">
       <span>
         <i class="fa-solid fa-chart-simple"></i>
-        Reporte de cargas por entidad
+        Reporte de cargas por entidad y usuario
       </span>
 
       <div class="reporte-actions">
-        <button
-          type="button"
+        <button type="button"
           class="btn btn-sm btn-secondary"
           [disabled]="cargando()"
           (click)="cargarReporte()">
@@ -32,8 +31,7 @@
           Actualizar
         </button>
 
-        <button
-          type="button"
+        <button type="button"
           class="btn btn-sm btn-secondary"
           [disabled]="cargando() || exportandoExcel()"
           (click)="exportarExcel()">
@@ -48,9 +46,8 @@
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input
-            type="text"
-            placeholder="Buscar carga..."
+          <input type="text"
+            placeholder="Buscar entidad, usuario o periodo..."
             [ngModel]="busqueda()"
             (ngModelChange)="buscar($event)">
         </div>
@@ -60,18 +57,28 @@
     <div class="corte-selector">
       <div class="corte-selector-title">
         <i class="fa-solid fa-calendar-days"></i>
-        Semana consultada
+        Periodo consultado
       </div>
 
       <div class="corte-selector-controls">
-        <select
-          class="form-select form-select-sm"
-          [ngModel]="semanaSeleccionada()"
-          (ngModelChange)="semanaSeleccionada.set($event); cambiarSemana()">
-          @for (semana of semanas(); track semana.anioSemana + '-' + semana.numeroSemana) {
-          <option
-            [value]="semana.anioSemana + '-' + semana.numeroSemana.toString().padStart(2, '0')">
-            {{ semana.semana }}
+        <select class="form-select form-select-sm"
+          [ngModel]="periodoSeleccionado()"
+          (ngModelChange)="periodoSeleccionado.set($event); cambiarFiltros()">
+          @for (periodo of periodos(); track periodo.clave) {
+          <option [value]="periodo.clave">
+            {{ periodo.periodo }}
+          </option>
+          }
+        </select>
+
+        <select class="form-select form-select-sm"
+          [ngModel]="idUsuarioSeleccionado()"
+          (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
+          <option [ngValue]="null">Todos los usuarios</option>
+
+          @for (usuarioReporte of usuariosReporte(); track usuarioReporte.idUsuarioCarga) {
+          <option [ngValue]="usuarioReporte.idUsuarioCarga">
+            {{ usuarioReporte.usuarioCarga }} - {{ usuarioReporte.nombreUsuarioCarga }}
           </option>
           }
         </select>
@@ -92,9 +99,14 @@
               <i [class]="iconoOrden('claveEntidad')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarPor('semana')">
-              Semana
-              <i [class]="iconoOrden('semana')"></i>
+            <th class="sortable" (click)="ordenarPor('usuario')">
+              Usuario
+              <i [class]="iconoOrden('usuario')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarPor('periodo')">
+              Periodo
+              <i [class]="iconoOrden('periodo')"></i>
             </th>
 
             <th class="sortable" (click)="ordenarPor('intentos')">
@@ -127,12 +139,26 @@
         <tbody>
           @for (
             carga of cargasPaginadas();
-            track carga.idEntidadFederativa + '-' + carga.anioSemana + '-' + carga.numeroSemana
+            track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.anioCorte + '-' + carga.mesCorte
           ) {
           <tr>
             <td>{{ carga.entidadFederativa }}</td>
             <td>{{ carga.claveEntidad }}</td>
-            <td>{{ carga.semana }}</td>
+
+            <td>
+              <strong>{{ carga.usuarioCarga }}</strong>
+
+              @if (
+                carga.nombreUsuarioCarga &&
+                carga.nombreUsuarioCarga !== carga.usuarioCarga
+              ) {
+              <small class="d-block text-muted">
+                {{ carga.nombreUsuarioCarga }}
+              </small>
+              }
+            </td>
+
+            <td>{{ periodoTexto(carga) }}</td>
 
             <td>
               <span class="intentos-chip">{{ carga.intentos }}</span>
@@ -143,8 +169,7 @@
             </td>
 
             <td>
-              <span
-                class="estatus-badge"
+              <span class="estatus-badge"
                 [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
                 [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
                 [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
@@ -157,8 +182,8 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="8" class="text-center p-4">
-              No se encontraron cargas semanales.
+            <td colspan="9" class="text-center p-4">
+              No se encontraron cargas preliminares.
             </td>
           </tr>
           }
@@ -173,8 +198,7 @@
       </span>
 
       <div class="pagination-actions">
-        <button
-          type="button"
+        <button type="button"
           class="btn btn-sm btn-outline-secondary"
           [disabled]="paginaActual() === 1"
           (click)="cambiarPagina(paginaActual() - 1)">
@@ -185,8 +209,7 @@
           {{ paginaActual() }} / {{ totalPaginas() }}
         </span>
 
-        <button
-          type="button"
+        <button type="button"
           class="btn btn-sm btn-outline-secondary"
           [disabled]="paginaActual() === totalPaginas()"
           (click)="cambiarPagina(paginaActual() + 1)">

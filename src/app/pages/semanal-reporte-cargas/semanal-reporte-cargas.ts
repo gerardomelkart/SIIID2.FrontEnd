@@ -14,16 +14,24 @@ import {
   ordenarPorEstado,
 } from '../../core/utils/sort.utils';
 
-interface SemanaReporte {
-  anioSemana: number;
-  numeroSemana: number;
-  semana: string;
+interface PeriodoReporte {
+  clave: string;
+  anioCorte: number;
+  mesCorte: number;
+  periodo: string;
+}
+
+interface UsuarioReporte {
+  idUsuarioCarga: number;
+  usuarioCarga: string;
+  nombreUsuarioCarga: string;
 }
 
 type CampoOrden =
   | 'entidadFederativa'
   | 'claveEntidad'
-  | 'semana'
+  | 'usuario'
+  | 'periodo'
   | 'intentos'
   | 'ordenCarga'
   | 'estatusUltimoIntento'
@@ -47,31 +55,67 @@ export class SemanalReporteCargas implements OnInit {
   exportandoExcel = signal(false);
   busqueda = signal('');
 
-  semanas = signal<SemanaReporte[]>([]);
-  semanaSeleccionada = signal('');
+  periodos = signal<PeriodoReporte[]>([]);
+  periodoSeleccionado = signal('');
+  idUsuarioSeleccionado = signal<number | null>(null);
 
   paginaActual = signal(1);
   tamanioPagina = 10;
   orden = signal<EstadoOrden<CampoOrden> | null>(null);
 
+  usuariosReporte = computed<UsuarioReporte[]>(() => {
+    const mapa = new Map<number, UsuarioReporte>();
+
+    for (const carga of this.cargas()) {
+      if (!mapa.has(carga.idUsuarioCarga)) {
+        mapa.set(carga.idUsuarioCarga, {
+          idUsuarioCarga: carga.idUsuarioCarga,
+          usuarioCarga: carga.usuarioCarga,
+          nombreUsuarioCarga: carga.nombreUsuarioCarga,
+        });
+      }
+    }
+
+    return Array.from(mapa.values()).sort((a, b) =>
+      a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', { sensitivity: 'base' }),
+    );
+  });
+
   cargasFiltradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
-    const semanaSeleccionada = this.semanaSeleccionada();
+    const periodoSeleccionado = this.periodoSeleccionado();
+    const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
 
     const registros = this.cargas().filter((carga) => {
       if (carga.claveEntidad === '00') return false;
       if (!carga.intentos || carga.intentos === 0) return false;
 
-      const keySemana = `${carga.anioSemana}-${carga.numeroSemana.toString().padStart(2, '0')}`;
+      if (periodoSeleccionado) {
+        const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
 
-      if (semanaSeleccionada && keySemana !== semanaSeleccionada) return false;
+        if (
+          carga.anioCorte !== Number(anioTexto) ||
+          carga.mesCorte !== Number(mesTexto)
+        ) {
+          return false;
+        }
+      }
+
+      if (
+        idUsuarioSeleccionado &&
+        carga.idUsuarioCarga !== idUsuarioSeleccionado
+      ) {
+        return false;
+      }
 
       if (!texto) return true;
 
       return (
         carga.entidadFederativa.toLowerCase().includes(texto) ||
         carga.claveEntidad.toLowerCase().includes(texto) ||
-        carga.semana.toLowerCase().includes(texto) ||
+        carga.usuarioCarga.toLowerCase().includes(texto) ||
+        carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
+        this.periodoTexto(carga).toLowerCase().includes(texto) ||
         (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.ultimoIntento ?? '').toLowerCase().includes(texto)
@@ -104,7 +148,17 @@ export class SemanalReporteCargas implements OnInit {
         const registros = response.registros ?? [];
 
         this.cargas.set(registros);
-        this.sincronizarSemanas(registros);
+        this.sincronizarPeriodos(registros);
+
+        const usuarioSeleccionado = this.idUsuarioSeleccionado();
+
+        if (
+          usuarioSeleccionado &&
+          !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado)
+        ) {
+          this.idUsuarioSeleccionado.set(null);
+        }
+
         this.paginaActual.set(1);
         this.cargando.set(false);
       },
@@ -112,7 +166,7 @@ export class SemanalReporteCargas implements OnInit {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar el reporte de cargas semanales',
+          'No fue posible consultar el reporte de cargas preliminares',
           await obtenerMensajeErrorHttpAsync(error, 'Revise la conexión con la API.'),
         );
       },
@@ -124,7 +178,7 @@ export class SemanalReporteCargas implements OnInit {
     this.paginaActual.set(1);
   }
 
-  cambiarSemana(): void {
+  cambiarFiltros(): void {
     this.paginaActual.set(1);
   }
 
@@ -140,6 +194,10 @@ export class SemanalReporteCargas implements OnInit {
   cambiarPagina(pagina: number): void {
     if (pagina < 1 || pagina > this.totalPaginas()) return;
     this.paginaActual.set(pagina);
+  }
+
+  periodoTexto(carga: SemanalReporteCargaItem): string {
+    return carga.periodo || this.crearPeriodoTexto(carga.anioCorte, carga.mesCorte);
   }
 
   etiquetaEstatus(carga: SemanalReporteCargaItem): string {
@@ -188,7 +246,9 @@ export class SemanalReporteCargas implements OnInit {
       const filas = this.cargasFiltradas().map((carga) => ({
         'Entidad federativa': carga.entidadFederativa,
         'Cve. entidad': carga.claveEntidad,
-        Semana: carga.semana,
+        Usuario: carga.usuarioCarga,
+        'Nombre del usuario': carga.nombreUsuarioCarga,
+        Periodo: this.periodoTexto(carga),
         Intentos: carga.intentos,
         Ranking: this.obtenerOrdenCarga(carga) ?? '',
         Estatus: this.etiquetaEstatus(carga),
@@ -198,14 +258,14 @@ export class SemanalReporteCargas implements OnInit {
 
       const exportado = await exportarFilasExcel(
         filas,
-        'reporte_cargas_semanales.xlsx',
-        'Cargas semanales',
+        'reporte_cargas_preliminares.xlsx',
+        'Cargas preliminares',
       );
 
       if (!exportado) {
         mostrarAdvertencia(
           'Sin registros para exportar',
-          'No existen cargas semanales para exportar.',
+          'No existen cargas preliminares para exportar.',
         );
       }
     } catch {
@@ -222,8 +282,8 @@ export class SemanalReporteCargas implements OnInit {
       .filter((item) => item.claveEntidad !== '00')
       .filter(
         (item) =>
-          item.anioSemana === carga.anioSemana &&
-          item.numeroSemana === carga.numeroSemana &&
+          item.anioCorte === carga.anioCorte &&
+          item.mesCorte === carga.mesCorte &&
           !!item.fechaCargaExitosa,
       )
       .sort((a, b) => {
@@ -232,16 +292,27 @@ export class SemanalReporteCargas implements OnInit {
 
         if (fechaA !== fechaB) return fechaA - fechaB;
 
-        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-          sensitivity: 'base',
-        });
+        const entidad = a.entidadFederativa.localeCompare(
+          b.entidadFederativa,
+          'es',
+          { sensitivity: 'base' },
+        );
+
+        if (entidad !== 0) return entidad;
+
+        return a.usuarioCarga.localeCompare(
+          b.usuarioCarga,
+          'es',
+          { sensitivity: 'base' },
+        );
       });
 
     const indice = cargasOrdenadas.findIndex(
       (item) =>
         item.idEntidadFederativa === carga.idEntidadFederativa &&
-        item.anioSemana === carga.anioSemana &&
-        item.numeroSemana === carga.numeroSemana,
+        item.idUsuarioCarga === carga.idUsuarioCarga &&
+        item.anioCorte === carga.anioCorte &&
+        item.mesCorte === carga.mesCorte,
     );
 
     return indice >= 0 ? indice + 1 : null;
@@ -256,8 +327,10 @@ export class SemanalReporteCargas implements OnInit {
         return carga.entidadFederativa;
       case 'claveEntidad':
         return carga.claveEntidad;
-      case 'semana':
-        return carga.anioSemana * 100 + carga.numeroSemana;
+      case 'usuario':
+        return carga.usuarioCarga;
+      case 'periodo':
+        return carga.anioCorte * 100 + carga.mesCorte;
       case 'intentos':
         return carga.intentos;
       case 'ordenCarga':
@@ -271,47 +344,52 @@ export class SemanalReporteCargas implements OnInit {
     }
   }
 
-  private sincronizarSemanas(registros: SemanalReporteCargaItem[]): void {
-    const mapa = new Map<string, SemanaReporte>();
+  private sincronizarPeriodos(registros: SemanalReporteCargaItem[]): void {
+    const mapa = new Map<string, PeriodoReporte>();
 
     for (const registro of registros) {
-      const key = `${registro.anioSemana}-${registro.numeroSemana.toString().padStart(2, '0')}`;
+      const clave =
+        `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
 
-      if (!mapa.has(key)) {
-        mapa.set(key, {
-          anioSemana: registro.anioSemana,
-          numeroSemana: registro.numeroSemana,
-          semana: registro.semana,
+      if (!mapa.has(clave)) {
+        mapa.set(clave, {
+          clave,
+          anioCorte: registro.anioCorte,
+          mesCorte: registro.mesCorte,
+          periodo: this.periodoTexto(registro),
         });
       }
     }
 
-    const semanas = Array.from(mapa.values()).sort(
-      (a, b) => b.anioSemana * 100 + b.numeroSemana - (a.anioSemana * 100 + a.numeroSemana),
+    const periodos = Array.from(mapa.values()).sort(
+      (a, b) =>
+        b.anioCorte * 100 +
+        b.mesCorte -
+        (a.anioCorte * 100 + a.mesCorte),
     );
 
-    this.semanas.set(semanas);
+    this.periodos.set(periodos);
 
-    if (semanas.length === 0) {
-      this.semanaSeleccionada.set('');
+    if (periodos.length === 0) {
+      this.periodoSeleccionado.set('');
       return;
     }
 
-    const seleccionada = this.semanaSeleccionada();
+    const seleccionada = this.periodoSeleccionado();
 
-    const existeSeleccionada = semanas.some(
-      (semana) =>
-        `${semana.anioSemana}-${semana.numeroSemana.toString().padStart(2, '0')}` ===
-        seleccionada,
-    );
-
-    if (!existeSeleccionada) {
-      const primera = semanas[0];
-
-      this.semanaSeleccionada.set(
-        `${primera.anioSemana}-${primera.numeroSemana.toString().padStart(2, '0')}`,
-      );
+    if (!periodos.some((periodo) => periodo.clave === seleccionada)) {
+      this.periodoSeleccionado.set(periodos[0].clave);
     }
+  }
+
+  private crearPeriodoTexto(anioCorte: number, mesCorte: number): string {
+    const fecha = new Date(anioCorte, mesCorte - 1, 1);
+    const periodo = new Intl.DateTimeFormat('es-MX', {
+      month: 'long',
+      year: 'numeric',
+    }).format(fecha);
+
+    return periodo.charAt(0).toUpperCase() + periodo.slice(1);
   }
 
   private normalizarTexto(valor: string | null | undefined): string {

@@ -31,6 +31,7 @@ export interface SemanalEnvioItem {
   fechaFinTramo: string;
   mesCorte: number;
   anioCorte: number;
+  periodo: string;
   idUsuarioCarga: number;
   usuarioCarga: string;
   nombreUsuarioCarga: string;
@@ -67,8 +68,9 @@ export interface SemanalEnviosResponse {
 
 export interface SemanalEnviosFiltro {
   idEntidadFederativa?: number | null;
-  anioSemana?: number | null;
-  numeroSemana?: number | null;
+  idUsuarioCarga?: number | null;
+  anioCorte?: number | null;
+  mesCorte?: number | null;
   tipoCarga?: string | null;
   estado?: string | null;
 }

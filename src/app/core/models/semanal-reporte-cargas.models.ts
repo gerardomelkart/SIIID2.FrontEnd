@@ -4,9 +4,12 @@ export interface SemanalReporteCargaItem {
   idEntidadFederativa: number;
   entidadFederativa: string;
   claveEntidad: string;
-  anioSemana: number;
-  numeroSemana: number;
-  semana: string;
+  idUsuarioCarga: number;
+  usuarioCarga: string;
+  nombreUsuarioCarga: string;
+  anioCorte: number;
+  mesCorte: number;
+  periodo: string;
   intentos: number;
   ultimoIntento: string | null;
   tipoCargaUltimoIntento: TipoCargaSemanal | null;
@@ -21,14 +24,16 @@ export interface SemanalReporteCargaItem {
 export interface SemanalReporteCargasResponse {
   esValido: boolean;
   idEntidadFederativa: number | null;
-  anioSemana: number | null;
-  numeroSemana: number | null;
+  idUsuarioCarga: number | null;
+  anioCorte: number | null;
+  mesCorte: number | null;
   total: number;
   registros: SemanalReporteCargaItem[];
 }
 
 export interface SemanalReporteCargasFiltro {
   idEntidadFederativa?: number | null;
-  anioSemana?: number | null;
-  numeroSemana?: number | null;
+  idUsuarioCarga?: number | null;
+  anioCorte?: number | null;
+  mesCorte?: number | null;
 }
