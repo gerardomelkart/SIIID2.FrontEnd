@@ -101,21 +101,11 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
 
     const registros = this.envios().filter((envio) => {
-      if (periodoSeleccionado) {
-        const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
-
-        if (
-          envio.anioCorte !== Number(anioTexto) ||
-          envio.mesCorte !== Number(mesTexto)
-        ) {
-          return false;
-        }
+      if (periodoSeleccionado && !this.contienePeriodo(envio, periodoSeleccionado)) {
+        return false;
       }
 
-      if (
-        idUsuarioSeleccionado &&
-        envio.idUsuarioCarga !== idUsuarioSeleccionado
-      ) {
+      if (idUsuarioSeleccionado && envio.idUsuarioCarga !== idUsuarioSeleccionado) {
         return false;
       }
 
@@ -287,11 +277,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
           return;
         }
 
-        const pdf = crearSafeBlobUrl(
-          response.body,
-          this.sanitizer,
-          this.acuseObjectUrl,
-        );
+        const pdf = crearSafeBlobUrl(response.body, this.sanitizer, this.acuseObjectUrl);
 
         this.acuseObjectUrl = pdf.objectUrl;
         this.acuseUrl.set(pdf.safeUrl);
@@ -387,14 +373,19 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   }
 
   periodoTexto(envio: SemanalEnvioItem): string {
-    return envio.periodo || this.crearPeriodoTexto(envio.anioCorte, envio.mesCorte);
+    const periodos = this.obtenerPeriodosEnvio(envio);
+
+    if (periodos.length === 0) {
+      return envio.periodo || this.crearPeriodoTexto(envio.anioCorte, envio.mesCorte);
+    }
+
+    return periodos
+      .map((periodo) => this.crearPeriodoTexto(periodo.anioCorte, periodo.mesCorte))
+      .join(', ');
   }
 
   usuarioTexto(envio: SemanalEnvioItem): string {
-    if (
-      envio.nombreUsuarioCarga &&
-      envio.nombreUsuarioCarga !== envio.usuarioCarga
-    ) {
+    if (envio.nombreUsuarioCarga && envio.nombreUsuarioCarga !== envio.usuarioCarga) {
       return `${envio.usuarioCarga} - ${envio.nombreUsuarioCarga}`;
     }
 
@@ -447,24 +438,22 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     const mapa = new Map<string, PeriodoEnvio>();
 
     for (const registro of registros) {
-      const clave =
-        `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
+      for (const periodoRegistro of this.obtenerPeriodosEnvio(registro)) {
+        const clave = `${periodoRegistro.anioCorte}-${periodoRegistro.mesCorte.toString().padStart(2, '0')}`;
 
-      if (!mapa.has(clave)) {
-        mapa.set(clave, {
-          clave,
-          anioCorte: registro.anioCorte,
-          mesCorte: registro.mesCorte,
-          periodo: this.periodoTexto(registro),
-        });
+        if (!mapa.has(clave)) {
+          mapa.set(clave, {
+            clave,
+            anioCorte: periodoRegistro.anioCorte,
+            mesCorte: periodoRegistro.mesCorte,
+            periodo: this.crearPeriodoTexto(periodoRegistro.anioCorte, periodoRegistro.mesCorte),
+          });
+        }
       }
     }
 
     const periodos = Array.from(mapa.values()).sort(
-      (a, b) =>
-        b.anioCorte * 100 +
-        b.mesCorte -
-        (a.anioCorte * 100 + a.mesCorte),
+      (a, b) => b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte),
     );
 
     this.periodosEnvio.set(periodos);
@@ -480,7 +469,46 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       this.periodoEnvioSeleccionado.set(periodos[0].clave);
     }
   }
+  private contienePeriodo(envio: SemanalEnvioItem, periodoSeleccionado: string): boolean {
+    const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+    const anioCorte = Number(anioTexto);
+    const mesCorte = Number(mesTexto);
 
+    return this.obtenerPeriodosEnvio(envio).some(
+      (periodo) => periodo.anioCorte === anioCorte && periodo.mesCorte === mesCorte,
+    );
+  }
+
+  private obtenerPeriodosEnvio(
+    envio: SemanalEnvioItem,
+  ): Array<{ anioCorte: number; mesCorte: number }> {
+    const fuente =
+      envio.periodos?.length > 0
+        ? envio.periodos
+        : [
+            {
+              anioCorte: envio.anioCorte,
+              mesCorte: envio.mesCorte,
+            },
+          ];
+
+    const mapa = new Map<string, { anioCorte: number; mesCorte: number }>();
+
+    for (const periodo of fuente) {
+      const clave = `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}`;
+
+      if (!mapa.has(clave)) {
+        mapa.set(clave, {
+          anioCorte: periodo.anioCorte,
+          mesCorte: periodo.mesCorte,
+        });
+      }
+    }
+
+    return Array.from(mapa.values()).sort(
+      (a, b) => a.anioCorte * 100 + a.mesCorte - (b.anioCorte * 100 + b.mesCorte),
+    );
+  }
   private crearPeriodoTexto(anioCorte: number, mesCorte: number): string {
     const fecha = new Date(anioCorte, mesCorte - 1, 1);
     const periodo = new Intl.DateTimeFormat('es-MX', {

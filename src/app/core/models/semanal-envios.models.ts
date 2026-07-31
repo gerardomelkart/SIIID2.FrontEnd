@@ -16,6 +16,12 @@ export interface SemanalEnvioBloqueItem {
   reemplazaInformacion: boolean;
 }
 
+export interface SemanalEnvioPeriodoItem {
+  idSemanalCarga: number;
+  anioCorte: number;
+  mesCorte: number;
+}
+
 export interface SemanalEnvioItem {
   idSemanalCarga: number;
   codigoReferencia: string;
@@ -32,6 +38,7 @@ export interface SemanalEnvioItem {
   mesCorte: number;
   anioCorte: number;
   periodo: string;
+  periodos: SemanalEnvioPeriodoItem[];
   idUsuarioCarga: number;
   usuarioCarga: string;
   nombreUsuarioCarga: string;
