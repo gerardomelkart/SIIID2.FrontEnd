@@ -43,6 +43,11 @@
       <table class="table table-sm originales-table">
         <thead>
           <tr>
+            <th class="sortable" (click)="ordenarPor('entidad')">
+              Entidad
+              <i [class]="iconoOrden('entidad')"></i>
+            </th>
+
             <th class="sortable" (click)="ordenarPor('usuario')">
               Usuario
               <i [class]="iconoOrden('usuario')"></i>
@@ -83,6 +88,12 @@
           track item.idEntidadFederativa + '-' + item.idUsuarioCarga
           ) {
           <tr>
+            <td>
+              <strong>
+                {{ entidadTexto(item) }}
+              </strong>
+            </td>
+
             <td>
               <strong>
                 {{ usuarioTexto(item) }}
