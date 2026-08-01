@@ -36,10 +36,9 @@ import { catchError, forkJoin, map, of } from 'rxjs';
 type DireccionOrden = 'asc' | 'desc';
 type ColumnaOrdenSemanal =
   | 'entidad'
-  | 'semana'
-  | 'operacion'
-  | 'tramo'
   | 'usuario'
+  | 'periodo'
+  | 'operacion'
   | 'fecha'
   | 'registros'
   | 'advertencias';
@@ -88,7 +87,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   procesando = signal<string | null>(null);
 
   acuseUrl = signal<SafeResourceUrl | null>(null);
-  acuseTitulo = signal('Informe previo de entrega de información semanal');
+  acuseTitulo = signal('Informe previo de entrega de información preliminar');
 
   pendientesFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -99,9 +98,8 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
             carga.codigoReferencia.toLowerCase().includes(texto) ||
             carga.usuarioCarga.toLowerCase().includes(texto) ||
             this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
-            this.semanaTexto(carga).toLowerCase().includes(texto) ||
-            this.tramoTexto(carga).toLowerCase().includes(texto) ||
-            this.periodoCorteTexto(carga).toLowerCase().includes(texto),
+            this.periodoTexto(carga).toLowerCase().includes(texto) ||
+            this.coberturaTexto(carga).toLowerCase().includes(texto),
         )
       : [...this.pendientes()];
 
@@ -190,7 +188,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar las cargas semanales pendientes',
+          'No fue posible consultar las operaciones preliminares pendientes',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
@@ -277,13 +275,16 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.descargandoArchivos.set(null);
 
         if (!response.body) {
-          mostrarError('Archivo vacío', 'La API no devolvió los archivos de la carga semanal.');
+          mostrarError(
+            'Archivo vacío',
+            'La API no devolvió los archivos de la operación preliminar.',
+          );
           return;
         }
 
         const nombreArchivo =
           this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
-          `ARCHIVOS_REVISION_SEMANAL_${carga.codigoReferencia}.zip`;
+          `ARCHIVOS_REVISION_PRELIMINAR_${carga.codigoReferencia}.zip`;
 
         this.descargarBlob(response.body, nombreArchivo);
       },
@@ -306,7 +307,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.descargandoAcuse.set(null);
 
         if (!response.body) {
-          mostrarError('Informe vacío', 'La API no devolvió el informe previo semanal.');
+          mostrarError(
+            'Informe vacío',
+            'La API no devolvió el informe previo de la operación preliminar.',
+          );
           return;
         }
 
@@ -325,11 +329,14 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
   async aprobar(carga: SemanalCargaPendienteAdministracionItem): Promise<void> {
     const esActualizacion = this.esActualizacion(carga);
+    const usuario = this.usuarioTexto(carga);
+    const periodo = this.periodoTexto(carga);
+
     const confirmacion = await confirmarAccion(
-      esActualizacion ? 'Aprobar actualización semanal' : 'Aprobar carga semanal',
+      esActualizacion ? 'Aprobar actualización preliminar' : 'Aprobar carga preliminar',
       esActualizacion
-        ? `Se reemplazará la versión confirmada de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`
-        : `Se incorporará definitivamente la información de ${carga.entidadFederativa}, correspondiente a ${this.semanaTexto(carga)}.`,
+        ? `Se reemplazará únicamente la información confirmada del usuario ${usuario} en ${carga.entidadFederativa}, correspondiente a ${periodo}.`
+        : `Se incorporará la información del usuario ${usuario} en ${carga.entidadFederativa}, correspondiente a ${periodo}.`,
       esActualizacion ? 'Aprobar actualización' : 'Aprobar carga',
     );
 
@@ -338,10 +345,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.procesando.set(carga.codigoReferencia);
 
     Swal.fire({
-      title: esActualizacion ? 'Aprobando actualización semanal' : 'Aprobando carga semanal',
+      title: esActualizacion ? 'Aprobando actualización preliminar' : 'Aprobando carga preliminar',
       text: esActualizacion
-        ? `Se está reemplazando la versión confirmada de ${carga.entidadFederativa}. Espere un momento...`
-        : `Se está incorporando definitivamente la información de ${carga.entidadFederativa}. Espere un momento...`,
+        ? `Se está reemplazando únicamente la información confirmada del usuario ${usuario}. Espere un momento...`
+        : `Se está incorporando la información del usuario ${usuario}. Espere un momento...`,
       allowOutsideClick: false,
       allowEscapeKey: false,
       showConfirmButton: false,
@@ -358,11 +365,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         Swal.close();
 
         mostrarExitoInstitucional(
-          esActualizacion ? 'Actualización semanal aprobada' : 'Carga semanal aprobada',
+          esActualizacion ? 'Actualización preliminar aprobada' : 'Carga preliminar aprobada',
           response.mensaje ||
             (esActualizacion
-              ? 'La información semanal fue actualizada correctamente.'
-              : 'La información semanal fue incorporada correctamente.'),
+              ? 'La información preliminar del usuario fue actualizada correctamente.'
+              : 'La información preliminar del usuario fue incorporada correctamente.'),
         );
 
         this.cargarPendientes();
@@ -373,9 +380,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
         mostrarError(
           esActualizacion
-            ? 'No fue posible aprobar la actualización semanal'
-            : 'No fue posible aprobar la carga semanal',
-          obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
+            ? 'No fue posible aprobar la actualización preliminar'
+            : 'No fue posible aprobar la carga preliminar',
+          obtenerMensajeErrorHttp(error, 'La operación pudo haber sido resuelta por otro usuario.'),
         );
 
         this.cargarPendientes();
@@ -387,8 +394,8 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     const esActualizacion = this.esActualizacion(carga);
     const resultado = await Swal.fire({
       icon: 'warning',
-      title: esActualizacion ? 'Rechazar actualización semanal' : 'Rechazar carga semanal',
-      text: `${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
+      title: esActualizacion ? 'Rechazar actualización preliminar' : 'Rechazar carga preliminar',
+      text: `${carga.entidadFederativa} — ${this.usuarioTexto(carga)} — ${this.periodoTexto(carga)}`,
       input: 'textarea',
       inputLabel: 'Motivo del rechazo',
       inputPlaceholder: 'Describa las correcciones que debe realizar el enlace estatal...',
@@ -404,6 +411,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         const motivo = valor?.trim() ?? '';
 
         if (motivo.length < 5) return 'Capture un motivo de al menos 5 caracteres.';
+
         return undefined;
       },
     });
@@ -423,9 +431,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.cerrarAcuse();
 
         mostrarExitoInstitucional(
-          esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
+          esActualizacion ? 'Actualización preliminar rechazada' : 'Carga preliminar rechazada',
           response.mensaje ||
-            `La ${esActualizacion ? 'actualización' : 'carga'} semanal fue rechazada correctamente.`,
+            `La ${esActualizacion ? 'actualización' : 'carga'} preliminar fue rechazada correctamente.`,
         );
 
         this.cargarPendientes();
@@ -435,9 +443,9 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
         mostrarError(
           esActualizacion
-            ? 'No fue posible rechazar la actualización semanal'
-            : 'No fue posible rechazar la carga semanal',
-          obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
+            ? 'No fue posible rechazar la actualización preliminar'
+            : 'No fue posible rechazar la carga preliminar',
+          obtenerMensajeErrorHttp(error, 'La operación pudo haber sido resuelta por otro usuario.'),
         );
 
         this.cargarPendientes();
@@ -457,43 +465,32 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     return carga.tipoCarga === 'ACTUALIZACION';
   }
 
-  semanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    const semanas = Array.from(
-      new Map(
-        this.bloquesCarga(carga).map((bloque) => [
-          `${bloque.anioSemana}-${bloque.numeroSemana}`,
-          `${bloque.numeroSemana}/${bloque.anioSemana}`,
-        ]),
-      ).values(),
-    );
-    return semanas.length === 1 ? `Semana ${semanas[0]}` : `Semanas ${semanas.join(', ')}`;
-  }
-
-  rangoSemanaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    const bloques = this.bloquesCarga(carga);
-    return `${this.fechaCorta(bloques[0].fechaInicioSemana)} al ${this.fechaCorta(bloques[bloques.length - 1].fechaFinSemana)}`;
-  }
-
-  tramoTexto(carga: SemanalCargaPendienteAdministracionItem): string {
-    const bloques = this.bloquesCarga(carga);
-    return `${this.fechaCorta(bloques[0].fechaInicioTramo)} al ${this.fechaCorta(bloques[bloques.length - 1].fechaFinTramo)}`;
-  }
-
-  periodoCorteTexto(carga: SemanalCargaPendienteAdministracionItem): string {
+  periodoTexto(carga: SemanalCargaPendienteAdministracionItem): string {
     return Array.from(
       new Map(
         this.bloquesCarga(carga).map((bloque) => {
           const fecha = new Date(bloque.anioCorte, bloque.mesCorte - 1, 1);
-          const texto = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' }).format(
-            fecha,
-          );
+
+          const texto = new Intl.DateTimeFormat('es-MX', {
+            month: 'long',
+            year: 'numeric',
+          }).format(fecha);
+
           return [
-            `${bloque.anioCorte}-${bloque.mesCorte}`,
+            `${bloque.anioCorte}-${bloque.mesCorte.toString().padStart(2, '0')}`,
             texto.charAt(0).toUpperCase() + texto.slice(1),
           ];
         }),
       ).values(),
     ).join(', ');
+  }
+
+  coberturaTexto(carga: SemanalCargaPendienteAdministracionItem): string {
+    const bloques = this.bloquesCarga(carga);
+
+    return `${this.fechaCorta(bloques[0].fechaInicioTramo)} al ${this.fechaCorta(
+      bloques[bloques.length - 1].fechaFinTramo,
+    )}`;
   }
 
   bloquesCarga(
@@ -580,7 +577,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     this.acuseObjectUrl = pdf.objectUrl;
     this.acuseUrl.set(pdf.safeUrl);
     this.acuseTitulo.set(
-      `Informe previo de ${this.esActualizacion(carga) ? 'actualización' : 'carga'} semanal — ${carga.entidadFederativa} — ${this.semanaTexto(carga)}`,
+      `Informe previo de ${this.esActualizacion(carga) ? 'actualización' : 'carga'} preliminar — ${carga.entidadFederativa} — ${this.usuarioTexto(carga)} — ${this.periodoTexto(carga)}`,
     );
   }
 
@@ -618,24 +615,23 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
       case 'entidad':
         resultado = this.compararTexto(a.entidadFederativa, b.entidadFederativa);
         break;
-      case 'semana':
-        resultado =
-          this.fechaOrden(this.bloquesCarga(a)[0].fechaInicioSemana) -
-          this.fechaOrden(this.bloquesCarga(b)[0].fechaInicioSemana);
-        break;
       case 'operacion':
         resultado = this.compararTexto(
           this.tipoCargaTexto(a.tipoCarga),
           this.tipoCargaTexto(b.tipoCarga),
         );
         break;
-      case 'tramo':
-        resultado =
-          this.fechaOrden(this.bloquesCarga(a)[0].fechaInicioTramo) -
-          this.fechaOrden(this.bloquesCarga(b)[0].fechaInicioTramo);
-        break;
       case 'usuario':
         resultado = this.compararTexto(this.usuarioTexto(a), this.usuarioTexto(b));
+        break;
+      case 'periodo':
+        resultado =
+          Math.max(
+            ...this.bloquesCarga(a).map((bloque) => bloque.anioCorte * 100 + bloque.mesCorte),
+          ) -
+          Math.max(
+            ...this.bloquesCarga(b).map((bloque) => bloque.anioCorte * 100 + bloque.mesCorte),
+          );
         break;
       case 'fecha':
         resultado = this.fechaOrden(a.fechaValidacion) - this.fechaOrden(b.fechaValidacion);
