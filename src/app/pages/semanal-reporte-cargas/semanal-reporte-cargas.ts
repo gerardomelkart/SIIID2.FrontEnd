@@ -114,7 +114,6 @@ export class SemanalReporteCargas implements OnInit {
         carga.entidadFederativa.toLowerCase().includes(texto) ||
         carga.claveEntidad.toLowerCase().includes(texto) ||
         carga.usuarioCarga.toLowerCase().includes(texto) ||
-        carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
         this.periodoTexto(carga).toLowerCase().includes(texto) ||
         (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
         (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
@@ -247,7 +246,6 @@ export class SemanalReporteCargas implements OnInit {
         'Entidad federativa': carga.entidadFederativa,
         'Cve. entidad': carga.claveEntidad,
         Usuario: carga.usuarioCarga,
-        'Nombre del usuario': carga.nombreUsuarioCarga,
         Periodo: this.periodoTexto(carga),
         Intentos: carga.intentos,
         Ranking: this.obtenerOrdenCarga(carga) ?? '',

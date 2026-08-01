@@ -19,10 +19,7 @@
       </span>
 
       <div class="reporte-actions">
-        <button type="button"
-          class="btn btn-sm btn-secondary"
-          [disabled]="cargando()"
-          (click)="cargarReporte()">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarReporte()">
           @if (cargando()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
           } @else {
@@ -31,9 +28,7 @@
           Actualizar
         </button>
 
-        <button type="button"
-          class="btn btn-sm btn-secondary"
-          [disabled]="cargando() || exportandoExcel()"
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando() || exportandoExcel()"
           (click)="exportarExcel()">
           @if (exportandoExcel()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
@@ -46,9 +41,7 @@
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input type="text"
-            placeholder="Buscar entidad, usuario o periodo..."
-            [ngModel]="busqueda()"
+          <input type="text" placeholder="Buscar entidad, usuario o periodo..." [ngModel]="busqueda()"
             (ngModelChange)="buscar($event)">
         </div>
       </div>
@@ -61,8 +54,7 @@
       </div>
 
       <div class="corte-selector-controls">
-        <select class="form-select form-select-sm"
-          [ngModel]="periodoSeleccionado()"
+        <select class="form-select form-select-sm" [ngModel]="periodoSeleccionado()"
           (ngModelChange)="periodoSeleccionado.set($event); cambiarFiltros()">
           @for (periodo of periodos(); track periodo.clave) {
           <option [value]="periodo.clave">
@@ -71,14 +63,13 @@
           }
         </select>
 
-        <select class="form-select form-select-sm"
-          [ngModel]="idUsuarioSeleccionado()"
+        <select class="form-select form-select-sm" [ngModel]="idUsuarioSeleccionado()"
           (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
           <option [ngValue]="null">Todos los usuarios</option>
 
           @for (usuarioReporte of usuariosReporte(); track usuarioReporte.idUsuarioCarga) {
           <option [ngValue]="usuarioReporte.idUsuarioCarga">
-            {{ usuarioReporte.usuarioCarga }} - {{ usuarioReporte.nombreUsuarioCarga }}
+            {{ usuarioReporte.usuarioCarga }}
           </option>
           }
         </select>
@@ -138,8 +129,8 @@
 
         <tbody>
           @for (
-            carga of cargasPaginadas();
-            track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.anioCorte + '-' + carga.mesCorte
+          carga of cargasPaginadas();
+          track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.anioCorte + '-' + carga.mesCorte
           ) {
           <tr>
             <td>{{ carga.entidadFederativa }}</td>
@@ -147,15 +138,6 @@
 
             <td>
               <strong>{{ carga.usuarioCarga }}</strong>
-
-              @if (
-                carga.nombreUsuarioCarga &&
-                carga.nombreUsuarioCarga !== carga.usuarioCarga
-              ) {
-              <small class="d-block text-muted">
-                {{ carga.nombreUsuarioCarga }}
-              </small>
-              }
             </td>
 
             <td>{{ periodoTexto(carga) }}</td>
@@ -169,8 +151,7 @@
             </td>
 
             <td>
-              <span class="estatus-badge"
-                [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
+              <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
                 [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
                 [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
                 {{ etiquetaEstatus(carga) }}
@@ -198,9 +179,7 @@
       </span>
 
       <div class="pagination-actions">
-        <button type="button"
-          class="btn btn-sm btn-outline-secondary"
-          [disabled]="paginaActual() === 1"
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaActual() === 1"
           (click)="cambiarPagina(paginaActual() - 1)">
           Anterior
         </button>
@@ -209,9 +188,7 @@
           {{ paginaActual() }} / {{ totalPaginas() }}
         </span>
 
-        <button type="button"
-          class="btn btn-sm btn-outline-secondary"
-          [disabled]="paginaActual() === totalPaginas()"
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaActual() === totalPaginas()"
           (click)="cambiarPagina(paginaActual() + 1)">
           Siguiente
         </button>

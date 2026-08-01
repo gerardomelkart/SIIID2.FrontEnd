@@ -117,7 +117,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
         this.periodoTexto(envio).toLowerCase().includes(texto) ||
         envio.usuarioCarga.toLowerCase().includes(texto) ||
-        envio.nombreUsuarioCarga.toLowerCase().includes(texto) ||
         envio.codigoReferencia.toLowerCase().includes(texto) ||
         envio.tipoCarga.toLowerCase().includes(texto) ||
         envio.estado.toLowerCase().includes(texto) ||
@@ -344,7 +343,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         'Entidad federativa': envio.entidadFederativa,
         'Cve. entidad': envio.claveEntidad,
         Usuario: envio.usuarioCarga,
-        'Nombre del usuario': envio.nombreUsuarioCarga,
         Periodo: this.periodoTexto(envio),
         'Fecha de envío': envio.fechaEnvioTexto,
         Estatus: envio.estadoTexto,
@@ -385,10 +383,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   }
 
   usuarioTexto(envio: SemanalEnvioItem): string {
-    if (envio.nombreUsuarioCarga && envio.nombreUsuarioCarga !== envio.usuarioCarga) {
-      return `${envio.usuarioCarga} - ${envio.nombreUsuarioCarga}`;
-    }
-
     return envio.usuarioCarga;
   }
 

@@ -242,15 +242,7 @@ export class SemanalArchivosOriginales implements OnInit {
   usuarioTexto(item: SemanalArchivosOriginalesResumen): string {
     const usuario = this.usuarioPorId().get(item.idUsuarioCarga);
 
-    if (!usuario) {
-      return `Usuario ${item.idUsuarioCarga}`;
-    }
-
-    if (usuario.nombreCompleto && usuario.nombreCompleto !== usuario.usuario) {
-      return `${usuario.usuario} - ${usuario.nombreCompleto}`;
-    }
-
-    return usuario.usuario;
+    return usuario?.usuario || `Usuario ${item.idUsuarioCarga}`;
   }
 
   tipoMovimientoTexto(tipoMovimiento: string | null): string {
