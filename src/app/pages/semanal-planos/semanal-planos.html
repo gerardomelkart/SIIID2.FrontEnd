@@ -2,7 +2,7 @@
   <div class="informes-header">
     <div>
       <h1>Informes</h1>
-      <p>Descarga del acumulado mensual vigente del módulo preliminar.</p>
+      <p>Generación del acumulado mensual del módulo preliminar.</p>
     </div>
 
     <div class="rol-chip">
@@ -11,142 +11,207 @@
     </div>
   </div>
 
-  <section class="siiid-card sabanas-card">
+  <section class="siiid-card reporte-shell">
     <div class="siiid-card-header reporte-card-header">
       <span>
         <i class="fa-solid fa-file-excel"></i>
         Reporte preliminar
       </span>
+
+      <span class="reporte-periodo-chip">
+        <i class="fa-solid fa-calendar-check"></i>
+        {{ nombreMesSeleccionado() }} {{ anioCorte() }}
+      </span>
     </div>
 
-    <div class="sabanas-hero">
-      <div class="sabanas-hero-icon">
-        <i class="fa-solid fa-file-excel"></i>
-      </div>
+    <div class="reporte-layout">
+      <aside class="reporte-configuracion">
+        <div class="reporte-seccion-titulo">
+          <span class="reporte-paso">1</span>
 
-      <div class="sabanas-hero-text">
-        <h2>Acumulado mensual por delito</h2>
-
-        <p>
-          @if (esSuperUsuario()) {
-          Seleccione un usuario o General para reunir todas las entidades en un solo archivo.
-          } @else {
-          Descargue la información confirmada de su usuario para:
-          <strong>{{ entidadUsuario() }}</strong>.
-          }
-        </p>
-      </div>
-    </div>
-
-    <div class="sabanas-toolbar reporte-preliminar-toolbar">
-      <div class="sabana-year-card">
-        <div class="sabana-year-label">
-          <i class="fa-solid fa-calendar-days"></i>
-          Año de corte
+          <div>
+            <strong>Define el alcance</strong>
+            <small>Selecciona el periodo y la entidad del reporte.</small>
+          </div>
         </div>
 
-        <div class="sabana-year-input-group">
-          <button type="button" class="sabana-year-step" [disabled]="operacionEnCurso()" (click)="ajustarAnio(-1)">
-            <i class="fa-solid fa-minus"></i>
+        <div class="reporte-campo">
+          <label for="reporte-anio">
+            <i class="fa-solid fa-calendar-days"></i>
+            Año de corte
+          </label>
+
+          <div class="reporte-year-control">
+            <button type="button" [disabled]="operacionEnCurso()" (click)="ajustarAnio(-1)">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+
+            <input id="reporte-anio" type="number" min="2000" max="2100" [disabled]="operacionEnCurso()"
+              [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" (blur)="cambiarPeriodo()" />
+
+            <button type="button" [disabled]="operacionEnCurso()" (click)="ajustarAnio(1)">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="reporte-campo">
+          <label for="reporte-mes">
+            <i class="fa-solid fa-calendar"></i>
+            Mes de corte
+          </label>
+
+          <select id="reporte-mes" class="form-select" [disabled]="operacionEnCurso()"
+            [ngModel]="mesCorte()" (ngModelChange)="cambiarMes(+$event)">
+            @for (mes of meses; track mes.numero) {
+            <option [value]="mes.numero">{{ mes.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        @if (esSuperUsuario()) {
+        <div class="reporte-campo">
+          <label for="reporte-entidad">
+            <i class="fa-solid fa-map-location-dot"></i>
+            Entidad
+          </label>
+
+          <select id="reporte-entidad" class="form-select" [disabled]="operacionEnCurso()"
+            [ngModel]="idEntidadSeleccionada() ?? ''" (ngModelChange)="cambiarEntidad($event)">
+            <option value="">General — todas las entidades</option>
+
+            @for (entidad of entidades(); track entidad.idEntidadFederativa) {
+            <option [value]="entidad.idEntidadFederativa">{{ entidad.entidadFederativa }}</option>
+            }
+          </select>
+
+          <small class="reporte-campo-ayuda">Solo aparecen entidades con información confirmada en el periodo.</small>
+        </div>
+        }
+
+        <div class="reporte-alcance">
+          <div class="reporte-alcance-icono">
+            @if (esSuperUsuario()) {
+            <i class="fa-solid fa-earth-americas"></i>
+            } @else {
+            <i class="fa-solid fa-user-lock"></i>
+            }
+          </div>
+
+          <div>
+            <span>Alcance seleccionado</span>
+            <strong>{{ alcanceSeleccionado() }}</strong>
+            <small>{{ descripcionAlcance() }}</small>
+          </div>
+        </div>
+      </aside>
+
+      <main class="reporte-contenido">
+        <div class="reporte-seccion-titulo">
+          <span class="reporte-paso">2</span>
+
+          <div>
+            <strong>Selecciona el delito</strong>
+            <small>El archivo reunirá el acumulado confirmado del delito seleccionado.</small>
+          </div>
+        </div>
+
+        <div class="reporte-campo reporte-campo-delito">
+          <label for="reporte-delito">
+            <i class="fa-solid fa-list-check"></i>
+            Delito
+          </label>
+
+          <select id="reporte-delito" class="form-select"
+            [disabled]="operacionEnCurso() || delitos().length === 0"
+            [ngModel]="idDelitoSeleccionado() ?? ''" (ngModelChange)="cambiarDelito($event)">
+            @if (delitos().length === 0) {
+            <option value="">Sin información confirmada</option>
+            }
+
+            @for (delito of delitos(); track delito.idDelito) {
+            <option [value]="delito.idDelito">{{ delito.delito }}</option>
+            }
+          </select>
+        </div>
+
+        @if (delitos().length > 0) {
+        <div class="reporte-archivo">
+          <div class="reporte-archivo-cabecera">
+            <div class="reporte-archivo-icono">
+              <i class="fa-solid fa-file-excel"></i>
+            </div>
+
+            <div>
+              <span>Archivo de salida</span>
+              <h2>{{ delitoSeleccionado()?.delito }}</h2>
+              <p>Un solo Excel con la estructura completa del acumulado mensual.</p>
+            </div>
+          </div>
+
+          <div class="reporte-hojas">
+            <span><i class="fa-solid fa-folder-open"></i> Carpetas</span>
+            <span><i class="fa-solid fa-scale-balanced"></i> Delitos</span>
+            <span><i class="fa-solid fa-users"></i> Víctimas</span>
+          </div>
+
+          <div class="reporte-datos">
+            <div>
+              <span>Periodo</span>
+              <strong>{{ nombreMesSeleccionado() }} {{ anioCorte() }}</strong>
+            </div>
+
+            <div>
+              <span>Alcance</span>
+              <strong>{{ alcanceSeleccionado() }}</strong>
+            </div>
+
+            <div>
+              <span>Primera columna</span>
+              <strong>Nombre entidad</strong>
+            </div>
+
+            <div>
+              <span>Fuente</span>
+              <strong>Registros confirmados y activos</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="reporte-descarga">
+          <div class="reporte-descarga-texto">
+            <span class="reporte-paso">3</span>
+
+            <div>
+              <strong>Genera el reporte</strong>
+              <small>La preparación puede tardar algunos minutos dependiendo del volumen.</small>
+            </div>
+          </div>
+
+          <button type="button" class="reporte-descarga-boton"
+            [disabled]="operacionEnCurso() || !idDelitoSeleccionado()" (click)="descargar()">
+            @if (descargandoReporte()) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Generando...
+            } @else {
+            <i class="fa-solid fa-file-arrow-down"></i>
+            Descargar Excel
+            }
           </button>
-
-          <input type="number" class="sabana-year-input" min="2000" max="2100" [disabled]="operacionEnCurso()"
-            [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" (blur)="cambiarPeriodo()" />
-
-          <button type="button" class="sabana-year-step" [disabled]="operacionEnCurso()" (click)="ajustarAnio(1)">
-            <i class="fa-solid fa-plus"></i>
-          </button>
         </div>
-      </div>
-
-      <div class="sabana-mode-card">
-        <div class="sabana-year-label">
-          <i class="fa-solid fa-calendar"></i>
-          Mes de corte
+        } @else {
+        <div class="reporte-vacio">
+          <i class="fa-solid fa-database"></i>
+          <strong>Sin información confirmada</strong>
+          <span>No existen delitos disponibles para el periodo y alcance seleccionados.</span>
         </div>
-
-        <select class="form-select" [disabled]="operacionEnCurso()" [ngModel]="mesCorte()"
-          (ngModelChange)="cambiarMes(+$event)">
-          @for (mes of meses; track mes.numero) {
-          <option [value]="mes.numero">{{ mes.nombre }}</option>
-          }
-        </select>
-      </div>
-
-      @if (esSuperUsuario()) {
-      <div class="sabana-mode-card">
-        <div class="sabana-year-label">
-          <i class="fa-solid fa-users"></i>
-          Usuario
-        </div>
-
-        <select class="form-select" [disabled]="operacionEnCurso()" [ngModel]="idUsuarioSeleccionado() ?? ''"
-          (ngModelChange)="cambiarUsuario($event)">
-          <option value="">General — todas las entidades</option>
-
-          @for (usuarioCarga of usuarios(); track usuarioCarga.idUsuarioCarga) {
-          <option [value]="usuarioCarga.idUsuarioCarga">
-            {{ usuarioCarga.entidadFederativa }} — {{ usuarioCarga.usuarioCarga }}
-          </option>
-          }
-        </select>
-      </div>
-      }
-
-      <div class="sabana-mode-card">
-        <div class="sabana-year-label">
-          <i class="fa-solid fa-list-check"></i>
-          Delito
-        </div>
-
-        <select class="form-select" [disabled]="operacionEnCurso() || delitos().length === 0"
-          [ngModel]="idDelitoSeleccionado()" (ngModelChange)="cambiarDelito(+$event)">
-          @if (delitos().length === 0) {
-          <option [ngValue]="null">Sin información confirmada</option>
-          }
-
-          @for (delito of delitos(); track delito.idDelito) {
-          <option [value]="delito.idDelito">{{ delito.delito }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="sabana-info-card">
-        <div class="sabana-info-badge">
-          <i class="fa-solid fa-circle-info"></i>
-          Información incluida
-        </div>
-
-        <ul>
-          <li><strong>Archivo:</strong> un Excel con Carpetas, Delitos y Víctimas.</li>
-          <li><strong>Primera columna:</strong> Nombre entidad en las tres pestañas.</li>
-          <li><strong>Periodo:</strong> acumulado vigente del mes seleccionado.</li>
-          <li><strong>Fuente:</strong> únicamente registros confirmados y activos.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="sabanas-grid reporte-preliminar-accion">
-      <button type="button" class="sabana-option sabana-option-primary"
-        [disabled]="operacionEnCurso() || !idDelitoSeleccionado()" (click)="descargar()">
-        <div class="sabana-option-icon">
-          @if (descargandoReporte()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-arrow-down"></i>
-          }
-        </div>
-
-        <div class="sabana-option-body">
-          <strong>Descargar reporte preliminar</strong>
-          <small>Genera el Excel mensual del delito y alcance seleccionados.</small>
-        </div>
-      </button>
+        }
+      </main>
     </div>
 
     @if (cargandoOpciones() || descargandoReporte()) {
-    <div class="sabana-loading">
-      <div class="sabana-loading-box">
+    <div class="reporte-loading">
+      <div class="reporte-loading-box">
         <i class="fa-solid fa-spinner fa-spin"></i>
 
         @if (descargandoReporte()) {

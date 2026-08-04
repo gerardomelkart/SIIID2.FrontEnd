@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ROLES } from '../../core/constants/roles.constants';
 import {
   SemanalReportePreliminarDelitoItem,
-  SemanalReportePreliminarUsuarioItem,
+  SemanalReportePreliminarEntidadItem,
 } from '../../core/models/semanal-envios.models';
 import { SemanalEnviosService } from '../../core/services/semanal-envios.service';
 import { SessionService } from '../../core/services/session.service';
@@ -24,16 +24,6 @@ export class SemanalPlanos implements OnInit {
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   entidadUsuario = computed(() => this.usuario()?.entidadFederativa ?? '');
 
-  anioCorte = signal(new Date().getFullYear());
-  mesCorte = signal(new Date().getMonth() + 1);
-  idUsuarioSeleccionado = signal<number | null>(null);
-  idDelitoSeleccionado = signal<number | null>(null);
-  usuarios = signal<SemanalReportePreliminarUsuarioItem[]>([]);
-  delitos = signal<SemanalReportePreliminarDelitoItem[]>([]);
-  cargandoOpciones = signal(false);
-  descargandoReporte = signal(false);
-  operacionEnCurso = computed(() => this.cargandoOpciones() || this.descargandoReporte());
-
   readonly meses = [
     { numero: 1, nombre: 'Enero' },
     { numero: 2, nombre: 'Febrero' },
@@ -49,6 +39,35 @@ export class SemanalPlanos implements OnInit {
     { numero: 12, nombre: 'Diciembre' },
   ];
 
+  anioCorte = signal(new Date().getFullYear());
+  mesCorte = signal(new Date().getMonth() + 1);
+  idEntidadSeleccionada = signal<number | null>(null);
+  idDelitoSeleccionado = signal<number | null>(null);
+  entidades = signal<SemanalReportePreliminarEntidadItem[]>([]);
+  delitos = signal<SemanalReportePreliminarDelitoItem[]>([]);
+  cargandoOpciones = signal(false);
+  descargandoReporte = signal(false);
+
+  operacionEnCurso = computed(() => this.cargandoOpciones() || this.descargandoReporte());
+  nombreMesSeleccionado = computed(() => this.meses.find(x => x.numero === this.mesCorte())?.nombre ?? '');
+  delitoSeleccionado = computed(() => this.delitos().find(x => x.idDelito === this.idDelitoSeleccionado()) ?? null);
+
+  alcanceSeleccionado = computed(() => {
+    if (!this.esSuperUsuario()) return this.entidadUsuario() || this.entidades()[0]?.entidadFederativa || 'Mi entidad';
+
+    const idEntidad = this.idEntidadSeleccionada();
+
+    if (!idEntidad) return 'General — todas las entidades';
+
+    return this.entidades().find(x => x.idEntidadFederativa === idEntidad)?.entidadFederativa ?? 'Entidad seleccionada';
+  });
+
+  descripcionAlcance = computed(() => {
+    if (!this.esSuperUsuario()) return 'Incluye únicamente los registros confirmados que fueron cargados por tu usuario.';
+    if (this.idEntidadSeleccionada()) return 'Incluye los registros confirmados de todos los usuarios de la entidad seleccionada.';
+    return 'Incluye los registros confirmados de todas las entidades y todos los usuarios.';
+  });
+
   ngOnInit(): void {
     this.cargarOpciones();
   }
@@ -61,7 +80,8 @@ export class SemanalPlanos implements OnInit {
   cambiarPeriodo(): void {
     if (!this.periodoValido()) return;
 
-    this.idUsuarioSeleccionado.set(null);
+    this.idEntidadSeleccionada.set(null);
+    this.idDelitoSeleccionado.set(null);
     this.cargarOpciones();
   }
 
@@ -70,16 +90,18 @@ export class SemanalPlanos implements OnInit {
     this.cambiarPeriodo();
   }
 
-  cambiarUsuario(valor: string | number | null): void {
-    const idUsuario = valor === null || valor === '' ? null : Number(valor);
+  cambiarEntidad(valor: string | number | null): void {
+    const idEntidad = Number(valor);
 
-    this.idUsuarioSeleccionado.set(Number.isInteger(idUsuario) && Number(idUsuario) > 0 ? idUsuario : null);
+    this.idEntidadSeleccionada.set(valor === null || valor === '' || !Number.isInteger(idEntidad) || idEntidad <= 0 ? null : idEntidad);
+    this.idDelitoSeleccionado.set(null);
     this.cargarOpciones();
   }
 
-  cambiarDelito(valor: number): void {
+  cambiarDelito(valor: string | number | null): void {
     const idDelito = Number(valor);
-    this.idDelitoSeleccionado.set(Number.isInteger(idDelito) && idDelito > 0 ? idDelito : null);
+
+    this.idDelitoSeleccionado.set(valor === null || valor === '' || !Number.isInteger(idDelito) || idDelito <= 0 ? null : idDelito);
   }
 
   cargarOpciones(): void {
@@ -91,22 +113,22 @@ export class SemanalPlanos implements OnInit {
       .obtenerOpcionesReportePreliminar(
         this.anioCorte(),
         this.mesCorte(),
-        this.esSuperUsuario() ? this.idUsuarioSeleccionado() : null,
+        this.esSuperUsuario() ? this.idEntidadSeleccionada() : null,
       )
       .subscribe({
         next: (response) => {
           this.cargandoOpciones.set(false);
 
-          const usuarios = response.usuarios ?? [];
+          const entidades = response.entidades ?? [];
           const delitos = response.delitos ?? [];
 
-          this.usuarios.set(usuarios);
+          this.entidades.set(entidades);
           this.delitos.set(delitos);
           this.idDelitoSeleccionado.set(delitos[0]?.idDelito ?? null);
         },
         error: async (error: unknown) => {
           this.cargandoOpciones.set(false);
-          this.usuarios.set([]);
+          this.entidades.set([]);
           this.delitos.set([]);
           this.idDelitoSeleccionado.set(null);
 
@@ -126,7 +148,7 @@ export class SemanalPlanos implements OnInit {
     if (!idDelito) {
       mostrarAdvertencia(
         'Reporte no disponible',
-        'No existe información confirmada para el periodo y usuario seleccionados.',
+        'No existe información confirmada para el periodo y alcance seleccionados.',
       );
       return;
     }
@@ -138,7 +160,7 @@ export class SemanalPlanos implements OnInit {
         this.anioCorte(),
         this.mesCorte(),
         idDelito,
-        this.esSuperUsuario() ? this.idUsuarioSeleccionado() : null,
+        this.esSuperUsuario() ? this.idEntidadSeleccionada() : null,
       )
       .subscribe({
         next: (response) => {

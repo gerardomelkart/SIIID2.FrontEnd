@@ -82,10 +82,7 @@ export interface SemanalEnviosFiltro {
   estado?: string | null;
 }
 
-export interface SemanalReportePreliminarUsuarioItem {
-  idUsuarioCarga: number;
-  usuarioCarga: string;
-  nombreUsuarioCarga: string;
+export interface SemanalReportePreliminarEntidadItem {
   idEntidadFederativa: number;
   entidadFederativa: string;
 }
@@ -98,6 +95,6 @@ export interface SemanalReportePreliminarDelitoItem {
 
 export interface SemanalReportePreliminarOpcionesResponse {
   esValido: boolean;
-  usuarios: SemanalReportePreliminarUsuarioItem[];
+  entidades: SemanalReportePreliminarEntidadItem[];
   delitos: SemanalReportePreliminarDelitoItem[];
 }

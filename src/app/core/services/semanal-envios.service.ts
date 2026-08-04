@@ -44,11 +44,11 @@ export class SemanalEnviosService {
   obtenerOpcionesReportePreliminar(
     anioCorte: number,
     mesCorte: number,
-    idUsuarioCarga?: number | null,
+    idEntidadFederativa?: number | null,
   ) {
     let params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte);
 
-    if (idUsuarioCarga) params = params.set('idUsuarioCarga', idUsuarioCarga);
+    if (idEntidadFederativa) params = params.set('idEntidadFederativa', idEntidadFederativa);
 
     return this.http.get<SemanalReportePreliminarOpcionesResponse>(
       `${this.apiUrl}/reporte-preliminar/opciones`,
@@ -60,14 +60,14 @@ export class SemanalEnviosService {
     anioCorte: number,
     mesCorte: number,
     idDelito: number,
-    idUsuarioCarga?: number | null,
+    idEntidadFederativa?: number | null,
   ) {
     let params = new HttpParams()
       .set('anioCorte', anioCorte)
       .set('mesCorte', mesCorte)
       .set('idDelito', idDelito);
 
-    if (idUsuarioCarga) params = params.set('idUsuarioCarga', idUsuarioCarga);
+    if (idEntidadFederativa) params = params.set('idEntidadFederativa', idEntidadFederativa);
 
     return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/reporte-preliminar/ticket`, null, {
       params,
