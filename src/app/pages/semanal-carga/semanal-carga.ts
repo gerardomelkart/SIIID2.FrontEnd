@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CargaValidacionError, CargaValidacionResumenItem } from '../../core/models/carga.models';
+import { CargaValidacionError, CargaValidacionResumenItem, ConfirmarCargaResponse } from '../../core/models/carga.models';
 import {
   SemanalCargaPeriodoRequest,
   SemanalCargaValidacionResponse,
@@ -18,15 +18,11 @@ import {
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
-import {
-  mostrarError,
-  mostrarExito,
-  mostrarExitoInstitucional,
-} from '../../core/utils/alert.utils';
+import { mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
-import { catchError, finalize, map, of, switchMap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
@@ -150,6 +146,7 @@ export class SemanalCarga implements OnInit {
   formulario = signal<SemanalCargaFormulario>(this.crearFormularioInicial());
   estado = signal<EstadoCargaSemanal>('CAPTURA');
   respuesta = signal<SemanalCargaValidacionResponse | null>(null);
+  resultadoConfirmacion = signal<ConfirmarCargaResponse | null>(null);
   diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
   cargandoDiferencias = signal(false);
   validandoSemana = signal(false);
@@ -160,10 +157,8 @@ export class SemanalCarga implements OnInit {
 
   cargandoAcusePrevio = signal(false);
   acusePrevioUrl = signal<SafeResourceUrl | null>(null);
-  acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
 
   private acusePrevioObjectUrl: string | null = null;
-  private acuseConfirmadoObjectUrl: string | null = null;
 
   archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
   private readonly fechaActual = new Date();
@@ -361,6 +356,7 @@ export class SemanalCarga implements OnInit {
 
     this.estado.set('VALIDANDO');
     this.respuesta.set(null);
+    this.resultadoConfirmacion.set(null);
     this.errorGeneral.set('');
     this.limpiarAcusePrevio();
 
@@ -368,12 +364,17 @@ export class SemanalCarga implements OnInit {
       next: (response) => {
         this.respuesta.set(response);
 
-        if (!response.esValido || !this.esActualizacion || response.advertencias.length > 0) {
+        if (!response.esValido) {
           this.estado.set('RESULTADO');
           return;
         }
 
-        this.prepararRevisionDiferencias(response.codigoReferencia);
+        if (response.tipoCarga === 'ACTUALIZACION') {
+          this.prepararRevisionDiferencias(response.codigoReferencia);
+          return;
+        }
+
+        this.abrirAcusePrevio(response.codigoReferencia);
       },
       error: (error: unknown) => {
         const response = obtenerErrorPayload<SemanalCargaValidacionResponse>(error);
@@ -422,16 +423,22 @@ export class SemanalCarga implements OnInit {
 
     this.prepararRevisionDiferencias(codigoReferencia);
   }
+
+  reintentarRevision(): void {
+    if (this.esActualizacion) {
+      this.revisarDiferencias();
+      return;
+    }
+
+    this.abrirAcusePrevio();
+  }
+
   continuarAAcusePrevio(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) return;
 
     this.abrirAcusePrevio(codigoReferencia);
-  }
-
-  volverADiferencias(): void {
-    if (this.diferencias()) this.estado.set('MOSTRANDO_DIFERENCIAS');
   }
 
   obtenerIdentificadoresDesdeBackend(
@@ -506,91 +513,37 @@ export class SemanalCarga implements OnInit {
 
     this.estado.set('CONFIRMANDO');
 
-    this.semanalCargaService
-      .confirmarCarga({
-        codigoReferencia,
-        aceptar,
-      })
-      .pipe(
-        switchMap((resultado) => {
-          if (!aceptar || resultado.estado === 'PENDIENTE_APROBACION') {
-            return of({
-              resultado,
-              acuseDescargado: false,
-              blob: null as Blob | null,
-            });
-          }
+    this.semanalCargaService.confirmarCarga({ codigoReferencia, aceptar }).subscribe({
+      next: (resultado) => {
+        if (!aceptar) {
+          this.limpiarAcusePrevio();
 
-          return this.semanalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
-            map((blob: Blob) => ({
-              resultado,
-              acuseDescargado: true,
-              blob,
-            })),
-            catchError(() =>
-              of({
-                resultado,
-                acuseDescargado: false,
-                blob: null as Blob | null,
-              }),
-            ),
-          );
-        }),
-      )
-      .subscribe({
-        next: (confirmacion) => {
-          if (!aceptar) {
-            this.limpiarAcusePrevio();
+          mostrarExitoInstitucional(
+            this.esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
+            resultado.mensaje,
+          ).then(() => {
+            this.reiniciarFormulario();
+            void this.router.navigateByUrl('/semanal/carga');
+          });
 
-            mostrarExitoInstitucional(
-              this.esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
-              confirmacion.resultado.mensaje,
-            ).then(() => {
-              this.reiniciarFormulario();
-              void this.router.navigateByUrl('/semanal');
-            });
+          return;
+        }
 
-            return;
-          }
+        this.resultadoConfirmacion.set(resultado);
+        this.limpiarAcusePrevio();
+        this.estado.set('CONFIRMADO');
+      },
+      error: (error: unknown) => {
+        this.estado.set('MOSTRANDO_ACUSE');
 
-          if (confirmacion.resultado.estado === 'PENDIENTE_APROBACION') {
-            this.limpiarAcusePrevio();
-
-            mostrarExitoInstitucional(
-              this.esActualizacion
-                ? 'Actualización enviada a revisión'
-                : 'Carga enviada a revisión',
-              confirmacion.resultado.mensaje,
-            ).then(() => {
-              this.reiniciarFormulario();
-              void this.router.navigateByUrl('/semanal');
-            });
-
-            return;
-          }
-
-          if (confirmacion.blob) this.reemplazarAcuseConfirmado(confirmacion.blob);
-
-          this.estado.set('CONFIRMADO');
-
-          mostrarExito(
-            this.esActualizacion ? 'Actualización semanal confirmada' : 'Carga semanal confirmada',
-            confirmacion.acuseDescargado
-              ? undefined
-              : `La ${this.esActualizacion ? 'actualización' : 'carga'} fue confirmada, pero no fue posible cargar el acuse confirmado.`,
-          );
-        },
-        error: (error: unknown) => {
-          this.estado.set('MOSTRANDO_ACUSE');
-
-          mostrarError(
-            aceptar
-              ? `No fue posible confirmar la ${this.esActualizacion ? 'actualización' : 'carga'}`
-              : `No fue posible rechazar la ${this.esActualizacion ? 'actualización' : 'carga'}`,
-            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-          );
-        },
-      });
+        mostrarError(
+          aceptar
+            ? `No fue posible confirmar la ${this.esActualizacion ? 'actualización' : 'carga'}`
+            : `No fue posible rechazar la ${this.esActualizacion ? 'actualización' : 'carga'}`,
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
+      },
+    });
   }
 
   cerrarProcesoConfirmado(): void {
@@ -604,6 +557,7 @@ export class SemanalCarga implements OnInit {
     this.archivos.set(crearArchivosCargaVacios());
     this.formulario.set(this.crearFormularioInicial());
     this.respuesta.set(null);
+    this.resultadoConfirmacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
     this.archivoArrastrado.set(null);
@@ -619,6 +573,7 @@ export class SemanalCarga implements OnInit {
     this.archivos.set(crearArchivosCargaVacios());
     this.formulario.set(this.crearFormularioInicial());
     this.respuesta.set(null);
+    this.resultadoConfirmacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
     this.archivoArrastrado.set(null);
@@ -808,21 +763,11 @@ export class SemanalCarga implements OnInit {
     this.acusePrevioUrl.set(pdf.safeUrl);
   }
 
-  private reemplazarAcuseConfirmado(blob: Blob): void {
-    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
-
-    this.acuseConfirmadoObjectUrl = pdf.objectUrl;
-    this.acuseConfirmadoUrl.set(pdf.safeUrl);
-  }
-
   private limpiarAcusePrevio(): void {
     revocarObjectUrl(this.acusePrevioObjectUrl);
-    revocarObjectUrl(this.acuseConfirmadoObjectUrl);
 
     this.acusePrevioObjectUrl = null;
-    this.acuseConfirmadoObjectUrl = null;
     this.acusePrevioUrl.set(null);
-    this.acuseConfirmadoUrl.set(null);
     this.cargandoAcusePrevio.set(false);
   }
 
@@ -837,6 +782,7 @@ export class SemanalCarga implements OnInit {
     }
 
     this.respuesta.set(null);
+    this.resultadoConfirmacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
     this.limpiarAcusePrevio();

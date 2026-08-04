@@ -269,31 +269,36 @@
   }
 
   @if (mostrandoResultado()) {
-  <section class="resultado-encabezado" [class.resultado-correcto]="respuestaValida()" [class.resultado-advertencia]="
-        respuestaValida() && advertencias().length > 0
-      " [class.resultado-error]="!respuestaValida()">
+  <section class="resultado-encabezado"
+    [class.resultado-correcto]="estado() === 'CONFIRMADO' || (respuestaValida() && advertencias().length === 0)"
+    [class.resultado-advertencia]="estado() !== 'CONFIRMADO' && respuestaValida() && advertencias().length > 0"
+    [class.resultado-error]="estado() !== 'CONFIRMADO' && !respuestaValida()">
     <div class="resultado-icono">
-      <i class="fa-solid" [class.fa-circle-check]="
-            respuestaValida() && advertencias().length === 0
-          " [class.fa-triangle-exclamation]="
-            !respuestaValida() || advertencias().length > 0
-          "></i>
+      <i class="fa-solid"
+        [class.fa-circle-check]="estado() === 'CONFIRMADO' || (respuestaValida() && advertencias().length === 0)"
+        [class.fa-triangle-exclamation]="estado() !== 'CONFIRMADO' && (!respuestaValida() || advertencias().length > 0)"></i>
     </div>
 
     <div>
-      <span>Resultado de validación</span>
+      <span>{{ estado() === 'CONFIRMADO' ? 'Resultado de operación' : 'Resultado de validación' }}</span>
 
       <h2>
-        @if (!respuestaValida()) {
+        @if (estado() === 'CONFIRMADO') {
+        @if (resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION') {
+        Enviada a revisión administrativa
+        } @else {
+        {{ esActualizacion ? 'Actualización acumulativa aceptada' : 'Carga acumulativa aceptada' }}
+        }
+        } @else if (!respuestaValida()) {
         La {{ esActualizacion ? 'actualización' : 'carga' }} contiene inconsistencias
         } @else if (advertencias().length > 0) {
         {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
         } @else {
-        {{ esActualizacion ? 'Actualización acumulativa' : 'Carga acumulativa' }} lista para revisar
+        {{ esActualizacion ? 'Actualización acumulativa validada' : 'Carga acumulativa validada' }}
         }
       </h2>
 
-      <p>{{ respuesta()?.mensaje }}</p>
+      <p>{{ estado() === 'CONFIRMADO' ? resultadoConfirmacion()?.mensaje : respuesta()?.mensaje }}</p>
     </div>
 
     <div class="resultado-totales">
@@ -438,14 +443,27 @@
   }
 
   <section class="resultado-acciones">
-    @if (!respuestaValida()) {
+    @if (estado() === 'CONFIRMADO') {
     <div>
       <strong>
-        Corrija las inconsistencias antes de continuar.
+        {{ resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION'
+        ? 'La operación fue enviada al flujo de aprobación administrativa.'
+        : 'La información fue integrada correctamente.' }}
       </strong>
+
       <span>
-        La información no fue integrada en las tablas semanales.
+        La operación ya fue aceptada y no queda pendiente de confirmación por parte del usuario.
       </span>
+    </div>
+
+    <button type="button" class="btn btn-siiid" (click)="cerrarProcesoConfirmado()">
+      <i class="fa-solid fa-check"></i>
+      Finalizar
+    </button>
+    } @else if (!respuestaValida()) {
+    <div>
+      <strong>Corrija las inconsistencias antes de continuar.</strong>
+      <span>La información no fue integrada en las tablas semanales.</span>
     </div>
 
     <button type="button" class="btn btn-siiid" (click)="volverACaptura()">
@@ -454,41 +472,21 @@
     </button>
     } @else {
     <div>
-      <strong>
-        Revise el tramo y los conteos antes de continuar.
-      </strong>
-
-      <span>
-        Abra el informe previo; desde ahí podrá aceptar o rechazar
-        la {{ esActualizacion ? 'actualización' : 'carga' }} semanal.
-      </span>
+      <strong>No fue posible abrir automáticamente la siguiente etapa.</strong>
+      <span>La operación permanece pendiente; vuelva a intentarlo para continuar.</span>
     </div>
 
-    <div class="botones-confirmacion">
-      <div class="botones-confirmacion">
-        @if (esActualizacion) {
-        <button type="button" class="btn btn-siiid" [disabled]="cargandoDiferencias()" (click)="revisarDiferencias()">
-          @if (cargandoDiferencias()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Cargando diferencias...
-          } @else {
-          <i class="fa-solid fa-code-compare"></i>
-          {{ advertencias().length > 0 ? 'Aceptar y revisar cambios' : 'Revisar diferencias' }}
-          }
-        </button>
-        } @else {
-        <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio()" (click)="abrirAcusePrevio()">
-          @if (cargandoAcusePrevio()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Generando informe...
-          } @else {
-          <i class="fa-solid fa-file-pdf"></i>
-          Revisar informe previo
-          }
-        </button>
-        }
-      </div>
-    </div>
+    <button type="button" class="btn btn-siiid"
+      [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
+      (click)="reintentarRevision()">
+      @if (cargandoAcusePrevio() || cargandoDiferencias()) {
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Abriendo...
+      } @else {
+      <i class="fa-solid fa-rotate-right"></i>
+      Reintentar revisión
+      }
+    </button>
     }
   </section>
   }
@@ -816,31 +814,16 @@
 </div>
 }
 
-@if (
-estado() === 'MOSTRANDO_ACUSE' ||
-estado() === 'CONFIRMANDO' ||
-estado() === 'CONFIRMADO'
-) {
+@if (estado() === 'MOSTRANDO_ACUSE' || estado() === 'CONFIRMANDO') {
 <div class="acuse-modal">
   <div class="acuse-header">
     <span>
-      {{ estado() === 'CONFIRMADO'
-      ? (esActualizacion ? 'Acuse confirmado de actualización semanal' : 'Acuse confirmado de entrega semanal')
-      : (esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo de entrega semanal') }}
+      {{ esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo de entrega semanal' }}
     </span>
-
-    @if (estado() === 'CONFIRMADO') {
-    <button type="button" class="acuse-close" aria-label="Cerrar acuse" (click)="cerrarProcesoConfirmado()">
-      ×
-    </button>
-    }
   </div>
 
   <div class="acuse-body">
-    @if (acuseConfirmadoUrl()) {
-    <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()"
-      [title]="esActualizacion ? 'Acuse de actualización semanal confirmada' : 'Acuse semanal confirmado'"></iframe>
-    } @else if (acusePrevioUrl()) {
+    @if (acusePrevioUrl()) {
     <iframe class="acuse-frame" [src]="acusePrevioUrl()"
       [title]="esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo semanal'"></iframe>
     }
@@ -852,12 +835,6 @@ estado() === 'CONFIRMADO'
       <i class="fa-solid fa-xmark"></i>
       Rechazar
     </button>
-
-    @if (esActualizacion && diferencias()) {
-    <button type="button" class="btn-acuse-previo" (click)="volverADiferencias()">
-      Volver a diferencias
-    </button>
-    }
 
     <button type="button" class="btn-aceptar" (click)="confirmarCarga(true)">
       <i class="fa-solid fa-check"></i>
@@ -873,13 +850,6 @@ estado() === 'CONFIRMADO'
     <button type="button" class="btn-aceptar btn-disabled" disabled>
       <i class="fa-solid fa-spinner fa-spin"></i>
       Procesando...
-    </button>
-    }
-
-    @if (estado() === 'CONFIRMADO') {
-    <button type="button" class="btn-cerrar-final" (click)="cerrarProcesoConfirmado()">
-      <i class="fa-solid fa-xmark"></i>
-      Cerrar
     </button>
     }
   </div>
