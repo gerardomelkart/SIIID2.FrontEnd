@@ -831,7 +831,7 @@ export class SemanalCarga implements OnInit {
     this.cargandoAcusePrevio.set(false);
   }
 
-  
+
   private limpiarResultado(): void {
     if (
       this.estado() === 'VALIDANDO' ||
@@ -851,23 +851,14 @@ export class SemanalCarga implements OnInit {
   }
 
   private obtenerPeriodoAcuse(): { anioCorte: number; mesCorte: number } | null {
-    const anioCorteConsulta = this.anioCortePendienteConsulta();
-    const mesCorteConsulta = this.mesCortePendienteConsulta();
+    const anioCorte = this.anioCortePendienteConsulta();
+    const mesCorte = this.mesCortePendienteConsulta();
 
-    if (anioCorteConsulta !== null && mesCorteConsulta !== null) {
-      return {
-        anioCorte: anioCorteConsulta,
-        mesCorte: mesCorteConsulta,
-      };
-    }
-
-    const tramo = this.tramoPrevisto();
-
-    if (!tramo) return null;
+    if (anioCorte === null || mesCorte === null) return null;
 
     return {
-      anioCorte: tramo.anioCorte,
-      mesCorte: tramo.mesCorte,
+      anioCorte,
+      mesCorte,
     };
   }
 
