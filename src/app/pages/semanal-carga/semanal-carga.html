@@ -818,7 +818,7 @@
 <div class="acuse-modal">
   <div class="acuse-header">
     <span>
-      {{ esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo de entrega semanal' }}
+      {{ esActualizacion ? 'Informe previo de actualización preliminar' : 'Informe previo de entrega preliminar' }}
     </span>
   </div>
 
@@ -831,6 +831,22 @@
 
   <div class="acuse-actions">
     @if (estado() === 'MOSTRANDO_ACUSE') {
+    @if (soloConsultaPendiente()) {
+    <div class="d-flex align-items-center gap-3 text-start flex-grow-1">
+      <i class="fa-solid fa-circle-info text-warning fs-3"></i>
+
+      <span>
+        Esta carga continúa pendiente de confirmación.
+        Notifique a <strong>{{ usuarioPendiente() || 'el usuario que realizó la carga' }}</strong>
+        para que ingrese y acepte o rechace su carga.
+      </span>
+    </div>
+
+    <button type="button" class="btn-cerrar-final" (click)="salirConsultaPendiente()">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      Salir
+    </button>
+    } @else {
     <button type="button" class="btn-rechazar" (click)="confirmarCarga(false)">
       <i class="fa-solid fa-xmark"></i>
       Rechazar
@@ -840,6 +856,7 @@
       <i class="fa-solid fa-check"></i>
       Aceptar
     </button>
+    }
     }
 
     @if (estado() === 'CONFIRMANDO') {

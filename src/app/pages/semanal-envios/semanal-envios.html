@@ -175,10 +175,18 @@
                 </button>
                 }
 
-                @if (envio.puedeResolverPendiente) {
-                <button type="button" class="btn-icon btn-view" title="Resolver operación pendiente"
+                @if (
+                envio.puedeResolverPendiente ||
+                esSuperUsuario() && esPendienteConfirmacionUsuario(envio)
+                ) {
+                <button type="button" class="btn-icon btn-view"
+                  [title]="esSuperUsuario() ? 'Consultar confirmación pendiente del usuario' : 'Resolver operación pendiente'"
                   [disabled]="operacionEnCurso()" (click)="resolverPendiente(envio)">
+                  @if (esSuperUsuario()) {
+                  <i class="fa-solid fa-bell"></i>
+                  } @else {
                   <i class="fa-solid fa-pen-to-square"></i>
+                  }
                 </button>
                 }
 

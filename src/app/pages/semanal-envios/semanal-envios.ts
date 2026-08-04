@@ -6,7 +6,7 @@ import { ROLES } from '../../core/constants/roles.constants';
 import { SemanalEnvioItem } from '../../core/models/semanal-envios.models';
 import { SemanalEnviosService } from '../../core/services/semanal-envios.service';
 import { SessionService } from '../../core/services/session.service';
-import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
+import { SemanalCargaService } from '../../core/services/semanal-carga.service';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
@@ -41,6 +41,7 @@ type CampoOrden = 'entidad' | 'clave' | 'fecha' | 'periodo' | 'usuario' | 'estad
 })
 export class SemanalEnvios implements OnInit, OnDestroy {
   private readonly semanalEnviosService = inject(SemanalEnviosService);
+  private readonly semanalCargaService = inject(SemanalCargaService);
   private readonly sessionService = inject(SessionService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly router = inject(Router);
@@ -67,7 +68,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   acuseUrl = signal<SafeResourceUrl | null>(null);
   acuseTitulo = signal('Informe preliminar');
-  private acuseObjectUrl: string | null = null;
 
   usuariosEnvio = computed<UsuarioEnvio[]>(() => {
     const mapa = new Map<number, UsuarioEnvio>();
@@ -265,36 +265,42 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   verAcuse(envio: SemanalEnvioItem): void {
     if (!envio.endpointAcuse) return;
 
+    const periodo = this.obtenerPeriodoSeleccionado();
+    const anioCorte = periodo?.anioCorte ?? envio.anioCorte;
+    const mesCorte = periodo?.mesCorte ?? envio.mesCorte;
+
     this.descargandoAcuse.set(envio.codigoReferencia);
 
-    const endpoint = this.agregarPeriodoSeleccionado(envio.endpointAcuse);
+    this.semanalCargaService
+      .crearTicketAcuse(envio.codigoReferencia, envio.esConfirmado, anioCorte, mesCorte)
+      .subscribe({
+        next: (response) => {
+          this.descargandoAcuse.set(null);
 
-    this.semanalEnviosService.descargarDesdeEndpoint(endpoint).subscribe({
-      next: (response) => {
-        this.descargandoAcuse.set(null);
+          if (!response.ticket) {
+            mostrarError(
+              'Informe no disponible',
+              'La API no devolvió un ticket para consultar el informe.',
+            );
+            return;
+          }
 
-        if (!response.body) {
-          mostrarError('Informe vacío', 'La API no devolvió el informe preliminar.');
-          return;
-        }
+          const url = this.semanalCargaService.obtenerUrlAcuseTicket(response.ticket);
 
-        const pdf = crearSafeBlobUrl(response.body, this.sanitizer, this.acuseObjectUrl);
+          this.acuseUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+          this.acuseTitulo.set(
+            `${envio.esConfirmado ? 'Acuse' : 'Informe previo'} — ${envio.entidadFederativa} — ${envio.usuarioCarga} — ${this.periodoTexto(envio)}`,
+          );
+        },
+        error: async (error: unknown) => {
+          this.descargandoAcuse.set(null);
 
-        this.acuseObjectUrl = pdf.objectUrl;
-        this.acuseUrl.set(pdf.safeUrl);
-        this.acuseTitulo.set(
-          `${envio.esConfirmado ? 'Acuse' : 'Informe previo'} — ${envio.entidadFederativa} — ${envio.usuarioCarga} — ${this.periodoTexto(envio)}`,
-        );
-      },
-      error: async (error: unknown) => {
-        this.descargandoAcuse.set(null);
-
-        mostrarError(
-          'No fue posible consultar el informe',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-        );
-      },
-    });
+          mostrarError(
+            'No fue posible consultar el informe',
+            await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+          );
+        },
+      });
   }
 
   descargarArchivos(envio: SemanalEnvioItem): void {
@@ -326,13 +332,26 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     });
   }
 
+  esPendienteConfirmacionUsuario(envio: SemanalEnvioItem): boolean {
+    const estado = envio.estado.trim().toUpperCase();
+
+    return estado === 'VALIDADO_PENDIENTE' || estado === 'VALIDADO_PENDIENTE_ACTUALIZACION';
+  }
+
   resolverPendiente(envio: SemanalEnvioItem): void {
-    if (!envio.puedeResolverPendiente) return;
+    const soloConsulta = this.esSuperUsuario() && this.esPendienteConfirmacionUsuario(envio);
+
+    if (!envio.puedeResolverPendiente && !soloConsulta) return;
+
+    const periodo = this.obtenerPeriodoSeleccionado();
 
     void this.router.navigate(['/semanal/carga'], {
       queryParams: {
         resolver: envio.codigoReferencia,
         tipoCarga: envio.tipoCarga,
+        usuario: envio.usuarioCarga,
+        anioCorte: periodo?.anioCorte ?? envio.anioCorte,
+        mesCorte: periodo?.mesCorte ?? envio.mesCorte,
       },
     });
   }
@@ -367,8 +386,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   }
 
   cerrarAcuse(): void {
-    revocarObjectUrl(this.acuseObjectUrl);
-    this.acuseObjectUrl = null;
     this.acuseUrl.set(null);
   }
 
@@ -417,16 +434,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     if (!clave) return null;
 
     return this.periodosEnvio().find((periodo) => periodo.clave === clave) ?? null;
-  }
-
-  private agregarPeriodoSeleccionado(endpoint: string): string {
-    const periodo = this.obtenerPeriodoSeleccionado();
-
-    if (!periodo) return endpoint;
-
-    const separador = endpoint.includes('?') ? '&' : '?';
-
-    return `${endpoint}${separador}anioCorte=${periodo.anioCorte}&mesCorte=${periodo.mesCorte}`;
   }
 
   private descargarBlob(blob: Blob, nombreArchivo: string): void {

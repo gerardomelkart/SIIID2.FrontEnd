@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import {
   ConfirmarCargaRequest,
   ConfirmarCargaResponse,
@@ -11,6 +11,12 @@ import {
 } from '../models/semanal-carga.models';
 import { ArchivosCargaSeleccionados } from '../types/archivo-carga.types';
 import { ActualizacionDiferenciasResponse } from '../models/actualizacion.models';
+
+interface SemanalAcuseTicketResponse {
+  esValido: boolean;
+  ticket: string;
+  nombreArchivo: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -33,22 +39,32 @@ export class SemanalCargaService {
     formData.append('mesCorte', periodo.mesCorte.toString());
     formData.append('anioCorte', periodo.anioCorte.toString());
 
-    if (periodo.idEntidadFederativa !== null && periodo.idEntidadFederativa !== undefined) formData.append('idEntidadFederativa', periodo.idEntidadFederativa.toString());
+    if (periodo.idEntidadFederativa !== null && periodo.idEntidadFederativa !== undefined)
+      formData.append('idEntidadFederativa', periodo.idEntidadFederativa.toString());
 
     return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
   }
 
-validarSemana(tipoCarga: TipoCargaSemanal, anioSemana: number, numeroSemana: number, idEntidadFederativa: number | null = null) {
-  const params: Record<string, string> = {
-    tipoCarga,
-    anioSemana: anioSemana.toString(),
-    numeroSemana: numeroSemana.toString(),
-  };
+  validarSemana(
+    tipoCarga: TipoCargaSemanal,
+    anioSemana: number,
+    numeroSemana: number,
+    idEntidadFederativa: number | null = null,
+  ) {
+    const params: Record<string, string> = {
+      tipoCarga,
+      anioSemana: anioSemana.toString(),
+      numeroSemana: numeroSemana.toString(),
+    };
 
-  if (idEntidadFederativa !== null) params['idEntidadFederativa'] = idEntidadFederativa.toString();
+    if (idEntidadFederativa !== null)
+      params['idEntidadFederativa'] = idEntidadFederativa.toString();
 
-  return this.http.get<SemanalSemanaDisponibilidadResponse>(`${this.apiUrl}/semana/disponibilidad`, { params });
-}
+    return this.http.get<SemanalSemanaDisponibilidadResponse>(
+      `${this.apiUrl}/semana/disponibilidad`,
+      { params },
+    );
+  }
 
   obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 100) {
     return this.http.get<ActualizacionDiferenciasResponse>(
@@ -61,6 +77,32 @@ validarSemana(tipoCarga: TipoCargaSemanal, anioSemana: number, numeroSemana: num
 
   confirmarCarga(request: ConfirmarCargaRequest) {
     return this.http.post<ConfirmarCargaResponse>(`${this.apiUrl}/confirmar`, request);
+  }
+
+  crearTicketAcuse(
+    codigoReferencia: string,
+    confirmado: boolean,
+    anioCorte: number | null = null,
+    mesCorte: number | null = null,
+  ) {
+    const params: Record<string, string> = {
+      confirmado: confirmado.toString(),
+    };
+
+    if (anioCorte !== null && mesCorte !== null) {
+      params['anioCorte'] = anioCorte.toString();
+      params['mesCorte'] = mesCorte.toString();
+    }
+
+    return this.http.post<SemanalAcuseTicketResponse>(
+      `${this.apiUrl}/${encodeURIComponent(codigoReferencia)}/acuse/ticket`,
+      null,
+      { params },
+    );
+  }
+
+  obtenerUrlAcuseTicket(ticket: string): string {
+    return `${API_BASE_URL}/semanal/cargas/acuse/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
   descargarAcusePrevio(codigoReferencia: string) {

@@ -1,7 +1,11 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CargaValidacionError, CargaValidacionResumenItem, ConfirmarCargaResponse } from '../../core/models/carga.models';
+import {
+  CargaValidacionError,
+  CargaValidacionResumenItem,
+  ConfirmarCargaResponse,
+} from '../../core/models/carga.models';
 import {
   SemanalCargaPeriodoRequest,
   SemanalCargaValidacionResponse,
@@ -21,7 +25,6 @@ import {
 import { mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { finalize } from 'rxjs';
 import { ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { CatalogosService } from '../../core/services/catalogos.service';
@@ -60,10 +63,7 @@ interface VistaTramoSemanal {
   selector: 'app-semanal-carga',
   imports: [FormsModule],
   templateUrl: './semanal-carga.html',
-  styleUrls: [
-    '../actualizacion/actualizacion.css',
-    './semanal-carga.css',
-  ],
+  styleUrls: ['../actualizacion/actualizacion.css', './semanal-carga.css'],
 })
 export class SemanalCarga implements OnInit {
   private readonly semanalCargaService = inject(SemanalCargaService);
@@ -74,7 +74,9 @@ export class SemanalCarga implements OnInit {
   private readonly sanitizer = inject(DomSanitizer);
 
   get tipoCarga(): TipoCargaSemanal {
-    return this.respuesta()?.tipoCarga ?? this.estadoSemana()?.tipoCargaPendiente ?? 'CARGA_INICIAL';
+    return (
+      this.respuesta()?.tipoCarga ?? this.estadoSemana()?.tipoCargaPendiente ?? 'CARGA_INICIAL'
+    );
   }
 
   get esActualizacion(): boolean {
@@ -155,10 +157,13 @@ export class SemanalCarga implements OnInit {
   private solicitudValidacionSemana = 0;
   errorGeneral = signal('');
 
+  soloConsultaPendiente = signal(false);
+  usuarioPendiente = signal('');
+  private anioCortePendienteConsulta = signal<number | null>(null);
+  private mesCortePendienteConsulta = signal<number | null>(null);
+
   cargandoAcusePrevio = signal(false);
   acusePrevioUrl = signal<SafeResourceUrl | null>(null);
-
-  private acusePrevioObjectUrl: string | null = null;
 
   archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
   private readonly fechaActual = new Date();
@@ -223,8 +228,33 @@ export class SemanalCarga implements OnInit {
 
     if (!codigoReferencia) return;
 
-    const tipoCargaPendiente: TipoCargaSemanal = this.activatedRoute.snapshot.queryParamMap.get('tipoCarga') === 'ACTUALIZACION' ? 'ACTUALIZACION' : 'CARGA_INICIAL';
+    const tipoCargaPendiente: TipoCargaSemanal =
+      this.activatedRoute.snapshot.queryParamMap.get('tipoCarga') === 'ACTUALIZACION'
+        ? 'ACTUALIZACION'
+        : 'CARGA_INICIAL';
     const esActualizacionPendiente = tipoCargaPendiente === 'ACTUALIZACION';
+    const soloConsulta = this.esSuperUsuario();
+    const usuarioPendiente =
+      this.activatedRoute.snapshot.queryParamMap.get('usuario')?.trim() ?? '';
+    const anioTexto = this.activatedRoute.snapshot.queryParamMap.get('anioCorte');
+    const mesTexto = this.activatedRoute.snapshot.queryParamMap.get('mesCorte');
+    const anioCorte = anioTexto ? Number(anioTexto) : NaN;
+    const mesCorte = mesTexto ? Number(mesTexto) : NaN;
+
+    this.soloConsultaPendiente.set(soloConsulta);
+    this.usuarioPendiente.set(usuarioPendiente);
+
+    if (
+      Number.isInteger(anioCorte) &&
+      anioCorte >= 2000 &&
+      anioCorte <= 2100 &&
+      Number.isInteger(mesCorte) &&
+      mesCorte >= 1 &&
+      mesCorte <= 12
+    ) {
+      this.anioCortePendienteConsulta.set(anioCorte);
+      this.mesCortePendienteConsulta.set(mesCorte);
+    }
 
     this.estadoSemana.set({
       esValido: true,
@@ -232,12 +262,14 @@ export class SemanalCarga implements OnInit {
       tieneCargaConfirmada: esActualizacionPendiente,
       existeOperacionPendiente: true,
       codigo: 'SEMANAL_PENDIENTE_DESDE_CONSULTA',
-      mensaje: 'Operación semanal pendiente seleccionada desde la consulta de envíos.',
+      mensaje: 'Operación preliminar pendiente seleccionada desde la consulta de envíos.',
       codigoReferenciaPendiente: codigoReferencia,
-      estadoPendiente: esActualizacionPendiente ? 'VALIDADO_PENDIENTE_ACTUALIZACION' : 'VALIDADO_PENDIENTE',
+      estadoPendiente: esActualizacionPendiente
+        ? 'VALIDADO_PENDIENTE_ACTUALIZACION'
+        : 'VALIDADO_PENDIENTE',
       tipoCargaPendiente,
-      pendientePropia: true,
-      puedeResolverPendiente: true,
+      pendientePropia: !soloConsulta,
+      puedeResolverPendiente: !soloConsulta,
       debeUsarActualizacion: false,
     });
 
@@ -402,7 +434,14 @@ export class SemanalCarga implements OnInit {
     const disponibilidad = this.estadoSemana();
     const codigoReferencia = this.codigoReferenciaOperacion();
 
-    if (!disponibilidad?.puedeResolverPendiente || !codigoReferencia) return;
+    if (!disponibilidad?.existeOperacionPendiente || !codigoReferencia) return;
+
+    if (this.soloConsultaPendiente()) {
+      this.abrirAcusePrevio(codigoReferencia);
+      return;
+    }
+
+    if (!disponibilidad.puedeResolverPendiente) return;
 
     if (disponibilidad.tipoCargaPendiente === 'ACTUALIZACION') {
       this.prepararRevisionDiferencias(codigoReferencia);
@@ -486,30 +525,54 @@ export class SemanalCarga implements OnInit {
   abrirAcusePrevio(codigoReferencia = this.codigoReferenciaOperacion()): void {
     if (!codigoReferencia || this.cargandoAcusePrevio() || this.estado() === 'CONFIRMANDO') return;
 
+    const periodo = this.obtenerPeriodoAcuse();
+
     this.cargandoAcusePrevio.set(true);
 
-    this.semanalCargaService.descargarAcusePrevio(codigoReferencia).subscribe({
-      next: (blob) => {
-        this.reemplazarAcusePrevio(blob);
-        this.estado.set('MOSTRANDO_ACUSE');
-        this.cargandoAcusePrevio.set(false);
-      },
-      error: (error: unknown) => {
-        this.estado.set(this.respuesta() ? 'RESULTADO' : 'CAPTURA');
-        this.cargandoAcusePrevio.set(false);
+    this.semanalCargaService
+      .crearTicketAcuse(
+        codigoReferencia,
+        false,
+        periodo?.anioCorte ?? null,
+        periodo?.mesCorte ?? null,
+      )
+      .subscribe({
+        next: (response) => {
+          if (!response.ticket) {
+            this.estado.set(this.respuesta() ? 'RESULTADO' : 'CAPTURA');
+            this.cargandoAcusePrevio.set(false);
 
-        mostrarError(
-          'No fue posible generar el informe previo',
-          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-        );
-      },
-    });
+            mostrarError(
+              'No fue posible generar el informe previo',
+              'La API no devolvió un ticket para consultar el informe.',
+            );
+
+            return;
+          }
+
+          const url = this.semanalCargaService.obtenerUrlAcuseTicket(response.ticket);
+
+          this.acusePrevioUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+          this.estado.set('MOSTRANDO_ACUSE');
+          this.cargandoAcusePrevio.set(false);
+        },
+        error: (error: unknown) => {
+          this.estado.set(this.respuesta() ? 'RESULTADO' : 'CAPTURA');
+          this.cargandoAcusePrevio.set(false);
+
+          mostrarError(
+            'No fue posible generar el informe previo',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
+        },
+      });
   }
 
   confirmarCarga(aceptar: boolean): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
 
-    if (!codigoReferencia || this.estado() === 'CONFIRMANDO') return;
+    if (this.soloConsultaPendiente() || !codigoReferencia || this.estado() === 'CONFIRMANDO')
+      return;
 
     this.estado.set('CONFIRMANDO');
 
@@ -544,6 +607,13 @@ export class SemanalCarga implements OnInit {
         );
       },
     });
+  }
+
+  salirConsultaPendiente(): void {
+    if (!this.soloConsultaPendiente() || this.estado() === 'CONFIRMANDO') return;
+
+    this.limpiarAcusePrevio();
+    void this.router.navigateByUrl('/semanal/informes/envios');
   }
 
   cerrarProcesoConfirmado(): void {
@@ -756,21 +826,12 @@ export class SemanalCarga implements OnInit {
       });
   }
 
-  private reemplazarAcusePrevio(blob: Blob): void {
-    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
-
-    this.acusePrevioObjectUrl = pdf.objectUrl;
-    this.acusePrevioUrl.set(pdf.safeUrl);
-  }
-
   private limpiarAcusePrevio(): void {
-    revocarObjectUrl(this.acusePrevioObjectUrl);
-
-    this.acusePrevioObjectUrl = null;
     this.acusePrevioUrl.set(null);
     this.cargandoAcusePrevio.set(false);
   }
 
+  
   private limpiarResultado(): void {
     if (
       this.estado() === 'VALIDANDO' ||
@@ -787,6 +848,27 @@ export class SemanalCarga implements OnInit {
     this.errorGeneral.set('');
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
+  }
+
+  private obtenerPeriodoAcuse(): { anioCorte: number; mesCorte: number } | null {
+    const anioCorteConsulta = this.anioCortePendienteConsulta();
+    const mesCorteConsulta = this.mesCortePendienteConsulta();
+
+    if (anioCorteConsulta !== null && mesCorteConsulta !== null) {
+      return {
+        anioCorte: anioCorteConsulta,
+        mesCorte: mesCorteConsulta,
+      };
+    }
+
+    const tramo = this.tramoPrevisto();
+
+    if (!tramo) return null;
+
+    return {
+      anioCorte: tramo.anioCorte,
+      mesCorte: tramo.mesCorte,
+    };
   }
 
   private crearFormularioInicial(): SemanalCargaFormulario {
