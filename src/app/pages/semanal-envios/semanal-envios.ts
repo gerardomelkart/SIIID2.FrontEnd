@@ -267,7 +267,9 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
     this.descargandoAcuse.set(envio.codigoReferencia);
 
-    this.semanalEnviosService.descargarDesdeEndpoint(envio.endpointAcuse).subscribe({
+    const endpoint = this.agregarPeriodoSeleccionado(envio.endpointAcuse);
+
+    this.semanalEnviosService.descargarDesdeEndpoint(endpoint).subscribe({
       next: (response) => {
         this.descargandoAcuse.set(null);
 
@@ -371,6 +373,12 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   }
 
   periodoTexto(envio: SemanalEnvioItem): string {
+    const periodoSeleccionado = this.obtenerPeriodoSeleccionado();
+
+    if (periodoSeleccionado && this.contienePeriodo(envio, periodoSeleccionado.clave)) {
+      return periodoSeleccionado.periodo;
+    }
+
     const periodos = this.obtenerPeriodosEnvio(envio);
 
     if (periodos.length === 0) {
@@ -401,6 +409,24 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       case 'estado':
         return envio.estadoTexto;
     }
+  }
+
+  private obtenerPeriodoSeleccionado(): PeriodoEnvio | null {
+    const clave = this.periodoEnvioSeleccionado();
+
+    if (!clave) return null;
+
+    return this.periodosEnvio().find((periodo) => periodo.clave === clave) ?? null;
+  }
+
+  private agregarPeriodoSeleccionado(endpoint: string): string {
+    const periodo = this.obtenerPeriodoSeleccionado();
+
+    if (!periodo) return endpoint;
+
+    const separador = endpoint.includes('?') ? '&' : '?';
+
+    return `${endpoint}${separador}anioCorte=${periodo.anioCorte}&mesCorte=${periodo.mesCorte}`;
   }
 
   private descargarBlob(blob: Blob, nombreArchivo: string): void {
