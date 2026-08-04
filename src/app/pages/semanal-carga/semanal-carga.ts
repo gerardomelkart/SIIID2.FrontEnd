@@ -22,7 +22,7 @@ import {
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
-import { mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import { mostrarError, mostrarExitoInstitucional, mostrarAdvertencia } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { finalize } from 'rxjs';
@@ -393,11 +393,22 @@ export class SemanalCarga implements OnInit {
     this.limpiarAcusePrevio();
 
     this.semanalCargaService.validarArchivos(archivos, periodo).subscribe({
-      next: (response) => {
+      next: async (response) => {
         this.respuesta.set(response);
 
         if (!response.esValido) {
           this.estado.set('RESULTADO');
+          return;
+        }
+
+        if ((response.advertencias?.length ?? 0) > 0) {
+          this.estado.set('RESULTADO');
+
+          await mostrarAdvertencia(
+            'Advertencias detectadas',
+            'La validación terminó correctamente, pero contiene advertencias que no bloquean la carga. Revise el detalle y después elija Cancelar operación o Aceptar con advertencias.',
+          );
+
           return;
         }
 
@@ -476,6 +487,20 @@ export class SemanalCarga implements OnInit {
     const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (!codigoReferencia) return;
+
+    this.abrirAcusePrevio(codigoReferencia);
+  }
+
+    continuarConAdvertencias(): void {
+    const response = this.respuesta();
+    const codigoReferencia = response?.codigoReferencia?.trim();
+
+    if (!response?.esValido || (response.advertencias?.length ?? 0) === 0 || !codigoReferencia) return;
+
+    if (response.tipoCarga === 'ACTUALIZACION') {
+      this.prepararRevisionDiferencias(codigoReferencia);
+      return;
+    }
 
     this.abrirAcusePrevio(codigoReferencia);
   }
@@ -574,6 +599,8 @@ export class SemanalCarga implements OnInit {
     if (this.soloConsultaPendiente() || !codigoReferencia || this.estado() === 'CONFIRMANDO')
       return;
 
+    const estadoAnterior = this.estado();
+
     this.estado.set('CONFIRMANDO');
 
     this.semanalCargaService.confirmarCarga({ codigoReferencia, aceptar }).subscribe({
@@ -597,7 +624,7 @@ export class SemanalCarga implements OnInit {
         this.estado.set('CONFIRMADO');
       },
       error: (error: unknown) => {
-        this.estado.set('MOSTRANDO_ACUSE');
+        this.estado.set(estadoAnterior);
 
         mostrarError(
           aceptar

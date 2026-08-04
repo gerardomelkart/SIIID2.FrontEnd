@@ -470,6 +470,37 @@
       <i class="fa-solid fa-arrow-left"></i>
       Volver a los archivos
     </button>
+    } @else if (advertencias().length > 0) {
+    <div>
+      <strong>Revise las advertencias antes de continuar.</strong>
+      <span>Puede cancelar la operación para corregir la información o continuar aceptando las advertencias mostradas.</span>
+    </div>
+
+    <div class="botones-confirmacion">
+      <button type="button" class="btn btn-outline-secondary"
+        [disabled]="estado() === 'CONFIRMANDO' || cargandoAcusePrevio() || cargandoDiferencias()"
+        (click)="confirmarCarga(false)">
+        @if (estado() === 'CONFIRMANDO') {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Cancelando...
+        } @else {
+        <i class="fa-solid fa-xmark"></i>
+        Cancelar operación
+        }
+      </button>
+
+      <button type="button" class="btn btn-siiid"
+        [disabled]="estado() === 'CONFIRMANDO' || cargandoAcusePrevio() || cargandoDiferencias()"
+        (click)="continuarConAdvertencias()">
+        @if (cargandoAcusePrevio() || cargandoDiferencias()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Abriendo...
+        } @else {
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Aceptar con advertencias
+        }
+      </button>
+    </div>
     } @else {
     <div>
       <strong>No fue posible abrir automáticamente la siguiente etapa.</strong>
