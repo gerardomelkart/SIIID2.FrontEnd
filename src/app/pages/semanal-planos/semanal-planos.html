@@ -1,8 +1,8 @@
-<div class="informes-page semanal-planos-page">
+<div class="informes-page reporte-preliminar-page">
   <div class="informes-header">
     <div>
       <h1>Informes</h1>
-      <p>Generación de planos estadísticos con información preliminar del módulo semanal.</p>
+      <p>Descarga del acumulado mensual vigente del módulo preliminar.</p>
     </div>
 
     <div class="rol-chip">
@@ -14,31 +14,31 @@
   <section class="siiid-card sabanas-card">
     <div class="siiid-card-header reporte-card-header">
       <span>
-        <i class="fa-solid fa-table"></i>
-        Planos estadísticos
+        <i class="fa-solid fa-file-excel"></i>
+        Reporte preliminar
       </span>
     </div>
 
     <div class="sabanas-hero">
       <div class="sabanas-hero-icon">
-        <i class="fa-solid fa-file-zipper"></i>
+        <i class="fa-solid fa-file-excel"></i>
       </div>
 
       <div class="sabanas-hero-text">
-        <h2>Descarga de planos estadísticos semanales</h2>
+        <h2>Acumulado mensual por delito</h2>
 
         <p>
           @if (esSuperUsuario()) {
-          Genere planos nacionales por año, mes y tipo de información.
+          Seleccione un usuario o General para reunir todas las entidades en un solo archivo.
           } @else {
-          Descargue los planos semanales confirmados correspondientes a:
+          Descargue la información confirmada de su usuario para:
           <strong>{{ entidadUsuario() }}</strong>.
           }
         </p>
       </div>
     </div>
 
-    <div class="sabanas-toolbar semanal-planos-toolbar" [class.semanal-planos-toolbar-super]="esSuperUsuario()">
+    <div class="sabanas-toolbar reporte-preliminar-toolbar">
       <div class="sabana-year-card">
         <div class="sabana-year-label">
           <i class="fa-solid fa-calendar-days"></i>
@@ -46,14 +46,14 @@
         </div>
 
         <div class="sabana-year-input-group">
-          <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()" (click)="ajustarAnio(-1)">
+          <button type="button" class="sabana-year-step" [disabled]="operacionEnCurso()" (click)="ajustarAnio(-1)">
             <i class="fa-solid fa-minus"></i>
           </button>
 
-          <input type="number" class="sabana-year-input" min="2000" max="2100" [disabled]="descargaEnProceso()"
-            [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" />
+          <input type="number" class="sabana-year-input" min="2000" max="2100" [disabled]="operacionEnCurso()"
+            [ngModel]="anioCorte()" (ngModelChange)="anioCorte.set(+$event)" (blur)="cambiarPeriodo()" />
 
-          <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()" (click)="ajustarAnio(1)">
+          <button type="button" class="sabana-year-step" [disabled]="operacionEnCurso()" (click)="ajustarAnio(1)">
             <i class="fa-solid fa-plus"></i>
           </button>
         </div>
@@ -65,43 +65,51 @@
           Mes de corte
         </div>
 
-        <select class="form-select" [disabled]="descargaEnProceso()" [ngModel]="mesCorte()"
-          (ngModelChange)="mesCorte.set(+$event)">
+        <select class="form-select" [disabled]="operacionEnCurso()" [ngModel]="mesCorte()"
+          (ngModelChange)="cambiarMes(+$event)">
           @for (mes of meses; track mes.numero) {
           <option [value]="mes.numero">{{ mes.nombre }}</option>
           }
         </select>
-
-        <small class="sabana-mode-help">
-          El Excel mostrará Semana 1, Semana 2, Semana 3 y las demás semanas que intersecten el mes.
-        </small>
       </div>
 
       @if (esSuperUsuario()) {
       <div class="sabana-mode-card">
         <div class="sabana-year-label">
-          <i class="fa-solid fa-layer-group"></i>
-          Tipo de plano
+          <i class="fa-solid fa-users"></i>
+          Usuario
         </div>
 
-        <select class="form-select" [disabled]="descargaEnProceso()" [ngModel]="modoPlano()"
-          (ngModelChange)="modoPlano.set($event)">
-          <option value="CONFIRMADO">Plano confirmado</option>
-          <option value="PREVIO">Plano previo</option>
-          <option value="MIXTO">Plano mixto</option>
-        </select>
+        <select class="form-select" [disabled]="operacionEnCurso()" [ngModel]="idUsuarioSeleccionado() ?? ''"
+          (ngModelChange)="cambiarUsuario($event)">
+          <option value="">General — todas las entidades</option>
 
-        <small class="sabana-mode-help">
-          @if (modoPlano() === 'CONFIRMADO') {
-          Usa únicamente cargas y actualizaciones confirmadas.
-          } @else if (modoPlano() === 'PREVIO') {
-          En una semana con pendientes utiliza únicamente las cargas pendientes de esa semana.
-          } @else {
-          Sustituye el confirmado únicamente para la entidad y semana que tenga información pendiente.
+          @for (usuarioCarga of usuarios(); track usuarioCarga.idUsuarioCarga) {
+          <option [value]="usuarioCarga.idUsuarioCarga">
+            {{ usuarioCarga.entidadFederativa }} — {{ usuarioCarga.usuarioCarga }}
+          </option>
           }
-        </small>
+        </select>
       </div>
       }
+
+      <div class="sabana-mode-card">
+        <div class="sabana-year-label">
+          <i class="fa-solid fa-list-check"></i>
+          Delito
+        </div>
+
+        <select class="form-select" [disabled]="operacionEnCurso() || delitos().length === 0"
+          [ngModel]="idDelitoSeleccionado()" (ngModelChange)="cambiarDelito(+$event)">
+          @if (delitos().length === 0) {
+          <option [ngValue]="null">Sin información confirmada</option>
+          }
+
+          @for (delito of delitos(); track delito.idDelito) {
+          <option [value]="delito.idDelito">{{ delito.delito }}</option>
+          }
+        </select>
+      </div>
 
       <div class="sabana-info-card">
         <div class="sabana-info-badge">
@@ -110,70 +118,44 @@
         </div>
 
         <ul>
-          <li><strong>Columnas:</strong> Semana 1, Semana 2, Semana 3 y las restantes del mes.</li>
-          <li><strong>Periodo:</strong> año y mes seleccionados.</li>
-          <li><strong>Semanas cruzadas:</strong> sólo se contabiliza el tramo perteneciente al mes.</li>
-          <li><strong>Fuente:</strong> tablas finales o temporales según el tipo de plano.</li>
+          <li><strong>Archivo:</strong> un Excel con Carpetas, Delitos y Víctimas.</li>
+          <li><strong>Primera columna:</strong> Nombre entidad en las tres pestañas.</li>
+          <li><strong>Periodo:</strong> acumulado vigente del mes seleccionado.</li>
+          <li><strong>Fuente:</strong> únicamente registros confirmados y activos.</li>
         </ul>
       </div>
     </div>
 
-    <div class="sabanas-grid">
-      <button type="button" class="sabana-option sabana-option-primary" [disabled]="descargaEnProceso()"
-        (click)="descargarPlanos('COMPLETA')">
+    <div class="sabanas-grid reporte-preliminar-accion">
+      <button type="button" class="sabana-option sabana-option-primary"
+        [disabled]="operacionEnCurso() || !idDelitoSeleccionado()" (click)="descargar()">
         <div class="sabana-option-icon">
-          @if (descargandoPlano() === 'COMPLETA') {
+          @if (descargandoReporte()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
           } @else {
-          <i class="fa-solid fa-layer-group"></i>
+          <i class="fa-solid fa-file-arrow-down"></i>
           }
         </div>
 
         <div class="sabana-option-body">
-          <strong>Plano estadístico</strong>
-          <small>Incluye los cuatro archivos estadísticos del periodo seleccionado.</small>
-        </div>
-      </button>
-
-      <button type="button" class="sabana-option" [disabled]="descargaEnProceso()"
-        (click)="descargarPlanos('ESTATALES')">
-        <div class="sabana-option-icon">
-          @if (descargandoPlano() === 'ESTATALES') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-map"></i>
-          }
-        </div>
-
-        <div class="sabana-option-body">
-          <strong>Plano estatal</strong>
-          <small>Descarga estatal delitos y estatal víctimas.</small>
-        </div>
-      </button>
-
-      <button type="button" class="sabana-option" [disabled]="descargaEnProceso()"
-        (click)="descargarPlanos('MUNICIPALES')">
-        <div class="sabana-option-icon">
-          @if (descargandoPlano() === 'MUNICIPALES') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-city"></i>
-          }
-        </div>
-
-        <div class="sabana-option-body">
-          <strong>Plano municipal</strong>
-          <small>Descarga municipal delitos y municipal víctimas.</small>
+          <strong>Descargar reporte preliminar</strong>
+          <small>Genera el Excel mensual del delito y alcance seleccionados.</small>
         </div>
       </button>
     </div>
 
-    @if (descargandoPlano()) {
+    @if (cargandoOpciones() || descargandoReporte()) {
     <div class="sabana-loading">
       <div class="sabana-loading-box">
         <i class="fa-solid fa-spinner fa-spin"></i>
-        <strong>Generando planos semanales...</strong>
-        <span>La generación puede tardar algunos minutos dependiendo del volumen de información.</span>
+
+        @if (descargandoReporte()) {
+        <strong>Generando reporte preliminar...</strong>
+        <span>El archivo puede tardar algunos minutos dependiendo del volumen de información.</span>
+        } @else {
+        <strong>Consultando información disponible...</strong>
+        <span>Espere un momento.</span>
+        }
       </div>
     </div>
     }

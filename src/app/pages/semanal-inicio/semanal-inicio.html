@@ -94,15 +94,15 @@
       </a>
       }
 
-      @if (puedeVerPlanos()) {
-      <a class="quick-link" routerLink="/semanal/informes/planos">
+      @if (puedeVerReportePreliminar()) {
+      <a class="quick-link" routerLink="/semanal/informes/reporte-preliminar">
         <div class="quick-icon">
-          <i class="fa-solid fa-table"></i>
+          <i class="fa-solid fa-file-excel"></i>
         </div>
 
         <div>
-          <strong>Planos estadísticos</strong>
-          <span>Consulta y generación de planos de información semanal.</span>
+          <strong>Reporte preliminar</strong>
+          <span>Descarga el acumulado mensual vigente en un Excel de tres pestañas.</span>
         </div>
       </a>
       }

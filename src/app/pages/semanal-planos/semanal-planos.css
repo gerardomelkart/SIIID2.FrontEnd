@@ -2,16 +2,12 @@
   display: block;
 }
 
-.semanal-planos-page {
+.reporte-preliminar-page {
   --siiid-guinda: #19463c;
 }
 
-.semanal-planos-toolbar {
-  grid-template-columns: 280px 280px 1fr;
-}
-
-.semanal-planos-toolbar.semanal-planos-toolbar-super {
-  grid-template-columns: 240px 240px 280px 1fr;
+.reporte-preliminar-toolbar {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
 .sabanas-hero {
@@ -21,6 +17,11 @@
 
 .sabanas-hero-icon {
   box-shadow: 0 10px 22px rgba(25, 70, 60, .22);
+}
+
+.reporte-preliminar-accion {
+  grid-template-columns: minmax(320px, 620px);
+  justify-content: center;
 }
 
 .sabana-option {
@@ -36,16 +37,9 @@
   border-top-color: var(--siiid-guinda);
 }
 
-@media (max-width: 1200px) {
-  .semanal-planos-toolbar,
-  .semanal-planos-toolbar.semanal-planos-toolbar-super {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 @media (max-width: 780px) {
-  .semanal-planos-toolbar,
-  .semanal-planos-toolbar.semanal-planos-toolbar-super {
+  .reporte-preliminar-toolbar,
+  .reporte-preliminar-accion {
     grid-template-columns: 1fr;
   }
 }

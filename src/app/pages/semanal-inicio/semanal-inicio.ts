@@ -66,7 +66,7 @@ export class SemanalInicio {
     () => this.esSuperUsuario(),
   );
 
-  puedeVerPlanos = computed(
+  puedeVerReportePreliminar = computed(
     () =>
       this.esSuperUsuario() ||
       this.esEnlaceEstatal() ||

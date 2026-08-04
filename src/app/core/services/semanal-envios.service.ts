@@ -1,7 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { SemanalEnviosFiltro, SemanalEnviosResponse } from '../models/semanal-envios.models';
+import {
+  SemanalEnviosFiltro,
+  SemanalEnviosResponse,
+  SemanalReportePreliminarOpcionesResponse,
+} from '../models/semanal-envios.models';
 import {
   SemanalReporteCargasFiltro,
   SemanalReporteCargasResponse,
@@ -19,47 +23,66 @@ export class SemanalEnviosService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = API_ENDPOINTS.semanalEnvios;
 
-  crearTicketDescargaAcuses(anioCorte: number, mesCorte: number, idEntidadFederativa?: number | null, idUsuarioCarga?: number | null) {
-    let params = new HttpParams()
-      .set('anioCorte', anioCorte)
-      .set('mesCorte', mesCorte);
+  crearTicketDescargaAcuses(
+    anioCorte: number,
+    mesCorte: number,
+    idEntidadFederativa?: number | null,
+    idUsuarioCarga?: number | null,
+  ) {
+    let params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte);
 
     if (idEntidadFederativa) params = params.set('idEntidadFederativa', idEntidadFederativa);
     if (idUsuarioCarga) params = params.set('idUsuarioCarga', idUsuarioCarga);
 
-    return this.http.post<SemanalTicketResponse>(
-      `${this.apiUrl}/acuses/ticket`,
-      null,
-      { params },
-    );
+    return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/acuses/ticket`, null, { params });
   }
 
   obtenerUrlDescargaAcuses(ticket: string): string {
     return `${API_BASE_URL}/semanal/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
-  crearTicketDescargaPlanos(anioCorte: number, mesCorte: number, tipo: string, modo: string) {
-    const params = new HttpParams()
-      .set('anioCorte', anioCorte)
-      .set('mesCorte', mesCorte)
-      .set('tipo', tipo)
-      .set('modo', modo);
+  obtenerOpcionesReportePreliminar(
+    anioCorte: number,
+    mesCorte: number,
+    idUsuarioCarga?: number | null,
+  ) {
+    let params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte);
 
-    return this.http.post<SemanalTicketResponse>(
-      `${this.apiUrl}/planos/ticket`,
-      null,
+    if (idUsuarioCarga) params = params.set('idUsuarioCarga', idUsuarioCarga);
+
+    return this.http.get<SemanalReportePreliminarOpcionesResponse>(
+      `${this.apiUrl}/reporte-preliminar/opciones`,
       { params },
     );
   }
 
-  obtenerUrlDescargaPlanos(ticket: string): string {
-    return `${API_BASE_URL}/semanal/envios/planos/descargar?ticket=${encodeURIComponent(ticket)}`;
+  crearTicketReportePreliminar(
+    anioCorte: number,
+    mesCorte: number,
+    idDelito: number,
+    idUsuarioCarga?: number | null,
+  ) {
+    let params = new HttpParams()
+      .set('anioCorte', anioCorte)
+      .set('mesCorte', mesCorte)
+      .set('idDelito', idDelito);
+
+    if (idUsuarioCarga) params = params.set('idUsuarioCarga', idUsuarioCarga);
+
+    return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/reporte-preliminar/ticket`, null, {
+      params,
+    });
+  }
+
+  obtenerUrlReportePreliminar(ticket: string): string {
+    return `${API_BASE_URL}/semanal/envios/reporte-preliminar/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
   obtenerEnvios(filtro: SemanalEnviosFiltro = {}) {
     let params = new HttpParams();
 
-    if (filtro.idEntidadFederativa) params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
+    if (filtro.idEntidadFederativa)
+      params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
     if (filtro.idUsuarioCarga) params = params.set('idUsuarioCarga', filtro.idUsuarioCarga);
     if (filtro.anioCorte) params = params.set('anioCorte', filtro.anioCorte);
     if (filtro.mesCorte) params = params.set('mesCorte', filtro.mesCorte);
@@ -72,25 +95,20 @@ export class SemanalEnviosService {
   obtenerReporteCargas(filtro: SemanalReporteCargasFiltro = {}) {
     let params = new HttpParams();
 
-    if (filtro.idEntidadFederativa) params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
+    if (filtro.idEntidadFederativa)
+      params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
     if (filtro.idUsuarioCarga) params = params.set('idUsuarioCarga', filtro.idUsuarioCarga);
     if (filtro.anioCorte) params = params.set('anioCorte', filtro.anioCorte);
     if (filtro.mesCorte) params = params.set('mesCorte', filtro.mesCorte);
 
-    return this.http.get<SemanalReporteCargasResponse>(
-      `${this.apiUrl}/reporte-cargas`,
-      { params },
-    );
+    return this.http.get<SemanalReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
   descargarArchivos(codigoReferencia: string) {
-    return this.http.get(
-      `${this.apiUrl}/${encodeURIComponent(codigoReferencia)}/archivos`,
-      {
-        responseType: 'blob',
-        observe: 'response',
-      },
-    );
+    return this.http.get(`${this.apiUrl}/${encodeURIComponent(codigoReferencia)}/archivos`, {
+      responseType: 'blob',
+      observe: 'response',
+    });
   }
 
   descargarDesdeEndpoint(endpoint: string) {

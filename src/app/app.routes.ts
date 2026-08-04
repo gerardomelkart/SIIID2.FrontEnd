@@ -65,7 +65,7 @@ export const routes: Routes = [
       },
 
       {
-        path: 'informes/planos',
+        path: 'informes/reporte-preliminar',
         loadComponent: () =>
           import('./pages/semanal-planos/semanal-planos').then((m) => m.SemanalPlanos),
         canActivate: [permissionGuard],
