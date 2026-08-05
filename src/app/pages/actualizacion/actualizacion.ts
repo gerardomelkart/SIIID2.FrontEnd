@@ -421,7 +421,7 @@ export class Actualizacion implements OnInit {
         idEntidad,
       )
       .subscribe({
-        next: (response: CargaValidacionResponse) => {
+        next: async (response: CargaValidacionResponse) => {
           this.respuestaValidacion.set(response);
 
           if (!response.esValido) {
@@ -431,6 +431,12 @@ export class Actualizacion implements OnInit {
 
           if (this.hayAdvertenciasDeDecision()) {
             this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
+
+            await mostrarAdvertencia(
+              'Advertencias detectadas',
+              'La validación terminó correctamente, pero contiene advertencias que no bloquean la actualización. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
+            );
+
             return;
           }
 

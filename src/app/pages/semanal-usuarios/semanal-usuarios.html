@@ -52,6 +52,11 @@
         </button>
 
         <label class="ver-inactivos">
+          <input type="checkbox" [ngModel]="mostrarTodos()" (ngModelChange)="cambiarFiltroTodos($event)">
+          Ver todos
+        </label>
+
+        <label class="ver-inactivos">
           <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)">
           Ver inactivos
         </label>
@@ -126,7 +131,9 @@
         <tbody>
           @for (usuario of usuariosPaginados(); track usuario.idUsuario) {
           <tr>
-            <td><div class="usuario-nombre">{{ usuario.nombreCompleto }}</div></td>
+            <td>
+              <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
+            </td>
             <td>{{ usuario.usuario }}</td>
             <td>{{ usuario.correoElectronico }}</td>
             <td><span class="rol-badge">{{ usuario.rol }}</span></td>
@@ -170,8 +177,7 @@
 
                 <button type="button" class="btn-icon btn-toggle" [class.btn-disabled]="!puedeCambiarEstado(usuario)"
                   [title]="motivoBloqueoEstado(usuario)" (click)="cambiarEstado(usuario)">
-                  <i class="fa-solid" [class.fa-toggle-on]="usuario.activo"
-                    [class.fa-toggle-off]="!usuario.activo"></i>
+                  <i class="fa-solid" [class.fa-toggle-on]="usuario.activo" [class.fa-toggle-off]="!usuario.activo"></i>
                 </button>
               </div>
             </td>
@@ -287,8 +293,7 @@
       <div class="form-group">
         <label>Entidad federativa</label>
         <select class="form-select form-select-sm" [disabled]="formulario().rol === 'SUPER_USUARIO'"
-          [ngModel]="formulario().idEntidadFederativa"
-          (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
+          [ngModel]="formulario().idEntidadFederativa" (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
           <option value="">Seleccione entidad...</option>
           @for (entidad of entidades(); track entidad.idEntidadFederativa) {
           <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>

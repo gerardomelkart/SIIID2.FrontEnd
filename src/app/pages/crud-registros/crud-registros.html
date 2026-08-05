@@ -51,6 +51,10 @@
           Excel
         </button>
         <label class="ver-inactivos">
+          <input type="checkbox" [ngModel]="mostrarTodos()" (ngModelChange)="cambiarFiltroTodos($event)">
+          Ver todos
+        </label>
+        <label class="ver-inactivos">
           <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)">
           Ver inactivos
         </label>
@@ -167,7 +171,7 @@
           </tr>
           } @empty {
           <tr>
-                        <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
+            <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
           </tr>
           }
         </tbody>
@@ -341,7 +345,7 @@
       <div class="permiso-nota">Debe habilitar al menos un módulo para el usuario.</div>
       }
     </div>
-    
+
   </div>
 
   <div class="drawer-actions">

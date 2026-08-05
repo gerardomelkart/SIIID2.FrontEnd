@@ -204,7 +204,7 @@ export class CargaInicial {
     this.cargaService
       .validarArchivos(archivos.carpetas!, archivos.delitos!, archivos.victimas!)
       .subscribe({
-        next: (response) => {
+        next: async (response) => {
           this.respuesta.set(response);
           this.mensaje.set(response.mensaje || '');
 
@@ -215,6 +215,12 @@ export class CargaInicial {
 
           if (this.hayAdvertenciasDeDecision()) {
             this.estado.set('VALIDADO_ADVERTENCIA');
+
+            await mostrarAdvertencia(
+              'Advertencias detectadas',
+              'La validación terminó correctamente, pero contiene advertencias que no bloquean la carga. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
+            );
+
             return;
           }
 

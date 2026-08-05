@@ -87,6 +87,7 @@ export class CrudRegistros implements OnInit {
   paginaUsuarios = signal(1);
   readonly tamanioPaginaUsuarios = 10;
 
+  mostrarTodos = signal(false);
   mostrarInactivos = signal(false);
   cargando = signal(false);
 
@@ -105,6 +106,7 @@ export class CrudRegistros implements OnInit {
     const texto = this.busqueda().trim().toLowerCase();
 
     const filtrados = this.usuarios().filter((usuario) => {
+      const pasaModulo = this.mostrarTodos() || usuario.habilitaMensual;
       const pasaBusqueda =
         !texto ||
         usuario.nombreCompleto?.toLowerCase().includes(texto) ||
@@ -113,7 +115,7 @@ export class CrudRegistros implements OnInit {
         usuario.rol?.toLowerCase().includes(texto) ||
         usuario.entidadFederativa?.toLowerCase().includes(texto);
 
-      return pasaBusqueda;
+      return pasaModulo && pasaBusqueda;
     });
 
     return this.ordenarListaUsuarios(filtrados);
@@ -190,7 +192,10 @@ export class CrudRegistros implements OnInit {
   }
 
   esUsuarioActualFormulario(): boolean {
-    return this.modoFormulario() === 'EDITAR' && this.formulario().idUsuario === this.usuarioActual()?.idUsuario;
+    return (
+      this.modoFormulario() === 'EDITAR' &&
+      this.formulario().idUsuario === this.usuarioActual()?.idUsuario
+    );
   }
 
   ordenarUsuariosPor(campo: CampoOrdenUsuarios): void {
@@ -323,6 +328,11 @@ export class CrudRegistros implements OnInit {
         );
       },
     });
+  }
+
+  cambiarFiltroTodos(valor: boolean): void {
+    this.mostrarTodos.set(valor);
+    this.paginaUsuarios.set(1);
   }
 
   cambiarFiltroInactivos(valor: boolean): void {
@@ -627,8 +637,10 @@ export class CrudRegistros implements OnInit {
   private normalizarPermisosPorRol(rol: string): void {
     this.formulario.update((actual) => ({
       ...actual,
-      habilitaCarga: actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaCarga : false,
-      habilitaModificacion: actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaModificacion : false,
+      habilitaCarga:
+        actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaCarga : false,
+      habilitaModificacion:
+        actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaModificacion : false,
       habilitaCargaSemanal:
         actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
       habilitaModificacionSemanal:

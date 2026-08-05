@@ -81,6 +81,7 @@ export class SemanalUsuarios implements OnInit {
   paginaUsuarios = signal(1);
   readonly tamanioPaginaUsuarios = 10;
 
+  mostrarTodos = signal(false);
   mostrarInactivos = signal(false);
   cargando = signal(false);
   guardando = signal(false);
@@ -99,14 +100,16 @@ export class SemanalUsuarios implements OnInit {
     const texto = this.busqueda().trim().toLowerCase();
 
     const filtrados = this.usuarios().filter((usuario) => {
-      return (
+      const pasaModulo = this.mostrarTodos() || usuario.habilitaSemanal;
+      const pasaBusqueda =
         !texto ||
         usuario.nombreCompleto?.toLowerCase().includes(texto) ||
         usuario.usuario?.toLowerCase().includes(texto) ||
         usuario.correoElectronico?.toLowerCase().includes(texto) ||
         usuario.rol?.toLowerCase().includes(texto) ||
-        usuario.entidadFederativa?.toLowerCase().includes(texto)
-      );
+        usuario.entidadFederativa?.toLowerCase().includes(texto);
+
+      return pasaModulo && pasaBusqueda;
     });
 
     return this.ordenarListaUsuarios(filtrados);
@@ -117,12 +120,20 @@ export class SemanalUsuarios implements OnInit {
     return this.usuariosFiltrados().slice(inicio, inicio + this.tamanioPaginaUsuarios);
   });
 
-  totalPaginasUsuarios = computed(() => Math.max(1, Math.ceil(this.usuariosFiltrados().length / this.tamanioPaginaUsuarios)));
+  totalPaginasUsuarios = computed(() =>
+    Math.max(1, Math.ceil(this.usuariosFiltrados().length / this.tamanioPaginaUsuarios)),
+  );
   totalUsuarios = computed(() => this.usuarios().length);
   totalActivos = computed(() => this.usuarios().filter((usuario) => usuario.activo).length);
   totalInactivos = computed(() => this.usuarios().filter((usuario) => !usuario.activo).length);
-  totalConSemanal = computed(() => this.usuarios().filter((usuario) => usuario.activo && usuario.habilitaSemanal).length);
-  totalSuperUsuariosActivos = computed(() => this.usuarios().filter((usuario) => usuario.activo && usuario.rol === ROLES.SUPER_USUARIO).length);
+  totalConSemanal = computed(
+    () => this.usuarios().filter((usuario) => usuario.activo && usuario.habilitaSemanal).length,
+  );
+  totalSuperUsuariosActivos = computed(
+    () =>
+      this.usuarios().filter((usuario) => usuario.activo && usuario.rol === ROLES.SUPER_USUARIO)
+        .length,
+  );
 
   formularioValido = computed(() => {
     const form = this.formulario();
@@ -148,10 +159,15 @@ export class SemanalUsuarios implements OnInit {
   }
 
   private ordenarListaUsuarios(lista: UsuarioListadoItem[]): UsuarioListadoItem[] {
-    return ordenarPorEstado(lista, this.ordenUsuarios(), (usuario, campo) => this.obtenerValorOrdenUsuario(usuario, campo));
+    return ordenarPorEstado(lista, this.ordenUsuarios(), (usuario, campo) =>
+      this.obtenerValorOrdenUsuario(usuario, campo),
+    );
   }
 
-  private obtenerValorOrdenUsuario(usuario: UsuarioListadoItem, campo: CampoOrdenUsuariosSemanales): ValorOrden {
+  private obtenerValorOrdenUsuario(
+    usuario: UsuarioListadoItem,
+    campo: CampoOrdenUsuariosSemanales,
+  ): ValorOrden {
     return usuario[campo] ?? '';
   }
 
@@ -160,11 +176,18 @@ export class SemanalUsuarios implements OnInit {
   }
 
   esUsuarioActualFormulario(): boolean {
-    return this.modoFormulario() === 'EDITAR' && this.formulario().idUsuario === this.usuarioActual()?.idUsuario;
+    return (
+      this.modoFormulario() === 'EDITAR' &&
+      this.formulario().idUsuario === this.usuarioActual()?.idUsuario
+    );
   }
 
   esUnicoSuperUsuarioActivo(usuario: UsuarioListadoItem): boolean {
-    return usuario.activo && usuario.rol === ROLES.SUPER_USUARIO && this.totalSuperUsuariosActivos() === 1;
+    return (
+      usuario.activo &&
+      usuario.rol === ROLES.SUPER_USUARIO &&
+      this.totalSuperUsuariosActivos() === 1
+    );
   }
 
   puedeCambiarEstado(usuario: UsuarioListadoItem): boolean {
@@ -175,7 +198,8 @@ export class SemanalUsuarios implements OnInit {
 
   motivoBloqueoEstado(usuario: UsuarioListadoItem): string {
     if (this.esUsuarioActual(usuario)) return 'No puedes desactivar tu propio usuario';
-    if (this.esUnicoSuperUsuarioActivo(usuario)) return 'No puedes desactivar el único superusuario activo';
+    if (this.esUnicoSuperUsuarioActivo(usuario))
+      return 'No puedes desactivar el único superusuario activo';
     return usuario.activo ? 'Desactivar usuario' : 'Reactivar usuario';
   }
 
@@ -196,6 +220,11 @@ export class SemanalUsuarios implements OnInit {
   cambiarPaginaUsuarios(pagina: number): void {
     if (pagina < 1 || pagina > this.totalPaginasUsuarios()) return;
     this.paginaUsuarios.set(pagina);
+  }
+
+  cambiarFiltroTodos(valor: boolean): void {
+    this.mostrarTodos.set(valor);
+    this.paginaUsuarios.set(1);
   }
 
   cambiarFiltroInactivos(valor: boolean): void {
@@ -221,7 +250,10 @@ export class SemanalUsuarios implements OnInit {
       },
       error: (error) => {
         this.cargando.set(false);
-        mostrarError('No fue posible cargar administración', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+        mostrarError(
+          'No fue posible cargar administración',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -237,7 +269,10 @@ export class SemanalUsuarios implements OnInit {
       },
       error: (error) => {
         this.cargando.set(false);
-        mostrarError('No fue posible cargar usuarios', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+        mostrarError(
+          'No fue posible cargar usuarios',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -259,7 +294,11 @@ export class SemanalUsuarios implements OnInit {
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
 
-      const exportado = await exportarFilasExcel(filas, 'usuarios_modulo_preliminar.xlsx', 'Usuarios');
+      const exportado = await exportarFilasExcel(
+        filas,
+        'usuarios_modulo_preliminar.xlsx',
+        'Usuarios',
+      );
 
       if (!exportado) mostrarInfo('Sin registros', 'No hay información para exportar.');
     } catch {
@@ -288,7 +327,10 @@ export class SemanalUsuarios implements OnInit {
         this.cargando.set(false);
 
         if (!response.esValido || !response.usuario) {
-          mostrarAdvertencia('Usuario no encontrado', response.mensaje || 'No fue posible obtener el detalle.');
+          mostrarAdvertencia(
+            'Usuario no encontrado',
+            response.mensaje || 'No fue posible obtener el detalle.',
+          );
           return;
         }
 
@@ -298,7 +340,10 @@ export class SemanalUsuarios implements OnInit {
       },
       error: (error) => {
         this.cargando.set(false);
-        mostrarError('No fue posible obtener el usuario', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+        mostrarError(
+          'No fue posible obtener el usuario',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+        );
       },
     });
   }
@@ -311,7 +356,10 @@ export class SemanalUsuarios implements OnInit {
 
   guardarUsuario(): void {
     if (!this.formularioValido()) {
-      mostrarAdvertencia('Formulario incompleto', 'Revise los campos obligatorios antes de guardar.');
+      mostrarAdvertencia(
+        'Formulario incompleto',
+        'Revise los campos obligatorios antes de guardar.',
+      );
       return;
     }
 
@@ -339,7 +387,10 @@ export class SemanalUsuarios implements OnInit {
     this.confirmarReactivacion(usuario);
   }
 
-  actualizarCampo<K extends keyof UsuarioSemanalForm>(campo: K, valor: UsuarioSemanalForm[K]): void {
+  actualizarCampo<K extends keyof UsuarioSemanalForm>(
+    campo: K,
+    valor: UsuarioSemanalForm[K],
+  ): void {
     this.formulario.update((actual) => ({ ...actual, [campo]: valor }));
 
     if (campo === 'rol') this.normalizarPermisosPorRol(valor as string);
@@ -397,7 +448,8 @@ export class SemanalUsuarios implements OnInit {
     this.guardando.set(true);
 
     this.usuariosService.editarUsuarioSemanal(form.idUsuario, request).subscribe({
-      next: (response) => this.procesarGuardadoCorrecto(response, 'Usuario actualizado correctamente.'),
+      next: (response) =>
+        this.procesarGuardadoCorrecto(response, 'Usuario actualizado correctamente.'),
       error: (error) => this.procesarErrorOperacion(error, 'No fue posible editar el usuario.'),
     });
   }
@@ -415,7 +467,8 @@ export class SemanalUsuarios implements OnInit {
           mostrarExitoInstitucional('Usuario desactivado');
           this.cargarUsuarios();
         },
-        error: (error) => this.procesarErrorOperacion(error, 'No fue posible desactivar el usuario.'),
+        error: (error) =>
+          this.procesarErrorOperacion(error, 'No fue posible desactivar el usuario.'),
       });
     });
   }
@@ -428,22 +481,28 @@ export class SemanalUsuarios implements OnInit {
     ).then((result) => {
       if (!result.isConfirmed) return;
 
-      this.usuariosService.reactivarUsuarioSemanal(usuario.idUsuario, {
-        habilitaSemanal: usuario.habilitaSemanal,
-        habilitaCargaSemanal: usuario.habilitaCargaSemanal,
-        habilitaModificacionSemanal: usuario.habilitaModificacionSemanal,
-        administraDelitosSemanal: usuario.administraDelitosSemanal,
-      }).subscribe({
-        next: () => {
-          mostrarExitoInstitucional('Usuario reactivado');
-          this.cargarUsuarios();
-        },
-        error: (error) => this.procesarErrorOperacion(error, 'No fue posible reactivar el usuario.'),
-      });
+      this.usuariosService
+        .reactivarUsuarioSemanal(usuario.idUsuario, {
+          habilitaSemanal: usuario.habilitaSemanal,
+          habilitaCargaSemanal: usuario.habilitaCargaSemanal,
+          habilitaModificacionSemanal: usuario.habilitaModificacionSemanal,
+          administraDelitosSemanal: usuario.administraDelitosSemanal,
+        })
+        .subscribe({
+          next: () => {
+            mostrarExitoInstitucional('Usuario reactivado');
+            this.cargarUsuarios();
+          },
+          error: (error) =>
+            this.procesarErrorOperacion(error, 'No fue posible reactivar el usuario.'),
+        });
     });
   }
 
-  private procesarGuardadoCorrecto(response: UsuarioOperacionResponse, mensajeDefault: string): void {
+  private procesarGuardadoCorrecto(
+    response: UsuarioOperacionResponse,
+    mensajeDefault: string,
+  ): void {
     this.guardando.set(false);
     mostrarExitoInstitucional(response.mensaje || mensajeDefault);
     this.cerrarModal();
@@ -522,9 +581,16 @@ export class SemanalUsuarios implements OnInit {
     this.formulario.update((actual) => ({
       ...actual,
       idEntidadFederativa: rol === ROLES.SUPER_USUARIO ? '' : actual.idEntidadFederativa,
-      habilitaCargaSemanal: actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
-      habilitaModificacionSemanal: actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaModificacionSemanal : false,
-      administraDelitosSemanal: actual.habilitaSemanal && rol === ROLES.SUPER_USUARIO ? actual.administraDelitosSemanal : false,
+      habilitaCargaSemanal:
+        actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
+      habilitaModificacionSemanal:
+        actual.habilitaSemanal && rol !== ROLES.CONSULTA
+          ? actual.habilitaModificacionSemanal
+          : false,
+      administraDelitosSemanal:
+        actual.habilitaSemanal && rol === ROLES.SUPER_USUARIO
+          ? actual.administraDelitosSemanal
+          : false,
     }));
   }
 
