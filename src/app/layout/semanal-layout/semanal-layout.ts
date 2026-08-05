@@ -16,6 +16,7 @@ export class SemanalLayout {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  menuAbierto = signal(false);
   cargaAbierta = signal(false);
   administracionAbierta = signal(false);
   informesAbiertos = signal(false);
@@ -54,6 +55,18 @@ export class SemanalLayout {
   puedeCambiarAModuloConsolidado = computed(() =>
     this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'MENSUAL'),
   );
+
+  toggleMenu(): void {
+    this.menuAbierto.update((valor) => !valor);
+  }
+
+  cerrarMenu(): void {
+    this.menuAbierto.set(false);
+  }
+
+  cerrarMenuSiEsNavegacion(event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('a')) this.cerrarMenu();
+  }
 
   toggleCarga(): void {
     this.cargaAbierta.update((valor) => !valor);

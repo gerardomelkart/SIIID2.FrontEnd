@@ -1,8 +1,12 @@
 <div class="siiid-shell">
-  <app-topbar></app-topbar>
+  <app-topbar [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
 
   <div class="siiid-body">
-    <app-sidebar></app-sidebar>
+    @if (menuAbierto()) {
+    <button type="button" class="menu-backdrop" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
+    }
+
+    <app-sidebar id="siiid-navigation" [class.mobile-open]="menuAbierto()" (click)="cerrarMenuSiEsNavegacion($event)"></app-sidebar>
 
     <main class="siiid-main">
       <section class="siiid-content">

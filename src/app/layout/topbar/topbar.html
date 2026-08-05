@@ -1,3 +1,7 @@
 <header class="topbar">
+  <button type="button" class="topbar-menu" [attr.aria-expanded]="menuAbierto" aria-controls="siiid-navigation" [attr.aria-label]="menuAbierto ? 'Cerrar menú' : 'Abrir menú'" (click)="menuToggle.emit()">
+    <i class="fa-solid" [class.fa-bars]="!menuAbierto" [class.fa-xmark]="menuAbierto"></i>
+  </button>
+
   <img src="img/LogoSEGURIDAD2.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo" class="topbar-logo">
 </header>

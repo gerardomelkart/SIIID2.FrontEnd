@@ -1,5 +1,5 @@
 .topbar {
-  height: 90px;
+  height: var(--siiid-topbar-height);
   background: var(--siiid-guinda);
   display: flex;
   align-items: center;
@@ -7,8 +7,64 @@
   overflow: hidden;
 }
 
+.topbar-menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.topbar-menu:hover,
+.topbar-menu:focus-visible {
+  background: rgba(255, 255, 255, .14);
+}
+
 .topbar-logo {
   height: 88px;
   width: auto;
   display: block;
+}
+
+@media (max-width: 991.98px) {
+  .topbar {
+    gap: 14px;
+    padding: 0 16px;
+  }
+
+  .topbar-menu {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: flex;
+    font-size: 22px;
+  }
+
+  .topbar-logo {
+    max-width: calc(100% - 58px);
+    object-fit: contain;
+    object-position: left center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .topbar {
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .topbar-menu {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 20px;
+  }
+
+  .topbar-logo {
+    max-width: calc(100% - 50px);
+  }
 }

@@ -1,6 +1,6 @@
 .sidebar {
   width: 318px;
-  min-height: calc(100vh - 90px);
+  min-height: calc(100vh - var(--siiid-topbar-height));
   background: #ffffff;
   border-top: 5px solid var(--siiid-dorado);
   border-right: 1px solid #e5e5e5;
@@ -207,4 +207,18 @@
 
 .level-3::after {
   left: 42px;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar {
+    width: 100%;
+    min-height: 100%;
+    border-right: 0;
+  }
+
+  .menu-link {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
 }

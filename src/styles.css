@@ -10,6 +10,7 @@
   --siiid-text: #222222;
   --siiid-muted: #6c757d;
   --siiid-border: #dddddd;
+  --siiid-topbar-height: 90px;
 }
 
 body {
