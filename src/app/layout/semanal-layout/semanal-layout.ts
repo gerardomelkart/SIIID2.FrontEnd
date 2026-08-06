@@ -52,7 +52,7 @@ export class SemanalLayout implements OnInit {
     this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'MENSUAL'),
   );
 
-    ngOnInit(): void {
+  ngOnInit(): void {
     if (this.usuario()?.rol !== ROLES.ENLACE_ESTATAL) return;
 
     this.notificacionesService.consumirSemanal().subscribe({
