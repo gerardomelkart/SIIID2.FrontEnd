@@ -124,14 +124,69 @@
 
 @media (max-width: 680px) {
   .modulo-page {
-    padding-top: 35px;
+    min-height: 100dvh;
+    padding: 28px 16px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-position: center bottom;
+  }
+
+  .modulo-logo {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 76px;
+    margin-bottom: 28px;
+    object-fit: contain;
+  }
+
+  .modulo-panel {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px 16px;
+    border-top-width: 7px;
+  }
+
+  .modulo-panel h1 {
+    font-size: 25px;
+    line-height: 1.15;
+  }
+
+  .usuario {
+    margin: 8px 0 22px;
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   .modulo-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
-  .modulo-panel {
-    padding: 24px 18px;
+  .modulo-card {
+    min-height: 0;
+    padding: 20px 16px;
+  }
+
+  .modulo-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 14px;
+    font-size: 24px;
+  }
+
+  .modulo-card strong {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .modulo-card > span:last-child {
+    line-height: 1.4;
+  }
+
+  .cerrar-sesion {
+    min-height: 42px;
+    margin-top: 24px;
   }
 }
