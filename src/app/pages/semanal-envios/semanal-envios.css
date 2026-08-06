@@ -2,9 +2,21 @@
   min-width: 980px;
 }
 
+.envios-table-responsive {
+  min-height: 400px;
+  overflow-y: hidden;
+}
+
 .corte-selector .corte-selector-controls select {
   width: 210px !important;
   min-width: 210px;
+}
+
+.motivo-rechazo {
+  z-index: 30;
+  width: 520px;
+  max-width: calc(100vw - 70px);
+  white-space: normal;
 }
 
 .reporte-table thead th.sortable:hover {
