@@ -2,9 +2,25 @@
 <div class="row g-4">
   <div class="col-xl-8">
     <div class="siiid-card">
-      <div class="siiid-card-header">
-        <i class="fa-solid fa-arrows-rotate"></i>
-        Actualizar información, incidencia delictiva
+      <div class="siiid-card-header d-flex align-items-center">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+
+        <span>
+          {{ estadoPeriodo() === 'VALIDADO_ADVERTENCIA'
+          ? 'Detalle de advertencias'
+          : 'Detalle de inconsistencias' }}
+        </span>
+
+        <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
+          (click)="descargarValidacion()">
+          @if (exportandoValidacion()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Descargando...
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          Descargar errores/advertencias
+          }
+        </button>
       </div>
 
       <div class="update-message">

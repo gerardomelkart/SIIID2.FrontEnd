@@ -3,7 +3,8 @@
     <div>
       <span>Módulo preliminar</span>
       <h1>Integración acumulativa de incidencia delictiva</h1>
-      <p>Cargue los tres archivos acumulados del mes en curso; el sistema identificará internamente la información nueva y la que reemplaza versiones preliminares anteriores.</p>
+      <p>Cargue los tres archivos acumulados del mes en curso; el sistema identificará internamente la información nueva
+        y la que reemplaza versiones preliminares anteriores.</p>
     </div>
 
     @if (mostrandoResultado()) {
@@ -18,9 +19,20 @@
   <div class="row g-4 mt-1">
     <div class="col-xl-8">
       <section class="siiid-card carga-card">
-        <div class="siiid-card-header carga-card-header">
-          <i class="fa-solid fa-calendar-week"></i>
-          Archivos de la operación acumulativa
+        <div class="siiid-card-header carga-card-header d-flex align-items-center">
+          <i class="fa-solid fa-list-ul"></i>
+          <span>Detalle de errores y advertencias</span>
+
+          <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
+            (click)="descargarValidacion()">
+            @if (exportandoValidacion()) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Descargando...
+            } @else {
+            <i class="fa-solid fa-file-excel"></i>
+            Descargar errores/advertencias
+            }
+          </button>
         </div>
 
         <div class="carga-contenido">
@@ -96,7 +108,8 @@
             </div>
 
             @if (tramo.semanaCortada) {
-            <em>Durante el cruce de mes, la API asignará internamente cada registro al corte mensual que corresponda.</em>
+            <em>Durante el cruce de mes, la API asignará internamente cada registro al corte mensual que
+              corresponda.</em>
             }
           </div>
           }
@@ -259,7 +272,8 @@
 
             <div>
               <strong>Procesamiento acumulativo</strong>
-              <span>La información anterior del mismo periodo se reemplazará de forma versionada y los registros nuevos se integrarán al preliminar mensual.</span>
+              <span>La información anterior del mismo periodo se reemplazará de forma versionada y los registros nuevos
+                se integrarán al preliminar mensual.</span>
             </div>
           </div>
         </div>
@@ -328,7 +342,8 @@
 
     <div>
       <span>Ventana procesada</span>
-      <strong>{{ formatearFecha(ventana.fechaMinimaPermitida) }} al {{ formatearFecha(ventana.fechaMaximaPermitida) }}</strong>
+      <strong>{{ formatearFecha(ventana.fechaMinimaPermitida) }} al {{ formatearFecha(ventana.fechaMaximaPermitida)
+        }}</strong>
     </div>
   </section>
   }
@@ -473,7 +488,8 @@
     } @else if (advertencias().length > 0) {
     <div>
       <strong>Revise las advertencias antes de continuar.</strong>
-      <span>Puede cancelar la operación para corregir la información o continuar aceptando las advertencias mostradas.</span>
+      <span>Puede cancelar la operación para corregir la información o continuar aceptando las advertencias
+        mostradas.</span>
     </div>
 
     <div class="botones-confirmacion">
@@ -507,8 +523,7 @@
       <span>La operación permanece pendiente; vuelva a intentarlo para continuar.</span>
     </div>
 
-    <button type="button" class="btn btn-siiid"
-      [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
+    <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
       (click)="reintentarRevision()">
       @if (cargandoAcusePrevio() || cargandoDiferencias()) {
       <i class="fa-solid fa-spinner fa-spin"></i>

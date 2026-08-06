@@ -4,6 +4,7 @@ import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.model
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 
 import {
   mostrarAdvertencia,
@@ -114,6 +115,7 @@ export class Actualizacion implements OnInit {
   cargandoDiferencias = signal(false);
   generandoAcusePrevio = signal(false);
   procesandoConfirmacion = signal(false);
+  exportandoValidacion = signal(false);
   mensajeConfirmacion = signal('');
 
   acusePrevioUrl = signal<SafeResourceUrl | null>(null);
@@ -699,6 +701,40 @@ export class Actualizacion implements OnInit {
 
   esMovimientoNuevo(tipoMovimiento: string): boolean {
     return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
+  }
+
+  async descargarValidacion(): Promise<void> {
+    if (this.detallesValidacion().length === 0 || this.exportandoValidacion()) {
+      return;
+    }
+
+    this.exportandoValidacion.set(true);
+
+    try {
+      const periodo =
+        this.anioCorte() && this.mesCorte()
+          ? `${this.anioCorte()}_${this.mesCorte().padStart(2, '0')}`
+          : 'sin_periodo';
+
+      const referencia = this.codigoReferenciaOperacion() || periodo;
+
+      const exportado = await exportarValidacionExcel(
+        this.errores(),
+        this.advertencias(),
+        `validacion_actualizacion_${referencia}`,
+      );
+
+      if (!exportado) {
+        void mostrarAdvertencia(
+          'Sin resultados para descargar',
+          'La validación no contiene errores ni advertencias.',
+        );
+      }
+    } catch {
+      mostrarError('No fue posible descargar la validación', 'Intente nuevamente.');
+    } finally {
+      this.exportandoValidacion.set(false);
+    }
   }
 
   prepararNuevaValidacion(): void {

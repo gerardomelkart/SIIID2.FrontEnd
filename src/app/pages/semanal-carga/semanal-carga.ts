@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   CargaValidacionError,
@@ -22,7 +23,11 @@ import {
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
-import { mostrarError, mostrarExitoInstitucional, mostrarAdvertencia } from '../../core/utils/alert.utils';
+import {
+  mostrarError,
+  mostrarExitoInstitucional,
+  mostrarAdvertencia,
+} from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { finalize } from 'rxjs';
@@ -152,6 +157,7 @@ export class SemanalCarga implements OnInit {
   diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
   cargandoDiferencias = signal(false);
   validandoSemana = signal(false);
+  exportandoValidacion = signal(false);
   estadoSemana = signal<SemanalSemanaDisponibilidadResponse | null>(null);
   errorSemana = signal('');
   private solicitudValidacionSemana = 0;
@@ -285,6 +291,42 @@ export class SemanalCarga implements OnInit {
     this.archivos.set(crearArchivosCargaVacios());
     this.formulario.update((actual) => ({ ...actual, semanaSeleccionada: '' }));
     this.limpiarResultado();
+  }
+
+  async descargarValidacion(): Promise<void> {
+    if (this.detallesValidacion().length === 0 || this.exportandoValidacion()) {
+      return;
+    }
+
+    this.exportandoValidacion.set(true);
+
+    try {
+      const periodo = this.respuesta()?.periodo;
+
+      const periodoTexto = periodo
+        ? `${periodo.anioCorte}_${periodo.mesCorte.toString().padStart(2, '0')}`
+        : 'sin_periodo';
+
+      const referencia = this.codigoReferenciaOperacion() || periodoTexto;
+      const operacion = this.esActualizacion ? 'actualizacion' : 'carga';
+
+      const exportado = await exportarValidacionExcel(
+        this.errores(),
+        this.advertencias(),
+        `validacion_preliminar_${operacion}_${referencia}`,
+      );
+
+      if (!exportado) {
+        void mostrarAdvertencia(
+          'Sin resultados para descargar',
+          'La validación no contiene errores ni advertencias.',
+        );
+      }
+    } catch {
+      mostrarError('No fue posible descargar la validación', 'Intente nuevamente.');
+    } finally {
+      this.exportandoValidacion.set(false);
+    }
   }
 
   actualizarCampo<K extends keyof SemanalCargaFormulario>(
@@ -491,11 +533,12 @@ export class SemanalCarga implements OnInit {
     this.abrirAcusePrevio(codigoReferencia);
   }
 
-    continuarConAdvertencias(): void {
+  continuarConAdvertencias(): void {
     const response = this.respuesta();
     const codigoReferencia = response?.codigoReferencia?.trim();
 
-    if (!response?.esValido || (response.advertencias?.length ?? 0) === 0 || !codigoReferencia) return;
+    if (!response?.esValido || (response.advertencias?.length ?? 0) === 0 || !codigoReferencia)
+      return;
 
     if (response.tipoCarga === 'ACTUALIZACION') {
       this.prepararRevisionDiferencias(codigoReferencia);
@@ -857,7 +900,6 @@ export class SemanalCarga implements OnInit {
     this.acusePrevioUrl.set(null);
     this.cargandoAcusePrevio.set(false);
   }
-
 
   private limpiarResultado(): void {
     if (

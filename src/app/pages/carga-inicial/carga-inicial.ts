@@ -13,6 +13,7 @@ import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/h
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { CargaService } from '../../core/services/carga.service';
 import { catchError, map, of, switchMap } from 'rxjs';
+import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 import {
   CargaValidacionResponse,
   CargaValidacionResumenItem,
@@ -55,6 +56,7 @@ export class CargaInicial {
   archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
 
   cargandoAcusePrevio = signal(false);
+  exportandoValidacion = signal(false);
 
   private acusePrevioObjectUrl: string | null = null;
   private acuseConfirmadoObjectUrl: string | null = null;
@@ -377,6 +379,35 @@ export class CargaInicial {
           );
         },
       });
+  }
+
+  async descargarValidacion(): Promise<void> {
+    if (this.detallesValidacion().length === 0 || this.exportandoValidacion()) {
+      return;
+    }
+
+    this.exportandoValidacion.set(true);
+
+    try {
+      const referencia = this.codigoReferenciaOperacion() || 'sin_referencia';
+
+      const exportado = await exportarValidacionExcel(
+        this.errores(),
+        this.advertencias(),
+        `validacion_carga_${referencia}`,
+      );
+
+      if (!exportado) {
+        void mostrarAdvertencia(
+          'Sin resultados para descargar',
+          'La validación no contiene errores ni advertencias.',
+        );
+      }
+    } catch {
+      mostrarError('No fue posible descargar la validación', 'Intente nuevamente.');
+    } finally {
+      this.exportandoValidacion.set(false);
+    }
   }
 
   prepararNuevaValidacion(): void {
