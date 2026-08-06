@@ -283,6 +283,11 @@
       <table class="table table-sm reporte-table">
         <thead>
           <tr>
+            <th class="sortable" (click)="ordenarCargasPor('ordenCarga')">
+              Ranking
+              <i [class]="iconoOrdenCargas('ordenCarga')"></i>
+            </th>
+
             <th class="sortable" (click)="ordenarCargasPor('entidadFederativa')">
               Entidad federativa
               <i [class]="iconoOrdenCargas('entidadFederativa')"></i>
@@ -301,11 +306,6 @@
             <th class="sortable" (click)="ordenarCargasPor('intentos')">
               Intentos
               <i [class]="iconoOrdenCargas('intentos')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('ordenCarga')">
-              Ranking
-              <i [class]="iconoOrdenCargas('ordenCarga')"></i>
             </th>
 
             <th class="sortable" (click)="ordenarCargasPor('estatusUltimoIntento')">
@@ -328,17 +328,18 @@
         <tbody>
           @for (carga of cargasPaginadas(); track carga.idEntidadFederativa) {
           <tr>
+            <td>
+              <span class="folio-chip">
+                {{ ordenCarga(carga) }}
+              </span>
+            </td>
             <td>{{ carga.entidadFederativa }}</td>
             <td>{{ carga.claveEntidad }}</td>
             <td>{{ carga.corte }}</td>
             <td>
               <span class="intentos-chip">{{ carga.intentos }}</span>
             </td>
-            <td>
-              <span class="folio-chip">
-                {{ ordenCarga(carga) }}
-              </span>
-            </td>
+
             <td>
               <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
                 [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"

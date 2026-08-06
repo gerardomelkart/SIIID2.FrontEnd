@@ -93,18 +93,12 @@ export class SemanalReporteCargas implements OnInit {
       if (periodoSeleccionado) {
         const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
 
-        if (
-          carga.anioCorte !== Number(anioTexto) ||
-          carga.mesCorte !== Number(mesTexto)
-        ) {
+        if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) {
           return false;
         }
       }
 
-      if (
-        idUsuarioSeleccionado &&
-        carga.idUsuarioCarga !== idUsuarioSeleccionado
-      ) {
+      if (idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado) {
         return false;
       }
 
@@ -226,11 +220,7 @@ export class SemanalReporteCargas implements OnInit {
   esEstatusError(estatus: string | null): boolean {
     const valor = this.normalizarTexto(estatus);
 
-    return (
-      valor.includes('RECHAZADO') ||
-      valor.includes('ERROR') ||
-      valor.includes('EXPIRADO')
-    );
+    return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
   }
 
   ordenCarga(carga: SemanalReporteCargaItem): string {
@@ -242,13 +232,13 @@ export class SemanalReporteCargas implements OnInit {
     this.exportandoExcel.set(true);
 
     try {
-      const filas = this.cargasFiltradas().map((carga) => ({
+      const filas = this.obtenerCargasExportacion().map((carga) => ({
+        Ranking: this.obtenerOrdenCarga(carga) ?? '',
+        Usuario: carga.usuarioCarga,
         'Entidad federativa': carga.entidadFederativa,
         'Cve. entidad': carga.claveEntidad,
-        Usuario: carga.usuarioCarga,
         Periodo: this.periodoTexto(carga),
         Intentos: carga.intentos,
-        Ranking: this.obtenerOrdenCarga(carga) ?? '',
         Estatus: this.etiquetaEstatus(carga),
         'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
         'Fecha de aprobación': carga.fechaAprobacionTexto || '',
@@ -273,6 +263,57 @@ export class SemanalReporteCargas implements OnInit {
     }
   }
 
+  private obtenerCargasExportacion(): SemanalReporteCargaItem[] {
+    const texto = this.busqueda().trim().toLowerCase();
+    const periodoSeleccionado = this.periodoSeleccionado();
+    const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
+
+    return this.cargas()
+      .filter((carga) => {
+        if (carga.claveEntidad === '00') return false;
+
+        if (periodoSeleccionado) {
+          const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+
+          if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) {
+            return false;
+          }
+        }
+
+        if (idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado) {
+          return false;
+        }
+
+        if (!texto) return true;
+
+        return (
+          carga.entidadFederativa.toLowerCase().includes(texto) ||
+          carga.claveEntidad.toLowerCase().includes(texto) ||
+          carga.usuarioCarga.toLowerCase().includes(texto) ||
+          this.periodoTexto(carga).toLowerCase().includes(texto) ||
+          (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+          (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
+          (carga.ultimoIntento ?? '').toLowerCase().includes(texto)
+        );
+      })
+      .sort((a, b) => {
+        const rankingA = this.obtenerOrdenCarga(a) ?? Number.MAX_SAFE_INTEGER;
+        const rankingB = this.obtenerOrdenCarga(b) ?? Number.MAX_SAFE_INTEGER;
+
+        if (rankingA !== rankingB) return rankingA - rankingB;
+
+        const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+          sensitivity: 'base',
+        });
+
+        if (entidad !== 0) return entidad;
+
+        return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
+          sensitivity: 'base',
+        });
+      });
+  }
+
   private obtenerOrdenCarga(carga: SemanalReporteCargaItem): number | null {
     if (!carga.fechaCargaExitosa) return null;
 
@@ -290,19 +331,13 @@ export class SemanalReporteCargas implements OnInit {
 
         if (fechaA !== fechaB) return fechaA - fechaB;
 
-        const entidad = a.entidadFederativa.localeCompare(
-          b.entidadFederativa,
-          'es',
-          { sensitivity: 'base' },
-        );
+        const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+          sensitivity: 'base',
+        });
 
         if (entidad !== 0) return entidad;
 
-        return a.usuarioCarga.localeCompare(
-          b.usuarioCarga,
-          'es',
-          { sensitivity: 'base' },
-        );
+        return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', { sensitivity: 'base' });
       });
 
     const indice = cargasOrdenadas.findIndex(
@@ -316,10 +351,7 @@ export class SemanalReporteCargas implements OnInit {
     return indice >= 0 ? indice + 1 : null;
   }
 
-  private obtenerValorOrden(
-    carga: SemanalReporteCargaItem,
-    campo: CampoOrden,
-  ): ValorOrden {
+  private obtenerValorOrden(carga: SemanalReporteCargaItem, campo: CampoOrden): ValorOrden {
     switch (campo) {
       case 'entidadFederativa':
         return carga.entidadFederativa;
@@ -346,8 +378,7 @@ export class SemanalReporteCargas implements OnInit {
     const mapa = new Map<string, PeriodoReporte>();
 
     for (const registro of registros) {
-      const clave =
-        `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
+      const clave = `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
 
       if (!mapa.has(clave)) {
         mapa.set(clave, {
@@ -360,10 +391,7 @@ export class SemanalReporteCargas implements OnInit {
     }
 
     const periodos = Array.from(mapa.values()).sort(
-      (a, b) =>
-        b.anioCorte * 100 +
-        b.mesCorte -
-        (a.anioCorte * 100 + a.mesCorte),
+      (a, b) => b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte),
     );
 
     this.periodos.set(periodos);
@@ -391,11 +419,6 @@ export class SemanalReporteCargas implements OnInit {
   }
 
   private normalizarTexto(valor: string | null | undefined): string {
-    return (valor ?? '')
-      .toString()
-      .trim()
-      .toUpperCase()
-      .replaceAll('-', '_')
-      .replace(/\s+/g, '_');
+    return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
   }
 }

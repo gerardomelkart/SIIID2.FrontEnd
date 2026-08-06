@@ -468,12 +468,12 @@ export class Informes implements OnInit {
         return;
       }
 
-      const filas = this.cargasFiltradas().map((carga) => ({
+      const filas = this.obtenerCargasExportacion().map((carga) => ({
+        Ranking: this.obtenerOrdenCarga(carga) ?? '',
         'Entidad federativa': carga.entidadFederativa,
         'Cve. entidad': carga.claveEntidad,
         Periodo: carga.corte,
         Intentos: carga.intentos,
-        Ranking: this.obtenerOrdenCarga(carga) ?? '',
         Estatus: this.etiquetaEstatusCarga(carga),
         'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
         'Fecha de aprobación': carga.fechaAprobacionTexto || '',
@@ -699,6 +699,36 @@ export class Informes implements OnInit {
     const orden = this.obtenerOrdenCarga(carga);
 
     return orden ? `${orden}°` : '-';
+  }
+
+  private obtenerCargasExportacion(): InformeReporteCargaItem[] {
+    const texto = this.busquedaCargas().trim().toLowerCase();
+    const corte = this.corteOperativo();
+
+    return this.cargas()
+      .filter((carga) => {
+        if (carga.claveEntidad === '00') return false;
+        if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) return false;
+        if (!texto) return true;
+
+        return (
+          carga.entidadFederativa.toLowerCase().includes(texto) ||
+          carga.claveEntidad.toLowerCase().includes(texto) ||
+          carga.corte.toLowerCase().includes(texto) ||
+          (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+          (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
+        );
+      })
+      .sort((a, b) => {
+        const rankingA = this.obtenerOrdenCarga(a) ?? Number.MAX_SAFE_INTEGER;
+        const rankingB = this.obtenerOrdenCarga(b) ?? Number.MAX_SAFE_INTEGER;
+
+        if (rankingA !== rankingB) return rankingA - rankingB;
+
+        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+          sensitivity: 'base',
+        });
+      });
   }
 
   private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {

@@ -80,6 +80,12 @@
       <table class="table table-sm reporte-table semanal-envios-table">
         <thead>
           <tr>
+
+            <th class="sortable" (click)="ordenarPor('ordenCarga')">
+              Ranking
+              <i [class]="iconoOrden('ordenCarga')"></i>
+            </th>
+
             <th class="sortable" (click)="ordenarPor('entidadFederativa')">
               Entidad federativa
               <i [class]="iconoOrden('entidadFederativa')"></i>
@@ -105,10 +111,7 @@
               <i [class]="iconoOrden('intentos')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarPor('ordenCarga')">
-              Ranking
-              <i [class]="iconoOrden('ordenCarga')"></i>
-            </th>
+
 
             <th class="sortable" (click)="ordenarPor('estatusUltimoIntento')">
               Estatus
@@ -133,6 +136,9 @@
           track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.anioCorte + '-' + carga.mesCorte
           ) {
           <tr>
+            <td>
+              <span class="folio-chip">{{ ordenCarga(carga) }}</span>
+            </td>
             <td>{{ carga.entidadFederativa }}</td>
             <td>{{ carga.claveEntidad }}</td>
 
@@ -146,9 +152,7 @@
               <span class="intentos-chip">{{ carga.intentos }}</span>
             </td>
 
-            <td>
-              <span class="folio-chip">{{ ordenCarga(carga) }}</span>
-            </td>
+
 
             <td>
               <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
