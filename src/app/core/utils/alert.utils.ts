@@ -81,3 +81,19 @@ export function mostrarAdvertenciaHtml(title: string, html: string): Promise<Swe
     confirmButtonColor: obtenerColorPrimario(),
   });
 }
+
+export function mostrarNotificacionRechazo(cantidad: number): Promise<SweetAlertResult> {
+  const esPlural = cantidad > 1;
+
+  return Swal.fire({
+    icon: 'warning',
+    title: esPlural ? 'Cargas rechazadas' : 'Carga rechazada',
+    text: esPlural
+      ? `El administrador rechazó ${cantidad} de tus cargas. Revisa las observaciones en Consultar Envíos para realizar las correcciones.`
+      : 'Tu carga fue rechazada por el administrador. Revisa la observación en Consultar Envíos para realizar las correcciones.',
+    showCancelButton: true,
+    confirmButtonText: 'Ver reporte de envíos',
+    cancelButtonText: 'Cerrar',
+    confirmButtonColor: obtenerColorPrimario(),
+  });
+}

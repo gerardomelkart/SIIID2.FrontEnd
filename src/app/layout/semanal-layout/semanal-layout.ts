@@ -1,8 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ROLES } from '../../core/constants/roles.constants';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificacionesRechazosService } from '../../core/services/notificaciones-rechazos.service';
 import { SessionService } from '../../core/services/session.service';
+import { mostrarNotificacionRechazo } from '../../core/utils/alert.utils';
 import { Topbar } from '../topbar/topbar';
 
 @Component({
@@ -11,9 +13,10 @@ import { Topbar } from '../topbar/topbar';
   templateUrl: './semanal-layout.html',
   styleUrls: ['../main-layout/main-layout.css', '../sidebar/sidebar.css', './semanal-layout.css'],
 })
-export class SemanalLayout {
+export class SemanalLayout implements OnInit {
   private readonly sessionService = inject(SessionService);
   private readonly authService = inject(AuthService);
+  private readonly notificacionesService = inject(NotificacionesRechazosService);
   private readonly router = inject(Router);
 
   menuAbierto = signal(false);
@@ -48,6 +51,21 @@ export class SemanalLayout {
   puedeCambiarAModuloConsolidado = computed(() =>
     this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'MENSUAL'),
   );
+
+    ngOnInit(): void {
+    if (this.usuario()?.rol !== ROLES.ENLACE_ESTATAL) return;
+
+    this.notificacionesService.consumirSemanal().subscribe({
+      next: (response) => {
+        if (!response.hayNotificacion) return;
+
+        void mostrarNotificacionRechazo(response.cantidad).then((resultado) => {
+          if (resultado.isConfirmed) void this.router.navigateByUrl('/semanal/informes/envios');
+        });
+      },
+      error: () => undefined,
+    });
+  }
 
   toggleMenu(): void {
     this.menuAbierto.update((valor) => !valor);
