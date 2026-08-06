@@ -407,6 +407,16 @@ export class Informes implements OnInit {
     return tipoCarga.replaceAll('_', ' ');
   }
 
+    verMotivoRechazo(envio: InformeEnvioItem): void {
+    const detalles = [
+      envio.motivoRechazo?.trim() || 'Sin motivo registrado.',
+      envio.usuarioRechazo ? `Rechazado por: ${envio.usuarioRechazo}.` : '',
+      envio.fechaRechazoTexto ? `Fecha: ${envio.fechaRechazoTexto}.` : '',
+    ].filter((detalle) => detalle.length > 0).join(' ');
+
+    void mostrarAdvertencia('Motivo del rechazo', detalles);
+  }
+
   verAcuse(envio: InformeEnvioItem): void {
     if (!envio.endpointAcuse) {
       mostrarAdvertencia(

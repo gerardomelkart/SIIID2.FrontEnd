@@ -7,12 +7,6 @@
   min-width: 210px;
 }
 
-.motivo-rechazo {
-  z-index: 30;
-  width: min(360px, 80vw);
-  white-space: normal;
-}
-
 .reporte-table thead th.sortable:hover {
   background: #19463c !important;
 }
