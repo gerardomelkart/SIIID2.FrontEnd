@@ -61,7 +61,10 @@ export class SemanalReporteCargas implements OnInit {
 
   paginaActual = signal(1);
   tamanioPagina = 10;
-  orden = signal<EstadoOrden<CampoOrden> | null>(null);
+  orden = signal<EstadoOrden<CampoOrden> | null>({
+    campo: 'ordenCarga',
+    direccion: 'asc',
+  });
 
   usuariosReporte = computed<UsuarioReporte[]>(() => {
     const mapa = new Map<number, UsuarioReporte>();

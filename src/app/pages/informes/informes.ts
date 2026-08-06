@@ -90,7 +90,10 @@ export class Informes implements OnInit {
   modoPlano = signal<ModoPlanoDescarga>('CONFIRMADO');
 
   ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
-  ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>(null);
+  ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>({
+    campo: 'ordenCarga',
+    direccion: 'asc',
+  });
 
   descargaEnProceso = computed(() => {
     return (
