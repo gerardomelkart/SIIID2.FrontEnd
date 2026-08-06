@@ -30,7 +30,7 @@
       </div>
 
       <nav class="menu">
-        @if (puedeCargar() || puedeModificar()) {
+        @if (puedeCargar()) {
         <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
           <span>
             <i class="fa-solid fa-upload"></i>

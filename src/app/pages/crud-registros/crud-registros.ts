@@ -54,7 +54,6 @@ interface UsuarioForm {
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -447,7 +446,6 @@ export class CrudRegistros implements OnInit {
       habilitaModificacion: form.habilitaModificacion,
       habilitaSemanal: form.habilitaSemanal,
       habilitaCargaSemanal: form.habilitaCargaSemanal,
-      habilitaModificacionSemanal: form.habilitaModificacionSemanal,
       administraDelitosSemanal: form.administraDelitosSemanal,
     };
 
@@ -481,7 +479,6 @@ export class CrudRegistros implements OnInit {
       habilitaModificacion: form.habilitaModificacion,
       habilitaSemanal: form.habilitaSemanal,
       habilitaCargaSemanal: form.habilitaCargaSemanal,
-      habilitaModificacionSemanal: form.habilitaModificacionSemanal,
       administraDelitosSemanal: form.administraDelitosSemanal,
     };
 
@@ -591,7 +588,6 @@ export class CrudRegistros implements OnInit {
       habilitaModificacion: usuario.habilitaModificacion,
       habilitaSemanal: usuario.habilitaSemanal ?? false,
       habilitaCargaSemanal: usuario.habilitaCargaSemanal ?? false,
-      habilitaModificacionSemanal: usuario.habilitaModificacionSemanal ?? false,
       administraDelitosSemanal: usuario.administraDelitosSemanal ?? false,
     };
   }
@@ -615,7 +611,6 @@ export class CrudRegistros implements OnInit {
       habilitaModificacion: true,
       habilitaSemanal: false,
       habilitaCargaSemanal: false,
-      habilitaModificacionSemanal: false,
       administraDelitosSemanal: false,
     };
   }
@@ -643,10 +638,6 @@ export class CrudRegistros implements OnInit {
         actual.habilitaMensual && rol !== ROLES.CONSULTA ? actual.habilitaModificacion : false,
       habilitaCargaSemanal:
         actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
-      habilitaModificacionSemanal:
-        actual.habilitaSemanal && rol !== ROLES.CONSULTA
-          ? actual.habilitaModificacionSemanal
-          : false,
       administraDelitosSemanal:
         actual.habilitaSemanal && rol === ROLES.SUPER_USUARIO
           ? actual.administraDelitosSemanal
@@ -666,7 +657,6 @@ export class CrudRegistros implements OnInit {
     this.formulario.update((actual) => ({
       ...actual,
       habilitaCargaSemanal: false,
-      habilitaModificacionSemanal: false,
       administraDelitosSemanal: false,
     }));
   }

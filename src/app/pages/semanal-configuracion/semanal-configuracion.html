@@ -2,7 +2,7 @@
   <div class="admin-header">
     <div>
       <h1>Configuración de módulos</h1>
-      <p>Control global de carga y actualización, y control individual del acceso al módulo preliminar.</p>
+      <p>Control global de carga y control individual del acceso al módulo preliminar.</p>
     </div>
   </div>
 
@@ -16,25 +16,20 @@
       <div class="config-body">
         <div class="config-info">
           <strong>Aplicación general</strong>
-          <p>Estos switches habilitan o bloquean la carga y la actualización para los usuarios operativos con acceso al
-            módulo preliminar.</p>
+            <p>Este switch habilita o bloquea la carga semanal acumulativa para los usuarios operativos con acceso al módulo preliminar.</p>
         </div>
 
         <div class="config-switch-list">
           <label class="module-switch">
             <div>
               <strong>Carga semanal</strong>
-              <span>Permite integrar archivos correspondientes a una semana.</span>
+              <span>Permite integrar información nueva o reemplazar información previamente confirmada.</span>
             </div>
 
             <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
           </label>
 
           <label class="module-switch">
-            <div>
-              <strong>Actualización semanal</strong>
-              <span>Permite reemplazar información semanal previamente confirmada.</span>
-            </div>
 
             <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
               (ngModelChange)="cambiarModificacionGlobal($event)">
@@ -71,15 +66,10 @@
             <span>{{ totalEntidadesCargaActiva() }}</span>
             Con carga activada
           </div>
-
-          <div>
-            <span>{{ totalEntidadesModificacionActiva() }}</span>
-            Con actualización activada
-          </div>
         </div>
 
         <div class="config-note">
-          Los usuarios de CONSULTA pueden tener acceso al módulo, pero no permisos de carga ni actualización.
+          Los usuarios de CONSULTA pueden tener acceso al módulo, pero no permiso de carga.
         </div>
       </div>
     </section>
@@ -136,10 +126,6 @@
               <i [class]="iconoOrdenEntidades('usuariosCarga')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarEntidadesPor('usuariosModificacion')">
-              Actualización semanal
-              <i [class]="iconoOrdenEntidades('usuariosModificacion')"></i>
-            </th>
 
             <th>Acciones</th>
           </tr>
@@ -194,7 +180,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="5" class="text-center p-4">No se encontraron entidades.</td>
+            <td colspan="4" class="text-center p-4">No se encontraron entidades.</td>
           </tr>
           }
         </tbody>
@@ -241,7 +227,7 @@
   <div class="drawer-body">
     <div class="config-info">
       <strong>Usuarios activos de la entidad</strong>
-      <p>Ajusta acceso, carga y actualización del módulo preliminar. Los permisos mensuales no serán modificados.</p>
+      <p>Ajusta el acceso y la carga del módulo preliminar. Los permisos mensuales no serán modificados.</p>
     </div>
 
     <div class="usuarios-permisos-list">
@@ -256,7 +242,7 @@
           }
 
           @if (usuario.bloqueaOperacion) {
-          <small>El rol CONSULTA no puede cargar ni actualizar.</small>
+          <small>El rol CONSULTA no puede realizar cargas.</small>
           }
         </div>
 

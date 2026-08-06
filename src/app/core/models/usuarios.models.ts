@@ -17,7 +17,6 @@ export interface UsuarioListadoItem {
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
   activo: boolean;
 }
@@ -48,7 +47,6 @@ export interface UsuarioDetalle {
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
   fechaAlta: string;
   fechaModificacion: string;
@@ -72,7 +70,6 @@ export interface CrearUsuarioRequest {
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -93,7 +90,6 @@ export interface EditarUsuarioRequest {
   habilitaModificacion: boolean;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -111,7 +107,6 @@ export interface CrearUsuarioSemanalRequest {
   rol: string;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -129,7 +124,6 @@ export interface EditarUsuarioSemanalRequest {
   rol: string;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -142,7 +136,6 @@ export interface ReactivarUsuarioRequest {
 export interface ReactivarUsuarioSemanalRequest {
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -168,6 +161,5 @@ export interface PermisosGlobalesUsuariosRequest {
 export interface ActualizarPermisosSemanalesRequest {
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }

@@ -48,7 +48,6 @@ interface UsuarioSemanalForm {
   idEntidadFederativa: string;
   habilitaSemanal: boolean;
   habilitaCargaSemanal: boolean;
-  habilitaModificacionSemanal: boolean;
   administraDelitosSemanal: boolean;
 }
 
@@ -60,7 +59,6 @@ type CampoOrdenUsuariosSemanales =
   | 'entidadFederativa'
   | 'habilitaSemanal'
   | 'habilitaCargaSemanal'
-  | 'habilitaModificacionSemanal'
   | 'activo';
 
 @Component({
@@ -289,7 +287,6 @@ export class SemanalUsuarios implements OnInit {
         Entidad: usuario.entidadFederativa || 'Nacional',
         'Acceso preliminar': usuario.habilitaSemanal ? 'Sí' : 'No',
         'Carga semanal': usuario.habilitaCargaSemanal ? 'Sí' : 'No',
-        'Modificación semanal': usuario.habilitaModificacionSemanal ? 'Sí' : 'No',
         'Administra delitos': usuario.administraDelitosSemanal ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
@@ -412,7 +409,6 @@ export class SemanalUsuarios implements OnInit {
       rol: form.rol,
       habilitaSemanal: form.habilitaSemanal,
       habilitaCargaSemanal: form.habilitaCargaSemanal,
-      habilitaModificacionSemanal: form.habilitaModificacionSemanal,
       administraDelitosSemanal: form.administraDelitosSemanal,
     };
 
@@ -441,7 +437,6 @@ export class SemanalUsuarios implements OnInit {
       rol: form.rol,
       habilitaSemanal: form.habilitaSemanal,
       habilitaCargaSemanal: form.habilitaCargaSemanal,
-      habilitaModificacionSemanal: form.habilitaModificacionSemanal,
       administraDelitosSemanal: form.administraDelitosSemanal,
     };
 
@@ -485,7 +480,6 @@ export class SemanalUsuarios implements OnInit {
         .reactivarUsuarioSemanal(usuario.idUsuario, {
           habilitaSemanal: usuario.habilitaSemanal,
           habilitaCargaSemanal: usuario.habilitaCargaSemanal,
-          habilitaModificacionSemanal: usuario.habilitaModificacionSemanal,
           administraDelitosSemanal: usuario.administraDelitosSemanal,
         })
         .subscribe({
@@ -541,7 +535,6 @@ export class SemanalUsuarios implements OnInit {
       idEntidadFederativa: usuario.idEntidadFederativa?.toString() ?? '',
       habilitaSemanal: usuario.habilitaSemanal ?? false,
       habilitaCargaSemanal: usuario.habilitaCargaSemanal ?? false,
-      habilitaModificacionSemanal: usuario.habilitaModificacionSemanal ?? false,
       administraDelitosSemanal: usuario.administraDelitosSemanal ?? false,
     };
   }
@@ -562,7 +555,6 @@ export class SemanalUsuarios implements OnInit {
       idEntidadFederativa: '',
       habilitaSemanal: true,
       habilitaCargaSemanal: true,
-      habilitaModificacionSemanal: true,
       administraDelitosSemanal: false,
     };
   }
@@ -583,10 +575,6 @@ export class SemanalUsuarios implements OnInit {
       idEntidadFederativa: rol === ROLES.SUPER_USUARIO ? '' : actual.idEntidadFederativa,
       habilitaCargaSemanal:
         actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
-      habilitaModificacionSemanal:
-        actual.habilitaSemanal && rol !== ROLES.CONSULTA
-          ? actual.habilitaModificacionSemanal
-          : false,
       administraDelitosSemanal:
         actual.habilitaSemanal && rol === ROLES.SUPER_USUARIO
           ? actual.administraDelitosSemanal
@@ -598,7 +586,6 @@ export class SemanalUsuarios implements OnInit {
     this.formulario.update((actual) => ({
       ...actual,
       habilitaCargaSemanal: false,
-      habilitaModificacionSemanal: false,
       administraDelitosSemanal: false,
     }));
   }

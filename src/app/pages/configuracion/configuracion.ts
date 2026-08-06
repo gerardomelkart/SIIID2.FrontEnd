@@ -532,7 +532,6 @@ export class Configuracion implements OnInit {
       habilitaModificacion,
       habilitaSemanal: usuario.habilitaSemanal,
       habilitaCargaSemanal: usuario.habilitaCargaSemanal,
-      habilitaModificacionSemanal: usuario.habilitaModificacionSemanal,
       administraDelitosSemanal: usuario.administraDelitosSemanal,
     };
   }

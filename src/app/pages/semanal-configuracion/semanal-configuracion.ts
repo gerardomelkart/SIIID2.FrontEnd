@@ -30,8 +30,6 @@ interface ConfiguracionEntidadSemanal {
   totalUsuariosOperativos: number;
   usuariosAcceso: number;
   usuariosCarga: number;
-  usuariosModificacion: number;
-  estadoAcceso: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
   estadoCarga: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
   estadoModificacion: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
 }
@@ -43,10 +41,8 @@ interface UsuarioPermisoEntidadSemanal {
   rol: string;
   habilitaSemanalOriginal: boolean;
   habilitaCargaOriginal: boolean;
-  habilitaModificacionOriginal: boolean;
   habilitaSemanal: boolean;
   habilitaCarga: boolean;
-  habilitaModificacion: boolean;
   administraDelitosSemanal: boolean;
   bloqueaOperacion: boolean;
   esUsuarioActual: boolean;
@@ -56,10 +52,8 @@ type CampoOrdenConfiguracionSemanal =
   | 'entidadFederativa'
   | 'estadoAcceso'
   | 'estadoCarga'
-  | 'estadoModificacion'
   | 'usuariosAcceso'
   | 'usuariosCarga'
-  | 'usuariosModificacion'
   | 'totalUsuarios';
 
 @Component({
@@ -83,7 +77,6 @@ export class SemanalConfiguracion implements OnInit {
   readonly tamanioPaginaEntidades = 10;
 
   habilitaCargaGlobal = signal(true);
-  habilitaModificacionGlobal = signal(true);
 
   ordenEntidades = signal<EstadoOrden<CampoOrdenConfiguracionSemanal> | null>(null);
   entidadSeleccionada = signal<ConfiguracionEntidadSemanal | null>(null);
@@ -114,9 +107,6 @@ export class SemanalConfiguracion implements OnInit {
       const usuariosCarga = usuariosOperativos.filter(
         (usuario) => usuario.habilitaSemanal && usuario.habilitaCargaSemanal,
       ).length;
-      const usuariosModificacion = usuariosOperativos.filter(
-        (usuario) => usuario.habilitaSemanal && usuario.habilitaModificacionSemanal,
-      ).length;
 
       resultado.push({
         idEntidadFederativa: primero.idEntidadFederativa,
@@ -125,13 +115,8 @@ export class SemanalConfiguracion implements OnInit {
         totalUsuariosOperativos: usuariosOperativos.length,
         usuariosAcceso,
         usuariosCarga,
-        usuariosModificacion,
         estadoAcceso: this.obtenerEstadoPermiso(usuariosAcceso, lista.length),
         estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, usuariosOperativos.length),
-        estadoModificacion: this.obtenerEstadoPermiso(
-          usuariosModificacion,
-          usuariosOperativos.length,
-        ),
       });
     });
 
@@ -174,12 +159,6 @@ export class SemanalConfiguracion implements OnInit {
   totalEntidadesCargaActiva = computed(
     () =>
       this.entidadesConfiguracion().filter((entidad) => entidad.estadoCarga === 'ACTIVO').length,
-  );
-
-  totalEntidadesModificacionActiva = computed(
-    () =>
-      this.entidadesConfiguracion().filter((entidad) => entidad.estadoModificacion === 'ACTIVO')
-        .length,
   );
 
   ngOnInit(): void {
@@ -233,10 +212,6 @@ export class SemanalConfiguracion implements OnInit {
     this.habilitaCargaGlobal.set(valor);
   }
 
-  cambiarModificacionGlobal(valor: boolean): void {
-    this.habilitaModificacionGlobal.set(valor);
-  }
-
   etiquetaEstado(estado: 'ACTIVO' | 'INACTIVO' | 'MIXTO'): string {
     if (estado === 'ACTIVO') return 'Activo';
     if (estado === 'INACTIVO') return 'Inactivo';
@@ -254,8 +229,6 @@ export class SemanalConfiguracion implements OnInit {
         'Usuarios con acceso': `${entidad.usuariosAcceso} de ${entidad.totalUsuarios}`,
         'Carga semanal': this.etiquetaEstado(entidad.estadoCarga),
         'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuariosOperativos}`,
-        'Actualización semanal': this.etiquetaEstado(entidad.estadoModificacion),
-        'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuariosOperativos}`,
       }));
 
       const exportado = await exportarFilasExcel(
@@ -290,7 +263,7 @@ export class SemanalConfiguracion implements OnInit {
 
     confirmarAccion(
       'Actualizar configuración semanal global',
-      `Se actualizarán carga y actualización semanal de ${usuariosObjetivo.length} usuario(s) operativo(s) con acceso al módulo preliminar.`,
+      `Se actualizará la carga semanal de ${usuariosObjetivo.length} usuario(s) operativo(s) con acceso al módulo preliminar.`,
       'Sí, actualizar',
     ).then((result) => {
       if (!result.isConfirmed) return;
@@ -302,7 +275,6 @@ export class SemanalConfiguracion implements OnInit {
           .actualizarPermisosSemanales(usuario.idUsuario, {
             habilitaSemanal: usuario.habilitaSemanal,
             habilitaCargaSemanal: this.habilitaCargaGlobal(),
-            habilitaModificacionSemanal: this.habilitaModificacionGlobal(),
             administraDelitosSemanal: usuario.administraDelitosSemanal,
           })
           .pipe(
@@ -365,10 +337,8 @@ export class SemanalConfiguracion implements OnInit {
         rol: usuario.rol,
         habilitaSemanalOriginal: usuario.habilitaSemanal,
         habilitaCargaOriginal: usuario.habilitaCargaSemanal,
-        habilitaModificacionOriginal: usuario.habilitaModificacionSemanal,
         habilitaSemanal: usuario.habilitaSemanal,
         habilitaCarga: usuario.habilitaCargaSemanal,
-        habilitaModificacion: usuario.habilitaModificacionSemanal,
         administraDelitosSemanal: usuario.administraDelitosSemanal,
         bloqueaOperacion: usuario.rol === ROLES.CONSULTA,
         esUsuarioActual: usuario.idUsuario === idUsuarioActual,
@@ -394,7 +364,7 @@ export class SemanalConfiguracion implements OnInit {
 
   cambiarPermisoUsuarioEntidad(
     idUsuario: number,
-    permiso: 'habilitaSemanal' | 'habilitaCarga' | 'habilitaModificacion',
+    permiso: 'habilitaSemanal' | 'habilitaCarga',
     valor: boolean,
   ): void {
     this.usuariosEntidad.update((usuarios) =>
@@ -408,7 +378,6 @@ export class SemanalConfiguracion implements OnInit {
             ...usuario,
             habilitaSemanal: valor,
             habilitaCarga: valor ? usuario.habilitaCarga : false,
-            habilitaModificacion: valor ? usuario.habilitaModificacion : false,
           };
         }
 
@@ -427,8 +396,7 @@ export class SemanalConfiguracion implements OnInit {
     return this.usuariosEntidad().some(
       (usuario) =>
         usuario.habilitaSemanal !== usuario.habilitaSemanalOriginal ||
-        usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
+        usuario.habilitaCarga !== usuario.habilitaCargaOriginal,
     );
   }
 
@@ -436,8 +404,7 @@ export class SemanalConfiguracion implements OnInit {
     const usuariosModificados = this.usuariosEntidad().filter(
       (usuario) =>
         usuario.habilitaSemanal !== usuario.habilitaSemanalOriginal ||
-        usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
-        usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
+        usuario.habilitaCarga !== usuario.habilitaCargaOriginal,
     );
 
     if (usuariosModificados.length === 0) {
@@ -459,9 +426,6 @@ export class SemanalConfiguracion implements OnInit {
         const habilitaCargaSemanal =
           usuario.habilitaSemanal && !usuario.bloqueaOperacion && usuario.habilitaCarga;
 
-        const habilitaModificacionSemanal =
-          usuario.habilitaSemanal && !usuario.bloqueaOperacion && usuario.habilitaModificacion;
-
         const administraDelitosSemanal = usuario.habilitaSemanal
           ? usuario.administraDelitosSemanal
           : false;
@@ -470,7 +434,6 @@ export class SemanalConfiguracion implements OnInit {
           .actualizarPermisosSemanales(usuario.idUsuario, {
             habilitaSemanal: usuario.habilitaSemanal,
             habilitaCargaSemanal,
-            habilitaModificacionSemanal,
             administraDelitosSemanal,
           })
           .pipe(
@@ -538,16 +501,11 @@ export class SemanalConfiguracion implements OnInit {
 
     if (usuariosOperativosConAcceso.length === 0) {
       this.habilitaCargaGlobal.set(false);
-      this.habilitaModificacionGlobal.set(false);
       return;
     }
 
     this.habilitaCargaGlobal.set(
       usuariosOperativosConAcceso.every((usuario) => usuario.habilitaCargaSemanal),
-    );
-
-    this.habilitaModificacionGlobal.set(
-      usuariosOperativosConAcceso.every((usuario) => usuario.habilitaModificacionSemanal),
     );
   }
 }
