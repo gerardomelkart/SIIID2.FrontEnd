@@ -30,8 +30,8 @@ interface ConfiguracionEntidadSemanal {
   totalUsuariosOperativos: number;
   usuariosAcceso: number;
   usuariosCarga: number;
+  estadoAcceso: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
   estadoCarga: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
-  estadoModificacion: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
 }
 
 interface UsuarioPermisoEntidadSemanal {

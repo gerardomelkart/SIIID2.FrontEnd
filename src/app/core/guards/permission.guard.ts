@@ -28,23 +28,22 @@ export const permissionGuard: CanActivateFn = (route) => {
     return false;
   }
 
-  if (data.permiso === 'OPERACION_SEMANAL' && !sessionService.habilitaCarga()) {
-    mostrarAccesoDenegado(
-      router,
-      'No tiene habilitado el permiso de carga semanal.',
-    );
+  if (data.permiso === 'CARGA' && !sessionService.habilitaCarga()) {
+    mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de carga inicial.');
 
     return false;
   }
 
-  if (
-    data.permiso === 'OPERACION_SEMANAL' &&
-    !sessionService.habilitaCarga() &&
-    !sessionService.habilitaModificacion()
-  ) {
+  if (data.permiso === 'MODIFICACION' && !sessionService.habilitaModificacion()) {
+    mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de actualización.');
+
+    return false;
+  }
+
+  if (data.permiso === 'OPERACION_SEMANAL' && !sessionService.habilitaCarga()) {
     mostrarAccesoDenegado(
       router,
-      'No tiene habilitados permisos para integrar información semanal.',
+      'No tiene habilitado el permiso de carga semanal.',
     );
 
     return false;

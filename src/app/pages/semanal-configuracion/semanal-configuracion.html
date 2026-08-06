@@ -16,7 +16,7 @@
       <div class="config-body">
         <div class="config-info">
           <strong>Aplicación general</strong>
-            <p>Este switch habilita o bloquea la carga semanal acumulativa para los usuarios operativos con acceso al módulo preliminar.</p>
+          <p>Este switch habilita o bloquea la carga semanal acumulativa para los usuarios operativos con acceso al módulo preliminar.</p>
         </div>
 
         <div class="config-switch-list">
@@ -27,12 +27,6 @@
             </div>
 
             <input type="checkbox" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
-          </label>
-
-          <label class="module-switch">
-
-            <input type="checkbox" [ngModel]="habilitaModificacionGlobal()"
-              (ngModelChange)="cambiarModificacionGlobal($event)">
           </label>
         </div>
 
@@ -161,18 +155,6 @@
             </td>
 
             <td>
-              <span class="estado-config" [class.estado-config-activo]="entidad.estadoModificacion === 'ACTIVO'"
-                [class.estado-config-inactivo]="entidad.estadoModificacion === 'INACTIVO'"
-                [class.estado-config-mixto]="entidad.estadoModificacion === 'MIXTO'">
-                {{ etiquetaEstado(entidad.estadoModificacion) }}
-              </span>
-
-              <div class="config-subtexto">
-                {{ entidad.usuariosModificacion }} de {{ entidad.totalUsuariosOperativos }} usuarios operativos
-              </div>
-            </td>
-
-            <td>
               <button type="button" class="btn btn-sm btn-secondary" (click)="abrirPermisosEntidad(entidad)">
                 Administrar permisos
               </button>
@@ -262,15 +244,6 @@
               (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
 
             <span>Carga</span>
-          </label>
-
-          <label class="permiso-mini-switch">
-            <input type="checkbox"
-              [disabled]="!usuario.habilitaSemanal || usuario.bloqueaOperacion || guardandoEntidad()"
-              [ngModel]="usuario.habilitaModificacion"
-              (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
-
-            <span>Actualización</span>
           </label>
         </div>
       </div>
