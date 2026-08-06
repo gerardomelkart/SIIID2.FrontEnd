@@ -2,25 +2,9 @@
 <div class="row g-4">
   <div class="col-xl-8">
     <div class="siiid-card">
-      <div class="siiid-card-header d-flex align-items-center">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-
-        <span>
-          {{ estadoPeriodo() === 'VALIDADO_ADVERTENCIA'
-          ? 'Detalle de advertencias'
-          : 'Detalle de inconsistencias' }}
-        </span>
-
-        <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
-          (click)="descargarValidacion()">
-          @if (exportandoValidacion()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Descargando...
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          Descargar errores/advertencias
-          }
-        </button>
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        Actualizar información, incidencia delictiva
       </div>
 
       <div class="update-message">
@@ -482,36 +466,51 @@
 </div>
 
 @if (detallesValidacion().length > 0) {
-<div class="siiid-card mt-3">
-  <div class="siiid-card-header">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    {{ estadoPeriodo() === 'VALIDADO_ADVERTENCIA' ? 'Detalle de advertencias' : 'Detalle de inconsistencias' }}
-  </div>
+<div class="siiid-card-header d-flex align-items-center">
+  <i class="fa-solid fa-triangle-exclamation"></i>
 
-  <div class="table-responsive">
-    <table class="table table-sm table-bordered mb-0 detalle-errores">
-      <thead>
-        <tr>
-          <th>Archivo</th>
-          <th>Fila</th>
-          <th>Columna</th>
-          <th>Valor</th>
-          <th>Mensaje</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (error of detallesValidacion(); track $index) {
-        <tr>
-          <td>{{ error.archivo }}</td>
-          <td>{{ error.fila || '-' }}</td>
-          <td>{{ error.columna }}</td>
-          <td>{{ error.valor || '-' }}</td>
-          <td>{{ error.mensaje }}</td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <span>
+    {{ estadoPeriodo() === 'VALIDADO_ADVERTENCIA'
+    ? 'Detalle de advertencias'
+    : 'Detalle de inconsistencias' }}
+  </span>
+
+  <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
+    (click)="descargarValidacion()">
+    @if (exportandoValidacion()) {
+    <i class="fa-solid fa-spinner fa-spin"></i>
+    Descargando...
+    } @else {
+    <i class="fa-solid fa-file-excel"></i>
+    Descargar errores/advertencias
+    }
+  </button>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-sm table-bordered mb-0 detalle-errores">
+    <thead>
+      <tr>
+        <th>Archivo</th>
+        <th>Fila</th>
+        <th>Columna</th>
+        <th>Valor</th>
+        <th>Mensaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (error of detallesValidacion(); track $index) {
+      <tr>
+        <td>{{ error.archivo }}</td>
+        <td>{{ error.fila || '-' }}</td>
+        <td>{{ error.columna }}</td>
+        <td>{{ error.valor || '-' }}</td>
+        <td>{{ error.mensaje }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
 </div>
 }
 }

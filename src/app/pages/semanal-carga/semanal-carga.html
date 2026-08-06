@@ -19,20 +19,9 @@
   <div class="row g-4 mt-1">
     <div class="col-xl-8">
       <section class="siiid-card carga-card">
-        <div class="siiid-card-header carga-card-header d-flex align-items-center">
-          <i class="fa-solid fa-list-ul"></i>
-          <span>Detalle de errores y advertencias</span>
-
-          <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
-            (click)="descargarValidacion()">
-            @if (exportandoValidacion()) {
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            Descargando...
-            } @else {
-            <i class="fa-solid fa-file-excel"></i>
-            Descargar errores/advertencias
-            }
-          </button>
+        <div class="siiid-card-header carga-card-header">
+          <i class="fa-solid fa-calendar-week"></i>
+          Archivos de la operación acumulativa
         </div>
 
         <div class="carga-contenido">
@@ -406,9 +395,20 @@
 
   @if (detallesValidacion().length > 0) {
   <section class="siiid-card detalle-card">
-    <div class="siiid-card-header carga-card-header">
+    <div class="siiid-card-header carga-card-header d-flex align-items-center">
       <i class="fa-solid fa-list-ul"></i>
-      Detalle de errores y advertencias
+      <span>Detalle de errores y advertencias</span>
+
+      <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
+        (click)="descargarValidacion()">
+        @if (exportandoValidacion()) {
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Descargando...
+        } @else {
+        <i class="fa-solid fa-file-excel"></i>
+        Descargar errores/advertencias
+        }
+      </button>
     </div>
 
     <div class="table-responsive">
