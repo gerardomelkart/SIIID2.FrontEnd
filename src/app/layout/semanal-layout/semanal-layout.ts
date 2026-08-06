@@ -1,5 +1,7 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { catchError, exhaustMap, filter, of, timer } from 'rxjs';
 import { ROLES } from '../../core/constants/roles.constants';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificacionesRechazosService } from '../../core/services/notificaciones-rechazos.service';
@@ -18,6 +20,9 @@ export class SemanalLayout implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly notificacionesService = inject(NotificacionesRechazosService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private notificacionAbierta = false;
 
   menuAbierto = signal(false);
   cargaAbierta = signal(false);
@@ -55,16 +60,29 @@ export class SemanalLayout implements OnInit {
   ngOnInit(): void {
     if (this.usuario()?.rol !== ROLES.ENLACE_ESTATAL) return;
 
-    this.notificacionesService.consumirSemanal().subscribe({
-      next: (response) => {
+    timer(0, 60000)
+      .pipe(
+        filter(() => !this.notificacionAbierta),
+        exhaustMap(() =>
+          this.notificacionesService
+            .consumirSemanal()
+            .pipe(catchError(() => of({ hayNotificacion: false, cantidad: 0 }))),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((response) => {
         if (!response.hayNotificacion) return;
 
+        this.notificacionAbierta = true;
+
         void mostrarNotificacionRechazo(response.cantidad).then((resultado) => {
-          if (resultado.isConfirmed) void this.router.navigateByUrl('/semanal/informes/envios');
+          this.notificacionAbierta = false;
+
+          if (resultado.isConfirmed) {
+            void this.router.navigateByUrl('/semanal/informes/envios');
+          }
         });
-      },
-      error: () => undefined,
-    });
+      });
   }
 
   toggleMenu(): void {

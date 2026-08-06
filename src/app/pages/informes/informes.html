@@ -85,7 +85,7 @@
     </div>
     }
 
-    <div class="table-responsive">
+    <div class="table-responsive envios-mensual-table-responsive">
       <table class="table table-sm reporte-table">
         <thead>
           <tr>
@@ -157,12 +157,37 @@
                 }
 
                 @if (envio.esRechazadoAdministrador) {
-                <button type="button" class="btn-icon btn-view" title="Ver motivo de rechazo"
-                  (click)="verMotivoRechazo(envio)">
-                  <i class="fa-solid fa-circle-exclamation"></i>
-                </button>
+                <details class="position-relative">
+                  <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
+                    style="list-style: none; cursor: pointer;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                  </summary>
+
+                  <div
+                    class="position-absolute end-0 mt-2 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
+                    <strong class="d-block mb-2">Motivo del rechazo</strong>
+
+                    <div class="mb-2">
+                      {{ envio.motivoRechazo || 'Sin motivo registrado.' }}
+                    </div>
+
+                    @if (envio.usuarioRechazo) {
+                    <small class="d-block text-muted">
+                      <strong>Rechazado por:</strong>
+                      {{ envio.usuarioRechazo }}
+                    </small>
+                    }
+
+                    @if (envio.fechaRechazoTexto) {
+                    <small class="d-block text-muted">
+                      <strong>Fecha:</strong>
+                      {{ envio.fechaRechazoTexto }}
+                    </small>
+                    }
+                  </div>
+                </details>
                 }
-                
+
               </div>
             </td>
           </tr>

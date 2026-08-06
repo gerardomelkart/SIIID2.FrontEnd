@@ -73,6 +73,18 @@
   font-weight: 700;
 }
 
+.envios-mensual-table-responsive {
+  min-height: 400px;
+  overflow-y: hidden;
+}
+
+.motivo-rechazo-mensual {
+  z-index: 30;
+  width: 520px;
+  max-width: calc(100vw - 70px);
+  white-space: normal;
+}
+
 .reporte-table {
   margin-bottom: 0;
   font-size: 13px;
