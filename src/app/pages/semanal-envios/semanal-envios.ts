@@ -262,18 +262,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     this.paginaActual.set(pagina);
   }
 
-  verMotivoRechazo(envio: SemanalEnvioItem): void {
-    const detalles = [
-      envio.motivoRechazo?.trim() || 'Sin motivo registrado.',
-      envio.usuarioResolucion ? `Rechazado por: ${envio.usuarioResolucion}.` : '',
-      envio.fechaRechazoTexto ? `Fecha: ${envio.fechaRechazoTexto}.` : '',
-    ]
-      .filter((detalle) => detalle.length > 0)
-      .join(' ');
-
-    void mostrarAdvertencia('Motivo del rechazo', detalles);
-  }
-
   verAcuse(envio: SemanalEnvioItem): void {
     if (!envio.endpointAcuse) return;
 
