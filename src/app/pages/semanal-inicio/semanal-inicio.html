@@ -44,6 +44,32 @@
       <div class="status-number">{{ usuario()?.rol }}</div>
       <div class="status-label">Perfil de acceso</div>
     </div>
+
+    <div class="status-card status-card-delitos">
+      <div class="status-delitos-header">
+        <i class="fa-solid fa-list-check"></i>
+
+        <div>
+          <div class="status-delitos-title">Delitos habilitados</div>
+          <div class="status-label">Configuración vigente del módulo preliminar</div>
+        </div>
+      </div>
+
+      @if (cargandoDelitos()) {
+      <div class="status-delitos-mensaje">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Consultando...
+      </div>
+      } @else if (delitosHabilitados().length > 0) {
+      <div class="status-delitos-lista">
+        @for (delito of delitosHabilitados(); track delito.idDelito) {
+        <span class="status-delito-chip">{{ delito.delito }}</span>
+        }
+      </div>
+      } @else {
+      <div class="status-delitos-mensaje">{{ mensajeDelitos() }}</div>
+      }
+    </div>
   </section>
 
   <section class="quick-access-card">

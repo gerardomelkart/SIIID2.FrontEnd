@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { ActualizarConfiguracionDelitosSemanalesRequest, ConfiguracionDelitosSemanalesResponse } from '../models/semanal-delitos.models';
+import { ActualizarConfiguracionDelitosSemanalesRequest, ConfiguracionDelitosSemanalesResponse, DelitosSemanalesHabilitadosResponse } from '../models/semanal-delitos.models';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +12,10 @@ export class SemanalDelitosService {
 
   obtenerConfiguracion() {
     return this.http.get<ConfiguracionDelitosSemanalesResponse>(this.apiUrl);
+  }
+
+  obtenerDelitosHabilitados() {
+    return this.http.get<DelitosSemanalesHabilitadosResponse>(`${this.apiUrl}/habilitados`);
   }
 
   guardarConfiguracion(request: ActualizarConfiguracionDelitosSemanalesRequest) {

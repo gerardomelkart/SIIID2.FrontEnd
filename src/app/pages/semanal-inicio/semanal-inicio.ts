@@ -1,7 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { ROLES } from '../../core/constants/roles.constants';
+import { DelitoSemanalHabilitadoItem } from '../../core/models/semanal-delitos.models';
+import { SemanalDelitosService } from '../../core/services/semanal-delitos.service';
 import { SessionService } from '../../core/services/session.service';
 
 @Component({
@@ -10,11 +12,15 @@ import { SessionService } from '../../core/services/session.service';
   templateUrl: './semanal-inicio.html',
   styleUrls: ['../dashboard/dashboard.css', './semanal-inicio.css'],
 })
-export class SemanalInicio {
+export class SemanalInicio implements OnInit {
   private readonly sessionService = inject(SessionService);
+  private readonly semanalDelitosService = inject(SemanalDelitosService);
 
   usuario = this.sessionService.usuario;
   habilitaCarga = this.sessionService.habilitaCarga;
+  delitosHabilitados = signal<DelitoSemanalHabilitadoItem[]>([]);
+  cargandoDelitos = signal(true);
+  mensajeDelitos = signal('');
 
   esSuperUsuario = computed(
     () => this.usuario()?.rol === ROLES.SUPER_USUARIO,
@@ -91,4 +97,30 @@ export class SemanalInicio {
       this.esSuperUsuario() &&
       this.sessionService.administraDelitos(),
   );
+
+  ngOnInit(): void {
+    this.cargarDelitosHabilitados();
+  }
+
+  private cargarDelitosHabilitados(): void {
+    this.semanalDelitosService.obtenerDelitosHabilitados().subscribe({
+      next: (response) => {
+        this.cargandoDelitos.set(false);
+
+        if (!response.esValido) {
+          this.mensajeDelitos.set(response.mensaje || 'No fue posible consultar los delitos habilitados.');
+          return;
+        }
+
+        const delitos = response.delitos ?? [];
+
+        this.delitosHabilitados.set(delitos);
+        this.mensajeDelitos.set(delitos.length === 0 ? 'No hay delitos habilitados.' : '');
+      },
+      error: () => {
+        this.cargandoDelitos.set(false);
+        this.mensajeDelitos.set('No fue posible consultar los delitos habilitados.');
+      },
+    });
+  }
 }

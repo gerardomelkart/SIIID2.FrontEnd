@@ -2,7 +2,97 @@
   min-height: 98px;
 }
 
+.status-grid {
+  grid-template-columns: minmax(190px, .75fr) minmax(210px, .85fr) minmax(320px, 1.4fr);
+}
+
+.status-card-delitos {
+  min-width: 0;
+  border-left-color: #198754;
+  padding: 14px 18px;
+}
+
+.status-delitos-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-delitos-header > i {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #198754;
+  background: #eaf7ee;
+  border: 1px solid #cae8d2;
+  font-size: 16px;
+}
+
+.status-delitos-title {
+  color: #198754;
+  font-size: 18px;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.status-card-delitos .status-label {
+  margin-top: 3px;
+  color: #53605a;
+  font-size: 12px;
+}
+
+.status-delitos-lista {
+  margin-top: 11px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.status-delito-chip {
+  display: inline-flex;
+  align-items: center;
+  color: #145c32;
+  background: #eaf7ee;
+  border: 1px solid #b9dec4;
+  border-radius: 18px;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.status-delitos-mensaje {
+  margin-top: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .status-card-delitos {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 760px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-card-delitos {
+    grid-column: auto;
+  }
+
   .quick-placeholder {
     display: none;
   }

@@ -33,3 +33,16 @@ export interface ConfiguracionDelitosSemanalesResponse {
   totalSeleccionados: number;
   modalidades: ConfiguracionModalidadSemanalItem[];
 }
+
+export interface DelitoSemanalHabilitadoItem {
+  idDelito: number;
+  delito: string;
+  orden: number;
+}
+
+export interface DelitosSemanalesHabilitadosResponse {
+  esValido: boolean;
+  codigo: string;
+  mensaje: string;
+  delitos: DelitoSemanalHabilitadoItem[];
+}
