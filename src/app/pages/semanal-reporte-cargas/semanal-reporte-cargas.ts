@@ -58,8 +58,7 @@ export class SemanalReporteCargas implements OnInit {
   periodos = signal<PeriodoReporte[]>([]);
   periodoSeleccionado = signal('');
   idUsuarioSeleccionado = signal<number | null>(null);
-
-  idUsuarioSeleccionado = signal<number | null>(null);
+  delitoSeleccionado = signal('');
 
   paginaActual = signal(1);
   tamanioPagina = 10;

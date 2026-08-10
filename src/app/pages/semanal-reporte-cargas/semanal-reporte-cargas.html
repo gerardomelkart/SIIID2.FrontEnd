@@ -67,25 +67,24 @@
           (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
           <option [ngValue]="null">Todos los usuarios</option>
 
-          <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
-            (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
-            <option value="">Todos los delitos</option>
-
-            @for (delito of delitosReporte(); track delito) {
-            <option [value]="delito">
-              {{ delito }}
-            </option>
-            }
-          </select>
-
           @for (usuarioReporte of usuariosReporte(); track usuarioReporte.idUsuarioCarga) {
           <option [ngValue]="usuarioReporte.idUsuarioCarga">
             {{ usuarioReporte.usuarioCarga }}
           </option>
           }
         </select>
+
+        <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
+          (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
+          <option value="">Todos los delitos</option>
+
+          @for (delito of delitosReporte(); track delito) {
+          <option [value]="delito">
+            {{ delito }}
+          </option>
+          }
+        </select>
       </div>
-    </div>
 
     <div class="table-responsive">
       <table class="table table-sm reporte-table semanal-envios-table">
