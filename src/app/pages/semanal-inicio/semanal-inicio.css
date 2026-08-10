@@ -3,7 +3,8 @@
 }
 
 .status-grid {
-  grid-template-columns: minmax(190px, .75fr) minmax(210px, .85fr) minmax(320px, 1.4fr);
+  grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
+  align-items: start;
 }
 
 .status-card-delitos {
@@ -74,23 +75,9 @@
   font-weight: 700;
 }
 
-@media (max-width: 1100px) {
-  .status-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .status-card-delitos {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (max-width: 760px) {
   .status-grid {
     grid-template-columns: 1fr;
-  }
-
-  .status-card-delitos {
-    grid-column: auto;
   }
 
   .quick-placeholder {
