@@ -29,7 +29,7 @@ interface UsuarioReporte {
 
 type CampoOrden =
   | 'entidadFederativa'
-  | 'claveEntidad'
+  | 'delitos'
   | 'usuario'
   | 'periodo'
   | 'intentos'
@@ -59,6 +59,8 @@ export class SemanalReporteCargas implements OnInit {
   periodoSeleccionado = signal('');
   idUsuarioSeleccionado = signal<number | null>(null);
 
+  idUsuarioSeleccionado = signal<number | null>(null);
+
   paginaActual = signal(1);
   tamanioPagina = 10;
   orden = signal<EstadoOrden<CampoOrden> | null>({
@@ -84,10 +86,22 @@ export class SemanalReporteCargas implements OnInit {
     );
   });
 
+  delitosReporte = computed(() => {
+    const delitos = this.cargas()
+      .flatMap((carga) => carga.delitos ?? [])
+      .map((delito) => delito.trim())
+      .filter((delito) => delito.length > 0);
+
+    return Array.from(new Set(delitos)).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' }),
+    );
+  });
+
   cargasFiltradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
     const periodoSeleccionado = this.periodoSeleccionado();
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
+    const delitoSeleccionado = this.delitoSeleccionado();
 
     const registros = this.cargas().filter((carga) => {
       if (carga.claveEntidad === '00') return false;
@@ -105,11 +119,18 @@ export class SemanalReporteCargas implements OnInit {
         return false;
       }
 
+      if (
+        delitoSeleccionado &&
+        !(carga.delitos ?? []).some((delito) => delito === delitoSeleccionado)
+      ) {
+        return false;
+      }
+
       if (!texto) return true;
 
       return (
         carga.entidadFederativa.toLowerCase().includes(texto) ||
-        carga.claveEntidad.toLowerCase().includes(texto) ||
+        (carga.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
         carga.usuarioCarga.toLowerCase().includes(texto) ||
         this.periodoTexto(carga).toLowerCase().includes(texto) ||
         (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
@@ -155,6 +176,15 @@ export class SemanalReporteCargas implements OnInit {
           this.idUsuarioSeleccionado.set(null);
         }
 
+        const delitoSeleccionado = this.delitoSeleccionado();
+
+        if (
+          delitoSeleccionado &&
+          !registros.some((registro) => (registro.delitos ?? []).includes(delitoSeleccionado))
+        ) {
+          this.delitoSeleccionado.set('');
+        }
+
         this.paginaActual.set(1);
         this.cargando.set(false);
       },
@@ -194,6 +224,10 @@ export class SemanalReporteCargas implements OnInit {
 
   periodoTexto(carga: SemanalReporteCargaItem): string {
     return carga.periodo || this.crearPeriodoTexto(carga.anioCorte, carga.mesCorte);
+  }
+
+  delitosTexto(carga: SemanalReporteCargaItem): string {
+    return carga.delitos?.length ? carga.delitos.join(', ') : '—';
   }
 
   etiquetaEstatus(carga: SemanalReporteCargaItem): string {
@@ -239,7 +273,7 @@ export class SemanalReporteCargas implements OnInit {
         Ranking: this.obtenerOrdenCarga(carga) ?? '',
         Usuario: carga.usuarioCarga,
         'Entidad federativa': carga.entidadFederativa,
-        'Cve. entidad': carga.claveEntidad,
+        'Delito(s)': this.delitosTexto(carga),
         Periodo: this.periodoTexto(carga),
         Intentos: carga.intentos,
         Estatus: this.etiquetaEstatus(carga),
@@ -270,6 +304,7 @@ export class SemanalReporteCargas implements OnInit {
     const texto = this.busqueda().trim().toLowerCase();
     const periodoSeleccionado = this.periodoSeleccionado();
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
+    const delitoSeleccionado = this.delitoSeleccionado();
 
     return this.cargas()
       .filter((carga) => {
@@ -287,11 +322,18 @@ export class SemanalReporteCargas implements OnInit {
           return false;
         }
 
+        if (
+          delitoSeleccionado &&
+          !(carga.delitos ?? []).some((delito) => delito === delitoSeleccionado)
+        ) {
+          return false;
+        }
+
         if (!texto) return true;
 
         return (
           carga.entidadFederativa.toLowerCase().includes(texto) ||
-          carga.claveEntidad.toLowerCase().includes(texto) ||
+          (carga.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
           carga.usuarioCarga.toLowerCase().includes(texto) ||
           this.periodoTexto(carga).toLowerCase().includes(texto) ||
           (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
@@ -358,8 +400,8 @@ export class SemanalReporteCargas implements OnInit {
     switch (campo) {
       case 'entidadFederativa':
         return carga.entidadFederativa;
-      case 'claveEntidad':
-        return carga.claveEntidad;
+      case 'delitos':
+        return this.delitosTexto(carga);
       case 'usuario':
         return carga.usuarioCarga;
       case 'periodo':

@@ -29,6 +29,7 @@ export interface SemanalEnvioItem {
   idEntidadFederativa: number;
   entidadFederativa: string;
   claveEntidad: string;
+  delitos: string[];
   anioSemana: number;
   numeroSemana: number;
   fechaInicioSemana: string;

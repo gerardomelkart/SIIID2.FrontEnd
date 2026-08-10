@@ -4,6 +4,7 @@ export interface SemanalReporteCargaItem {
   idEntidadFederativa: number;
   entidadFederativa: string;
   claveEntidad: string;
+  delitos: string[];
   idUsuarioCarga: number;
   usuarioCarga: string;
   nombreUsuarioCarga: string;

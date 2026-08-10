@@ -41,7 +41,7 @@
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input type="text" placeholder="Buscar entidad, usuario o periodo..." [ngModel]="busqueda()"
+          <input type="text" placeholder="Buscar entidad, usuario, periodo o delito..." [ngModel]="busqueda()"
             (ngModelChange)="buscar($event)">
         </div>
       </div>
@@ -67,6 +67,17 @@
           (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
           <option [ngValue]="null">Todos los usuarios</option>
 
+          <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
+            (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
+            <option value="">Todos los delitos</option>
+
+            @for (delito of delitosReporte(); track delito) {
+            <option [value]="delito">
+              {{ delito }}
+            </option>
+            }
+          </select>
+
           @for (usuarioReporte of usuariosReporte(); track usuarioReporte.idUsuarioCarga) {
           <option [ngValue]="usuarioReporte.idUsuarioCarga">
             {{ usuarioReporte.usuarioCarga }}
@@ -91,9 +102,9 @@
               <i [class]="iconoOrden('entidadFederativa')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarPor('claveEntidad')">
-              Cve. entidad
-              <i [class]="iconoOrden('claveEntidad')"></i>
+            <th class="sortable" (click)="ordenarPor('delitos')">
+              Delito(s)
+              <i [class]="iconoOrden('delitos')"></i>
             </th>
 
             <th class="sortable" (click)="ordenarPor('usuario')">
@@ -140,7 +151,7 @@
               <span class="folio-chip">{{ ordenCarga(carga) }}</span>
             </td>
             <td>{{ carga.entidadFederativa }}</td>
-            <td>{{ carga.claveEntidad }}</td>
+            <td>{{ delitosTexto(carga) }}</td>
 
             <td>
               <strong>{{ carga.usuarioCarga }}</strong>

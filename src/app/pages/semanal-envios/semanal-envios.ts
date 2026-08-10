@@ -31,7 +31,7 @@ interface UsuarioEnvio {
   nombreUsuarioCarga: string;
 }
 
-type CampoOrden = 'entidad' | 'clave' | 'fecha' | 'periodo' | 'usuario' | 'estado';
+type CampoOrden = 'entidad' | 'delitos' | 'fecha' | 'periodo' | 'usuario' | 'estado';
 
 @Component({
   selector: 'app-semanal-envios',
@@ -56,6 +56,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   periodosEnvio = signal<PeriodoEnvio[]>([]);
   periodoEnvioSeleccionado = signal('');
   idUsuarioSeleccionado = signal<number | null>(null);
+  delitoSeleccionado = signal('');
   descargandoAcuses = signal(false);
 
   paginaActual = signal(1);
@@ -87,6 +88,17 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     );
   });
 
+  delitosEnvio = computed(() => {
+    const delitos = this.envios()
+      .flatMap((envio) => envio.delitos ?? [])
+      .map((delito) => delito.trim())
+      .filter((delito) => delito.length > 0);
+
+    return Array.from(new Set(delitos)).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' }),
+    );
+  });
+
   operacionEnCurso = computed(
     () =>
       this.descargandoAcuse() !== null ||
@@ -99,6 +111,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     const texto = this.busqueda().trim().toLowerCase();
     const periodoSeleccionado = this.periodoEnvioSeleccionado();
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
+    const delitoSeleccionado = this.delitoSeleccionado();
 
     const registros = this.envios().filter((envio) => {
       if (periodoSeleccionado && !this.contienePeriodo(envio, periodoSeleccionado)) {
@@ -109,11 +122,18 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         return false;
       }
 
+      if (
+        delitoSeleccionado &&
+        !(envio.delitos ?? []).some((delito) => delito === delitoSeleccionado)
+      ) {
+        return false;
+      }
+
       if (!texto) return true;
 
       return (
         envio.entidadFederativa.toLowerCase().includes(texto) ||
-        envio.claveEntidad.toLowerCase().includes(texto) ||
+        (envio.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
         envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
         this.periodoTexto(envio).toLowerCase().includes(texto) ||
         envio.usuarioCarga.toLowerCase().includes(texto) ||
@@ -163,6 +183,15 @@ export class SemanalEnvios implements OnInit, OnDestroy {
           !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado)
         ) {
           this.idUsuarioSeleccionado.set(null);
+        }
+
+        const delitoSeleccionado = this.delitoSeleccionado();
+
+        if (
+          delitoSeleccionado &&
+          !registros.some((registro) => (registro.delitos ?? []).includes(delitoSeleccionado))
+        ) {
+          this.delitoSeleccionado.set('');
         }
 
         this.paginaActual.set(1);
@@ -362,7 +391,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     try {
       const filas = this.enviosFiltrados().map((envio) => ({
         'Entidad federativa': envio.entidadFederativa,
-        'Cve. entidad': envio.claveEntidad,
+        'Delito(s)': this.delitosTexto(envio),
         Usuario: envio.usuarioCarga,
         Periodo: this.periodoTexto(envio),
         'Fecha de envío': envio.fechaEnvioTexto,
@@ -407,6 +436,10 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       .join(', ');
   }
 
+  delitosTexto(envio: SemanalEnvioItem): string {
+    return envio.delitos?.length ? envio.delitos.join(', ') : '—';
+  }
+
   usuarioTexto(envio: SemanalEnvioItem): string {
     return envio.usuarioCarga;
   }
@@ -415,8 +448,8 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     switch (campo) {
       case 'entidad':
         return envio.entidadFederativa;
-      case 'clave':
-        return envio.claveEntidad;
+      case 'delitos':
+        return this.delitosTexto(envio);
       case 'fecha':
         return envio.fechaMovimiento;
       case 'periodo':

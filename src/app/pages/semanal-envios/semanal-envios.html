@@ -51,7 +51,7 @@
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input type="text" placeholder="Buscar entidad, usuario, periodo o envío..." [ngModel]="busqueda()"
+          <input type="text" placeholder="Buscar entidad, usuario, periodo, delito o envío..." [ngModel]="busqueda()"
             (ngModelChange)="buscarEnvios($event)">
         </div>
       </div>
@@ -69,6 +69,17 @@
           @for (periodo of periodosEnvio(); track periodo.clave) {
           <option [value]="periodo.clave">
             {{ periodo.periodo }}
+          </option>
+          }
+        </select>
+
+        <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
+          (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
+          <option value="">Todos los delitos</option>
+
+          @for (delito of delitosEnvio(); track delito) {
+          <option [value]="delito">
+            {{ delito }}
           </option>
           }
         </select>
@@ -105,9 +116,9 @@
               <i [class]="iconoOrden('entidad')"></i>
             </th>
 
-            <th class="sortable" (click)="ordenarPor('clave')">
-              Cve. entidad
-              <i [class]="iconoOrden('clave')"></i>
+            <th class="sortable" (click)="ordenarPor('delitos')">
+              Delito(s)
+              <i [class]="iconoOrden('delitos')"></i>
             </th>
 
             <th class="sortable" (click)="ordenarPor('fecha')">
@@ -138,7 +149,7 @@
           @for (envio of enviosPaginados(); track envio.idSemanalCarga) {
           <tr>
             <td>{{ envio.entidadFederativa }}</td>
-            <td>{{ envio.claveEntidad }}</td>
+            <td>{{ delitosTexto(envio) }}</td>
             <td>{{ envio.fechaEnvioTexto }}</td>
             <td>{{ periodoTexto(envio) }}</td>
 
