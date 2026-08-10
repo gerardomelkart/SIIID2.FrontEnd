@@ -139,8 +139,6 @@ export class SemanalUsuarios implements OnInit {
     const camposBaseValidos =
       form.nombre.trim() !== '' &&
       form.primerApellido.trim() !== '' &&
-      form.rfc.trim() !== '' &&
-      form.curp.trim() !== '' &&
       form.correoElectronico.trim() !== '' &&
       form.usuario.trim() !== '' &&
       form.rol.trim() !== '';

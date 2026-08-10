@@ -35,8 +35,8 @@ export interface UsuarioDetalle {
   primerApellido: string;
   segundoApellido: string | null;
   correoElectronico: string;
-  rfc: string;
-  curp: string;
+  rfc: string | null;
+  curp: string | null;
   telefonoContacto: string | null;
   idEntidadFederativa: number | null;
   entidadFederativa: string | null;
