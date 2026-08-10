@@ -1,4 +1,8 @@
 <div class="dashboard-page">
+  @if (esEnlaceEstatal() && habilitaCarga()) {
+  <app-recordatorio-carga modulo="semanal"></app-recordatorio-carga>
+  }
+
   <section class="welcome-card">
     <div class="welcome-content">
       <div class="welcome-icon">

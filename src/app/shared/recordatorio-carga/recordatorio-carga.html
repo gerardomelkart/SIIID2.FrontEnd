@@ -1,0 +1,16 @@
+@if (visible()) {
+<section class="recordatorio-carga" role="status">
+  <div class="recordatorio-icono">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+  </div>
+
+  <div class="recordatorio-contenido">
+    <div class="recordatorio-titulo">{{ recordatorio()?.titulo }}</div>
+    <div class="recordatorio-mensaje">{{ recordatorio()?.mensaje }}</div>
+  </div>
+
+  <button type="button" class="recordatorio-cerrar" aria-label="Cerrar recordatorio" (click)="cerrar()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</section>
+}

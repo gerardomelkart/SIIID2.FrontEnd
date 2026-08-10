@@ -2,10 +2,11 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
+import { RecordatorioCarga } from '../../shared/recordatorio-carga/recordatorio-carga';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink],
+  imports: [RouterLink, RecordatorioCarga],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

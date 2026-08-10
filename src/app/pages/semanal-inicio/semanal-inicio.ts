@@ -5,10 +5,11 @@ import { ROLES } from '../../core/constants/roles.constants';
 import { DelitoSemanalHabilitadoItem } from '../../core/models/semanal-delitos.models';
 import { SemanalDelitosService } from '../../core/services/semanal-delitos.service';
 import { SessionService } from '../../core/services/session.service';
+import { RecordatorioCarga } from '../../shared/recordatorio-carga/recordatorio-carga';
 
 @Component({
   selector: 'app-semanal-inicio',
-  imports: [RouterLink],
+  imports: [RouterLink, RecordatorioCarga],
   templateUrl: './semanal-inicio.html',
   styleUrls: ['../dashboard/dashboard.css', './semanal-inicio.css'],
 })
