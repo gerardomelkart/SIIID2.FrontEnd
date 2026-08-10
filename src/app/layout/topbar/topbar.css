@@ -30,6 +30,16 @@
   display: block;
 }
 
+.topbar-modulo {
+  margin-left: auto;
+  margin-right: clamp(24px, 4.5vw, 86px);
+  color: #fff;
+  font-size: clamp(22px, 1.6vw, 30px);
+  font-weight: 800;
+  letter-spacing: .4px;
+  white-space: nowrap;
+}
+
 @media (max-width: 991.98px) {
   .topbar {
     gap: 14px;
@@ -49,6 +59,11 @@
     object-fit: contain;
     object-position: left center;
   }
+
+    .topbar-modulo {
+    margin-right: 0;
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 575.98px) {
@@ -65,6 +80,10 @@
   }
 
   .topbar-logo {
-    max-width: calc(100% - 50px);
+    max-width: calc(100% - 150px);
+  }
+
+  .topbar-modulo {
+    font-size: 15px;
   }
 }

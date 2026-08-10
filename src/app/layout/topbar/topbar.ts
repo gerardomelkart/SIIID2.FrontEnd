@@ -8,5 +8,6 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class Topbar {
   @Input() menuAbierto = false;
+  @Input() nombreModulo = '';
   @Output() menuToggle = new EventEmitter<void>();
 }
