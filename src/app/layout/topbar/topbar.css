@@ -55,12 +55,16 @@
   }
 
   .topbar-logo {
-    max-width: calc(100% - 58px);
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
     object-fit: contain;
     object-position: left center;
   }
 
-    .topbar-modulo {
+  .topbar-modulo {
+    flex: 0 0 auto;
+    margin-left: 0;
     margin-right: 0;
     font-size: 20px;
   }
@@ -80,10 +84,21 @@
   }
 
   .topbar-logo {
-    max-width: calc(100% - 150px);
+    width: 0;
+    height: 64px;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    object-fit: contain;
+    object-position: left center;
   }
 
   .topbar-modulo {
-    font-size: 15px;
+    width: 92px;
+    flex: 0 0 92px;
+    font-size: 14px;
+    line-height: 1.15;
+    text-align: right;
+    white-space: normal;
   }
 }
