@@ -216,7 +216,7 @@ export class SemanalDelitos implements OnInit {
   }
 
   private normalizarConfiguracion(modalidades: ConfiguracionModalidadSemanalItem[]): ConfiguracionModalidadSemanalItem[] {
-    return modalidades.map((modalidad) => ({ ...modalidad, seleccionado: modalidad.esObligatorio || modalidad.seleccionado }));
+    return modalidades.map((modalidad) => ({ ...modalidad, esObligatorio: false, conservarEntrePeriodos: false }));
   }
 
   private construirJerarquia(modalidades: ConfiguracionModalidadSemanalItem[], textoBusqueda: string): BienJuridicoSemanalAgrupado[] {
