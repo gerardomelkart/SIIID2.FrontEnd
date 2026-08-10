@@ -8,7 +8,7 @@
 
     <div class="modulo-grid">
       @for (modulo of modulos(); track modulo.idModulo) {
-      <button type="button" class="modulo-card" (click)="seleccionar(modulo)">
+      <button type="button" class="modulo-card" [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'" [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'" (click)="seleccionar(modulo)">
         <span class="modulo-icon">
           @if (modulo.clave === 'MENSUAL') {
           <i class="fa-solid fa-calendar-days"></i>
