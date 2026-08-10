@@ -31,9 +31,7 @@ export class Sidebar {
   esEnlaceEstatal = computed(() => this.usuario()?.rol === ROLES.ENLACE_ESTATAL);
   esConsulta = computed(() => this.usuario()?.rol === ROLES.CONSULTA);
 
-  puedeCambiarAModuloPreliminar = computed(() =>
-    this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'SEMANAL'),
-  );
+  puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   puedeVerCargaInformacion = computed(() => {
     return !this.esConsulta() && (this.habilitaCarga() || this.habilitaModificacion());
@@ -75,9 +73,9 @@ export class Sidebar {
     this.sesionAbierta.update((valor) => !valor);
   }
 
-  cambiarAModuloPreliminar(): void {
-    if (!this.sessionService.seleccionarModulo('SEMANAL')) return;
-    void this.router.navigateByUrl('/semanal');
+  regresarSeleccionModulo(): void {
+    this.sessionService.limpiarModuloActivo();
+    void this.router.navigateByUrl('/seleccionar-modulo');
   }
 
   cerrarSesion(): void {

@@ -53,9 +53,7 @@ export class SemanalLayout implements OnInit {
     () => this.esSuperUsuario() && this.sessionService.administraDelitos(),
   );
 
-  puedeCambiarAModuloConsolidado = computed(() =>
-    this.sessionService.modulos().some((modulo) => modulo.clave.toUpperCase() === 'MENSUAL'),
-  );
+  puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   ngOnInit(): void {
     if (this.usuario()?.rol !== ROLES.ENLACE_ESTATAL) return;
@@ -119,9 +117,9 @@ export class SemanalLayout implements OnInit {
     this.sesionAbierta.update((valor) => !valor);
   }
 
-  cambiarAModuloConsolidado(): void {
-    if (!this.sessionService.seleccionarModulo('MENSUAL')) return;
-    void this.router.navigateByUrl('/');
+  regresarSeleccionModulo(): void {
+    this.sessionService.limpiarModuloActivo();
+    void this.router.navigateByUrl('/seleccionar-modulo');
   }
 
   cerrarSesion(): void {

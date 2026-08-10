@@ -120,11 +120,11 @@
     </button>
 
     @if (sesionAbierta()) {
-    @if (puedeCambiarAModuloPreliminar()) {
-    <button type="button" class="menu-link menu-button level-2" (click)="cambiarAModuloPreliminar()">
+    @if (puedeRegresarSeleccionModulo()) {
+    <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
       <span>
-        <i class="fa-solid fa-repeat"></i>
-        Ir a Módulo preliminar
+        <i class="fa-solid fa-arrow-left"></i>
+        Regresar a selección de módulo
       </span>
     </button>
     }
