@@ -286,7 +286,7 @@ export class SemanalUsuarios implements OnInit {
         Rol: usuario.rol,
         Entidad: usuario.entidadFederativa || 'Nacional',
         'Acceso preliminar': usuario.habilitaSemanal ? 'Sí' : 'No',
-        'Carga semanal': usuario.habilitaCargaSemanal ? 'Sí' : 'No',
+        'Carga preliminar': usuario.habilitaCargaSemanal ? 'Sí' : 'No',
         'Administra delitos': usuario.administraDelitosSemanal ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));

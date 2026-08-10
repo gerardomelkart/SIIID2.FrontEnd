@@ -176,9 +176,9 @@
           <tr>
             <td colspan="8" class="text-center p-4">
               @if (cargando()) {
-              Consultando archivos originales semanales...
+              Consultando archivos originales preliminares...
               } @else {
-              No hay archivos originales semanales guardados.
+              No hay archivos originales preliminares guardados.
               }
             </td>
           </tr>
@@ -197,7 +197,7 @@
       </div>
 
       @if (totalPaginas() > 1) {
-      <nav class="paginacion-originales" aria-label="Paginación de archivos originales semanales">
+      <nav class="paginacion-originales" aria-label="Paginación de archivos originales preliminares">
         <button type="button" class="btn-pagina" [disabled]="paginaActual() === 1"
           (click)="irPagina(paginaActual() - 1)" aria-label="Página anterior">
           <i class="fa-solid fa-chevron-left"></i>

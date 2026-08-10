@@ -181,7 +181,7 @@ export class SemanalConfiguracion implements OnInit {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible cargar configuración semanal',
+          'No fue posible cargar configuración preliminar',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
@@ -227,13 +227,13 @@ export class SemanalConfiguracion implements OnInit {
         'Entidad federativa': entidad.entidadFederativa,
         'Acceso al módulo preliminar': this.etiquetaEstado(entidad.estadoAcceso),
         'Usuarios con acceso': `${entidad.usuariosAcceso} de ${entidad.totalUsuarios}`,
-        'Carga semanal': this.etiquetaEstado(entidad.estadoCarga),
+        'Carga preliminar': this.etiquetaEstado(entidad.estadoCarga),
         'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuariosOperativos}`,
       }));
 
       const exportado = await exportarFilasExcel(
         filas,
-        'configuracion_semanal_por_entidad.xlsx',
+        'configuracion_preliminar_por_entidad.xlsx',
         'Configuracion',
       );
 
@@ -262,8 +262,8 @@ export class SemanalConfiguracion implements OnInit {
     }
 
     confirmarAccion(
-      'Actualizar configuración semanal global',
-      `Se actualizará la carga semanal de ${usuariosObjetivo.length} usuario(s) operativo(s) con acceso al módulo preliminar.`,
+      'Actualizar configuración preliminar global',
+      `Se actualizará la carga preliminar de ${usuariosObjetivo.length} usuario(s) operativo(s) con acceso al módulo preliminar.`,
       'Sí, actualizar',
     ).then((result) => {
       if (!result.isConfirmed) return;
@@ -308,7 +308,7 @@ export class SemanalConfiguracion implements OnInit {
             return;
           }
 
-          mostrarExitoInstitucional('Configuración semanal actualizada');
+          mostrarExitoInstitucional('Configuración preliminar actualizada');
 
           this.cargarUsuarios();
         },
@@ -316,7 +316,7 @@ export class SemanalConfiguracion implements OnInit {
           this.guardandoGlobal.set(false);
 
           mostrarError(
-            'No fue posible actualizar configuración semanal',
+            'No fue posible actualizar configuración preliminar',
             obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
           );
         },
@@ -414,7 +414,7 @@ export class SemanalConfiguracion implements OnInit {
     }
 
     confirmarAccion(
-      'Guardar configuración semanal por entidad',
+      'Guardar configuración preliminar por entidad',
       `Se actualizarán permisos de ${usuariosModificados.length} usuario(s).`,
       'Sí, guardar',
     ).then((result) => {
@@ -467,7 +467,7 @@ export class SemanalConfiguracion implements OnInit {
             return;
           }
 
-          mostrarExitoInstitucional('Configuración semanal actualizada');
+          mostrarExitoInstitucional('Configuración preliminar actualizada');
 
           this.cerrarPermisosEntidad();
           this.cargarUsuarios();
@@ -476,7 +476,7 @@ export class SemanalConfiguracion implements OnInit {
           this.guardandoEntidad.set(false);
 
           mostrarError(
-            'No fue posible actualizar permisos semanales',
+            'No fue posible actualizar permisos preliminares',
             obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
           );
         },

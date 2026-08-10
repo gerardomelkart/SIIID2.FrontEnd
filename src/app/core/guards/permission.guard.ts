@@ -43,7 +43,7 @@ export const permissionGuard: CanActivateFn = (route) => {
   if (data.permiso === 'OPERACION_SEMANAL' && !sessionService.habilitaCarga()) {
     mostrarAccesoDenegado(
       router,
-      'No tiene habilitado el permiso de carga semanal.',
+      'No tiene habilitado el permiso de carga preliminar.',
     );
 
     return false;
@@ -52,7 +52,7 @@ export const permissionGuard: CanActivateFn = (route) => {
   if (data.permiso === 'ADMINISTRA_DELITOS' && !sessionService.administraDelitos()) {
     mostrarAccesoDenegado(
       router,
-      'No tiene habilitado el permiso de administración de delitos semanales.',
+      'No tiene habilitado el permiso de administración de delitos preliminares.',
     );
 
     return false;

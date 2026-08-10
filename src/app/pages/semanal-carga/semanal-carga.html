@@ -97,7 +97,7 @@
             </div>
 
             @if (tramo.semanaCortada) {
-            <em>Durante el cruce de mes, la API asignará internamente cada registro al corte mensual que
+            <em>Durante el cruce de mes, la API asignará internamente cada registro al corte del mes que
               corresponda.</em>
             }
           </div>
@@ -160,7 +160,7 @@
               @if (disponibilidad.debeUsarActualizacion) {
               <button type="button" class="btn btn-siiid" (click)="irAActualizacionSemanal()">
                 <i class="fa-solid fa-arrows-rotate"></i>
-                Ir a actualización semanal
+                Ir a actualización preliminar
               </button>
               }
             </div>
@@ -173,7 +173,7 @@
           <div class="seccion-titulo seccion-archivos">
             <div>
               <strong>Archivos requeridos</strong>
-              <p>Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas mensuales.
+              <p>Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas del módulo consolidado.
               </p>
             </div>
           </div>
@@ -262,7 +262,7 @@
             <div>
               <strong>Procesamiento acumulativo</strong>
               <span>La información anterior del mismo periodo se reemplazará de forma versionada y los registros nuevos
-                se integrarán al preliminar mensual.</span>
+                se integrarán al preliminar del mes.</span>
             </div>
           </div>
         </div>
@@ -478,7 +478,7 @@
     } @else if (!respuestaValida()) {
     <div>
       <strong>Corrija las inconsistencias antes de continuar.</strong>
-      <span>La información no fue integrada en las tablas semanales.</span>
+      <span>La información no fue integrada en las tablas preliminares.</span>
     </div>
 
     <button type="button" class="btn btn-siiid" (click)="volverACaptura()">
@@ -542,7 +542,7 @@
 <div class="procesando-overlay">
   <div class="procesando-caja">
     <div class="procesando-spinner"></div>
-    <strong>Validando {{ esActualizacion ? 'actualización' : 'carga' }} semanal...</strong>
+    <strong>Validando {{ esActualizacion ? 'actualización' : 'carga' }} preliminar...</strong>
     <span>
       Se están revisando estructura, catálogos, periodo y modalidades
       configuradas.
@@ -871,7 +871,7 @@
   <div class="acuse-body">
     @if (acusePrevioUrl()) {
     <iframe class="acuse-frame" [src]="acusePrevioUrl()"
-      [title]="esActualizacion ? 'Informe previo de actualización semanal' : 'Informe previo semanal'"></iframe>
+      [title]="esActualizacion ? 'Informe previo de actualización preliminar' : 'Informe previo preliminar'"></iframe>
     }
   </div>
 

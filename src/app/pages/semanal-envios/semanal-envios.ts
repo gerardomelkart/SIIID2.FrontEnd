@@ -191,7 +191,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       mesCorte < 1 ||
       mesCorte > 12
     ) {
-      mostrarAdvertencia('Periodo inválido', 'Seleccione un periodo mensual válido.');
+      mostrarAdvertencia('Periodo inválido', 'Seleccione un periodo válido.');
       return;
     }
 

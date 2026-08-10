@@ -182,7 +182,7 @@ export class SessionService {
         {
           idModulo: 0,
           clave: 'MENSUAL',
-          nombre: 'SIIID2 Mensual',
+          nombre: 'SIIID2 Consolidado',
           habilitaCarga: usuario.habilitaCarga,
           habilitaModificacion: usuario.habilitaModificacion,
           administraDelitos: false,

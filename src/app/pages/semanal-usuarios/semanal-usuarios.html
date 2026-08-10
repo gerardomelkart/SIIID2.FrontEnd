@@ -324,7 +324,7 @@
 
       @if (formulario().habilitaSemanal) {
       <label class="switch-row">
-        <span>Carga semanal</span>
+        <span>Carga preliminar</span>
         <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'"
           [ngModel]="formulario().habilitaCargaSemanal"
           (ngModelChange)="actualizarCampo('habilitaCargaSemanal', $event)">
@@ -332,7 +332,7 @@
 
       @if (formulario().rol === 'SUPER_USUARIO') {
       <label class="switch-row">
-        <span>Administración de delitos semanales</span>
+        <span>Administración de delitos preliminares</span>
         <input type="checkbox" [ngModel]="formulario().administraDelitosSemanal"
           (ngModelChange)="actualizarCampo('administraDelitosSemanal', $event)">
       </label>

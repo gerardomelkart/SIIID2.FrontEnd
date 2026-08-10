@@ -230,8 +230,8 @@ export class CrudRegistros implements OnInit {
         Rol: usuario.rol,
         Entidad: usuario.entidadFederativa || 'Nacional',
         'Acceso consolidado': usuario.habilitaMensual ? 'Sí' : 'No',
-        'Carga mensual': usuario.habilitaCarga ? 'Sí' : 'No',
-        'Modificación mensual': usuario.habilitaModificacion ? 'Sí' : 'No',
+        'Carga consolidada': usuario.habilitaCarga ? 'Sí' : 'No',
+        'Modificación consolidada': usuario.habilitaModificacion ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
 

@@ -10,19 +10,19 @@
     <section class="siiid-card">
       <div class="siiid-card-header">
         <i class="fa-solid fa-globe"></i>
-        Configuración global semanal
+        Configuración global preliminar
       </div>
 
       <div class="config-body">
         <div class="config-info">
           <strong>Aplicación general</strong>
-          <p>Este switch habilita o bloquea la carga semanal acumulativa para los usuarios operativos con acceso al módulo preliminar.</p>
+          <p>Este switch habilita o bloquea la carga preliminar acumulativa para los usuarios operativos con acceso al módulo preliminar.</p>
         </div>
 
         <div class="config-switch-list">
           <label class="module-switch">
             <div>
-              <strong>Carga semanal</strong>
+              <strong>Carga preliminar</strong>
               <span>Permite integrar información nueva o reemplazar información previamente confirmada.</span>
             </div>
 
@@ -73,7 +73,7 @@
     <div class="siiid-card-header usuarios-card-header">
       <span>
         <i class="fa-solid fa-table-list"></i>
-        Configuración semanal por entidad
+        Configuración preliminar por entidad
       </span>
 
       <div class="usuarios-tools">
@@ -116,7 +116,7 @@
             </th>
 
             <th class="sortable" (click)="ordenarEntidadesPor('usuariosCarga')">
-              Carga semanal
+              Carga preliminar
               <i [class]="iconoOrdenEntidades('usuariosCarga')"></i>
             </th>
 
@@ -199,7 +199,7 @@
 <aside class="permisos-entidad-drawer">
   <div class="drawer-header">
     <div>
-      <h2>Permisos semanales por entidad</h2>
+      <h2>Permisos preliminares por entidad</h2>
       <p>{{ entidadSeleccionada()?.entidadFederativa }}</p>
     </div>
 
@@ -209,7 +209,7 @@
   <div class="drawer-body">
     <div class="config-info">
       <strong>Usuarios activos de la entidad</strong>
-      <p>Ajusta el acceso y la carga del módulo preliminar. Los permisos mensuales no serán modificados.</p>
+      <p>Ajusta el acceso y la carga del módulo preliminar. Los permisos del módulo consolidado no serán modificados.</p>
     </div>
 
     <div class="usuarios-permisos-list">

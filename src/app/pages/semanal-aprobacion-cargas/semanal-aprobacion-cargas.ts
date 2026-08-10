@@ -454,7 +454,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   tipoContenidoTexto(tipoContenido: string): string {
-    return tipoContenido === 'ACUMULADO_MES' ? 'Acumulado mensual' : 'Solo semana';
+    return tipoContenido === 'ACUMULADO_MES' ? 'Acumulado del mes' : 'Solo semana';
   }
 
   tipoCargaTexto(tipoCarga: string): string {
@@ -784,7 +784,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         this.errorDiferenciasDetalle.set(
           obtenerMensajeErrorHttp(
             error,
-            'No fue posible consultar las diferencias de la actualización semanal.',
+            'No fue posible consultar las diferencias de la actualización preliminar.',
           ),
         );
       },

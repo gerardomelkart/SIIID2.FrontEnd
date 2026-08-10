@@ -199,7 +199,7 @@ export class SemanalDelitos implements OnInit {
         }
 
         this.establecerConfiguracion(response.modalidades ?? []);
-        mostrarExitoInstitucional(response.mensaje || 'Configuración semanal guardada correctamente.');
+        mostrarExitoInstitucional(response.mensaje || 'Configuración preliminar guardada correctamente.');
       },
       error: (error) => {
         this.guardando.set(false);

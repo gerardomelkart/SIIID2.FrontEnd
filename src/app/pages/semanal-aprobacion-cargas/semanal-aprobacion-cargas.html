@@ -66,7 +66,7 @@
             <th>
               <button type="button" class="btn-orden" [class.activo]="columnaOrden() === 'periodo'"
                 (click)="ordenarPor('periodo')">
-                Periodo mensual
+                Periodo
                 <i [class]="'fa-solid ' + iconoOrden('periodo')"></i>
               </button>
             </th>
@@ -268,7 +268,7 @@
       </div>
 
       <div class="detalle-dato">
-        <span>Periodo mensual</span>
+        <span>Periodo</span>
         <strong>{{ periodoTexto(carga) }}</strong>
       </div>
 
@@ -302,8 +302,8 @@
         <h3>Registros incluidos</h3>
         <p>
           {{ esActualizacion(carga)
-          ? 'Nueva versión mensual que reemplazará únicamente la información confirmada del mismo usuario.'
-          : 'Información mensual del usuario que se incorporará al aprobar la carga.' }}
+          ? 'Nueva versión del periodo que reemplazará únicamente la información confirmada del mismo usuario.'
+          : 'Información del periodo del usuario que se incorporará al aprobar la carga.' }}
         </p>
       </div>
     </div>

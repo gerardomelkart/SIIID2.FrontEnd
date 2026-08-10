@@ -475,8 +475,8 @@ export class SemanalCarga implements OnInit {
           obtenerMensajeErrorHttp(
             error,
             this.esActualizacion
-              ? 'No fue posible validar la actualización semanal.'
-              : 'No fue posible validar la carga semanal.',
+              ? 'No fue posible validar la actualización preliminar.'
+              : 'No fue posible validar la carga preliminar.',
           ),
         );
       },
@@ -652,7 +652,7 @@ export class SemanalCarga implements OnInit {
           this.limpiarAcusePrevio();
 
           mostrarExitoInstitucional(
-            this.esActualizacion ? 'Actualización semanal rechazada' : 'Carga semanal rechazada',
+            this.esActualizacion ? 'Actualización preliminar rechazada' : 'Carga preliminar rechazada',
             resultado.mensaje,
           ).then(() => {
             this.reiniciarFormulario();
@@ -788,7 +788,7 @@ export class SemanalCarga implements OnInit {
   }
 
   etiquetaTipoContenido(tipo: TipoContenidoSemanal | undefined): string {
-    if (tipo === 'ACUMULADO_MES') return 'Acumulado mensual';
+    if (tipo === 'ACUMULADO_MES') return 'Acumulado del mes';
     if (tipo === 'SOLO_SEMANA') return 'Solo semana';
     return '-';
   }
@@ -876,7 +876,7 @@ export class SemanalCarga implements OnInit {
             this.estado.set('RESULTADO');
             this.errorGeneral.set(
               response.mensaje ||
-                'No fue posible obtener las diferencias de la actualización semanal.',
+                'No fue posible obtener las diferencias de la actualización preliminar.',
             );
             return;
           }

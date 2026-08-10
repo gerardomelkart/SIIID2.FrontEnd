@@ -1,9 +1,9 @@
 <div class="semanal-delitos">
   <div class="semanal-admin-header delitos-header-row">
     <div>
-      <span>Administración semanal</span>
-      <h1>Modalidades del módulo semanal</h1>
-      <p>Seleccione las modalidades permitidas en los archivos semanales.</p>
+      <span>Administración preliminar</span>
+      <h1>Modalidades del módulo preliminar</h1>
+      <p>Seleccione las modalidades permitidas en los archivos preliminares.</p>
     </div>
 
     <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()"
@@ -22,7 +22,7 @@
 
     <div class="resumen-card resumen-seleccionados">
       <strong>{{ totalSeleccionados() }}</strong>
-      <span>Incluidas semanalmente</span>
+      <span>Incluidas en el preliminar</span>
     </div>
 
     <div class="resumen-card resumen-opcionales">

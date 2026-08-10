@@ -133,7 +133,7 @@ export class SemanalArchivosOriginales implements OnInit {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar los archivos originales semanales',
+          'No fue posible consultar los archivos originales preliminares',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },

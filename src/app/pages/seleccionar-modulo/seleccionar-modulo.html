@@ -17,13 +17,13 @@
           }
         </span>
 
-        <strong>{{ modulo.nombre }}</strong>
+        <strong>{{ modulo.clave === 'MENSUAL' ? 'Consolidado' : 'Preliminar' }}</strong>
 
         <span>
           @if (modulo.clave === 'MENSUAL') {
-          Integración mensual de incidencia delictiva.
+          Integración consolidada de incidencia delictiva.
           } @else {
-          Integración y seguimiento semanal de delitos configurados.
+          Integración y seguimiento preliminar de delitos configurados.
           }
         </span>
       </button>
