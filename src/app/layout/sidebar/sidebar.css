@@ -52,26 +52,36 @@
   word-break: break-word;
 }
 
-.user-status {
+.user-home-button {
   margin-top: 5px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: #1f6b35;
-  background: #eaf7ee;
-  border: 1px solid #cae8d2;
+  color: #fff;
+  background: var(--siiid-guinda);
+  border: 1px solid var(--siiid-guinda);
   border-radius: 20px;
-  padding: 3px 8px;
+  padding: 4px 9px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.2;
   font-weight: 900;
+  cursor: pointer;
 }
 
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, .15);
+.user-home-button i {
+  font-size: 10px;
+}
+
+.user-home-button:hover {
+  color: #fff;
+  background: var(--siiid-dorado);
+  border-color: var(--siiid-dorado);
+}
+
+.user-home-button:focus-visible {
+  outline: 2px solid var(--siiid-dorado);
+  outline-offset: 2px;
 }
 
 .system-info {

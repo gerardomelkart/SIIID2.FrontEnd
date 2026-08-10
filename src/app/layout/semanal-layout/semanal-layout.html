@@ -10,16 +10,16 @@
       <div class="user-card">
         <div class="user-main">
           <div class="avatar">
-            <img src="img/logoMujBandera.png" alt="Usuario en línea">
+            <img src="img/logoMujBandera.png" alt="Usuario">
           </div>
 
           <div class="user-info">
             <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
 
-            <div class="user-status">
-              <span class="status-dot"></span>
-              EN LÍNEA
-            </div>
+            <button type="button" class="user-home-button" (click)="regresarInicio()">
+              <i class="fa-solid fa-house"></i>
+              Regresar al inicio
+            </button>
           </div>
         </div>
 

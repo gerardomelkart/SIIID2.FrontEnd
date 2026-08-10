@@ -117,6 +117,10 @@ export class SemanalLayout implements OnInit {
     this.sesionAbierta.update((valor) => !valor);
   }
 
+  regresarInicio(): void {
+    void this.router.navigateByUrl('/semanal').then(() => window.location.reload());
+  }
+
   regresarSeleccionModulo(): void {
     this.sessionService.limpiarModuloActivo();
     void this.router.navigateByUrl('/seleccionar-modulo');
