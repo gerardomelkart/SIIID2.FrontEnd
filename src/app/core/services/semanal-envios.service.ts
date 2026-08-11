@@ -78,6 +78,18 @@ export class SemanalEnviosService {
     return `${API_BASE_URL}/semanal/envios/reporte-preliminar/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
+  crearTicketDescargaSabanas(anioCorte: number, tipo: string, modo: string) {
+    const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo).set('modo', modo);
+
+    return this.http.post<SemanalTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, {
+      params,
+    });
+  }
+
+  obtenerUrlDescargaSabanas(ticket: string): string {
+    return `${API_BASE_URL}/semanal/envios/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
+  }
+
   obtenerEnvios(filtro: SemanalEnviosFiltro = {}) {
     let params = new HttpParams();
 

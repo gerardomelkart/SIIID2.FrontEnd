@@ -1,12 +1,13 @@
 <div class="siiid-shell">
-    <app-topbar nombreModulo="Preliminar" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
+  <app-topbar nombreModulo="Preliminar" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
 
   <div class="siiid-body">
     @if (menuAbierto()) {
     <button type="button" class="menu-backdrop" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
     }
 
-    <aside id="siiid-navigation" class="sidebar" [class.mobile-open]="menuAbierto()" (click)="cerrarMenuSiEsNavegacion($event)">
+    <aside id="siiid-navigation" class="sidebar" [class.mobile-open]="menuAbierto()"
+      (click)="cerrarMenuSiEsNavegacion($event)">
       <div class="user-card">
         <div class="user-main">
           <div class="avatar">
@@ -70,6 +71,11 @@
         <a class="menu-link level-2" routerLink="/semanal/informes/reporte-preliminar" routerLinkActive="active">
           <i class="fa-solid fa-file-excel"></i>
           Reporte preliminar
+        </a>
+
+        <a class="menu-link level-2" routerLink="/semanal/informes/planos-estadisticos" routerLinkActive="active">
+          <i class="fa-solid fa-table"></i>
+          Planos estadísticos
         </a>
 
         @if (esSuperUsuario()) {

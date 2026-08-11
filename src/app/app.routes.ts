@@ -74,6 +74,15 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'informes/planos-estadisticos',
+        loadComponent: () =>
+          import('./pages/semanal-sabanas/semanal-sabanas').then((m) => m.SemanalSabanas),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+        },
+      },
+      {
         path: 'informes/cargas',
         loadComponent: () =>
           import('./pages/semanal-reporte-cargas/semanal-reporte-cargas').then(
