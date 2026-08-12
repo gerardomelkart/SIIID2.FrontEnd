@@ -157,14 +157,14 @@
                 }
 
                 @if (envio.esRechazadoAdministrador) {
-                <details class="position-relative">
+                <details class="position-relative" (toggle)="ajustarPosicionMotivo($event)">
                   <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
                     style="list-style: none; cursor: pointer;">
                     <i class="fa-solid fa-circle-exclamation"></i>
                   </summary>
 
                   <div
-                    class="position-absolute end-0 mt-2 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
+                    class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
                     <strong class="d-block mb-2">Motivo del rechazo</strong>
 
                     <div class="mb-2">

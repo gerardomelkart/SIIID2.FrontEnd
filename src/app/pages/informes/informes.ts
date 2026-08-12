@@ -390,6 +390,27 @@ export class Informes implements OnInit {
     return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
   }
 
+  ajustarPosicionMotivo(event: Event): void {
+    const detalle = event.currentTarget as HTMLDetailsElement;
+
+    if (!detalle.open) {
+      detalle.classList.remove('motivo-rechazo-arriba');
+      return;
+    }
+
+    const contenedor = detalle.closest('.envios-mensual-table-responsive');
+    const panel = detalle.querySelector<HTMLElement>('.motivo-rechazo-mensual');
+
+    if (!contenedor || !panel) return;
+
+    const espacioInferior =
+      contenedor.getBoundingClientRect().bottom - detalle.getBoundingClientRect().bottom;
+
+    const abrirArriba = espacioInferior < panel.offsetHeight + 12;
+
+    detalle.classList.toggle('motivo-rechazo-arriba', abrirArriba);
+  }
+
   private normalizarTexto(valor: string | null | undefined): string {
     return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
   }
