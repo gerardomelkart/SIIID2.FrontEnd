@@ -13,10 +13,16 @@
 }
 
 .motivo-rechazo {
+  top: calc(100% + 8px);
   z-index: 30;
   width: 520px;
   max-width: calc(100vw - 70px);
   white-space: normal;
+}
+
+.motivo-rechazo-arriba .motivo-rechazo {
+  top: auto;
+  bottom: calc(100% + 8px);
 }
 
 .reporte-table thead th.sortable:hover {
