@@ -144,7 +144,8 @@
         <tbody>
           @for (
           carga of cargasPaginadas();
-          track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.anioCorte + '-' + carga.mesCorte
+          track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.idDelito + '-' +
+          carga.fechaInicioSemana + '-' + carga.anioCorte + '-' + carga.mesCorte
           ) {
           <tr>
             <td>
@@ -157,7 +158,10 @@
               <strong>{{ carga.usuarioCarga }}</strong>
             </td>
 
-            <td>{{ periodoTexto(carga) }}</td>
+            <td>
+              <strong>{{ periodoTexto(carga) }}</strong>
+              <small class="d-block text-muted">{{ rangoSemanaTexto(carga) }}</small>
+            </td>
 
             <td>
               <span class="intentos-chip">{{ carga.intentos }}</span>

@@ -151,7 +151,10 @@
             <td>{{ envio.entidadFederativa }}</td>
             <td>{{ delitosTexto(envio) }}</td>
             <td>{{ envio.fechaEnvioTexto }}</td>
-            <td>{{ periodoTexto(envio) }}</td>
+            <td>
+              <strong>{{ periodoTexto(envio) }}</strong>
+              <small class="d-block text-muted">{{ rangoSemanaTexto(envio) }}</small>
+            </td>
 
             <td>
               <strong>{{ envio.usuarioCarga }}</strong>

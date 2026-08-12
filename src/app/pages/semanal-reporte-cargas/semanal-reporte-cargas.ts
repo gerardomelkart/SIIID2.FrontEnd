@@ -225,6 +225,10 @@ export class SemanalReporteCargas implements OnInit {
     return carga.periodo || this.crearPeriodoTexto(carga.anioCorte, carga.mesCorte);
   }
 
+  rangoSemanaTexto(carga: SemanalReporteCargaItem): string {
+    return `${this.formatearFechaCorta(carga.fechaInicioSemana)} al ${this.formatearFechaCorta(carga.fechaFinSemana)}`;
+  }
+
   delitosTexto(carga: SemanalReporteCargaItem): string {
     return carga.delitos?.length ? carga.delitos.join(', ') : '—';
   }
@@ -273,7 +277,7 @@ export class SemanalReporteCargas implements OnInit {
         Usuario: carga.usuarioCarga,
         'Entidad federativa': carga.entidadFederativa,
         'Delito(s)': this.delitosTexto(carga),
-        Periodo: this.periodoTexto(carga),
+        Periodo: `${this.periodoTexto(carga)} — ${this.rangoSemanaTexto(carga)}`,
         Intentos: carga.intentos,
         Estatus: this.etiquetaEstatus(carga),
         'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
@@ -381,20 +385,31 @@ export class SemanalReporteCargas implements OnInit {
 
         if (entidad !== 0) return entidad;
 
-        return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', { sensitivity: 'base' });
+        return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
+          sensitivity: 'base',
+        });
       });
 
-    const indice = cargasOrdenadas.findIndex(
+    const usuariosOrdenados: SemanalReporteCargaItem[] = [];
+    const usuariosAgregados = new Set<string>();
+
+    for (const item of cargasOrdenadas) {
+      const clave = `${item.idEntidadFederativa}-${item.idUsuarioCarga}`;
+
+      if (usuariosAgregados.has(clave)) continue;
+
+      usuariosAgregados.add(clave);
+      usuariosOrdenados.push(item);
+    }
+
+    const indice = usuariosOrdenados.findIndex(
       (item) =>
         item.idEntidadFederativa === carga.idEntidadFederativa &&
-        item.idUsuarioCarga === carga.idUsuarioCarga &&
-        item.anioCorte === carga.anioCorte &&
-        item.mesCorte === carga.mesCorte,
+        item.idUsuarioCarga === carga.idUsuarioCarga,
     );
 
     return indice >= 0 ? indice + 1 : null;
   }
-
   private obtenerValorOrden(carga: SemanalReporteCargaItem, campo: CampoOrden): ValorOrden {
     switch (campo) {
       case 'entidadFederativa':
@@ -404,7 +419,7 @@ export class SemanalReporteCargas implements OnInit {
       case 'usuario':
         return carga.usuarioCarga;
       case 'periodo':
-        return carga.anioCorte * 100 + carga.mesCorte;
+        return carga.fechaInicioSemana;
       case 'intentos':
         return carga.intentos;
       case 'ordenCarga':
@@ -460,6 +475,13 @@ export class SemanalReporteCargas implements OnInit {
     }).format(fecha);
 
     return periodo.charAt(0).toUpperCase() + periodo.slice(1);
+  }
+  private formatearFechaCorta(valor: string): string {
+    const partes = valor?.slice(0, 10).split('-');
+
+    if (!partes || partes.length !== 3) return '';
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
 
   private normalizarTexto(valor: string | null | undefined): string {

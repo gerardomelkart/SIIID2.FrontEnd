@@ -4,10 +4,14 @@ export interface SemanalReporteCargaItem {
   idEntidadFederativa: number;
   entidadFederativa: string;
   claveEntidad: string;
+  idDelito: number;
+  delito: string;
   delitos: string[];
   idUsuarioCarga: number;
   usuarioCarga: string;
   nombreUsuarioCarga: string;
+  fechaInicioSemana: string;
+  fechaFinSemana: string;
   anioCorte: number;
   mesCorte: number;
   periodo: string;

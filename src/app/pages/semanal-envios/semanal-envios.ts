@@ -436,6 +436,22 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       .join(', ');
   }
 
+  rangoSemanaTexto(envio: SemanalEnvioItem): string {
+    const bloques = envio.bloques ?? [];
+    const inicios = bloques
+      .map((bloque) => bloque.fechaInicioSemana)
+      .filter((fecha) => !!fecha)
+      .sort();
+    const finales = bloques
+      .map((bloque) => bloque.fechaFinSemana)
+      .filter((fecha) => !!fecha)
+      .sort();
+    const inicio = inicios[0] ?? envio.fechaInicioSemana;
+    const fin = finales[finales.length - 1] ?? envio.fechaFinSemana;
+
+    return `${this.formatearFechaCorta(inicio)} al ${this.formatearFechaCorta(fin)}`;
+  }
+
   delitosTexto(envio: SemanalEnvioItem): string {
     return envio.delitos?.length ? envio.delitos.join(', ') : '—';
   }
@@ -569,6 +585,15 @@ export class SemanalEnvios implements OnInit, OnDestroy {
       (a, b) => a.anioCorte * 100 + a.mesCorte - (b.anioCorte * 100 + b.mesCorte),
     );
   }
+
+  private formatearFechaCorta(valor: string): string {
+    const partes = valor?.slice(0, 10).split('-');
+
+    if (!partes || partes.length !== 3) return '';
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
   private crearPeriodoTexto(anioCorte: number, mesCorte: number): string {
     const fecha = new Date(anioCorte, mesCorte - 1, 1);
     const periodo = new Intl.DateTimeFormat('es-MX', {
