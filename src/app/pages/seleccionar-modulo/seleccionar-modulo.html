@@ -8,31 +8,49 @@
 
     <div class="modulo-grid">
       @for (modulo of modulos(); track modulo.idModulo) {
-      <button type="button" class="modulo-card" [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'" [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'" (click)="seleccionar(modulo)">
+      <button type="button"
+        class="modulo-card"
+        [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'"
+        [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'"
+        [class.modulo-card-federal]="modulo.clave === 'FEDERAL'"
+        (click)="seleccionar(modulo)">
+
         <span class="modulo-icon">
           @if (modulo.clave === 'MENSUAL') {
           <i class="fa-solid fa-calendar-days"></i>
-          } @else {
+          } @else if (modulo.clave === 'SEMANAL') {
           <i class="fa-solid fa-calendar-week"></i>
+          } @else {
+          <i class="fa-solid fa-landmark"></i>
           }
         </span>
 
-        <strong>{{ modulo.clave === 'MENSUAL' ? 'Consolidado' : 'Preliminar' }}</strong>
+        <strong>
+          @if (modulo.clave === 'MENSUAL') {
+          Consolidado
+          } @else if (modulo.clave === 'SEMANAL') {
+          Preliminar
+          } @else {
+          Federal
+          }
+        </strong>
 
         <span>
           @if (modulo.clave === 'MENSUAL') {
           Integración consolidada de incidencia delictiva.
-          } @else {
+          } @else if (modulo.clave === 'SEMANAL') {
           Integración y seguimiento preliminar de delitos configurados.
+          } @else {
+          Integración nacional de información de incidencia delictiva federal.
           }
         </span>
       </button>
       }
     </div>
 
-  <button type="button" class="cerrar-sesion" (click)="cerrarSesion()">
-    <i class="fa-solid fa-right-from-bracket"></i>
-    <span>Cerrar sesión</span>
-  </button>
+    <button type="button" class="cerrar-sesion" (click)="cerrarSesion()">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Cerrar sesión</span>
+    </button>
   </section>
 </div>

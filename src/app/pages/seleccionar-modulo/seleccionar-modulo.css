@@ -2,6 +2,7 @@
   display: block;
   --modulo-neutral: #667085;
   --modulo-preliminar: #235B4E;
+  --modulo-federal: #1F4E79;
 }
 
 .modulo-page {
@@ -23,7 +24,7 @@
 }
 
 .modulo-panel {
-  width: min(860px, 100%);
+  width: min(1180px, 100%);
   background: #fff;
   border-top: 8px solid var(--modulo-neutral);
   box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
@@ -46,7 +47,7 @@
 
 .modulo-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 22px;
 }
 
@@ -74,6 +75,11 @@
 .modulo-card-preliminar {
   --modulo-color: var(--modulo-preliminar);
   --modulo-shadow: rgba(35, 91, 78, .22);
+}
+
+.modulo-card-federal {
+  --modulo-color: var(--modulo-federal);
+  --modulo-shadow: rgba(31, 78, 121, .22);
 }
 
 .modulo-card:hover {

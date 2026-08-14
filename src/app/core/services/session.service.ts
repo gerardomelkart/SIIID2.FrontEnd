@@ -99,7 +99,12 @@ export class SessionService {
   }
 
   obtenerRutaModulo(clave: string): string {
-    return clave.toUpperCase() === 'SEMANAL' ? '/semanal' : '/';
+    const claveNormalizada = clave.trim().toUpperCase();
+
+    if (claveNormalizada === 'SEMANAL') return '/semanal';
+    if (claveNormalizada === 'FEDERAL') return '/federal';
+
+    return '/';
   }
 
   limpiarSesion(): void {

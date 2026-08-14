@@ -1,0 +1,39 @@
+<div class="federal-page" style="background-image: url('img/ImgFondo2.png')">
+  <img class="federal-logo" src="img/LogoSEGURIDAD.png"
+    alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
+
+  <section class="federal-panel">
+    <span class="federal-etiqueta">Módulo en desarrollo</span>
+
+    <div class="federal-icono">
+      <i class="fa-solid fa-landmark"></i>
+    </div>
+
+    <h1>SIIID2 Federal</h1>
+    <p class="federal-usuario">Bienvenido, {{ nombreUsuario() }}</p>
+
+    <p class="federal-descripcion">
+      Integración nacional de información de incidencia delictiva federal.
+    </p>
+
+    <p class="federal-estado">
+      La estructura inicial del módulo está habilitada en el ambiente de desarrollo.
+    </p>
+
+    <div class="federal-acciones">
+      @if (puedeCambiarModulo()) {
+      <button type="button" class="federal-boton federal-boton-secundario"
+        (click)="regresarSeleccionModulo()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Regresar a selección de módulo
+      </button>
+      }
+
+      <button type="button" class="federal-boton federal-boton-principal"
+        (click)="cerrarSesion()">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Cerrar sesión
+      </button>
+    </div>
+  </section>
+</div>

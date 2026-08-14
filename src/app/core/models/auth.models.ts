@@ -1,4 +1,4 @@
-export type ClaveModulo = 'MENSUAL' | 'SEMANAL';
+export type ClaveModulo = 'MENSUAL' | 'SEMANAL' | 'FEDERAL';
 
 export interface LoginRequest {
   usuario: string;

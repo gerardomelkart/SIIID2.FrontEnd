@@ -63,7 +63,6 @@ export const routes: Routes = [
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
         },
       },
-
       {
         path: 'informes/reporte-preliminar',
         loadComponent: () =>
@@ -147,6 +146,17 @@ export const routes: Routes = [
       },
     ],
   },
+
+  {
+    path: 'federal',
+    loadComponent: () =>
+      import('./pages/federal-inicio/federal-inicio').then((m) => m.FederalInicio),
+    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    data: {
+      modulo: 'FEDERAL',
+    },
+  },
+
 
   {
     path: '',
