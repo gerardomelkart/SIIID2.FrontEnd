@@ -246,10 +246,6 @@
           <small>Tu propio acceso al consolidado no puede deshabilitarse.</small>
           }
 
-          @if (!usuario.habilitaSemanal) {
-          <small>Debe conservar el consolidado porque no tiene acceso al preliminar.</small>
-          }
-
           @if (usuario.bloqueaOperacion) {
           <small>El rol CONSULTA no puede cargar ni actualizar.</small>
           }
