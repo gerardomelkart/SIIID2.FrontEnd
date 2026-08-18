@@ -333,17 +333,17 @@
   }
 
   .usuario-permisos-grid {
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 560px) {
-  .usuario-permisos-grid {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
-}
+
+  @media (max-width: 560px) {
+    .usuario-permisos-grid {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
 }
 
 .sortable {

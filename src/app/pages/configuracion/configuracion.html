@@ -255,33 +255,33 @@
           }
         </div>
 
-<div class="usuario-permisos-grid">
-  <label class="permiso-mini-switch">
-    <input type="checkbox" [disabled]="usuario.esUsuarioActual || guardandoEntidad()"
-      [ngModel]="usuario.habilitaMensual"
-      (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaMensual', $event)">
+        <div class="usuario-permisos-grid">
+          <label class="permiso-mini-switch">
+            <input type="checkbox" [disabled]="usuario.esUsuarioActual || guardandoEntidad()"
+              [ngModel]="usuario.habilitaMensual"
+              (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaMensual', $event)">
 
-    <span>Acceso</span>
-  </label>
+            <span>Acceso</span>
+          </label>
 
-  <label class="permiso-mini-switch">
-    <input type="checkbox"
-      [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
-      [ngModel]="usuario.habilitaCarga"
-      (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
+          <label class="permiso-mini-switch">
+            <input type="checkbox"
+              [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
+              [ngModel]="usuario.habilitaCarga"
+              (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaCarga', $event)">
 
-    <span>Carga</span>
-  </label>
+            <span>Carga</span>
+          </label>
 
-  <label class="permiso-mini-switch">
-    <input type="checkbox"
-      [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
-      [ngModel]="usuario.habilitaModificacion"
-      (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
+          <label class="permiso-mini-switch">
+            <input type="checkbox"
+              [disabled]="!usuario.habilitaMensual || usuario.bloqueaOperacion || guardandoEntidad()"
+              [ngModel]="usuario.habilitaModificacion"
+              (ngModelChange)="cambiarPermisoUsuarioEntidad(usuario.idUsuario, 'habilitaModificacion', $event)">
 
-    <span>Actualización</span>
-  </label>
-</div>
+            <span>Actualización</span>
+          </label>
+        </div>
       </div>
       } @empty {
       <div class="sin-usuarios-entidad">
