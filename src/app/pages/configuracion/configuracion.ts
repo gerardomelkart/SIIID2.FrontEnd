@@ -173,15 +173,15 @@ export class Configuracion implements OnInit {
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
 
   totalEntidadesAccesoActivo = computed(() => {
-    return this.entidadesConfiguracion().filter((x) => x.estadoAcceso === 'ACTIVO').length;
+    return this.entidadesConfiguracion().filter((x) => x.usuariosAcceso > 0).length;
   });
 
   totalEntidadesCargaActiva = computed(() => {
-    return this.entidadesConfiguracion().filter((x) => x.estadoCarga === 'ACTIVO').length;
+    return this.entidadesConfiguracion().filter((x) => x.usuariosCarga > 0).length;
   });
 
   totalEntidadesModificacionActiva = computed(() => {
-    return this.entidadesConfiguracion().filter((x) => x.estadoModificacion === 'ACTIVO').length;
+    return this.entidadesConfiguracion().filter((x) => x.usuariosModificacion > 0).length;
   });
 
   ngOnInit(): void {

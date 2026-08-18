@@ -152,13 +152,11 @@ export class SemanalConfiguracion implements OnInit {
   totalEntidades = computed(() => this.entidadesConfiguracion().length);
 
   totalEntidadesAccesoActivo = computed(
-    () =>
-      this.entidadesConfiguracion().filter((entidad) => entidad.estadoAcceso === 'ACTIVO').length,
+    () => this.entidadesConfiguracion().filter((entidad) => entidad.usuariosAcceso > 0).length,
   );
 
   totalEntidadesCargaActiva = computed(
-    () =>
-      this.entidadesConfiguracion().filter((entidad) => entidad.estadoCarga === 'ACTIVO').length,
+    () => this.entidadesConfiguracion().filter((entidad) => entidad.usuariosCarga > 0).length,
   );
 
   ngOnInit(): void {
