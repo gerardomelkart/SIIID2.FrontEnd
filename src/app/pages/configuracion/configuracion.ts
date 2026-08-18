@@ -54,7 +54,6 @@ interface UsuarioPermisoEntidad {
   habilitaMensual: boolean;
   habilitaCarga: boolean;
   habilitaModificacion: boolean;
-  habilitaSemanal: boolean;
   bloqueaOperacion: boolean;
   esUsuarioActual: boolean;
 }
@@ -343,7 +342,6 @@ export class Configuracion implements OnInit {
         habilitaMensual: usuario.habilitaMensual,
         habilitaCarga: usuario.habilitaCarga,
         habilitaModificacion: usuario.habilitaModificacion,
-        habilitaSemanal: usuario.habilitaSemanal,
         bloqueaOperacion: usuario.rol === ROLES.CONSULTA,
         esUsuarioActual: usuario.idUsuario === idUsuarioActual,
       }))
@@ -378,7 +376,7 @@ export class Configuracion implements OnInit {
         }
 
         if (permiso === 'habilitaMensual') {
-          if (!valor && (usuario.esUsuarioActual || !usuario.habilitaSemanal)) {
+          if (!valor && usuario.esUsuarioActual) {
             return usuario;
           }
 
@@ -550,7 +548,7 @@ export class Configuracion implements OnInit {
 
     return 'MIXTO';
   }
-  
+
   private sincronizarSwitchesGlobales(usuarios: UsuarioListadoItem[]): void {
     const usuariosOperativosConAcceso = usuarios.filter(
       (usuario) => usuario.activo && usuario.rol !== ROLES.CONSULTA && usuario.habilitaMensual,
@@ -562,7 +560,11 @@ export class Configuracion implements OnInit {
       return;
     }
 
-    this.habilitaCargaGlobal.set(usuariosOperativosConAcceso.every((usuario) => usuario.habilitaCarga));
-    this.habilitaModificacionGlobal.set(usuariosOperativosConAcceso.every((usuario) => usuario.habilitaModificacion));
+    this.habilitaCargaGlobal.set(
+      usuariosOperativosConAcceso.every((usuario) => usuario.habilitaCarga),
+    );
+    this.habilitaModificacionGlobal.set(
+      usuariosOperativosConAcceso.every((usuario) => usuario.habilitaModificacion),
+    );
   }
 }

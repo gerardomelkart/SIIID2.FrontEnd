@@ -248,13 +248,21 @@
 
 .usuario-permiso-card {
   display: grid;
-  grid-template-columns: 1fr 105px 130px 160px;
+  grid-template-columns: minmax(260px, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
   border: 1px solid #ddd;
   border-left: 6px solid var(--siiid-guinda);
   background: #fff;
   padding: 12px 14px;
+}
+
+.usuario-permisos-grid {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 22px;
+  flex-wrap: nowrap;
 }
 
 .usuario-permiso-info strong {
@@ -282,17 +290,26 @@
 }
 
 .permiso-mini-switch {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 7px;
   font-weight: 800;
   font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .permiso-mini-switch input {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.permiso-mini-switch:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: .5;
 }
 
 .sin-usuarios-entidad {
@@ -314,6 +331,19 @@
   .usuario-permiso-card {
     grid-template-columns: 1fr;
   }
+
+  .usuario-permisos-grid {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .usuario-permisos-grid {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
 }
 
 .sortable {
