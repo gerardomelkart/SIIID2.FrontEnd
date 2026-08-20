@@ -241,8 +241,8 @@ export class SemanalCarga implements OnInit {
 
   codigoReferenciaOperacion = computed(
     () =>
-      this.estadoSemana()?.codigoReferenciaPendiente?.trim() ||
       this.respuesta()?.codigoReferencia?.trim() ||
+      this.estadoSemana()?.codigoReferenciaPendiente?.trim() ||
       '',
   );
   puedeResolverPendiente = computed(() => this.estadoSemana()?.puedeResolverPendiente === true);
@@ -605,6 +605,8 @@ export class SemanalCarga implements OnInit {
           this.estado.set('RESULTADO');
           return;
         }
+
+        this.estadoSemana.set(null);
 
         if ((response.advertencias?.length ?? 0) > 0) {
           this.estado.set('RESULTADO');
