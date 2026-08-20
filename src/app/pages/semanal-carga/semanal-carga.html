@@ -370,17 +370,23 @@
         @if (estado() === 'CONFIRMADO') {
         @if (resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION') {
         Enviada a revisión administrativa
+        } @else if (esCargaCero()) {
+        Carga en cero aceptada
+        } @else if (esActualizacion) {
+        Actualización acumulativa aceptada
         } @else {
-        {{ esCargaCero() ? 'Carga en cero aceptada' : esActualizacion ? 'Actualización acumulativa aceptada' : 'Carga
-        acumulativa aceptada' }}
+        Carga acumulativa aceptada
         }
         } @else if (!respuestaValida()) {
         La {{ esActualizacion ? 'actualización' : 'carga' }} contiene inconsistencias
         } @else if (advertencias().length > 0) {
         {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
+        } @else if (esCargaCero()) {
+        Carga en cero validada
+        } @else if (esActualizacion) {
+        Actualización acumulativa validada
         } @else {
-        {{ esCargaCero() ? 'Carga en cero validada' : esActualizacion ? 'Actualización acumulativa validada' : 'Carga
-        acumulativa validada' }}
+        Carga acumulativa validada
         }
       </h2>
 
@@ -409,8 +415,15 @@
 
     <div>
       <span>Operación detectada</span>
-      <strong>{{ esCargaCero() ? 'Carga preliminar reportada en cero' : esActualizacion ? 'Actualización preliminar
-        acumulativa' : 'Carga preliminar acumulativa' }}</strong>
+      <strong>
+        @if (esCargaCero()) {
+        Carga preliminar reportada en cero
+        } @else if (esActualizacion) {
+        Actualización preliminar acumulativa
+        } @else {
+        Carga preliminar acumulativa
+        }
+      </strong>
     </div>
 
     <div>
@@ -949,8 +962,13 @@
 <div class="acuse-modal">
   <div class="acuse-header">
     <span>
-      {{ esCargaCero() ? 'Informe previo de carga semanal en cero' : esActualizacion ? 'Informe previo de actualización
-      preliminar' : 'Informe previo de entrega preliminar' }}
+      @if (esCargaCero()) {
+      Informe previo de carga semanal en cero
+      } @else if (esActualizacion) {
+      Informe previo de actualización preliminar
+      } @else {
+      Informe previo de entrega preliminar
+      }
     </span>
   </div>
 

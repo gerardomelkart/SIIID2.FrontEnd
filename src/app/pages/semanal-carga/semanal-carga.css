@@ -1013,7 +1013,7 @@
 
 .carga-cero-grid {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) minmax(230px, 1fr) minmax(230px, 1fr) auto;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   align-items: end;
   gap: 12px;
 }
