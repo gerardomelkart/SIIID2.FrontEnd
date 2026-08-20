@@ -10,6 +10,8 @@ import { SessionService } from '../../core/services/session.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
+type ModoReportePreliminar = 'CONFIRMADO' | 'PREVIO' | 'MIXTO';
+
 @Component({
   selector: 'app-semanal-planos',
   imports: [FormsModule],
@@ -41,6 +43,7 @@ export class SemanalPlanos implements OnInit {
 
   anioCorte = signal(new Date().getFullYear());
   mesCorte = signal(new Date().getMonth() + 1);
+  modoReporte = signal<ModoReportePreliminar>('CONFIRMADO');
   idEntidadSeleccionada = signal<number | null>(null);
   idDelitoSeleccionado = signal<number | null>(null);
   entidades = signal<SemanalReportePreliminarEntidadItem[]>([]);
@@ -49,23 +52,40 @@ export class SemanalPlanos implements OnInit {
   descargandoReporte = signal(false);
 
   operacionEnCurso = computed(() => this.cargandoOpciones() || this.descargandoReporte());
-  nombreMesSeleccionado = computed(() => this.meses.find(x => x.numero === this.mesCorte())?.nombre ?? '');
-  delitoSeleccionado = computed(() => this.delitos().find(x => x.idDelito === this.idDelitoSeleccionado()) ?? null);
+  nombreMesSeleccionado = computed(
+    () => this.meses.find((x) => x.numero === this.mesCorte())?.nombre ?? '',
+  );
+  delitoSeleccionado = computed(
+    () => this.delitos().find((x) => x.idDelito === this.idDelitoSeleccionado()) ?? null,
+  );
+  descripcionModo = computed(() => {
+    if (this.modoReporte() === 'PREVIO')
+      return 'Incluye únicamente cargas pendientes de aprobación.';
+    if (this.modoReporte() === 'MIXTO')
+      return 'Combina la información confirmada con la información pendiente disponible.';
+    return 'Incluye únicamente cargas confirmadas.';
+  });
 
   alcanceSeleccionado = computed(() => {
-    if (!this.esSuperUsuario()) return this.entidadUsuario() || this.entidades()[0]?.entidadFederativa || 'Mi entidad';
+    if (!this.esSuperUsuario())
+      return this.entidadUsuario() || this.entidades()[0]?.entidadFederativa || 'Mi entidad';
 
     const idEntidad = this.idEntidadSeleccionada();
 
     if (!idEntidad) return 'General — todas las entidades';
 
-    return this.entidades().find(x => x.idEntidadFederativa === idEntidad)?.entidadFederativa ?? 'Entidad seleccionada';
+    return (
+      this.entidades().find((x) => x.idEntidadFederativa === idEntidad)?.entidadFederativa ??
+      'Entidad seleccionada'
+    );
   });
 
   descripcionAlcance = computed(() => {
-    if (!this.esSuperUsuario()) return 'Incluye únicamente los registros confirmados que fueron cargados por tu usuario.';
-    if (this.idEntidadSeleccionada()) return 'Incluye los registros confirmados de todos los usuarios de la entidad seleccionada.';
-    return 'Incluye los registros confirmados de todas las entidades y todos los usuarios.';
+    if (!this.esSuperUsuario())
+      return 'Incluye únicamente los registros confirmados que fueron cargados por tu usuario.';
+    if (this.idEntidadSeleccionada())
+      return `${this.descripcionModo()} Alcance: todos los usuarios de la entidad seleccionada.`;
+    return `${this.descripcionModo()} Alcance: todas las entidades y todos los usuarios.`;
   });
 
   ngOnInit(): void {
@@ -90,10 +110,21 @@ export class SemanalPlanos implements OnInit {
     this.cambiarPeriodo();
   }
 
+  cambiarModo(valor: ModoReportePreliminar): void {
+    this.modoReporte.set(valor);
+    this.idEntidadSeleccionada.set(null);
+    this.idDelitoSeleccionado.set(null);
+    this.cargarOpciones();
+  }
+
   cambiarEntidad(valor: string | number | null): void {
     const idEntidad = Number(valor);
 
-    this.idEntidadSeleccionada.set(valor === null || valor === '' || !Number.isInteger(idEntidad) || idEntidad <= 0 ? null : idEntidad);
+    this.idEntidadSeleccionada.set(
+      valor === null || valor === '' || !Number.isInteger(idEntidad) || idEntidad <= 0
+        ? null
+        : idEntidad,
+    );
     this.idDelitoSeleccionado.set(null);
     this.cargarOpciones();
   }
@@ -101,7 +132,11 @@ export class SemanalPlanos implements OnInit {
   cambiarDelito(valor: string | number | null): void {
     const idDelito = Number(valor);
 
-    this.idDelitoSeleccionado.set(valor === null || valor === '' || !Number.isInteger(idDelito) || idDelito <= 0 ? null : idDelito);
+    this.idDelitoSeleccionado.set(
+      valor === null || valor === '' || !Number.isInteger(idDelito) || idDelito <= 0
+        ? null
+        : idDelito,
+    );
   }
 
   cargarOpciones(): void {
@@ -113,6 +148,7 @@ export class SemanalPlanos implements OnInit {
       .obtenerOpcionesReportePreliminar(
         this.anioCorte(),
         this.mesCorte(),
+        this.esSuperUsuario() ? this.modoReporte() : 'CONFIRMADO',
         this.esSuperUsuario() ? this.idEntidadSeleccionada() : null,
       )
       .subscribe({
@@ -148,7 +184,7 @@ export class SemanalPlanos implements OnInit {
     if (!idDelito) {
       mostrarAdvertencia(
         'Reporte no disponible',
-        'No existe información confirmada para el periodo y alcance seleccionados.',
+        'No existe información disponible para el periodo, estado y alcance seleccionados.',
       );
       return;
     }
@@ -160,13 +196,17 @@ export class SemanalPlanos implements OnInit {
         this.anioCorte(),
         this.mesCorte(),
         idDelito,
+        this.esSuperUsuario() ? this.modoReporte() : 'CONFIRMADO',
         this.esSuperUsuario() ? this.idEntidadSeleccionada() : null,
       )
       .subscribe({
         next: (response) => {
           if (!response.ticket) {
             this.descargandoReporte.set(false);
-            mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+            mostrarAdvertencia(
+              'Descarga no disponible',
+              'La API no devolvió un ticket de descarga.',
+            );
             return;
           }
 

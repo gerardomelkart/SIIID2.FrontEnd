@@ -61,13 +61,32 @@
             Mes de corte
           </label>
 
-          <select id="reporte-mes" class="form-select" [disabled]="operacionEnCurso()"
-            [ngModel]="mesCorte()" (ngModelChange)="cambiarMes(+$event)">
+          <select id="reporte-mes" class="form-select" [disabled]="operacionEnCurso()" [ngModel]="mesCorte()"
+            (ngModelChange)="cambiarMes(+$event)">
             @for (mes of meses; track mes.numero) {
             <option [value]="mes.numero">{{ mes.nombre }}</option>
             }
           </select>
         </div>
+
+        @if (esSuperUsuario()) {
+        <div class="reporte-campo">
+          <label for="reporte-modo">
+            <i class="fa-solid fa-layer-group"></i>
+            Estado de la información
+          </label>
+
+          <select id="reporte-modo" class="form-select" [disabled]="operacionEnCurso()" [ngModel]="modoReporte()"
+            (ngModelChange)="cambiarModo($event)">
+            <option value="CONFIRMADO">Reporte confirmado</option>
+            <option value="PREVIO">Reporte previo</option>
+            <option value="MIXTO">Reporte mixto</option>
+          </select>
+
+          <small class="reporte-campo-ayuda">{{ descripcionModo() }}</small>
+        </div>
+        }
+
 
         @if (esSuperUsuario()) {
         <div class="reporte-campo">
@@ -85,7 +104,8 @@
             }
           </select>
 
-          <small class="reporte-campo-ayuda">Solo aparecen entidades con información confirmada en el periodo.</small>
+          <small class="reporte-campo-ayuda">Solo aparecen entidades con información disponible para el estado
+            seleccionado.</small>
         </div>
         }
 
@@ -112,7 +132,7 @@
 
           <div>
             <strong>Selecciona el delito</strong>
-            <small>El archivo reunirá el acumulado confirmado del delito seleccionado.</small>
+            <small>El archivo reunirá el acumulado del estado y delito seleccionados.</small>
           </div>
         </div>
 
@@ -122,11 +142,10 @@
             Delito
           </label>
 
-          <select id="reporte-delito" class="form-select"
-            [disabled]="operacionEnCurso() || delitos().length === 0"
+          <select id="reporte-delito" class="form-select" [disabled]="operacionEnCurso() || delitos().length === 0"
             [ngModel]="idDelitoSeleccionado() ?? ''" (ngModelChange)="cambiarDelito($event)">
             @if (delitos().length === 0) {
-            <option value="">Sin información confirmada</option>
+            <option value="">Sin información disponible</option>
             }
 
             @for (delito of delitos(); track delito.idDelito) {
@@ -174,8 +193,8 @@
         } @else {
         <div class="reporte-vacio">
           <i class="fa-solid fa-database"></i>
-          <strong>Sin información confirmada</strong>
-          <span>No existen delitos disponibles para el periodo y alcance seleccionados.</span>
+          <strong>Sin información disponible</strong>
+          <span>No existen delitos disponibles para el periodo, estado y alcance seleccionados.</span>
         </div>
         }
       </main>

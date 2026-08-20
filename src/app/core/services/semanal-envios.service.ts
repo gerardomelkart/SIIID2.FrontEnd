@@ -44,9 +44,13 @@ export class SemanalEnviosService {
   obtenerOpcionesReportePreliminar(
     anioCorte: number,
     mesCorte: number,
+    modo: string,
     idEntidadFederativa?: number | null,
   ) {
-    let params = new HttpParams().set('anioCorte', anioCorte).set('mesCorte', mesCorte);
+    let params = new HttpParams()
+      .set('anioCorte', anioCorte)
+      .set('mesCorte', mesCorte)
+      .set('modo', modo);
 
     if (idEntidadFederativa) params = params.set('idEntidadFederativa', idEntidadFederativa);
 
@@ -60,12 +64,14 @@ export class SemanalEnviosService {
     anioCorte: number,
     mesCorte: number,
     idDelito: number,
+    modo: string,
     idEntidadFederativa?: number | null,
   ) {
     let params = new HttpParams()
       .set('anioCorte', anioCorte)
       .set('mesCorte', mesCorte)
-      .set('idDelito', idDelito);
+      .set('idDelito', idDelito)
+      .set('modo', modo);
 
     if (idEntidadFederativa) params = params.set('idEntidadFederativa', idEntidadFederativa);
 
