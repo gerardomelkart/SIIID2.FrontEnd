@@ -1,6 +1,5 @@
 const esLocal =
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1';
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 export const API_BASE_URL = esLocal ? 'api' : '/beta/api';
 
@@ -17,5 +16,6 @@ export const API_ENDPOINTS = {
   semanalAdministracionCargas: `${API_BASE_URL}/semanal/administracion/cargas-pendientes`,
   semanalEnvios: `${API_BASE_URL}/semanal/envios`,
   semanalArchivosOriginales: `${API_BASE_URL}/semanal/informes/archivos-originales`,
+  federalCatalogos: `${API_BASE_URL}/federal/catalogos`,
   notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
 } as const;

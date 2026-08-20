@@ -150,13 +150,19 @@ export const routes: Routes = [
   {
     path: 'federal',
     loadComponent: () =>
-      import('./pages/federal-inicio/federal-inicio').then((m) => m.FederalInicio),
+      import('./layout/federal-layout/federal-layout').then((m) => m.FederalLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
     data: {
       modulo: 'FEDERAL',
     },
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/federal-inicio/federal-inicio').then((m) => m.FederalInicio),
+      },
+    ],
   },
-
 
   {
     path: '',

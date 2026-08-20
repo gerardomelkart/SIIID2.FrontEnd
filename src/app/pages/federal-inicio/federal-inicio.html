@@ -1,39 +1,140 @@
-<div class="federal-page" style="background-image: url('img/ImgFondo2.png')">
-  <img class="federal-logo" src="img/LogoSEGURIDAD.png"
-    alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
+<div class="dashboard-page">
+  <section class="welcome-card">
+    <div class="welcome-content">
+      <div class="welcome-icon federal-welcome-icon">
+        <i class="fa-solid fa-landmark"></i>
+      </div>
 
-  <section class="federal-panel">
-    <span class="federal-etiqueta">Módulo en desarrollo</span>
+      <div>
+        <h1>Bienvenido, {{ nombreUsuario() }}</h1>
 
-    <div class="federal-icono">
-      <i class="fa-solid fa-landmark"></i>
+        <p>Sistema de Integración de Información de Incidencia Delictiva Federal.</p>
+
+        <div class="welcome-meta">
+          <span>
+            <i class="fa-solid fa-user-shield"></i>
+            {{ rolDescripcion() }}
+          </span>
+
+          <span>
+            <i class="fa-solid fa-earth-americas"></i>
+            Cobertura nacional
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="federal-resumen">
+    <div class="federal-resumen-header">
+      <div>
+        <h2>Catálogos federales</h2>
+        <p>Estructura vigente para la integración de información federal.</p>
+      </div>
+
+      <button type="button" class="federal-actualizar" [disabled]="cargando()"
+        (click)="cargarResumen()">
+        <i class="fa-solid fa-rotate" [class.fa-spin]="cargando()"></i>
+        Actualizar
+      </button>
     </div>
 
-    <h1>SIIID2 Federal</h1>
-    <p class="federal-usuario">Bienvenido, {{ nombreUsuario() }}</p>
+    @if (cargando()) {
+    <div class="federal-mensaje">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Consultando catálogos federales...
+    </div>
+    } @else if (resumen(); as datos) {
+    <div class="federal-grid">
+      <article class="federal-card">
+        <div class="federal-card-icon">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
 
-    <p class="federal-descripcion">
-      Integración nacional de información de incidencia delictiva federal.
-    </p>
+        <div class="federal-card-number">{{ datos.bienesJuridicos | number }}</div>
+        <div class="federal-card-label">Bienes jurídicos</div>
+      </article>
 
-    <p class="federal-estado">
-      La estructura inicial del módulo está habilitada en el ambiente de desarrollo.
-    </p>
+      <article class="federal-card">
+        <div class="federal-card-icon">
+          <i class="fa-solid fa-gavel"></i>
+        </div>
 
-    <div class="federal-acciones">
-      @if (puedeCambiarModulo()) {
-      <button type="button" class="federal-boton federal-boton-secundario"
-        (click)="regresarSeleccionModulo()">
-        <i class="fa-solid fa-arrow-left"></i>
-        Regresar a selección de módulo
-      </button>
-      }
+        <div class="federal-card-number">{{ datos.delitos | number }}</div>
+        <div class="federal-card-label">Delitos</div>
+      </article>
 
-      <button type="button" class="federal-boton federal-boton-principal"
-        (click)="cerrarSesion()">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Cerrar sesión
-      </button>
+      <article class="federal-card">
+        <div class="federal-card-icon">
+          <i class="fa-solid fa-list"></i>
+        </div>
+
+        <div class="federal-card-number">{{ datos.subtipos | number }}</div>
+        <div class="federal-card-label">Subtipos</div>
+      </article>
+
+      <article class="federal-card">
+        <div class="federal-card-icon">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+
+        <div class="federal-card-number">{{ datos.modalidades | number }}</div>
+        <div class="federal-card-label">Modalidades</div>
+      </article>
+
+      <article class="federal-card federal-card-comun">
+        <div class="federal-card-icon">
+          <i class="fa-solid fa-building-shield"></i>
+        </div>
+
+        <div class="federal-card-number">{{ datos.modalidadesComunes | number }}</div>
+        <div class="federal-card-label">Modalidades del fuero común</div>
+      </article>
+
+      <article class="federal-card federal-card-federal">
+        <div class="federal-card-icon">
+          <i class="fa-solid fa-landmark-flag"></i>
+        </div>
+
+        <div class="federal-card-number">{{ datos.modalidadesFederales | number }}</div>
+        <div class="federal-card-label">Modalidades del fuero federal</div>
+      </article>
+    </div>
+
+    <div class="federal-sabana">
+      <div class="federal-sabana-principal">
+        <span>Combinaciones de sábana</span>
+        <strong>{{ datos.combinacionesSabana | number }}</strong>
+      </div>
+
+      <div class="federal-sabana-detalle">
+        <span>
+          Fuero común
+          <strong>{{ datos.combinacionesComunes | number }}</strong>
+        </span>
+
+        <span>
+          Fuero federal
+          <strong>{{ datos.combinacionesFederales | number }}</strong>
+        </span>
+      </div>
+    </div>
+    } @else {
+    <div class="federal-mensaje federal-mensaje-error">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      {{ mensaje() }}
+    </div>
+    }
+  </section>
+
+  <section class="federal-siguiente">
+    <div class="federal-siguiente-icon">
+      <i class="fa-solid fa-file-arrow-up"></i>
+    </div>
+
+    <div>
+      <strong>Estructura federal preparada</strong>
+      <span>El siguiente componente será la carga inicial de carpetas, delitos y víctimas federales.</span>
     </div>
   </section>
 </div>
