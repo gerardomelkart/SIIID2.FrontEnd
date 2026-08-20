@@ -419,21 +419,21 @@ export class SemanalCarga implements OnInit {
     if (tramo) this.validarDisponibilidadSemana(tramo, this.solicitudValidacionSemana);
   }
 
-async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void> {
-  const input = event.target as HTMLInputElement;
-  const archivo = obtenerArchivoDesdeEvento(event);
+  async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const archivo = obtenerArchivoDesdeEvento(event);
 
-  if (archivo && !(await esArchivoCargaLegible(archivo))) {
-    input.value = '';
-    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+    if (archivo && !(await esArchivoCargaLegible(archivo))) {
+      input.value = '';
+      this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+      this.limpiarResultado();
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+      return;
+    }
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
     this.limpiarResultado();
-    this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
-    return;
   }
-
-  this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
-  this.limpiarResultado();
-}
 
   arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
     event.preventDefault();
@@ -450,25 +450,25 @@ async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void> {
     if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
   }
 
-async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
-  event.preventDefault();
-  event.stopPropagation();
-  this.archivoArrastrado.set(null);
+  async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(null);
 
-  const archivo = event.dataTransfer?.files.item(0) ?? null;
+    const archivo = event.dataTransfer?.files.item(0) ?? null;
 
-  if (!archivo) return;
+    if (!archivo) return;
 
-  if (!(await esArchivoCargaLegible(archivo))) {
-    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+    if (!(await esArchivoCargaLegible(archivo))) {
+      this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+      this.limpiarResultado();
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+      return;
+    }
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
     this.limpiarResultado();
-    this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
-    return;
   }
-
-  this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
-  this.limpiarResultado();
-}
 
   nombreArchivo(tipo: ArchivoCargaTipo): string {
     return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
@@ -555,13 +555,23 @@ async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
       });
   }
 
- async validarArchivos(): Promise<void> {
+  async validarArchivos(): Promise<void> {
     const archivos = this.archivos();
     const formulario = this.formulario();
     const tramo = this.tramoPrevisto();
 
     if (!tieneTresArchivosSeleccionados(archivos)) {
       this.errorGeneral.set('Debe seleccionar los archivos de carpetas, delitos y víctimas.');
+      return;
+    }
+
+    const archivoNoLegible = await obtenerArchivoCargaNoLegible(archivos);
+
+    if (archivoNoLegible) {
+      this.archivos.set(
+        actualizarArchivoSeleccionado(this.archivos(), archivoNoLegible.tipo, null),
+      );
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivoNoLegible.archivo));
       return;
     }
 
@@ -615,6 +625,14 @@ async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
         this.abrirAcusePrevio(response.codigoReferencia);
       },
       error: (error: unknown) => {
+        if (esErrorEnvioArchivos(error)) {
+          this.estado.set('CAPTURA');
+          this.errorGeneral.set(
+            'No fue posible leer o enviar alguno de los archivos. Verifique que estén cerrados en Excel y vuelva a seleccionarlos.',
+          );
+          return;
+        }
+
         const response = obtenerErrorPayload<SemanalCargaValidacionResponse>(error);
 
         if (response?.errores || response?.resumenValidacion) {

@@ -422,9 +422,18 @@ export class Actualizacion implements OnInit {
       return;
     }
 
+    const archivoNoLegible = await obtenerArchivoCargaNoLegible(archivos);
+
+    if (archivoNoLegible) {
+      this.archivos.set(
+        actualizarArchivoSeleccionado(this.archivos(), archivoNoLegible.tipo, null),
+      );
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivoNoLegible.archivo));
+      return;
+    }
+
     const mes = Number(this.mesCorte());
     const anio = Number(this.anioCorte());
-
     const idEntidad = this.esSuperUsuario() ? Number(this.idEntidadFederativa()) : null;
 
     this.estadoPeriodo.set('VALIDANDO');
@@ -488,16 +497,6 @@ export class Actualizacion implements OnInit {
           );
         },
       });
-
-    const archivoNoLegible = await obtenerArchivoCargaNoLegible(archivos);
-
-    if (archivoNoLegible) {
-      this.archivos.set(
-        actualizarArchivoSeleccionado(this.archivos(), archivoNoLegible.tipo, null),
-      );
-      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivoNoLegible.archivo));
-      return;
-    }
   }
   aceptarAdvertenciasActualizacion(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();
