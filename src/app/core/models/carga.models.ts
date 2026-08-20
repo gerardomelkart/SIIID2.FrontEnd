@@ -26,6 +26,7 @@ export interface CargaValidacionError {
   codigo: string;
   descripcionResumen: string;
   mensaje: string;
+  totalRegistrosAfectados: number;
 }
 
 export interface ConfirmarCargaRequest {
