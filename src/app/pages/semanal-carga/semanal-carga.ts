@@ -24,9 +24,10 @@ import {
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
 import {
+  confirmarAccion,
+  mostrarAdvertencia,
   mostrarError,
   mostrarExitoInstitucional,
-  mostrarAdvertencia,
 } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -36,6 +37,8 @@ import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
 import { SessionService } from '../../core/services/session.service';
 import { ROLES } from '../../core/constants/roles.constants';
+import { SemanalDelitosService } from '../../core/services/semanal-delitos.service';
+import { DelitoSemanalHabilitadoItem } from '../../core/models/semanal-delitos.models';
 
 type EstadoCargaSemanal =
   | 'CAPTURA'
@@ -72,6 +75,7 @@ interface VistaTramoSemanal {
 })
 export class SemanalCarga implements OnInit {
   private readonly semanalCargaService = inject(SemanalCargaService);
+  private readonly semanalDelitosService = inject(SemanalDelitosService);
   private readonly sessionService = inject(SessionService);
   private readonly catalogosService = inject(CatalogosService);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -95,6 +99,54 @@ export class SemanalCarga implements OnInit {
   idEntidadFederativa = signal('');
   entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
   cargandoEntidades = signal(false);
+
+  idDelitoCargaCero = signal('');
+  delitosHabilitados = signal<DelitoSemanalHabilitadoItem[]>([]);
+  cargandoDelitosHabilitados = signal(false);
+  validandoCargaCero = signal(false);
+  operacionCargaCero = signal(false);
+  errorCargaCero = signal('');
+
+  readonly periodoCargaCero = computed(() => {
+    const fechaActual = new Date();
+    const diasDesdeLunes = (fechaActual.getDay() + 6) % 7;
+    const fechaInicio = new Date(
+      fechaActual.getFullYear(),
+      fechaActual.getMonth(),
+      fechaActual.getDate(),
+    );
+    fechaInicio.setDate(fechaInicio.getDate() - diasDesdeLunes - 7);
+
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaFin.getDate() + 6);
+
+    return { fechaInicio, fechaFin };
+  });
+
+  readonly delitoCargaCeroSeleccionado = computed(() => {
+    const idDelito = Number(this.idDelitoCargaCero());
+    return this.delitosHabilitados().find((x) => x.idDelito === idDelito) ?? null;
+  });
+
+  readonly esCargaCero = computed(() => {
+    const response = this.respuesta();
+
+    return (
+      this.operacionCargaCero() ||
+      (!!response &&
+        response.totalCarpetasIncluidas === 0 &&
+        response.totalDelitosIncluidos === 0 &&
+        response.totalVictimasIncluidas === 0)
+    );
+  });
+
+  readonly puedeValidarCargaCero = computed(() => {
+    if (this.validandoCargaCero() || this.estado() === 'CONFIRMANDO') return false;
+    if (!this.idDelitoCargaCero()) return false;
+    if (this.esSuperUsuario() && !this.idEntidadFederativa()) return false;
+
+    return true;
+  });
 
   readonly meses = [
     { valor: 1, nombre: 'Enero' },
@@ -230,6 +282,9 @@ export class SemanalCarga implements OnInit {
   ]);
 
   ngOnInit(): void {
+    this.cargarDelitosHabilitados();
+
+    if (this.esSuperUsuario()) this.cargarEntidadesFederativas();
     const codigoReferencia = this.activatedRoute.snapshot.queryParamMap.get('resolver')?.trim();
 
     if (!codigoReferencia) return;
@@ -291,6 +346,16 @@ export class SemanalCarga implements OnInit {
     this.archivos.set(crearArchivosCargaVacios());
     this.formulario.update((actual) => ({ ...actual, semanaSeleccionada: '' }));
     this.limpiarResultado();
+  }
+
+  onDelitoCargaCeroChange(valor: string): void {
+    this.idDelitoCargaCero.set(valor);
+    this.errorCargaCero.set('');
+  }
+
+  onEntidadCargaCeroChange(valor: string): void {
+    this.idEntidadFederativa.set(valor);
+    this.errorCargaCero.set('');
   }
 
   async descargarValidacion(): Promise<void> {
@@ -400,6 +465,75 @@ export class SemanalCarga implements OnInit {
     }
 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  async validarCargaCero(): Promise<void> {
+    const idDelito = Number(this.idDelitoCargaCero());
+    const delito = this.delitoCargaCeroSeleccionado();
+    const periodo = this.periodoCargaCero();
+
+    if (!Number.isInteger(idDelito) || idDelito <= 0 || !delito) {
+      this.errorCargaCero.set('Debe seleccionar el delito que desea reportar en cero.');
+      return;
+    }
+
+    if (this.esSuperUsuario() && !this.idEntidadFederativa()) {
+      this.errorCargaCero.set(
+        'Debe seleccionar la entidad federativa que realizará la carga en cero.',
+      );
+      return;
+    }
+
+    const confirmacion = await confirmarAccion(
+      'Confirmar carga en cero',
+      `¿Está seguro de que desea cargar ${delito.delito} para la semana del ${this.formatearFecha(periodo.fechaInicio)} al ${this.formatearFecha(periodo.fechaFin)} en cero?`,
+      'Sí, continuar',
+    );
+
+    if (!confirmacion.isConfirmed) return;
+
+    this.operacionCargaCero.set(true);
+    this.validandoCargaCero.set(true);
+    this.estado.set('VALIDANDO');
+    this.respuesta.set(null);
+    this.resultadoConfirmacion.set(null);
+    this.errorCargaCero.set('');
+    this.errorGeneral.set('');
+    this.limpiarAcusePrevio();
+
+    this.semanalCargaService
+      .validarCargaCero({
+        idDelito,
+        idEntidadFederativa: this.esSuperUsuario() ? Number(this.idEntidadFederativa()) : null,
+      })
+      .pipe(finalize(() => this.validandoCargaCero.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.respuesta.set(response);
+
+          if (!response.esValido) {
+            this.estado.set('RESULTADO');
+            return;
+          }
+
+          this.abrirAcusePrevio(response.codigoReferencia);
+        },
+        error: (error: unknown) => {
+          const response = obtenerErrorPayload<SemanalCargaValidacionResponse>(error);
+
+          if (response?.errores || response?.resumenValidacion) {
+            this.respuesta.set(response);
+            this.estado.set('RESULTADO');
+            return;
+          }
+
+          this.operacionCargaCero.set(false);
+          this.estado.set('CAPTURA');
+          this.errorCargaCero.set(
+            obtenerMensajeErrorHttp(error, 'No fue posible preparar la carga semanal en cero.'),
+          );
+        },
+      });
   }
 
   validarArchivos(): void {
@@ -636,11 +770,30 @@ export class SemanalCarga implements OnInit {
       });
   }
 
-  confirmarCarga(aceptar: boolean): void {
+  async confirmarCarga(aceptar: boolean): Promise<void> {
     const codigoReferencia = this.codigoReferenciaOperacion();
 
     if (this.soloConsultaPendiente() || !codigoReferencia || this.estado() === 'CONFIRMANDO')
       return;
+    if (aceptar && this.esCargaCero()) {
+      const response = this.respuesta();
+      const periodo = this.periodoCargaCero();
+      const fechaInicio = response?.periodo?.fechaInicioSemana
+        ? this.formatearFecha(response.periodo.fechaInicioSemana)
+        : this.formatearFecha(periodo.fechaInicio);
+      const fechaFin = response?.periodo?.fechaFinSemana
+        ? this.formatearFecha(response.periodo.fechaFinSemana)
+        : this.formatearFecha(periodo.fechaFin);
+      const delito = this.delitoCargaCeroSeleccionado()?.delito ?? 'el delito seleccionado';
+
+      const confirmacion = await confirmarAccion(
+        'Confirmación definitiva',
+        `¿Confirma que desea registrar ${delito} para la semana del ${fechaInicio} al ${fechaFin} en cero? Después de confirmar, una carga posterior para esa semana será considerada una actualización.`,
+        'Sí, confirmar en cero',
+      );
+
+      if (!confirmacion.isConfirmed) return;
+    }
 
     const estadoAnterior = this.estado();
 
@@ -652,7 +805,9 @@ export class SemanalCarga implements OnInit {
           this.limpiarAcusePrevio();
 
           mostrarExitoInstitucional(
-            this.esActualizacion ? 'Actualización preliminar rechazada' : 'Carga preliminar rechazada',
+            this.esActualizacion
+              ? 'Actualización preliminar rechazada'
+              : 'Carga preliminar rechazada',
             resultado.mensaje,
           ).then(() => {
             this.reiniciarFormulario();
@@ -700,6 +855,8 @@ export class SemanalCarga implements OnInit {
     this.resultadoConfirmacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
+    this.operacionCargaCero.set(false);
+    this.errorCargaCero.set('');
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
@@ -716,6 +873,10 @@ export class SemanalCarga implements OnInit {
     this.resultadoConfirmacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
+    this.idDelitoCargaCero.set('');
+    this.idEntidadFederativa.set('');
+    this.operacionCargaCero.set(false);
+    this.errorCargaCero.set('');
     this.archivoArrastrado.set(null);
     this.limpiarAcusePrevio();
     this.estado.set('CAPTURA');
@@ -844,6 +1005,31 @@ export class SemanalCarga implements OnInit {
       });
   }
 
+  private cargarDelitosHabilitados(): void {
+    this.cargandoDelitosHabilitados.set(true);
+    this.errorCargaCero.set('');
+
+    this.semanalDelitosService
+      .obtenerDelitosHabilitados()
+      .pipe(finalize(() => this.cargandoDelitosHabilitados.set(false)))
+      .subscribe({
+        next: (response) => {
+          if (!response.esValido) {
+            this.errorCargaCero.set(
+              response.mensaje || 'No fue posible obtener los delitos habilitados.',
+            );
+            return;
+          }
+
+          this.delitosHabilitados.set(response.delitos);
+        },
+        error: (error: unknown) =>
+          this.errorCargaCero.set(
+            obtenerMensajeErrorHttp(error, 'No fue posible cargar los delitos habilitados.'),
+          ),
+      });
+  }
+
   private cargarEntidadesFederativas(): void {
     this.cargandoEntidades.set(true);
     this.errorSemana.set('');
@@ -956,7 +1142,7 @@ export class SemanalCarga implements OnInit {
       fechaInicioSemana,
       fechaFinSemana,
       fechaInicioTramo: fechaInicioMes,
-      fechaFinTramo: fechaActual,
+      fechaFinTramo: this.sumarDias(fechaActual, -1),
       fechaInicioMesCorte: fechaInicioMes,
       mesCorte: fechaActual.getMonth() + 1,
       anioCorte: fechaActual.getFullYear(),

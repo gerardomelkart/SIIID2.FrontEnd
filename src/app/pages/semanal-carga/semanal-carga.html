@@ -16,6 +16,86 @@
   </div>
 
   @if (!mostrandoResultado()) {
+  <section class="siiid-card carga-cero-card mt-4">
+    <div class="siiid-card-header carga-cero-header">
+      <i class="fa-solid fa-file-circle-minus"></i>
+      Reportar semana en cero
+    </div>
+
+    <div class="carga-cero-contenido">
+      <div class="carga-cero-descripcion">
+        <i class="fa-solid fa-circle-info"></i>
+
+        <div>
+          <strong>Registro sin incidencia</strong>
+          <span>Utilice esta opción cuando no existan registros para un delito durante la semana inmediata
+            anterior.</span>
+        </div>
+      </div>
+
+      <div class="carga-cero-grid">
+        <div class="carga-cero-periodo">
+          <span>Semana que se reportará</span>
+          <strong>{{ formatearFecha(periodoCargaCero().fechaInicio) }} al {{ formatearFecha(periodoCargaCero().fechaFin)
+            }}</strong>
+        </div>
+
+        <label class="campo-periodo">
+          <span>Delito</span>
+
+          <select class="form-select" [disabled]="cargandoDelitosHabilitados()" [ngModel]="idDelitoCargaCero()"
+            [ngModelOptions]="{ standalone: true }" (ngModelChange)="onDelitoCargaCeroChange($event)">
+            <option value="">{{ cargandoDelitosHabilitados() ? 'Cargando delitos...' : 'Seleccione un delito' }}
+            </option>
+
+            @for (delito of delitosHabilitados(); track delito.idDelito) {
+            <option [value]="delito.idDelito">{{ delito.delito }}</option>
+            }
+          </select>
+        </label>
+
+        @if (esSuperUsuario()) {
+        <label class="campo-periodo">
+          <span>Entidad federativa</span>
+
+          <select class="form-select" [disabled]="cargandoEntidades()" [ngModel]="idEntidadFederativa()"
+            [ngModelOptions]="{ standalone: true }" (ngModelChange)="onEntidadCargaCeroChange($event)">
+            <option value="">{{ cargandoEntidades() ? 'Cargando entidades...' : 'Seleccione una entidad' }}</option>
+
+            @for (entidad of entidadesFederativas(); track entidad.idEntidadFederativa) {
+            <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
+            }
+          </select>
+        </label>
+        }
+
+        <button type="button" class="btn btn-siiid btn-carga-cero" [disabled]="!puedeValidarCargaCero()"
+          (click)="validarCargaCero()">
+          @if (validandoCargaCero()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Preparando...
+          } @else {
+          <i class="fa-solid fa-file-circle-check"></i>
+          Generar carga en cero
+          }
+        </button>
+      </div>
+
+      @if (errorCargaCero()) {
+      <div class="alert alert-danger mb-0 mt-3">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ errorCargaCero() }}
+      </div>
+      }
+    </div>
+  </section>
+
+  <div class="separador-operaciones">
+    <span>O realice una carga mediante archivos</span>
+  </div>
+  }
+
+  @if (!mostrandoResultado()) {
   <div class="row g-4 mt-1">
     <div class="col-xl-8">
       <section class="siiid-card carga-card">
@@ -45,7 +125,7 @@
           <div class="seccion-titulo">
             <div>
               <strong>Carga acumulativa</strong>
-              <p>Los archivos deben contener la información acumulada del mes en curso hasta la fecha actual.</p>
+              <p>Los archivos deben contener la información acumulada del mes en curso hasta el día anterior.</p>
             </div>
           </div>
 
@@ -78,7 +158,7 @@
           <div class="seccion-titulo seccion-periodo">
             <div>
               <strong>Periodo calculado automáticamente</strong>
-              <p>La operación corresponde al acumulado del mes en curso hasta la fecha actual.</p>
+              <p>La operación corresponde al acumulado del mes en curso hasta el día anterior.</p>
             </div>
           </div>
 
@@ -173,7 +253,8 @@
           <div class="seccion-titulo seccion-archivos">
             <div>
               <strong>Archivos requeridos</strong>
-              <p>Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas del módulo consolidado.
+              <p>Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas del módulo
+                consolidado.
               </p>
             </div>
           </div>
@@ -290,14 +371,16 @@
         @if (resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION') {
         Enviada a revisión administrativa
         } @else {
-        {{ esActualizacion ? 'Actualización acumulativa aceptada' : 'Carga acumulativa aceptada' }}
+        {{ esCargaCero() ? 'Carga en cero aceptada' : esActualizacion ? 'Actualización acumulativa aceptada' : 'Carga
+        acumulativa aceptada' }}
         }
         } @else if (!respuestaValida()) {
         La {{ esActualizacion ? 'actualización' : 'carga' }} contiene inconsistencias
         } @else if (advertencias().length > 0) {
         {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
         } @else {
-        {{ esActualizacion ? 'Actualización acumulativa validada' : 'Carga acumulativa validada' }}
+        {{ esCargaCero() ? 'Carga en cero validada' : esActualizacion ? 'Actualización acumulativa validada' : 'Carga
+        acumulativa validada' }}
         }
       </h2>
 
@@ -326,7 +409,8 @@
 
     <div>
       <span>Operación detectada</span>
-      <strong>{{ esActualizacion ? 'Actualización preliminar acumulativa' : 'Carga preliminar acumulativa' }}</strong>
+      <strong>{{ esCargaCero() ? 'Carga preliminar reportada en cero' : esActualizacion ? 'Actualización preliminar
+        acumulativa' : 'Carga preliminar acumulativa' }}</strong>
     </div>
 
     <div>
@@ -542,7 +626,8 @@
 <div class="procesando-overlay">
   <div class="procesando-caja">
     <div class="procesando-spinner"></div>
-    <strong>Validando {{ esActualizacion ? 'actualización' : 'carga' }} preliminar...</strong>
+    <strong>{{ esCargaCero() ? 'Preparando carga semanal en cero...' : 'Validando ' + (esActualizacion ? 'actualización'
+      : 'carga') + ' preliminar...' }}</strong>
     <span>
       Se están revisando estructura, catálogos, periodo y modalidades
       configuradas.
@@ -864,7 +949,8 @@
 <div class="acuse-modal">
   <div class="acuse-header">
     <span>
-      {{ esActualizacion ? 'Informe previo de actualización preliminar' : 'Informe previo de entrega preliminar' }}
+      {{ esCargaCero() ? 'Informe previo de carga semanal en cero' : esActualizacion ? 'Informe previo de actualización
+      preliminar' : 'Informe previo de entrega preliminar' }}
     </span>
   </div>
 
@@ -900,7 +986,7 @@
 
     <button type="button" class="btn-aceptar" (click)="confirmarCarga(true)">
       <i class="fa-solid fa-check"></i>
-      Aceptar
+      {{ esCargaCero() ? 'Confirmar carga en cero' : 'Aceptar' }}
     </button>
     }
     }

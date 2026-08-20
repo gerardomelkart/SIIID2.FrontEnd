@@ -4,6 +4,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constant
 import {
   ConfirmarCargaRequest,
   ConfirmarCargaResponse,
+  SemanalCargaCeroRequest,
   SemanalCargaPeriodoRequest,
   SemanalCargaValidacionResponse,
   SemanalSemanaDisponibilidadResponse,
@@ -43,6 +44,10 @@ export class SemanalCargaService {
       formData.append('idEntidadFederativa', periodo.idEntidadFederativa.toString());
 
     return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+  }
+
+  validarCargaCero(request: SemanalCargaCeroRequest) {
+    return this.http.post<SemanalCargaValidacionResponse>(`${this.apiUrl}/validar-cero`, request);
   }
 
   validarSemana(

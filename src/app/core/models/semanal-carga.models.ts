@@ -18,6 +18,11 @@ export interface SemanalCargaPeriodoRequest {
   idEntidadFederativa?: number | null;
 }
 
+export interface SemanalCargaCeroRequest {
+  idDelito: number;
+  idEntidadFederativa?: number | null;
+}
+
 export interface SemanalPeriodoCarga {
   tipoContenido: TipoContenidoSemanal;
   anioSemana: number;

@@ -961,7 +961,126 @@
   }
 }
 
+
+.carga-cero-card {
+  overflow: hidden;
+}
+
+.carga-cero-header {
+  background: #72531f;
+  color: #fff;
+}
+
+.carga-cero-header i {
+  margin-right: 7px;
+}
+
+.carga-cero-contenido {
+  padding: 20px 22px;
+}
+
+.carga-cero-descripcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 18px;
+  border-left: 5px solid var(--siiid-dorado);
+  background: #fff8eb;
+  padding: 12px 14px;
+}
+
+.carga-cero-descripcion>i {
+  margin-top: 2px;
+  color: #8a5b12;
+  font-size: 19px;
+}
+
+.carga-cero-descripcion strong,
+.carga-cero-descripcion span {
+  display: block;
+}
+
+.carga-cero-descripcion strong {
+  color: #72531f;
+  font-size: 14px;
+}
+
+.carga-cero-descripcion span {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.carga-cero-grid {
+  display: grid;
+  grid-template-columns: minmax(230px, 1fr) minmax(230px, 1fr) minmax(230px, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.carga-cero-periodo {
+  min-height: 46px;
+  border-left: 5px solid var(--siiid-guinda);
+  background: #edf4f1;
+  padding: 8px 12px;
+}
+
+.carga-cero-periodo span,
+.carga-cero-periodo strong {
+  display: block;
+}
+
+.carga-cero-periodo span {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.carga-cero-periodo strong {
+  margin-top: 3px;
+  color: var(--siiid-guinda-dark);
+  font-size: 13px;
+}
+
+.btn-carga-cero {
+  min-width: 220px;
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.btn-carga-cero:disabled {
+  opacity: .5;
+}
+
+.separador-operaciones {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0 4px;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.separador-operaciones::before,
+.separador-operaciones::after {
+  height: 1px;
+  flex: 1;
+  background: #d7dedb;
+  content: '';
+}
+
 @media (max-width: 1200px) {
+
+  .carga-cero-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .btn-carga-cero {
+    width: 100%;
+  }
 
   .periodo-confirmado {
     grid-template-columns: repeat(3, 1fr);
@@ -982,6 +1101,15 @@
 }
 
 @media (max-width: 800px) {
+
+  .carga-cero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-carga-cero {
+    width: 100%;
+    min-width: 0;
+  }
 
   .carga-header,
   .resultado-acciones {
