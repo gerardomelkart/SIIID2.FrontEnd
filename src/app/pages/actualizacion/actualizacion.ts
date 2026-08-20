@@ -33,7 +33,11 @@ import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/a
 import {
   actualizarArchivoSeleccionado,
   crearArchivosCargaVacios,
+  esArchivoCargaLegible,
+  esErrorEnvioArchivos,
+  obtenerArchivoCargaNoLegible,
   obtenerArchivoDesdeEvento,
+  obtenerMensajeArchivoCargaNoLegible,
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
@@ -351,14 +355,22 @@ export class Actualizacion implements OnInit {
     });
   }
 
-  seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
+  async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void> {
+    const input = event.target as HTMLInputElement;
     const archivo = obtenerArchivoDesdeEvento(event);
-
-    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
 
     this.respuestaValidacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
+
+    if (archivo && !(await esArchivoCargaLegible(archivo))) {
+      input.value = '';
+      this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+      return;
+    }
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
   }
 
   arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
@@ -376,25 +388,33 @@ export class Actualizacion implements OnInit {
     if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
   }
 
-  soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+  async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
     this.archivoArrastrado.set(null);
 
     const archivo = event.dataTransfer?.files.item(0) ?? null;
+
     if (!archivo) return;
 
-    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
     this.respuestaValidacion.set(null);
     this.diferencias.set(null);
     this.errorGeneral.set('');
+
+    if (!(await esArchivoCargaLegible(archivo))) {
+      this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+      return;
+    }
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
   }
 
   nombreArchivo(tipo: ArchivoCargaTipo): string {
     return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
   }
 
-  validarActualizacion(): void {
+  async validarActualizacion(): Promise<void> {
     const archivos = this.archivos();
 
     if (!tieneTresArchivosSeleccionados(archivos)) {
@@ -445,6 +465,14 @@ export class Actualizacion implements OnInit {
           this.prepararRevisionDiferencias(response.codigoReferencia);
         },
         error: (error: unknown) => {
+          if (esErrorEnvioArchivos(error)) {
+            this.estadoPeriodo.set('DISPONIBLE');
+            this.errorGeneral.set(
+              'No fue posible leer o enviar alguno de los archivos. Verifique que estén cerrados en Excel y vuelva a seleccionarlos.',
+            );
+            return;
+          }
+
           const response = obtenerErrorPayload<CargaValidacionResponse>(error);
 
           if (response?.resumenValidacion || response?.errores) {
@@ -460,6 +488,16 @@ export class Actualizacion implements OnInit {
           );
         },
       });
+
+    const archivoNoLegible = await obtenerArchivoCargaNoLegible(archivos);
+
+    if (archivoNoLegible) {
+      this.archivos.set(
+        actualizarArchivoSeleccionado(this.archivos(), archivoNoLegible.tipo, null),
+      );
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivoNoLegible.archivo));
+      return;
+    }
   }
   aceptarAdvertenciasActualizacion(): void {
     const codigoReferencia = this.codigoReferenciaOperacion();

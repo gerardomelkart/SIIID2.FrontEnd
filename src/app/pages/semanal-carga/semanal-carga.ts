@@ -19,7 +19,11 @@ import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/a
 import {
   actualizarArchivoSeleccionado,
   crearArchivosCargaVacios,
+  esArchivoCargaLegible,
+  esErrorEnvioArchivos,
+  obtenerArchivoCargaNoLegible,
   obtenerArchivoDesdeEvento,
+  obtenerMensajeArchivoCargaNoLegible,
   obtenerResumenPorArchivo,
   tieneTresArchivosSeleccionados,
 } from '../../core/utils/archivo-carga.utils';
@@ -415,13 +419,21 @@ export class SemanalCarga implements OnInit {
     if (tramo) this.validarDisponibilidadSemana(tramo, this.solicitudValidacionSemana);
   }
 
-  seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): void {
-    const archivo = obtenerArchivoDesdeEvento(event);
+async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void> {
+  const input = event.target as HTMLInputElement;
+  const archivo = obtenerArchivoDesdeEvento(event);
 
-    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
-
+  if (archivo && !(await esArchivoCargaLegible(archivo))) {
+    input.value = '';
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
     this.limpiarResultado();
+    this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+    return;
   }
+
+  this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+  this.limpiarResultado();
+}
 
   arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
     event.preventDefault();
@@ -438,18 +450,25 @@ export class SemanalCarga implements OnInit {
     if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
   }
 
-  soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.archivoArrastrado.set(null);
+async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
+  event.preventDefault();
+  event.stopPropagation();
+  this.archivoArrastrado.set(null);
 
-    const archivo = event.dataTransfer?.files.item(0) ?? null;
+  const archivo = event.dataTransfer?.files.item(0) ?? null;
 
-    if (!archivo) return;
+  if (!archivo) return;
 
-    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+  if (!(await esArchivoCargaLegible(archivo))) {
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
     this.limpiarResultado();
+    this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+    return;
   }
+
+  this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+  this.limpiarResultado();
+}
 
   nombreArchivo(tipo: ArchivoCargaTipo): string {
     return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
@@ -536,7 +555,7 @@ export class SemanalCarga implements OnInit {
       });
   }
 
-  validarArchivos(): void {
+ async validarArchivos(): Promise<void> {
     const archivos = this.archivos();
     const formulario = this.formulario();
     const tramo = this.tramoPrevisto();
