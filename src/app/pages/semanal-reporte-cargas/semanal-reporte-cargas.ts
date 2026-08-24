@@ -67,6 +67,71 @@ export class SemanalReporteCargas implements OnInit {
     direccion: 'asc',
   });
 
+
+    rankingPorUsuario = computed(() => {
+    const usuariosPorPeriodo = new Map<
+      string,
+      Map<
+        string,
+        {
+          claveUsuario: string;
+          fechaCargaExitosa: number;
+          entidadFederativa: string;
+          usuarioCarga: string;
+        }
+      >
+    >();
+
+    for (const carga of this.cargas()) {
+      if (carga.claveEntidad === '00' || !carga.fechaCargaExitosa) continue;
+
+      const fechaCargaExitosa = new Date(carga.fechaCargaExitosa).getTime();
+
+      if (!Number.isFinite(fechaCargaExitosa)) continue;
+
+      const clavePeriodo = `${carga.anioCorte}-${carga.mesCorte}`;
+      const claveUsuario = `${carga.idEntidadFederativa}-${carga.idUsuarioCarga}`;
+      const usuarios = usuariosPorPeriodo.get(clavePeriodo) ?? new Map();
+      const usuarioActual = usuarios.get(claveUsuario);
+
+      if (!usuarioActual || fechaCargaExitosa < usuarioActual.fechaCargaExitosa) {
+        usuarios.set(claveUsuario, {
+          claveUsuario,
+          fechaCargaExitosa,
+          entidadFederativa: carga.entidadFederativa,
+          usuarioCarga: carga.usuarioCarga,
+        });
+      }
+
+      usuariosPorPeriodo.set(clavePeriodo, usuarios);
+    }
+
+    const ranking = new Map<string, number>();
+
+    for (const [clavePeriodo, usuarios] of usuariosPorPeriodo) {
+      Array.from(usuarios.values())
+        .sort((a, b) => {
+          if (a.fechaCargaExitosa !== b.fechaCargaExitosa)
+            return a.fechaCargaExitosa - b.fechaCargaExitosa;
+
+          const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+            sensitivity: 'base',
+          });
+
+          if (entidad !== 0) return entidad;
+
+          return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
+            sensitivity: 'base',
+          });
+        })
+        .forEach((usuario, indice) => {
+          ranking.set(`${clavePeriodo}-${usuario.claveUsuario}`, indice + 1);
+        });
+    }
+
+    return ranking;
+  });
+
   usuariosReporte = computed<UsuarioReporte[]>(() => {
     const mapa = new Map<number, UsuarioReporte>();
 
@@ -363,53 +428,11 @@ export class SemanalReporteCargas implements OnInit {
   }
 
   private obtenerOrdenCarga(carga: SemanalReporteCargaItem): number | null {
-    if (!carga.fechaCargaExitosa) return null;
+    const clave = `${carga.anioCorte}-${carga.mesCorte}-${carga.idEntidadFederativa}-${carga.idUsuarioCarga}`;
 
-    const cargasOrdenadas = this.cargas()
-      .filter((item) => item.claveEntidad !== '00')
-      .filter(
-        (item) =>
-          item.anioCorte === carga.anioCorte &&
-          item.mesCorte === carga.mesCorte &&
-          !!item.fechaCargaExitosa,
-      )
-      .sort((a, b) => {
-        const fechaA = new Date(a.fechaCargaExitosa!).getTime();
-        const fechaB = new Date(b.fechaCargaExitosa!).getTime();
-
-        if (fechaA !== fechaB) return fechaA - fechaB;
-
-        const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-          sensitivity: 'base',
-        });
-
-        if (entidad !== 0) return entidad;
-
-        return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
-          sensitivity: 'base',
-        });
-      });
-
-    const usuariosOrdenados: SemanalReporteCargaItem[] = [];
-    const usuariosAgregados = new Set<string>();
-
-    for (const item of cargasOrdenadas) {
-      const clave = `${item.idEntidadFederativa}-${item.idUsuarioCarga}`;
-
-      if (usuariosAgregados.has(clave)) continue;
-
-      usuariosAgregados.add(clave);
-      usuariosOrdenados.push(item);
-    }
-
-    const indice = usuariosOrdenados.findIndex(
-      (item) =>
-        item.idEntidadFederativa === carga.idEntidadFederativa &&
-        item.idUsuarioCarga === carga.idUsuarioCarga,
-    );
-
-    return indice >= 0 ? indice + 1 : null;
+    return this.rankingPorUsuario().get(clave) ?? null;
   }
+  
   private obtenerValorOrden(carga: SemanalReporteCargaItem, campo: CampoOrden): ValorOrden {
     switch (campo) {
       case 'entidadFederativa':
