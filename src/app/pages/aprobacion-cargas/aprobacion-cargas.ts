@@ -32,7 +32,6 @@ import {
   ActualizacionDiferenciasResponse,
 } from '../../core/models/actualizacion.models';
 import { ActualizacionService } from '../../core/services/actualizacion.service';
-import { catchError, forkJoin, map, of } from 'rxjs';
 
 type DireccionOrden = 'asc' | 'desc';
 type ColumnaOrdenMensual =
@@ -72,7 +71,6 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   cargandoDiferenciasDetalle = signal(false);
   mostrarDiferenciasDetalle = signal(false);
   errorDiferenciasDetalle = signal('');
-  private solicitudResumenesDiferencias = 0;
   private codigoDiferenciasDetalle = '';
 
   columnaOrden = signal<ColumnaOrdenMensual>('fecha');
@@ -157,7 +155,6 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   }
 
   cargarPendientes(): void {
-    this.solicitudResumenesDiferencias++;
     this.diferenciasPorReferencia.set({});
     this.cargando.set(true);
 
@@ -166,7 +163,6 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         const registros = response.registros ?? [];
 
         this.pendientes.set(registros);
-        this.cargarResumenesDiferencias(registros);
         if (this.paginaActual() > this.totalPaginas()) {
           this.paginaActual.set(this.totalPaginas());
         }
@@ -232,6 +228,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         this.mostrarDiferenciasDetalle.set(false);
         this.errorDiferenciasDetalle.set('');
         this.cargandoDetalle.set(null);
+        if (this.esActualizacion(response.detalle)) this.cargarDiferenciasDetalle(codigoReferencia);
         this.cdr.detectChanges();
         requestAnimationFrame(() =>
           requestAnimationFrame(() =>
@@ -638,40 +635,6 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     return valor === 'ELIMINADO' || valor === 'BAJA';
   }
 
-  private cargarResumenesDiferencias(registros: CargaPendienteAdministracionItem[]): void {
-    const solicitud = ++this.solicitudResumenesDiferencias;
-    const actualizaciones = registros.filter((carga) => this.esActualizacion(carga));
-
-    if (actualizaciones.length === 0) {
-      this.diferenciasPorReferencia.set({});
-      return;
-    }
-
-    forkJoin(
-      actualizaciones.map((carga) =>
-        this.actualizacionService.obtenerDiferencias(carga.codigoReferencia, 1).pipe(
-          map((response) => ({ codigoReferencia: carga.codigoReferencia, response })),
-          catchError(() =>
-            of({
-              codigoReferencia: carga.codigoReferencia,
-              response: null as ActualizacionDiferenciasResponse | null,
-            }),
-          ),
-        ),
-      ),
-    ).subscribe((resultados) => {
-      if (solicitud !== this.solicitudResumenesDiferencias) return;
-
-      const mapa: Record<string, ActualizacionDiferenciasResponse> = {};
-
-      for (const resultado of resultados) {
-        if (resultado.response?.esValido) mapa[resultado.codigoReferencia] = resultado.response;
-      }
-
-      this.diferenciasPorReferencia.set(mapa);
-    });
-  }
-
   private cargarDiferenciasDetalle(codigoReferencia: string): void {
     this.codigoDiferenciasDetalle = codigoReferencia;
     this.cargandoDiferenciasDetalle.set(true);
@@ -691,6 +654,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         }
 
         this.diferenciasDetalle.set(response);
+        this.diferenciasPorReferencia.update((actual) => ({ ...actual, [codigoReferencia]: response }));
       },
       error: (error: unknown) => {
         if (this.codigoDiferenciasDetalle !== codigoReferencia) return;

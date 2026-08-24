@@ -162,8 +162,8 @@
                 </div>
                 } @else {
                 <div class="registros-cambios-cargando">
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  Calculando cambios...
+                  <i class="fa-solid fa-eye"></i>
+                  Abra la revisión para consultar los cambios
                 </div>
                 }
                 }
@@ -490,6 +490,11 @@
       </div>
       }
       }
+      } @else if (errorDiferenciasDetalle()) {
+      <div class="alert alert-warning mt-3 mb-0">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ errorDiferenciasDetalle() }}
+      </div>
       } @else {
       <div class="cambios-admin-cargando">
         <i class="fa-solid fa-spinner fa-spin"></i>
