@@ -40,6 +40,22 @@
           Inicio
         </a>
 
+        @if (habilitaCarga()) {
+        <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
+          <span>
+            <i class="fa-solid fa-upload"></i>
+            Carga de Información
+          </span>
+        </button>
+
+        @if (cargaAbierta()) {
+        <a class="menu-link level-2" routerLink="/federal/carga-inicial" routerLinkActive="active">
+          <i class="fa-solid fa-upload"></i>
+          Integrar Información
+        </a>
+        }
+        }
+
         <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
           <span>
             <i class="fa-solid fa-user"></i>

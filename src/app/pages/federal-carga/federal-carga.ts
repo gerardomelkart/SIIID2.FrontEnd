@@ -1,0 +1,570 @@
+import { Component, computed, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Router } from '@angular/router';
+
+import {
+  mostrarAdvertencia,
+  mostrarError,
+  mostrarExito,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
+
+import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
+import { FederalCargaService } from '../../core/services/federal-carga.service';
+import { catchError, map, of, switchMap } from 'rxjs';
+import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
+import {
+  CargaValidacionResponse,
+  CargaValidacionResumenItem,
+} from '../../core/models/carga.models';
+
+import { ArchivoCargaTipo, ArchivosCargaSeleccionados } from '../../core/types/archivo-carga.types';
+
+import {
+  actualizarArchivoSeleccionado,
+  crearArchivosCargaVacios,
+  esArchivoCargaLegible,
+  esErrorEnvioArchivos,
+  obtenerArchivoCargaNoLegible,
+  obtenerArchivoDesdeEvento,
+  obtenerMensajeArchivoCargaNoLegible,
+  obtenerResumenPorArchivo,
+  tieneTresArchivosSeleccionados,
+} from '../../core/utils/archivo-carga.utils';
+
+type EstadoCarga =
+  | 'INICIAL'
+  | 'VALIDANDO'
+  | 'VALIDADO_ERROR'
+  | 'VALIDADO_ADVERTENCIA'
+  | 'MOSTRANDO_ACUSE'
+  | 'CONFIRMANDO'
+  | 'CONFIRMADO'
+  | 'RECHAZADO';
+
+@Component({
+  selector: 'app-federal-carga',
+  imports: [],
+  templateUrl: './federal-carga.html',
+  styleUrl: './federal-carga.css',
+})
+export class FederalCarga {
+  archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
+
+  estado = signal<EstadoCarga>('INICIAL');
+  respuesta = signal<CargaValidacionResponse | null>(null);
+  mensaje = signal('');
+  errorGeneral = signal('');
+
+  archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
+
+  cargandoAcusePrevio = signal(false);
+  exportandoValidacion = signal(false);
+
+  private acusePrevioObjectUrl: string | null = null;
+  private acuseConfirmadoObjectUrl: string | null = null;
+
+  acusePrevioUrl = signal<SafeResourceUrl | null>(null);
+  acuseConfirmadoUrl = signal<SafeResourceUrl | null>(null);
+
+  resumenCarpetas = computed(() => this.resumenPorArchivo('carpetas'));
+  resumenDelitos = computed(() => this.resumenPorArchivo('delitos'));
+  resumenVictimas = computed(() => this.resumenPorArchivo('victimas'));
+
+  errores = computed(() => this.respuesta()?.errores ?? []);
+  advertencias = computed(() => this.respuesta()?.advertencias ?? []);
+
+  detallesValidacion = computed(() => [...this.errores(), ...this.advertencias()]);
+
+  hayAdvertenciasDeDecision = computed(() => {
+    return this.advertencias().length > 0;
+  });
+
+  codigoReferencia = computed(() => this.respuesta()?.codigoReferencia ?? '');
+
+  errorCargaPendiente = computed(() => {
+    return (
+      this.errores().find(
+        (error) =>
+          error.codigo === 'FEDERAL_CARGA_PENDIENTE_EXISTENTE' ||
+          error.codigo === 'FEDERAL_CARGA_PENDIENTE_APROBACION',
+      ) ?? null
+    );
+  });
+
+  codigoReferenciaPendiente = computed(() => {
+    const codigo = this.errorCargaPendiente()?.valor?.trim();
+
+    if (codigo) {
+      return codigo;
+    }
+
+    const textoErrores = this.errores()
+      .map((error) => `${error.valor ?? ''} ${error.mensaje ?? ''}`)
+      .join(' ');
+
+    const match = textoErrores.match(/Código de referencia pendiente:\s*([a-zA-Z0-9-]+)/i);
+
+    return match?.[1] ?? '';
+  });
+
+  hayCargaPendiente = computed(() => this.errorCargaPendiente() !== null);
+
+  cargaPendientePorResolver = computed(() => {
+    return this.errorCargaPendiente()?.codigo === 'FEDERAL_CARGA_PENDIENTE_EXISTENTE';
+  });
+
+  cargaEnRevisionAdministrativa = computed(() => {
+    return this.errorCargaPendiente()?.codigo === 'FEDERAL_CARGA_PENDIENTE_APROBACION';
+  });
+
+  codigoReferenciaOperacion = computed(() => {
+    return this.codigoReferenciaPendiente() || this.codigoReferencia();
+  });
+
+  debeUsarActualizacion = computed(() => {
+    const textoErrores = this.errores()
+      .map((error) => `${error.mensaje ?? ''} ${error.descripcionResumen ?? ''}`)
+      .join(' ')
+      .toLowerCase();
+
+    return (
+      textoErrores.includes('flujo de actualización') ||
+      textoErrores.includes('flujo de actualizacion') ||
+      textoErrores.includes('información confirmada') ||
+      textoErrores.includes('informacion confirmada')
+    );
+  });
+
+  puedeValidar = computed(() => {
+    return tieneTresArchivosSeleccionados(this.archivos()) && this.estado() !== 'VALIDANDO';
+  });
+
+  mostrarTablasErrores = computed(() => {
+    return (
+      (this.estado() === 'VALIDADO_ERROR' || this.estado() === 'VALIDADO_ADVERTENCIA') &&
+      !!this.respuesta()
+    );
+  });
+
+  constructor(
+    private federalCargaService: FederalCargaService,
+    private sanitizer: DomSanitizer,
+    private router: Router,
+  ) {}
+
+  async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const archivo = obtenerArchivoDesdeEvento(event);
+
+    if (archivo && !(await esArchivoCargaLegible(archivo))) {
+      input.value = '';
+      this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+      this.limpiarResultado();
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+      return;
+    }
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+    this.limpiarResultado();
+  }
+
+  arrastrarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.archivoArrastrado.set(tipo);
+  }
+
+  salirArrastreArchivo(event: DragEvent, tipo: ArchivoCargaTipo): void {
+    const tarjeta = event.currentTarget as HTMLElement | null;
+    const destino = event.relatedTarget as Node | null;
+
+    if (tarjeta && destino && tarjeta.contains(destino)) return;
+    if (this.archivoArrastrado() === tipo) this.archivoArrastrado.set(null);
+  }
+
+  async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(null);
+
+    const archivo = event.dataTransfer?.files.item(0) ?? null;
+
+    if (!archivo) return;
+
+    if (!(await esArchivoCargaLegible(archivo))) {
+      this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, null));
+      this.limpiarResultado();
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivo));
+      return;
+    }
+
+    this.archivos.set(actualizarArchivoSeleccionado(this.archivos(), tipo, archivo));
+    this.limpiarResultado();
+  }
+
+  nombreArchivo(tipo: ArchivoCargaTipo): string {
+    return this.archivos()[tipo]?.name ?? 'Ningún archivo seleccionado';
+  }
+
+  async validarArchivos(): Promise<void> {
+    const archivos = this.archivos();
+
+    if (!tieneTresArchivosSeleccionados(archivos)) {
+      this.errorGeneral.set('Debe seleccionar los tres archivos: carpetas, delitos y víctimas.');
+      return;
+    }
+
+    const archivoNoLegible = await obtenerArchivoCargaNoLegible(archivos);
+
+    if (archivoNoLegible) {
+      this.archivos.set(
+        actualizarArchivoSeleccionado(this.archivos(), archivoNoLegible.tipo, null),
+      );
+      this.errorGeneral.set(obtenerMensajeArchivoCargaNoLegible(archivoNoLegible.archivo));
+      return;
+    }
+
+    this.estado.set('VALIDANDO');
+    this.errorGeneral.set('');
+    this.mensaje.set('Procesando...');
+    this.respuesta.set(null);
+    this.limpiarUrlsPdf();
+
+    this.federalCargaService
+      .validarArchivos(archivos.carpetas!, archivos.delitos!, archivos.victimas!)
+      .subscribe({
+        next: async (response) => {
+          this.respuesta.set(response);
+          this.mensaje.set(response.mensaje || '');
+
+          if (!response.esValido) {
+            this.estado.set('VALIDADO_ERROR');
+            return;
+          }
+
+          if (this.hayAdvertenciasDeDecision()) {
+            this.estado.set('VALIDADO_ADVERTENCIA');
+
+            await mostrarAdvertencia(
+              'Advertencias detectadas',
+              'La validación terminó correctamente, pero contiene advertencias que no bloquean la carga. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
+            );
+
+            return;
+          }
+
+          this.abrirAcusePrevio(response.codigoReferencia);
+        },
+        error: (error: unknown) => {
+          if (esErrorEnvioArchivos(error)) {
+            this.estado.set('INICIAL');
+            this.errorGeneral.set(
+              'No fue posible leer o enviar alguno de los archivos. Verifique que estén cerrados en Excel y vuelva a seleccionarlos.',
+            );
+            this.mensaje.set('');
+            return;
+          }
+
+          const response = obtenerErrorPayload<CargaValidacionResponse>(error);
+
+          if (response?.resumenValidacion || response?.errores) {
+            this.respuesta.set(response);
+            this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
+            this.estado.set('VALIDADO_ERROR');
+            return;
+          }
+
+          this.estado.set('INICIAL');
+          this.errorGeneral.set(
+            obtenerMensajeErrorHttp(error, 'Intente nuevamente.') ||
+              'No fue posible validar los archivos.',
+          );
+          this.mensaje.set('');
+        },
+      });
+  }
+
+  continuarAAcusePrevio(): void {
+    if (this.cargandoAcusePrevio()) {
+      return;
+    }
+
+    const codigoReferencia = this.codigoReferenciaOperacion();
+
+    if (!codigoReferencia) {
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
+  }
+
+  aceptarCarga(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
+
+    if (!codigoReferencia) {
+      return;
+    }
+
+    this.estado.set('CONFIRMANDO');
+
+    this.federalCargaService
+      .confirmarCarga({
+        codigoReferencia,
+        aceptar: true,
+      })
+      .pipe(
+        switchMap((response) => {
+          if (response.estado === 'PENDIENTE_APROBACION') {
+            return of({
+              response,
+              acuseDescargado: false,
+              blob: null as Blob | null,
+            });
+          }
+
+          return this.federalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
+            map((blob: Blob) => ({
+              response,
+              acuseDescargado: true,
+              blob,
+            })),
+            catchError(() =>
+              of({
+                response,
+                acuseDescargado: false,
+                blob: null as Blob | null,
+              }),
+            ),
+          );
+        }),
+      )
+      .subscribe({
+        next: (resultado) => {
+          if (resultado.response.estado === 'PENDIENTE_APROBACION') {
+            this.limpiarUrlsPdf();
+
+            mostrarExitoInstitucional(
+              'Carga enviada a revision',
+              resultado.response.mensaje ||
+                'La carga quedo pendiente de aprobacion administrativa.',
+            ).then(() => {
+              this.reiniciarFormulario();
+              this.estado.set('INICIAL');
+              this.router.navigateByUrl('/federal');
+            });
+
+            return;
+          }
+
+          if (resultado.blob) {
+            this.reemplazarAcuseConfirmado(resultado.blob);
+          }
+
+          this.estado.set('CONFIRMADO');
+
+          mostrarExito(
+            'Carga completada',
+            resultado.acuseDescargado
+              ? undefined
+              : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
+          );
+        },
+        error: (error: unknown) => {
+          this.estado.set('MOSTRANDO_ACUSE');
+
+          mostrarError(
+            'No fue posible procesar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexion con la API.'),
+          );
+        },
+      });
+  }
+
+  rechazarCarga(): void {
+    const codigoReferencia = this.codigoReferenciaOperacion();
+
+    if (!codigoReferencia) {
+      return;
+    }
+
+    this.estado.set('CONFIRMANDO');
+
+    this.federalCargaService
+      .confirmarCarga({
+        codigoReferencia,
+        aceptar: false,
+      })
+      .subscribe({
+        next: () => {
+          this.estado.set('RECHAZADO');
+          this.limpiarUrlsPdf();
+
+          mostrarExitoInstitucional(
+            'Carga rechazada',
+            'La carga fue rechazada correctamente.',
+          ).then(() => {
+            this.router.navigateByUrl('/federal');
+          });
+        },
+        error: (error) => {
+          this.estado.set('MOSTRANDO_ACUSE');
+
+          mostrarError(
+            'No fue posible rechazar la carga',
+            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+          );
+        },
+      });
+  }
+
+  async descargarValidacion(): Promise<void> {
+    if (this.detallesValidacion().length === 0 || this.exportandoValidacion()) {
+      return;
+    }
+
+    this.exportandoValidacion.set(true);
+
+    try {
+      const referencia = this.codigoReferenciaOperacion() || 'sin_referencia';
+
+      const exportado = await exportarValidacionExcel(
+        this.errores(),
+        this.advertencias(),
+        `validacion_carga_federal_${referencia}`,
+      );
+
+      if (!exportado) {
+        void mostrarAdvertencia(
+          'Sin resultados para descargar',
+          'La validación no contiene errores ni advertencias.',
+        );
+      }
+    } catch {
+      mostrarError('No fue posible descargar la validación', 'Intente nuevamente.');
+    } finally {
+      this.exportandoValidacion.set(false);
+    }
+  }
+
+  prepararNuevaValidacion(): void {
+    this.reiniciarFormulario();
+    this.limpiarUrlsPdf();
+    this.estado.set('INICIAL');
+  }
+
+  cerrarAcuse(): void {
+    this.estado.set('INICIAL');
+    this.limpiarUrlsPdf();
+  }
+
+  cerrarProcesoConfirmado(): void {
+    this.limpiarUrlsPdf();
+    this.reiniciarFormulario();
+    this.estado.set('INICIAL');
+    this.router.navigateByUrl('/federal');
+  }
+
+  resolverCargaPendiente(): void {
+    if (this.cargaEnRevisionAdministrativa()) {
+      mostrarAdvertencia(
+        'Carga en revisión administrativa',
+        'La carga ya fue aceptada y se encuentra esperando la resolución del administrador.',
+      );
+
+      return;
+    }
+
+    const codigoReferencia = this.codigoReferenciaPendiente();
+
+    if (!codigoReferencia) {
+      mostrarAdvertencia(
+        'Sin referencia pendiente',
+        'No fue posible identificar el código de referencia pendiente.',
+      );
+
+      return;
+    }
+
+    this.abrirAcusePrevio(codigoReferencia);
+  }
+
+  irAActualizacion(): void {
+    void mostrarAdvertencia(
+      'Actualización federal pendiente',
+      'La carga inicial federal ya existe para este periodo. El flujo de actualización federal se incorporará en el siguiente bloque.',
+    );
+  }
+
+  private abrirAcusePrevio(codigoReferencia: string): void {
+    if (this.cargandoAcusePrevio()) {
+      return;
+    }
+
+    this.cargandoAcusePrevio.set(true);
+
+    this.federalCargaService.descargarAcusePrevio(codigoReferencia).subscribe({
+      next: (blob) => {
+        this.reemplazarAcusePrevio(blob);
+        this.estado.set('MOSTRANDO_ACUSE');
+        this.cargandoAcusePrevio.set(false);
+      },
+      error: () => {
+        this.estado.set(this.hayAdvertenciasDeDecision() ? 'VALIDADO_ADVERTENCIA' : 'INICIAL');
+        this.errorGeneral.set(
+          'La validación fue correcta, pero no fue posible generar el informe previo.',
+        );
+        this.cargandoAcusePrevio.set(false);
+      },
+    });
+  }
+
+  private reemplazarAcusePrevio(blob: Blob): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acusePrevioObjectUrl);
+
+    this.acusePrevioObjectUrl = pdf.objectUrl;
+    this.acusePrevioUrl.set(pdf.safeUrl);
+  }
+
+  private reemplazarAcuseConfirmado(blob: Blob): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseConfirmadoObjectUrl);
+
+    this.acuseConfirmadoObjectUrl = pdf.objectUrl;
+    this.acuseConfirmadoUrl.set(pdf.safeUrl);
+  }
+
+  private limpiarResultado(): void {
+    this.estado.set('INICIAL');
+    this.respuesta.set(null);
+    this.mensaje.set('');
+    this.errorGeneral.set('');
+    this.cargandoAcusePrevio.set(false);
+    this.limpiarUrlsPdf();
+  }
+
+  private reiniciarFormulario(): void {
+    this.archivos.set(crearArchivosCargaVacios());
+    this.respuesta.set(null);
+    this.mensaje.set('');
+    this.cargandoAcusePrevio.set(false);
+    this.errorGeneral.set('');
+    this.archivoArrastrado.set(null);
+  }
+
+  private limpiarUrlsPdf(): void {
+    revocarObjectUrl(this.acusePrevioObjectUrl);
+    revocarObjectUrl(this.acuseConfirmadoObjectUrl);
+
+    this.acusePrevioObjectUrl = null;
+    this.acuseConfirmadoObjectUrl = null;
+
+    this.acusePrevioUrl.set(null);
+    this.acuseConfirmadoUrl.set(null);
+  }
+
+  private resumenPorArchivo(archivo: ArchivoCargaTipo): CargaValidacionResumenItem[] {
+    return obtenerResumenPorArchivo(this.respuesta()?.resumenValidacion ?? [], archivo);
+  }
+}

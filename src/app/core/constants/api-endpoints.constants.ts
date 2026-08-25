@@ -17,5 +17,6 @@ export const API_ENDPOINTS = {
   semanalEnvios: `${API_BASE_URL}/semanal/envios`,
   semanalArchivosOriginales: `${API_BASE_URL}/semanal/informes/archivos-originales`,
   federalCatalogos: `${API_BASE_URL}/federal/catalogos`,
+  federalCargas: `${API_BASE_URL}/federal/cargas`,
   notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
 } as const;

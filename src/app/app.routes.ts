@@ -161,6 +161,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/federal-inicio/federal-inicio').then((m) => m.FederalInicio),
       },
+      {
+        path: 'carga-inicial',
+        loadComponent: () =>
+          import('./pages/federal-carga/federal-carga').then((m) => m.FederalCarga),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+          permiso: 'CARGA',
+        },
+      },
     ],
   },
 

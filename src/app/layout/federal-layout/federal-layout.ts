@@ -17,9 +17,11 @@ export class FederalLayout {
   private readonly router = inject(Router);
 
   menuAbierto = signal(false);
+  cargaAbierta = signal(false);
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
+  habilitaCarga = this.sessionService.habilitaCarga;
   puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   toggleMenu(): void {
@@ -36,6 +38,10 @@ export class FederalLayout {
 
   toggleSesion(): void {
     this.sesionAbierta.update((valor) => !valor);
+  }
+
+  toggleCarga(): void {
+    this.cargaAbierta.update((valor) => !valor);
   }
 
   regresarInicio(): void {
