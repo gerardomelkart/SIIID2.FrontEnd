@@ -71,11 +71,11 @@ export class SemanalCargaService {
     );
   }
 
-  obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 100) {
+  obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 100, soloMuestra = false) {
     return this.http.get<ActualizacionDiferenciasResponse>(
       `${this.apiUrl}/${codigoReferencia}/diferencias`,
       {
-        params: { limitePorSeccion },
+        params: { limitePorSeccion, soloMuestra },
       },
     );
   }

@@ -788,41 +788,50 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
-  private cargarDiferenciasDetalle(codigoReferencia: string): void {
-    this.codigoDiferenciasDetalle = codigoReferencia;
-    this.cargandoDiferenciasDetalle.set(true);
-    this.errorDiferenciasDetalle.set('');
+private cargarDiferenciasDetalle(codigoReferencia: string): void {
+  this.codigoDiferenciasDetalle = codigoReferencia;
+  this.cargandoDiferenciasDetalle.set(true);
+  this.errorDiferenciasDetalle.set('');
 
-    this.semanalCargaService.obtenerDiferencias(codigoReferencia, 100).subscribe({
-      next: (response) => {
-        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+  this.semanalCargaService.obtenerDiferencias(codigoReferencia, 100, true).subscribe({
+    next: (response) => {
+      if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
 
-        this.cargandoDiferenciasDetalle.set(false);
+      this.cargandoDiferenciasDetalle.set(false);
 
-        if (!response.esValido) {
-          this.errorDiferenciasDetalle.set(
-            response.mensaje || 'No fue posible consultar las diferencias.',
-          );
-          return;
-        }
-
-        this.diferenciasDetalle.set(response);
-        this.diferenciasPorReferencia.update((actual) => ({
-          ...actual,
-          [codigoReferencia]: response,
-        }));
-      },
-      error: (error: unknown) => {
-        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
-
-        this.cargandoDiferenciasDetalle.set(false);
+      if (!response.esValido) {
         this.errorDiferenciasDetalle.set(
-          obtenerMensajeErrorHttp(
-            error,
-            'No fue posible consultar las diferencias de la actualización preliminar.',
-          ),
+          response.mensaje || 'No fue posible consultar las diferencias.',
         );
-      },
-    });
-  }
+        return;
+      }
+
+      const resumen = this.diferenciasResumen(codigoReferencia);
+
+      this.diferenciasDetalle.set({
+        ...response,
+        totalCarpetas: resumen?.totalCarpetas ?? response.totalCarpetas,
+        totalDelitos: resumen?.totalDelitos ?? response.totalDelitos,
+        totalVictimas: resumen?.totalVictimas ?? response.totalVictimas,
+        totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
+        detalleLimitado: resumen?.detalleLimitado ?? response.detalleLimitado,
+        resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
+        resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
+        resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
+        resumenTotal: resumen?.resumenTotal ?? response.resumenTotal,
+      });
+    },
+    error: (error: unknown) => {
+      if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+      this.cargandoDiferenciasDetalle.set(false);
+      this.errorDiferenciasDetalle.set(
+        obtenerMensajeErrorHttp(
+          error,
+          'No fue posible consultar las diferencias de la actualización preliminar.',
+        ),
+      );
+    },
+  });
+}
 }
