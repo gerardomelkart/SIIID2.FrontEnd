@@ -60,10 +60,10 @@ export class SemanalReporteCargas implements OnInit {
   exportandoExcel = signal(false);
   busqueda = signal('');
 
-periodos = signal<PeriodoReporte[]>([]);
-periodoSeleccionado = signal('');
-semanaSeleccionada = signal('');
-idUsuarioSeleccionado = signal<number | null>(null);
+  periodos = signal<PeriodoReporte[]>([]);
+  periodoSeleccionado = signal('');
+  semanaSeleccionada = signal('');
+  idUsuarioSeleccionado = signal<number | null>(null);
   delitoSeleccionado = signal('');
 
   paginaActual = signal(1);
@@ -73,8 +73,7 @@ idUsuarioSeleccionado = signal<number | null>(null);
     direccion: 'asc',
   });
 
-
-    rankingPorUsuario = computed(() => {
+  rankingPorUsuario = computed(() => {
     const usuariosPorPeriodo = new Map<
       string,
       Map<
@@ -168,28 +167,28 @@ idUsuarioSeleccionado = signal<number | null>(null);
   });
 
   semanasReporte = computed<SemanaReporte[]>(() => {
-  const periodoSeleccionado = this.periodoSeleccionado();
-  const semanas = new Map<string, SemanaReporte>();
+    const periodoSeleccionado = this.periodoSeleccionado();
+    const semanas = new Map<string, SemanaReporte>();
 
-  for (const carga of this.cargas()) {
-    if (periodoSeleccionado) {
-      const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+    for (const carga of this.cargas()) {
+      if (periodoSeleccionado) {
+        const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
 
-      if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) continue;
+        if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) continue;
+      }
+
+      const clave = this.claveSemana(carga);
+
+      if (!semanas.has(clave)) {
+        semanas.set(clave, {
+          clave,
+          semana: this.rangoSemanaTexto(carga),
+        });
+      }
     }
 
-    const clave = this.claveSemana(carga);
-
-    if (!semanas.has(clave)) {
-      semanas.set(clave, {
-        clave,
-        semana: this.rangoSemanaTexto(carga),
-      });
-    }
-  }
-
-  return Array.from(semanas.values()).sort((a, b) => b.clave.localeCompare(a.clave));
-});
+    return Array.from(semanas.values()).sort((a, b) => b.clave.localeCompare(a.clave));
+  });
 
   cargasFiltradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -209,6 +208,8 @@ idUsuarioSeleccionado = signal<number | null>(null);
           return false;
         }
       }
+
+      if (semanaSeleccionada && this.claveSemana(carga) !== semanaSeleccionada) return false;
 
       if (idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado) {
         return false;
@@ -262,6 +263,15 @@ idUsuarioSeleccionado = signal<number | null>(null);
         this.cargas.set(registros);
         this.sincronizarPeriodos(registros);
 
+        const semanaSeleccionada = this.semanaSeleccionada();
+
+        if (
+          semanaSeleccionada &&
+          !this.semanasReporte().some((semana) => semana.clave === semanaSeleccionada)
+        ) {
+          this.semanaSeleccionada.set('');
+        }
+
         const usuarioSeleccionado = this.idUsuarioSeleccionado();
 
         if (
@@ -300,10 +310,6 @@ idUsuarioSeleccionado = signal<number | null>(null);
   }
 
   cambiarFiltros(): void {
-    this.paginaActual.set(1);
-  }
-
-  ordenarPor(campo: CampoOrden): void {
     this.orden.set(alternarOrden(this.orden(), campo));
     this.paginaActual.set(1);
   }
@@ -402,6 +408,7 @@ idUsuarioSeleccionado = signal<number | null>(null);
   private obtenerCargasExportacion(): SemanalReporteCargaItem[] {
     const texto = this.busqueda().trim().toLowerCase();
     const periodoSeleccionado = this.periodoSeleccionado();
+    const semanaSeleccionada = this.semanaSeleccionada();
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
     const delitoSeleccionado = this.delitoSeleccionado();
 
@@ -416,6 +423,8 @@ idUsuarioSeleccionado = signal<number | null>(null);
             return false;
           }
         }
+
+        if (semanaSeleccionada && this.claveSemana(carga) !== semanaSeleccionada) return false;
 
         if (idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado) {
           return false;
@@ -463,7 +472,11 @@ idUsuarioSeleccionado = signal<number | null>(null);
 
     return this.rankingPorUsuario().get(clave) ?? null;
   }
-  
+
+  private claveSemana(carga: SemanalReporteCargaItem): string {
+    return `${carga.fechaInicioSemana.slice(0, 10)}|${carga.fechaFinSemana.slice(0, 10)}`;
+  }
+
   private obtenerValorOrden(carga: SemanalReporteCargaItem, campo: CampoOrden): ValorOrden {
     switch (campo) {
       case 'entidadFederativa':

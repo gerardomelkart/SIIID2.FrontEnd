@@ -55,10 +55,21 @@
 
       <div class="corte-selector-controls">
         <select class="form-select form-select-sm" [ngModel]="periodoSeleccionado()"
-          (ngModelChange)="periodoSeleccionado.set($event); cambiarFiltros()">
+          (ngModelChange)="cambiarPeriodo($event)">
           @for (periodo of periodos(); track periodo.clave) {
           <option [value]="periodo.clave">
             {{ periodo.periodo }}
+          </option>
+          }
+        </select>
+
+        <select class="form-select form-select-sm" [ngModel]="semanaSeleccionada()"
+          (ngModelChange)="semanaSeleccionada.set($event); cambiarFiltros()">
+          <option value="">Todas las semanas</option>
+
+          @for (semana of semanasReporte(); track semana.clave) {
+          <option [value]="semana.clave">
+            {{ semana.semana }}
           </option>
           }
         </select>
