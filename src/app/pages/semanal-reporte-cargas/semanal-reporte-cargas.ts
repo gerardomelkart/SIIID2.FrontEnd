@@ -310,6 +310,16 @@ export class SemanalReporteCargas implements OnInit {
   }
 
   cambiarFiltros(): void {
+    this.paginaActual.set(1);
+  }
+
+  cambiarPeriodo(valor: string): void {
+    this.periodoSeleccionado.set(valor);
+    this.semanaSeleccionada.set('');
+    this.paginaActual.set(1);
+  }
+
+  ordenarPor(campo: CampoOrden): void {
     this.orden.set(alternarOrden(this.orden(), campo));
     this.paginaActual.set(1);
   }
