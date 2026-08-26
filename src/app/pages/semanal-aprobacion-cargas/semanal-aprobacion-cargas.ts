@@ -800,21 +800,22 @@ private cargarDiferenciasDetalle(codigoReferencia: string): void {
       this.cargandoDiferenciasDetalle.set(false);
 
       if (!response.esValido) {
-        this.errorDiferenciasDetalle.set(
-          response.mensaje || 'No fue posible consultar las diferencias.',
-        );
+        this.errorDiferenciasDetalle.set(response.mensaje || 'No fue posible consultar las diferencias.');
         return;
       }
 
       const resumen = this.diferenciasResumen(codigoReferencia);
+      const totalCarpetas = resumen?.totalCarpetas ?? response.totalCarpetas;
+      const totalDelitos = resumen?.totalDelitos ?? response.totalDelitos;
+      const totalVictimas = resumen?.totalVictimas ?? response.totalVictimas;
 
       this.diferenciasDetalle.set({
         ...response,
-        totalCarpetas: resumen?.totalCarpetas ?? response.totalCarpetas,
-        totalDelitos: resumen?.totalDelitos ?? response.totalDelitos,
-        totalVictimas: resumen?.totalVictimas ?? response.totalVictimas,
+        totalCarpetas,
+        totalDelitos,
+        totalVictimas,
         totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
-        detalleLimitado: resumen?.detalleLimitado ?? response.detalleLimitado,
+        detalleLimitado: totalCarpetas > response.carpetas.length || totalDelitos > response.delitos.length || totalVictimas > response.victimas.length,
         resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
         resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
         resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
@@ -825,12 +826,7 @@ private cargarDiferenciasDetalle(codigoReferencia: string): void {
       if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
 
       this.cargandoDiferenciasDetalle.set(false);
-      this.errorDiferenciasDetalle.set(
-        obtenerMensajeErrorHttp(
-          error,
-          'No fue posible consultar las diferencias de la actualización preliminar.',
-        ),
-      );
+      this.errorDiferenciasDetalle.set(obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización preliminar.'));
     },
   });
 }
