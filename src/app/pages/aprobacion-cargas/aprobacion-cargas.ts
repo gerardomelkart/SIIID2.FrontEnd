@@ -228,7 +228,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         this.mostrarDiferenciasDetalle.set(false);
         this.errorDiferenciasDetalle.set('');
         this.cargandoDetalle.set(null);
-        if (this.esActualizacion(response.detalle)) this.cargarDiferenciasDetalle(codigoReferencia);
+        if (this.esActualizacion(response.detalle)) this.cargarResumenDiferencias(codigoReferencia);
         this.cdr.detectChanges();
         requestAnimationFrame(() =>
           requestAnimationFrame(() =>
@@ -633,6 +633,40 @@ export class AprobacionCargas implements OnInit, OnDestroy {
   esMovimientoEliminado(tipoMovimiento: string): boolean {
     const valor = tipoMovimiento?.toUpperCase() ?? '';
     return valor === 'ELIMINADO' || valor === 'BAJA';
+  }
+
+    private cargarResumenDiferencias(codigoReferencia: string): void {
+    this.codigoDiferenciasDetalle = codigoReferencia;
+    this.cargandoDiferenciasDetalle.set(true);
+    this.errorDiferenciasDetalle.set('');
+
+    this.actualizacionService.obtenerDiferencias(codigoReferencia, 0).subscribe({
+      next: (response) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+
+        if (!response.esValido) {
+          this.errorDiferenciasDetalle.set(
+            response.mensaje || 'No fue posible consultar el resumen de diferencias.',
+          );
+          return;
+        }
+
+        this.diferenciasPorReferencia.update((actual) => ({ ...actual, [codigoReferencia]: response }));
+      },
+      error: (error: unknown) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+        this.errorDiferenciasDetalle.set(
+          obtenerMensajeErrorHttp(
+            error,
+            'No fue posible consultar el resumen de diferencias de la actualización.',
+          ),
+        );
+      },
+    });
   }
 
   private cargarDiferenciasDetalle(codigoReferencia: string): void {
