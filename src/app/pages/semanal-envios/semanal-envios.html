@@ -65,7 +65,7 @@
 
       <div class="corte-selector-controls">
         <select class="form-select form-select-sm" [ngModel]="periodoEnvioSeleccionado()"
-          (ngModelChange)="periodoEnvioSeleccionado.set($event); cambiarFiltros()">
+          (ngModelChange)="cambiarPeriodo($event)">
           @for (periodo of periodosEnvio(); track periodo.clave) {
           <option [value]="periodo.clave">
             {{ periodo.periodo }}
@@ -73,13 +73,13 @@
           }
         </select>
 
-        <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
-          (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
-          <option value="">Todos los delitos</option>
+        <select class="form-select form-select-sm" [ngModel]="semanaSeleccionada()"
+          (ngModelChange)="semanaSeleccionada.set($event); cambiarFiltros()">
+          <option value="">Todas las semanas</option>
 
-          @for (delito of delitosEnvio(); track delito) {
-          <option [value]="delito">
-            {{ delito }}
+          @for (semana of semanasEnvio(); track semana.clave) {
+          <option [value]="semana.clave">
+            {{ semana.semana }}
           </option>
           }
         </select>
@@ -96,6 +96,17 @@
           }
         </select>
         }
+
+        <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
+          (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
+          <option value="">Todos los delitos</option>
+
+          @for (delito of delitosEnvio(); track delito) {
+          <option [value]="delito">
+            {{ delito }}
+          </option>
+          }
+        </select>
       </div>
     </div>
 
@@ -211,8 +222,7 @@
                     <i class="fa-solid fa-circle-exclamation"></i>
                   </summary>
 
-                  <div
-                    class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo">
+                  <div class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo">
                     <strong class="d-block mb-2">Motivo del rechazo</strong>
 
                     <div class="mb-2">

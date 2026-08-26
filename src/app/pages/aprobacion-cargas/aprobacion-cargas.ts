@@ -635,7 +635,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     return valor === 'ELIMINADO' || valor === 'BAJA';
   }
 
-    private cargarResumenDiferencias(codigoReferencia: string): void {
+  private cargarResumenDiferencias(codigoReferencia: string): void {
     this.codigoDiferenciasDetalle = codigoReferencia;
     this.cargandoDiferenciasDetalle.set(true);
     this.errorDiferenciasDetalle.set('');
@@ -653,7 +653,10 @@ export class AprobacionCargas implements OnInit, OnDestroy {
           return;
         }
 
-        this.diferenciasPorReferencia.update((actual) => ({ ...actual, [codigoReferencia]: response }));
+        this.diferenciasPorReferencia.update((actual) => ({
+          ...actual,
+          [codigoReferencia]: response,
+        }));
       },
       error: (error: unknown) => {
         if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
@@ -669,46 +672,56 @@ export class AprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
-private cargarDiferenciasDetalle(codigoReferencia: string): void {
-  this.codigoDiferenciasDetalle = codigoReferencia;
-  this.cargandoDiferenciasDetalle.set(true);
-  this.errorDiferenciasDetalle.set('');
+  private cargarDiferenciasDetalle(codigoReferencia: string): void {
+    this.codigoDiferenciasDetalle = codigoReferencia;
+    this.cargandoDiferenciasDetalle.set(true);
+    this.errorDiferenciasDetalle.set('');
 
-  this.actualizacionService.obtenerDiferencias(codigoReferencia, 100, false).subscribe({
-    next: (response) => {
-      if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+    this.actualizacionService.obtenerDiferencias(codigoReferencia, 100, false).subscribe({
+      next: (response) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
 
-      this.cargandoDiferenciasDetalle.set(false);
+        this.cargandoDiferenciasDetalle.set(false);
 
-      if (!response.esValido) {
-        this.errorDiferenciasDetalle.set(response.mensaje || 'No fue posible consultar las diferencias.');
-        return;
-      }
+        if (!response.esValido) {
+          this.errorDiferenciasDetalle.set(
+            response.mensaje || 'No fue posible consultar las diferencias.',
+          );
+          return;
+        }
 
-      const resumen = this.diferenciasResumen(codigoReferencia);
-      const totalCarpetas = resumen?.totalCarpetas ?? response.totalCarpetas;
-      const totalDelitos = resumen?.totalDelitos ?? response.totalDelitos;
-      const totalVictimas = resumen?.totalVictimas ?? response.totalVictimas;
+        const resumen = this.diferenciasResumen(codigoReferencia);
+        const totalCarpetas = resumen?.totalCarpetas ?? response.totalCarpetas;
+        const totalDelitos = resumen?.totalDelitos ?? response.totalDelitos;
+        const totalVictimas = resumen?.totalVictimas ?? response.totalVictimas;
 
-      this.diferenciasDetalle.set({
-        ...response,
-        totalCarpetas,
-        totalDelitos,
-        totalVictimas,
-        totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
-        detalleLimitado: totalCarpetas > response.carpetas.length || totalDelitos > response.delitos.length || totalVictimas > response.victimas.length,
-        resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
-        resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
-        resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
-        resumenTotal: resumen?.resumenTotal ?? response.resumenTotal,
-      });
-    },
-    error: (error: unknown) => {
-      if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+        this.diferenciasDetalle.set({
+          ...response,
+          totalCarpetas,
+          totalDelitos,
+          totalVictimas,
+          totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
+          detalleLimitado:
+            totalCarpetas > response.carpetas.length ||
+            totalDelitos > response.delitos.length ||
+            totalVictimas > response.victimas.length,
+          resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
+          resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
+          resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
+          resumenTotal: resumen?.resumenTotal ?? response.resumenTotal,
+        });
+      },
+      error: (error: unknown) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
 
-      this.cargandoDiferenciasDetalle.set(false);
-      this.errorDiferenciasDetalle.set(obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización.'));
-    },
-  });
-}
+        this.cargandoDiferenciasDetalle.set(false);
+        this.errorDiferenciasDetalle.set(
+          obtenerMensajeErrorHttp(
+            error,
+            'No fue posible consultar las diferencias de la actualización.',
+          ),
+        );
+      },
+    });
+  }
 }

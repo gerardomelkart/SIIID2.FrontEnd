@@ -25,6 +25,11 @@ interface PeriodoEnvio {
   periodo: string;
 }
 
+interface SemanaEnvio {
+  clave: string;
+  semana: string;
+}
+
 interface UsuarioEnvio {
   idUsuarioCarga: number;
   usuarioCarga: string;
@@ -55,6 +60,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   periodosEnvio = signal<PeriodoEnvio[]>([]);
   periodoEnvioSeleccionado = signal('');
+  semanaSeleccionada = signal('');
   idUsuarioSeleccionado = signal<number | null>(null);
   delitoSeleccionado = signal('');
   descargandoAcuses = signal(false);
@@ -69,6 +75,19 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   acuseUrl = signal<SafeResourceUrl | null>(null);
   acuseTitulo = signal('Informe preliminar');
+
+  semanasEnvio = computed<SemanaEnvio[]>(() => {
+    const periodo = this.obtenerPeriodoSeleccionado();
+    const mapa = new Map<string, SemanaEnvio>();
+
+    for (const envio of this.envios()) {
+      for (const semana of this.obtenerSemanasEnvio(envio, periodo)) {
+        if (!mapa.has(semana.clave)) mapa.set(semana.clave, semana);
+      }
+    }
+
+    return Array.from(mapa.values()).sort((a, b) => b.clave.localeCompare(a.clave));
+  });
 
   usuariosEnvio = computed<UsuarioEnvio[]>(() => {
     const mapa = new Map<number, UsuarioEnvio>();
@@ -110,13 +129,23 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   enviosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
     const periodoSeleccionado = this.periodoEnvioSeleccionado();
+    const semanaSeleccionada = this.semanaSeleccionada();
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
     const delitoSeleccionado = this.delitoSeleccionado();
+    const periodo = this.obtenerPeriodoSeleccionado();
 
     const registros = this.envios().filter((envio) => {
       if (periodoSeleccionado && !this.contienePeriodo(envio, periodoSeleccionado)) {
         return false;
       }
+
+      if (
+        semanaSeleccionada &&
+        !this.obtenerSemanasEnvio(envio, periodo).some(
+          (semana) => semana.clave === semanaSeleccionada,
+        )
+      )
+        return false;
 
       if (idUsuarioSeleccionado && envio.idUsuarioCarga !== idUsuarioSeleccionado) {
         return false;
@@ -175,6 +204,14 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
         this.envios.set(registros);
         this.sincronizarPeriodosEnvio(registros);
+
+        const semanaSeleccionada = this.semanaSeleccionada();
+
+        if (
+          semanaSeleccionada &&
+          !this.semanasEnvio().some((semana) => semana.clave === semanaSeleccionada)
+        )
+          this.semanaSeleccionada.set('');
 
         const usuarioSeleccionado = this.idUsuarioSeleccionado();
 
@@ -270,6 +307,12 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   buscarEnvios(valor: string): void {
     this.busqueda.set(valor);
+    this.paginaActual.set(1);
+  }
+
+  cambiarPeriodo(valor: string): void {
+    this.periodoEnvioSeleccionado.set(valor);
+    this.semanaSeleccionada.set('');
     this.paginaActual.set(1);
   }
 
@@ -437,6 +480,13 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   }
 
   rangoSemanaTexto(envio: SemanalEnvioItem): string {
+    const semanaSeleccionada = this.semanaSeleccionada();
+
+    if (semanaSeleccionada) {
+      const semana = this.semanasEnvio().find((item) => item.clave === semanaSeleccionada);
+      if (semana) return semana.semana;
+    }
+
     const bloques = envio.bloques ?? [];
     const inicios = bloques
       .map((bloque) => bloque.fechaInicioSemana)
@@ -451,7 +501,6 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
     return `${this.formatearFechaCorta(inicio)} al ${this.formatearFechaCorta(fin)}`;
   }
-
   delitosTexto(envio: SemanalEnvioItem): string {
     return envio.delitos?.length ? envio.delitos.join(', ') : '—';
   }
@@ -460,7 +509,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     return envio.usuarioCarga;
   }
 
-    ajustarPosicionMotivo(event: Event): void {
+  ajustarPosicionMotivo(event: Event): void {
     const detalle = event.currentTarget as HTMLDetailsElement;
 
     if (!detalle.open) {
@@ -474,15 +523,11 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     if (!contenedor || !panel) return;
 
     const espacioInferior =
-      contenedor.getBoundingClientRect().bottom -
-      detalle.getBoundingClientRect().bottom;
+      contenedor.getBoundingClientRect().bottom - detalle.getBoundingClientRect().bottom;
 
     const abrirArriba = espacioInferior < panel.offsetHeight + 12;
 
-    detalle.classList.toggle(
-      'motivo-rechazo-arriba',
-      abrirArriba,
-    );
+    detalle.classList.toggle('motivo-rechazo-arriba', abrirArriba);
   }
 
   private obtenerValorOrden(envio: SemanalEnvioItem, campo: CampoOrden): ValorOrden {
@@ -609,6 +654,40 @@ export class SemanalEnvios implements OnInit, OnDestroy {
     return Array.from(mapa.values()).sort(
       (a, b) => a.anioCorte * 100 + a.mesCorte - (b.anioCorte * 100 + b.mesCorte),
     );
+  }
+
+  private obtenerSemanasEnvio(
+    envio: SemanalEnvioItem,
+    periodo: PeriodoEnvio | null,
+  ): SemanaEnvio[] {
+    const bloques = (envio.bloques ?? []).filter(
+      (bloque) =>
+        !periodo ||
+        (bloque.anioCorte === periodo.anioCorte && bloque.mesCorte === periodo.mesCorte),
+    );
+    const fuente = bloques.length
+      ? bloques.map((bloque) => ({ inicio: bloque.fechaInicioSemana, fin: bloque.fechaFinSemana }))
+      : !periodo || this.contienePeriodo(envio, periodo.clave)
+        ? [{ inicio: envio.fechaInicioSemana, fin: envio.fechaFinSemana }]
+        : [];
+    const mapa = new Map<string, SemanaEnvio>();
+
+    for (const item of fuente) {
+      const inicio = item.inicio?.slice(0, 10);
+      const fin = item.fin?.slice(0, 10);
+
+      if (!inicio || !fin) continue;
+
+      const clave = `${inicio}|${fin}`;
+
+      if (!mapa.has(clave))
+        mapa.set(clave, {
+          clave,
+          semana: `${this.formatearFechaCorta(inicio)} al ${this.formatearFechaCorta(fin)}`,
+        });
+    }
+
+    return Array.from(mapa.values());
   }
 
   private formatearFechaCorta(valor: string): string {
