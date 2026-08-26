@@ -21,6 +21,11 @@ interface PeriodoReporte {
   periodo: string;
 }
 
+interface SemanaReporte {
+  clave: string;
+  semana: string;
+}
+
 interface UsuarioReporte {
   idUsuarioCarga: number;
   usuarioCarga: string;
@@ -55,9 +60,10 @@ export class SemanalReporteCargas implements OnInit {
   exportandoExcel = signal(false);
   busqueda = signal('');
 
-  periodos = signal<PeriodoReporte[]>([]);
-  periodoSeleccionado = signal('');
-  idUsuarioSeleccionado = signal<number | null>(null);
+periodos = signal<PeriodoReporte[]>([]);
+periodoSeleccionado = signal('');
+semanaSeleccionada = signal('');
+idUsuarioSeleccionado = signal<number | null>(null);
   delitoSeleccionado = signal('');
 
   paginaActual = signal(1);
@@ -161,9 +167,34 @@ export class SemanalReporteCargas implements OnInit {
     );
   });
 
+  semanasReporte = computed<SemanaReporte[]>(() => {
+  const periodoSeleccionado = this.periodoSeleccionado();
+  const semanas = new Map<string, SemanaReporte>();
+
+  for (const carga of this.cargas()) {
+    if (periodoSeleccionado) {
+      const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+
+      if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) continue;
+    }
+
+    const clave = this.claveSemana(carga);
+
+    if (!semanas.has(clave)) {
+      semanas.set(clave, {
+        clave,
+        semana: this.rangoSemanaTexto(carga),
+      });
+    }
+  }
+
+  return Array.from(semanas.values()).sort((a, b) => b.clave.localeCompare(a.clave));
+});
+
   cargasFiltradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
     const periodoSeleccionado = this.periodoSeleccionado();
+    const semanaSeleccionada = this.semanaSeleccionada();
     const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
     const delitoSeleccionado = this.delitoSeleccionado();
 

@@ -64,6 +64,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   pendientes = signal<SemanalCargaPendienteAdministracionItem[]>([]);
   detalle = signal<SemanalCargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
+  idDelitoSeleccionado = signal<number | null>(null);
 
   diferenciasPorReferencia = signal<Record<string, ActualizacionDiferenciasResponse>>({});
   diferenciasDetalle = signal<ActualizacionDiferenciasResponse | null>(null);
@@ -87,19 +88,35 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
   acuseUrl = signal<SafeResourceUrl | null>(null);
   acuseTitulo = signal('Informe previo de entrega de información preliminar');
 
+  delitosPendientes = computed(() => {
+    const delitos = new Map<number, string>();
+
+    for (const carga of this.pendientes()) {
+      if (carga.idDelito && carga.delito?.trim()) delitos.set(carga.idDelito, carga.delito.trim());
+    }
+
+    return Array.from(delitos, ([idDelito, delito]) => ({ idDelito, delito })).sort((a, b) =>
+      a.delito.localeCompare(b.delito, 'es', { sensitivity: 'base' }),
+    );
+  });
+
   pendientesFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
-    const registros = texto
-      ? this.pendientes().filter(
-          (carga) =>
-            carga.entidadFederativa.toLowerCase().includes(texto) ||
-            carga.codigoReferencia.toLowerCase().includes(texto) ||
-            carga.usuarioCarga.toLowerCase().includes(texto) ||
-            this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
-            this.periodoTexto(carga).toLowerCase().includes(texto) ||
-            this.coberturaTexto(carga).toLowerCase().includes(texto),
-        )
-      : [...this.pendientes()];
+    const idDelitoSeleccionado = this.idDelitoSeleccionado();
+    const registros = this.pendientes().filter((carga) => {
+      if (idDelitoSeleccionado && carga.idDelito !== idDelitoSeleccionado) return false;
+      if (!texto) return true;
+
+      return (
+        carga.entidadFederativa.toLowerCase().includes(texto) ||
+        carga.codigoReferencia.toLowerCase().includes(texto) ||
+        carga.usuarioCarga.toLowerCase().includes(texto) ||
+        (carga.delito ?? '').toLowerCase().includes(texto) ||
+        this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
+        this.periodoTexto(carga).toLowerCase().includes(texto) ||
+        this.coberturaTexto(carga).toLowerCase().includes(texto)
+      );
+    });
 
     return registros.sort((a, b) => this.compararCargas(a, b));
   });
@@ -163,6 +180,16 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         const registros = response.registros ?? [];
 
         this.pendientes.set(registros);
+
+        const idDelitoSeleccionado = this.idDelitoSeleccionado();
+
+        if (
+          idDelitoSeleccionado &&
+          !registros.some((registro) => registro.idDelito === idDelitoSeleccionado)
+        ) {
+          this.idDelitoSeleccionado.set(null);
+        }
+
         if (this.paginaActual() > this.totalPaginas()) {
           this.paginaActual.set(this.totalPaginas());
         }
@@ -192,6 +219,11 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
 
   buscar(valor: string): void {
     this.busqueda.set(valor);
+    this.paginaActual.set(1);
+  }
+
+  cambiarDelito(idDelito: number | null): void {
+    this.idDelitoSeleccionado.set(idDelito);
     this.paginaActual.set(1);
   }
 
@@ -738,7 +770,10 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy {
         }
 
         this.diferenciasDetalle.set(response);
-        this.diferenciasPorReferencia.update((actual) => ({ ...actual, [codigoReferencia]: response }));
+        this.diferenciasPorReferencia.update((actual) => ({
+          ...actual,
+          [codigoReferencia]: response,
+        }));
       },
       error: (error: unknown) => {
         if (this.codigoDiferenciasDetalle !== codigoReferencia) return;

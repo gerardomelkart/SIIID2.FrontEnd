@@ -21,6 +21,8 @@ export interface SemanalCargaPendienteAdministracionItem {
   codigoReferencia: string;
   tipoCarga: string;
   tipoContenido: string;
+  idDelito: number;
+  delito: string;
   idEntidadFederativa: number | null;
   entidadFederativa: string;
   anioSemana: number;

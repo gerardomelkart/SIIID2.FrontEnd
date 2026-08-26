@@ -34,11 +34,6 @@
       </div>
 
       <nav class="menu">
-        <a class="menu-link" routerLink="/federal" routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: true }">
-          <i class="fa-solid fa-chart-line"></i>
-          Inicio
-        </a>
 
         @if (habilitaCarga()) {
         <button type="button" class="menu-link menu-button" (click)="toggleCarga()">

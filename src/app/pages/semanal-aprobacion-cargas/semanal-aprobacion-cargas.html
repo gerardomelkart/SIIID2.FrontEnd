@@ -30,10 +30,21 @@
         Operaciones preliminares pendientes de revisión
       </span>
 
-      <div class="buscador">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Buscar operación, entidad, usuario o periodo..." [ngModel]="busqueda()"
-          (ngModelChange)="buscar($event)">
+      <div class="filtros-bandeja">
+        <select class="form-select form-select-sm filtro-delito" [ngModel]="idDelitoSeleccionado()"
+          (ngModelChange)="cambiarDelito($event)">
+          <option [ngValue]="null">Todos los delitos</option>
+
+          @for (delito of delitosPendientes(); track delito.idDelito) {
+          <option [ngValue]="delito.idDelito">{{ delito.delito }}</option>
+          }
+        </select>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar operación, entidad, usuario o periodo..." [ngModel]="busqueda()"
+            (ngModelChange)="buscar($event)">
+        </div>
       </div>
     </div>
 
