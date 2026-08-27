@@ -748,11 +748,25 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         !periodo ||
         (bloque.anioCorte === periodo.anioCorte && bloque.mesCorte === periodo.mesCorte),
     );
+
     const fuente = bloques.length
-      ? bloques.map((bloque) => ({ inicio: bloque.fechaInicioSemana, fin: bloque.fechaFinSemana }))
+      ? bloques.map((bloque) => ({
+          inicio: bloque.fechaInicioSemana,
+          fin: bloque.fechaFinSemana,
+          anioSemana: bloque.anioSemana,
+          numeroSemana: bloque.numeroSemana,
+        }))
       : !periodo || this.contienePeriodo(envio, periodo.clave)
-        ? [{ inicio: envio.fechaInicioSemana, fin: envio.fechaFinSemana }]
+        ? [
+            {
+              inicio: envio.fechaInicioSemana,
+              fin: envio.fechaFinSemana,
+              anioSemana: envio.anioSemana,
+              numeroSemana: envio.numeroSemana,
+            },
+          ]
         : [];
+
     const mapa = new Map<string, SemanaEnvio>();
 
     for (const item of fuente) {
@@ -767,6 +781,8 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         mapa.set(clave, {
           clave,
           semana: `${this.formatearFechaCorta(inicio)} al ${this.formatearFechaCorta(fin)}`,
+          anioSemana: item.anioSemana,
+          numeroSemana: item.numeroSemana,
         });
     }
 
