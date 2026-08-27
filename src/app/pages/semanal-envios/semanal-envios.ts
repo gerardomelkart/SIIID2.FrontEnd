@@ -3,7 +3,10 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ROLES } from '../../core/constants/roles.constants';
-import { SemanalEnvioItem } from '../../core/models/semanal-envios.models';
+import {
+  SemanalEnvioItem,
+  SemanalEnvioSemanaOpcionItem,
+} from '../../core/models/semanal-envios.models';
 import { SemanalEnviosService } from '../../core/services/semanal-envios.service';
 import { SessionService } from '../../core/services/session.service';
 import { SemanalCargaService } from '../../core/services/semanal-carga.service';
@@ -28,6 +31,8 @@ interface PeriodoEnvio {
 interface SemanaEnvio {
   clave: string;
   semana: string;
+  anioSemana: number;
+  numeroSemana: number;
 }
 
 interface UsuarioEnvio {
@@ -59,6 +64,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   busqueda = signal('');
 
   periodosEnvio = signal<PeriodoEnvio[]>([]);
+  opcionesSemanas = signal<SemanalEnvioSemanaOpcionItem[]>([]);
   periodoEnvioSeleccionado = signal('');
   semanaSeleccionada = signal('');
   idUsuarioSeleccionado = signal<number | null>(null);
@@ -78,12 +84,25 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
   semanasEnvio = computed<SemanaEnvio[]>(() => {
     const periodo = this.obtenerPeriodoSeleccionado();
+
+    if (!periodo) return [];
+
     const mapa = new Map<string, SemanaEnvio>();
 
-    for (const envio of this.envios()) {
-      for (const semana of this.obtenerSemanasEnvio(envio, periodo)) {
-        if (!mapa.has(semana.clave)) mapa.set(semana.clave, semana);
-      }
+    for (const item of this.opcionesSemanas()) {
+      if (item.anioCorte !== periodo.anioCorte || item.mesCorte !== periodo.mesCorte) continue;
+
+      const inicio = item.fechaInicioSemana.slice(0, 10);
+      const fin = item.fechaFinSemana.slice(0, 10);
+      const clave = `${inicio}|${fin}`;
+
+      if (!mapa.has(clave))
+        mapa.set(clave, {
+          clave,
+          semana: `${this.formatearFechaCorta(inicio)} al ${this.formatearFechaCorta(fin)}`,
+          anioSemana: item.anioSemana,
+          numeroSemana: item.numeroSemana,
+        });
     }
 
     return Array.from(mapa.values()).sort((a, b) => b.clave.localeCompare(a.clave));
@@ -198,47 +217,44 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   cargarEnvios(): void {
     this.cargando.set(true);
 
-    this.semanalEnviosService.obtenerEnvios().subscribe({
+    this.semanalEnviosService.obtenerOpcionesEnvios().subscribe({
       next: (response) => {
-        const registros = response.registros ?? [];
+        const periodos = (response.periodos ?? []).map((periodo) => ({
+          clave: `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}`,
+          anioCorte: periodo.anioCorte,
+          mesCorte: periodo.mesCorte,
+          periodo: this.crearPeriodoTexto(periodo.anioCorte, periodo.mesCorte),
+        }));
 
-        this.envios.set(registros);
-        this.sincronizarPeriodosEnvio(registros);
+        this.periodosEnvio.set(periodos);
+        this.opcionesSemanas.set(response.semanas ?? []);
 
-        const semanaSeleccionada = this.semanaSeleccionada();
+        if (!periodos.length) {
+          this.periodoEnvioSeleccionado.set('');
+          this.semanaSeleccionada.set('');
+          this.envios.set([]);
+          this.cargando.set(false);
+          return;
+        }
+
+        const seleccionada = this.periodoEnvioSeleccionado();
+
+        if (!periodos.some((periodo) => periodo.clave === seleccionada))
+          this.periodoEnvioSeleccionado.set(periodos[0].clave);
 
         if (
-          semanaSeleccionada &&
-          !this.semanasEnvio().some((semana) => semana.clave === semanaSeleccionada)
+          this.semanaSeleccionada() &&
+          !this.semanasEnvio().some((semana) => semana.clave === this.semanaSeleccionada())
         )
           this.semanaSeleccionada.set('');
 
-        const usuarioSeleccionado = this.idUsuarioSeleccionado();
-
-        if (
-          usuarioSeleccionado &&
-          !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado)
-        ) {
-          this.idUsuarioSeleccionado.set(null);
-        }
-
-        const delitoSeleccionado = this.delitoSeleccionado();
-
-        if (
-          delitoSeleccionado &&
-          !registros.some((registro) => (registro.delitos ?? []).includes(delitoSeleccionado))
-        ) {
-          this.delitoSeleccionado.set('');
-        }
-
-        this.paginaActual.set(1);
-        this.cargando.set(false);
+        this.cargarEnviosPeriodo();
       },
       error: async (error: unknown) => {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar los envíos preliminares',
+          'No fue posible consultar los periodos preliminares',
           await obtenerMensajeErrorHttpAsync(error, 'Revise la conexión con la API.'),
         );
       },
@@ -313,7 +329,18 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   cambiarPeriodo(valor: string): void {
     this.periodoEnvioSeleccionado.set(valor);
     this.semanaSeleccionada.set('');
+    this.idUsuarioSeleccionado.set(null);
+    this.delitoSeleccionado.set('');
     this.paginaActual.set(1);
+    this.cargarEnviosPeriodo();
+  }
+
+  cambiarSemana(valor: string): void {
+    this.semanaSeleccionada.set(valor);
+    this.idUsuarioSeleccionado.set(null);
+    this.delitoSeleccionado.set('');
+    this.paginaActual.set(1);
+    this.cargarEnviosPeriodo();
   }
 
   cambiarFiltros(): void {
@@ -578,6 +605,62 @@ export class SemanalEnvios implements OnInit, OnDestroy {
 
     const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
     return normalMatch?.[1] ?? '';
+  }
+
+  private cargarEnviosPeriodo(): void {
+    const periodo = this.obtenerPeriodoSeleccionado();
+
+    if (!periodo) {
+      this.envios.set([]);
+      this.cargando.set(false);
+      return;
+    }
+
+    const semana = this.semanasEnvio().find((item) => item.clave === this.semanaSeleccionada());
+
+    this.cargando.set(true);
+
+    this.semanalEnviosService
+      .obtenerEnvios({
+        anioCorte: periodo.anioCorte,
+        mesCorte: periodo.mesCorte,
+        anioSemana: semana?.anioSemana ?? null,
+        numeroSemana: semana?.numeroSemana ?? null,
+      })
+      .subscribe({
+        next: (response) => {
+          const registros = response.registros ?? [];
+
+          this.envios.set(registros);
+
+          const usuarioSeleccionado = this.idUsuarioSeleccionado();
+
+          if (
+            usuarioSeleccionado &&
+            !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado)
+          )
+            this.idUsuarioSeleccionado.set(null);
+
+          const delitoSeleccionado = this.delitoSeleccionado();
+
+          if (
+            delitoSeleccionado &&
+            !registros.some((registro) => (registro.delitos ?? []).includes(delitoSeleccionado))
+          )
+            this.delitoSeleccionado.set('');
+
+          this.paginaActual.set(1);
+          this.cargando.set(false);
+        },
+        error: async (error: unknown) => {
+          this.cargando.set(false);
+
+          mostrarError(
+            'No fue posible consultar los envíos preliminares',
+            await obtenerMensajeErrorHttpAsync(error, 'Revise la conexión con la API.'),
+          );
+        },
+      });
   }
 
   private sincronizarPeriodosEnvio(registros: SemanalEnvioItem[]): void {

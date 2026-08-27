@@ -79,8 +79,30 @@ export interface SemanalEnviosFiltro {
   idUsuarioCarga?: number | null;
   anioCorte?: number | null;
   mesCorte?: number | null;
+  anioSemana?: number | null;
+  numeroSemana?: number | null;
   tipoCarga?: string | null;
   estado?: string | null;
+}
+
+export interface SemanalEnvioPeriodoOpcionItem {
+  anioCorte: number;
+  mesCorte: number;
+}
+
+export interface SemanalEnvioSemanaOpcionItem {
+  anioCorte: number;
+  mesCorte: number;
+  anioSemana: number;
+  numeroSemana: number;
+  fechaInicioSemana: string;
+  fechaFinSemana: string;
+}
+
+export interface SemanalEnviosOpcionesResponse {
+  esValido: boolean;
+  periodos: SemanalEnvioPeriodoOpcionItem[];
+  semanas: SemanalEnvioSemanaOpcionItem[];
 }
 
 export interface SemanalReportePreliminarEntidadItem {

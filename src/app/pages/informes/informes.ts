@@ -259,18 +259,37 @@ export class Informes implements OnInit {
   cargarEnvios(): void {
     this.cargandoEnvios.set(true);
 
-    this.informesService.obtenerEnvios().subscribe({
-      next: (envios) => {
-        this.envios.set(envios);
-        this.sincronizarPeriodosEnvio(envios);
-        this.paginaEnvios.set(1);
-        this.cargandoEnvios.set(false);
+    this.informesService.obtenerPeriodosEnvios().subscribe({
+      next: (periodos) => {
+        this.periodosEnvio.set(periodos);
+
+        if (!periodos.length) {
+          this.periodoEnvioSeleccionado.set('');
+          this.envios.set([]);
+          this.paginaEnvios.set(1);
+          this.cargandoEnvios.set(false);
+          return;
+        }
+
+        const seleccionado = this.periodoEnvioSeleccionado();
+        const existe = periodos.some(
+          (periodo) =>
+            `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado,
+        );
+
+        if (!existe) {
+          const periodo = periodos[0];
+          this.periodoEnvioSeleccionado.set(
+            `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}`,
+          );
+        }
+
+        this.cargarEnviosPeriodo();
       },
       error: (error) => {
         this.cargandoEnvios.set(false);
-
         mostrarError(
-          'No fue posible consultar los envíos',
+          'No fue posible consultar los periodos de envíos',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
@@ -316,6 +335,7 @@ export class Informes implements OnInit {
 
   cambiarCorteEnvios(): void {
     this.paginaEnvios.set(1);
+    this.cargarEnviosPeriodo();
   }
 
   buscarCargas(valor: string): void {
@@ -614,6 +634,36 @@ export class Informes implements OnInit {
         mostrarError(
           'No fue posible descargar los planos',
           await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+        );
+      },
+    });
+  }
+
+  private cargarEnviosPeriodo(): void {
+    const periodo = this.periodoEnvioSeleccionado();
+    const [anioTexto, mesTexto] = periodo.split('-');
+    const anioCorte = Number(anioTexto);
+    const mesCorte = Number(mesTexto);
+
+    if (!Number.isInteger(anioCorte) || !Number.isInteger(mesCorte)) {
+      this.envios.set([]);
+      this.cargandoEnvios.set(false);
+      return;
+    }
+
+    this.cargandoEnvios.set(true);
+
+    this.informesService.obtenerEnvios({ anioCorte, mesCorte }).subscribe({
+      next: (envios) => {
+        this.envios.set(envios);
+        this.paginaEnvios.set(1);
+        this.cargandoEnvios.set(false);
+      },
+      error: (error) => {
+        this.cargandoEnvios.set(false);
+        mostrarError(
+          'No fue posible consultar los envíos',
+          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
     });

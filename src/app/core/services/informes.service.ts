@@ -8,6 +8,7 @@ import {
   InformeEnviosFiltro,
   InformeReporteCargasFiltro,
   InformeReporteCargasResponse,
+  PeriodoCorteInforme,
   UltimosArchivosEntidadResponse,
 } from '../models/informes.models';
 
@@ -25,6 +26,10 @@ export interface SabanaTicketResponse {
 export class InformesService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = API_ENDPOINTS.informes;
+
+  obtenerPeriodosEnvios() {
+    return this.http.get<PeriodoCorteInforme[]>(`${this.apiUrl}/envios/periodos`);
+  }
 
   obtenerEnvios(filtro: InformeEnviosFiltro = {}) {
     let params = new HttpParams();

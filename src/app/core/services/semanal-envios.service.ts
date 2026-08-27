@@ -5,6 +5,7 @@ import {
   SemanalEnviosFiltro,
   SemanalEnviosResponse,
   SemanalReportePreliminarOpcionesResponse,
+  SemanalEnviosOpcionesResponse,
 } from '../models/semanal-envios.models';
 import {
   SemanalReporteCargasFiltro,
@@ -104,10 +105,16 @@ export class SemanalEnviosService {
     if (filtro.idUsuarioCarga) params = params.set('idUsuarioCarga', filtro.idUsuarioCarga);
     if (filtro.anioCorte) params = params.set('anioCorte', filtro.anioCorte);
     if (filtro.mesCorte) params = params.set('mesCorte', filtro.mesCorte);
+    if (filtro.anioSemana) params = params.set('anioSemana', filtro.anioSemana);
+    if (filtro.numeroSemana) params = params.set('numeroSemana', filtro.numeroSemana);
     if (filtro.tipoCarga) params = params.set('tipoCarga', filtro.tipoCarga);
     if (filtro.estado) params = params.set('estado', filtro.estado);
 
     return this.http.get<SemanalEnviosResponse>(this.apiUrl, { params });
+  }
+
+  obtenerOpcionesEnvios() {
+    return this.http.get<SemanalEnviosOpcionesResponse>(`${this.apiUrl}/opciones`);
   }
 
   obtenerReporteCargas(filtro: SemanalReporteCargasFiltro = {}) {
