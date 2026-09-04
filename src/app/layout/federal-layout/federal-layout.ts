@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { ROLES } from '../../core/constants/roles.constants';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
@@ -18,14 +19,20 @@ export class FederalLayout {
 
   menuAbierto = signal(false);
   cargaAbierta = signal(false);
+  administracionAbierta = signal(false);
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
+  esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   habilitaCarga = this.sessionService.habilitaCarga;
   puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   toggleMenu(): void {
     this.menuAbierto.update((valor) => !valor);
+  }
+
+  toggleAdministracion(): void {
+    this.administracionAbierta.update((valor) => !valor);
   }
 
   cerrarMenu(): void {

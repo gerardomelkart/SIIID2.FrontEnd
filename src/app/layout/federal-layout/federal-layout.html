@@ -1,11 +1,9 @@
 <div class="siiid-shell">
-  <app-topbar nombreModulo="Federal" [menuAbierto]="menuAbierto()"
-    (menuToggle)="toggleMenu()"></app-topbar>
+  <app-topbar nombreModulo="Federal" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
 
   <div class="siiid-body">
     @if (menuAbierto()) {
-    <button type="button" class="menu-backdrop" aria-label="Cerrar menú"
-      (click)="cerrarMenu()"></button>
+    <button type="button" class="menu-backdrop" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
     }
 
     <aside id="siiid-navigation" class="sidebar" [class.mobile-open]="menuAbierto()"
@@ -51,6 +49,22 @@
         }
         }
 
+        @if (esSuperUsuario()) {
+        <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+          <span>
+            <i class="fa-solid fa-user-shield"></i>
+            Administración
+          </span>
+        </button>
+
+        @if (administracionAbierta()) {
+        <a class="menu-link level-2" routerLink="/federal/administracion/cargas-pendientes" routerLinkActive="active">
+          <i class="fa-solid fa-clipboard-check"></i>
+          Aprobación de cargas
+        </a>
+        }
+        }
+
         <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
           <span>
             <i class="fa-solid fa-user"></i>
@@ -60,8 +74,7 @@
 
         @if (sesionAbierta()) {
         @if (puedeRegresarSeleccionModulo()) {
-        <button type="button" class="menu-link menu-button level-2"
-          (click)="regresarSeleccionModulo()">
+        <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
           <span>
             <i class="fa-solid fa-arrow-left"></i>
             Regresar a selección de módulo
@@ -69,8 +82,7 @@
         </button>
         }
 
-        <button type="button" class="menu-link menu-button level-2"
-          (click)="cerrarSesion()">
+        <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
           <span>
             <i class="fa-solid fa-power-off"></i>
             Cerrar sesión

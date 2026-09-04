@@ -171,6 +171,17 @@ export const routes: Routes = [
           permiso: 'CARGA',
         },
       },
+      {
+        path: 'administracion/cargas-pendientes',
+        loadComponent: () =>
+          import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then(
+            (m) => m.FederalAprobacionCargas,
+          ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
     ],
   },
 
