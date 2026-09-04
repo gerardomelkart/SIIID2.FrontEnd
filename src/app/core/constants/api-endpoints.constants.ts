@@ -19,5 +19,6 @@ export const API_ENDPOINTS = {
   federalCatalogos: `${API_BASE_URL}/federal/catalogos`,
   federalCargas: `${API_BASE_URL}/federal/cargas`,
   federalAdministracionCargas: `${API_BASE_URL}/federal/administracion/cargas-pendientes`,
+  federalInformes: `${API_BASE_URL}/federal/informes`,
   notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
 } as const;

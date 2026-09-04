@@ -172,6 +172,15 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'informes/envios',
+        loadComponent: () =>
+          import('./pages/federal-envios/federal-envios').then((m) => m.FederalEnvios),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+        },
+      },
+      {
         path: 'administracion/cargas-pendientes',
         loadComponent: () =>
           import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then(

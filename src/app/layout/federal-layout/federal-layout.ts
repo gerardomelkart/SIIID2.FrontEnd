@@ -19,6 +19,7 @@ export class FederalLayout {
 
   menuAbierto = signal(false);
   cargaAbierta = signal(false);
+  informesAbierto = signal(false);
   administracionAbierta = signal(false);
   sesionAbierta = signal(false);
 
@@ -49,6 +50,10 @@ export class FederalLayout {
 
   toggleCarga(): void {
     this.cargaAbierta.update((valor) => !valor);
+  }
+
+  toggleInformes(): void {
+    this.informesAbierto.update((valor) => !valor);
   }
 
   regresarInicio(): void {

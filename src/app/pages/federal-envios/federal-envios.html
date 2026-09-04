@@ -1,0 +1,185 @@
+<div class="informes-page">
+  <div class="informes-header">
+    <div>
+      <h1>Reporte de envíos Federal</h1>
+      <p>Consulta de envíos y rechazos administrativos de información Federal.</p>
+    </div>
+  </div>
+
+  <section class="siiid-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Consulta de envíos
+      </span>
+
+      <div class="reporte-actions">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarEnvios()">
+          @if (cargando()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-rotate"></i>
+          }
+          Actualizar
+        </button>
+
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()" (click)="exportarExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar envío..." [ngModel]="busqueda()" (ngModelChange)="buscar($event)">
+        </div>
+      </div>
+    </div>
+
+    <div class="corte-selector">
+      <div class="corte-selector-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Corte consultado
+      </div>
+
+      <div class="corte-selector-controls">
+        <select class="form-select form-select-sm" [ngModel]="periodoSeleccionado()"
+          (ngModelChange)="periodoSeleccionado.set($event); cambiarPeriodo()">
+          @for (periodo of periodos(); track periodo.mesCorte + '-' + periodo.anioCorte) {
+          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
+            {{ periodo.corte }}
+          </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive envios-mensual-table-responsive">
+      <table class="table table-sm reporte-table">
+        <thead>
+          <tr>
+            <th>Fecha de envío</th>
+            <th>Corte</th>
+            <th>Usuario envío</th>
+            <th>Tipo</th>
+            <th>Estatus</th>
+            <th class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (envio of enviosPaginados(); track envio.idCarga) {
+          <tr>
+            <td>{{ envio.fechaEnvioTexto }}</td>
+            <td>{{ envio.corte }}</td>
+            <td>{{ envio.usuarioEnvio }}</td>
+            <td>{{ tipoCargaTexto(envio.tipoCarga) }}</td>
+            <td>{{ envio.estadoTexto }}</td>
+
+            <td>
+              <div class="acciones">
+                <button type="button" class="btn-icon btn-pdf"
+                  [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
+                  [disabled]="!envio.endpointAcuse || descargandoAcuse() !== null"
+                  (click)="verAcuse(envio)">
+                  @if (descargandoAcuse() === envio.codigoReferencia) {
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  } @else {
+                  <i class="fa-solid fa-file-pdf"></i>
+                  }
+                </button>
+
+                @if (envio.esRechazadoAdministrador) {
+                <details class="position-relative" (toggle)="ajustarPosicionMotivo($event)">
+                  <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
+                    style="list-style: none; cursor: pointer;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                  </summary>
+
+                  <div class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
+                    <strong class="d-block mb-2">Motivo del rechazo</strong>
+
+                    <div class="mb-2">
+                      {{ envio.motivoRechazo || 'Sin motivo registrado.' }}
+                    </div>
+
+                    @if (envio.usuarioRechazo) {
+                    <small class="d-block text-muted">
+                      <strong>Rechazado por:</strong>
+                      {{ envio.usuarioRechazo }}
+                    </small>
+                    }
+
+                    @if (envio.fechaRechazoTexto) {
+                    <small class="d-block text-muted">
+                      <strong>Fecha:</strong>
+                      {{ envio.fechaRechazoTexto }}
+                    </small>
+                    }
+                  </div>
+                </details>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="text-center p-4">
+              @if (cargando()) {
+              Consultando envíos...
+              } @else {
+              No se encontraron envíos.
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <span>
+        Mostrando {{ enviosPaginados().length }} de {{ enviosFiltrados().length }} registros
+      </span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="pagina() === 1"
+          (click)="cambiarPagina(pagina() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ pagina() }} / {{ totalPaginas() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="pagina() === totalPaginas()"
+          (click)="cambiarPagina(pagina() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </section>
+
+  @if (acuseUrl()) {
+  <div class="acuse-modal-backdrop">
+    <div class="acuse-modal">
+      <div class="acuse-modal-header">
+        <h2>{{ acuseTitulo() }}</h2>
+
+        <button type="button" class="acuse-close" (click)="cerrarAcuse()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <iframe class="acuse-frame" [src]="acuseUrl()" title="Informe Federal"></iframe>
+
+      <div class="acuse-modal-footer">
+        <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

@@ -49,6 +49,20 @@
         }
         }
 
+        <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+          <span>
+            <i class="fa-solid fa-file-lines"></i>
+            Informes
+          </span>
+        </button>
+
+        @if (informesAbierto()) {
+        <a class="menu-link level-2" routerLink="/federal/informes/envios" routerLinkActive="active">
+          <i class="fa-solid fa-paper-plane"></i>
+          Reporte de envíos
+        </a>
+        }
+
         @if (esSuperUsuario()) {
         <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
           <span>
