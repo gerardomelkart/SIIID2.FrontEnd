@@ -1,7 +1,12 @@
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { InformeEnvioItem, PeriodoCorteInforme } from '../models/informes.models';
+
+interface FederalAcusesTicketResponse {
+  esValido: boolean;
+  ticket: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -19,10 +24,22 @@ export class FederalInformesService {
     return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
   }
 
-  descargarDesdeEndpoint(endpoint: string) {
-    const url = this.normalizarEndpoint(endpoint);
+  crearTicketDescargaAcuses(mesCorte: number, anioCorte: number) {
+    const params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
 
-    return this.http.get(url, {
+    return this.http.post<FederalAcusesTicketResponse>(
+      `${this.apiUrl}/envios/acuses/ticket`,
+      null,
+      { params },
+    );
+  }
+
+  obtenerUrlDescargaAcuses(ticket: string): string {
+    return `${this.apiUrl}/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
+  }
+
+  descargarDesdeEndpoint(endpoint: string) {
+    return this.http.get(this.normalizarEndpoint(endpoint), {
       responseType: 'blob',
       observe: 'response',
     });

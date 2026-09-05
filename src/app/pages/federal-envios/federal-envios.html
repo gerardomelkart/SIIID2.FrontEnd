@@ -23,6 +23,16 @@
           Actualizar
         </button>
 
+        <button type="button" class="btn btn-sm btn-secondary"
+          [disabled]="descargaEnProceso() || !periodoSeleccionado()" (click)="descargarAcusesCorte()">
+          @if (descargandoAcuses()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-zipper"></i>
+          }
+          Descargar acuses
+        </button>
+
         <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()" (click)="exportarExcel()">
           @if (exportandoExcel()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
@@ -83,8 +93,7 @@
               <div class="acciones">
                 <button type="button" class="btn-icon btn-pdf"
                   [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
-                  [disabled]="!envio.endpointAcuse || descargandoAcuse() !== null"
-                  (click)="verAcuse(envio)">
+                  [disabled]="!envio.endpointAcuse || descargandoAcuse() !== null" (click)="verAcuse(envio)">
                   @if (descargandoAcuse() === envio.codigoReferencia) {
                   <i class="fa-solid fa-spinner fa-spin"></i>
                   } @else {
@@ -99,7 +108,8 @@
                     <i class="fa-solid fa-circle-exclamation"></i>
                   </summary>
 
-                  <div class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
+                  <div
+                    class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
                     <strong class="d-block mb-2">Motivo del rechazo</strong>
 
                     <div class="mb-2">
