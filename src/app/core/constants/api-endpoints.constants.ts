@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
   semanalArchivosOriginales: `${API_BASE_URL}/semanal/informes/archivos-originales`,
   federalCatalogos: `${API_BASE_URL}/federal/catalogos`,
   federalCargas: `${API_BASE_URL}/federal/cargas`,
+  federalActualizaciones: `${API_BASE_URL}/federal/actualizaciones`,
   federalAdministracionCargas: `${API_BASE_URL}/federal/administracion/cargas-pendientes`,
   federalInformes: `${API_BASE_URL}/federal/informes`,
   notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
