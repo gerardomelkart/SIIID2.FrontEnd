@@ -172,6 +172,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'actualizacion',
+        loadComponent: () =>
+          import('./pages/federal-actualizacion/federal-actualizacion').then(
+            (m) => m.FederalActualizacion,
+          ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+          permiso: 'MODIFICACION',
+        },
+      },
+      {
         path: 'informes/envios',
         loadComponent: () =>
           import('./pages/federal-envios/federal-envios').then((m) => m.FederalEnvios),

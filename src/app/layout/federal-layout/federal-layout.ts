@@ -26,6 +26,7 @@ export class FederalLayout {
   usuario = this.sessionService.usuario;
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   habilitaCarga = this.sessionService.habilitaCarga;
+  habilitaModificacion = this.sessionService.habilitaModificacion;
   puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   toggleMenu(): void {

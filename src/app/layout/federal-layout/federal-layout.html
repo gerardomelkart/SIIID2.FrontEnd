@@ -33,7 +33,7 @@
 
       <nav class="menu">
 
-        @if (habilitaCarga()) {
+        @if (habilitaCarga() || habilitaModificacion()) {
         <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
           <span>
             <i class="fa-solid fa-upload"></i>
@@ -42,10 +42,19 @@
         </button>
 
         @if (cargaAbierta()) {
+        @if (habilitaCarga()) {
         <a class="menu-link level-2" routerLink="/federal/carga-inicial" routerLinkActive="active">
           <i class="fa-solid fa-upload"></i>
           Integrar Información
         </a>
+        }
+
+        @if (habilitaModificacion()) {
+        <a class="menu-link level-2" routerLink="/federal/actualizacion" routerLinkActive="active">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          Actualizar Información
+        </a>
+        }
         }
         }
 

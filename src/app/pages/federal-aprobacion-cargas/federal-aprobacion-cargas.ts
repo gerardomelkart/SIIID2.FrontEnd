@@ -10,6 +10,11 @@ import {
 
 import { FederalAdministracionCargasService } from '../../core/services/federal-administracion-cargas.service';
 import { FederalCargaService } from '../../core/services/federal-carga.service';
+import { FederalActualizacionService } from '../../core/services/federal-actualizacion.service';
+import {
+  ActualizacionDiferenciaRegistro,
+  ActualizacionDiferenciasResponse,
+} from '../../core/models/actualizacion.models';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
@@ -23,6 +28,7 @@ import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 export class FederalAprobacionCargas implements OnInit, OnDestroy {
   private readonly administracionService = inject(FederalAdministracionCargasService);
   private readonly federalCargaService = inject(FederalCargaService);
+  private readonly federalActualizacionService = inject(FederalActualizacionService);
   private readonly sanitizer = inject(DomSanitizer);
 
   private acuseObjectUrl: string | null = null;
@@ -30,6 +36,11 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
   pendientes = signal<CargaPendienteAdministracionItem[]>([]);
   detalle = signal<CargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
+  diferenciasResumen = signal<ActualizacionDiferenciasResponse | null>(null);
+  diferenciasDetalle = signal<ActualizacionDiferenciasResponse | null>(null);
+  cargandoDiferencias = signal(false);
+  mostrarDiferencias = signal(false);
+  errorDiferencias = signal('');
 
   cargando = signal(false);
   cargandoDetalle = signal<string | null>(null);
@@ -59,6 +70,17 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
       this.descargandoAcuse() !== null ||
       this.procesando() !== null,
   );
+
+  seccionesDiferencias = computed(() => {
+    const diferencias = this.diferenciasDetalle();
+    if (!diferencias) return [];
+
+    return [
+      { clave: 'carpetas', titulo: 'Carpetas', registros: diferencias.carpetas },
+      { clave: 'delitos', titulo: 'Delitos', registros: diferencias.delitos },
+      { clave: 'victimas', titulo: 'Víctimas', registros: diferencias.victimas },
+    ];
+  });
 
   ngOnInit(): void {
     this.cargarPendientes();
@@ -99,7 +121,12 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     this.administracionService.obtenerDetalle(codigoReferencia).subscribe({
       next: (response) => {
         this.detalle.set(response.detalle);
+        this.diferenciasResumen.set(null);
+        this.diferenciasDetalle.set(null);
+        this.mostrarDiferencias.set(false);
+        this.errorDiferencias.set('');
         this.cargandoDetalle.set(null);
+        if (this.esActualizacion(response.detalle)) this.cargarResumenDiferencias(response.detalle.codigoReferencia);
 
         requestAnimationFrame(() =>
           document
@@ -123,13 +150,21 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
 
   cerrarDetalle(): void {
     this.detalle.set(null);
+    this.diferenciasResumen.set(null);
+    this.diferenciasDetalle.set(null);
+    this.mostrarDiferencias.set(false);
+    this.errorDiferencias.set('');
     this.cerrarAcuse();
   }
 
   verAcuse(carga: CargaPendienteAdministracionItem): void {
     this.descargandoAcuse.set(carga.codigoReferencia);
 
-    this.federalCargaService.descargarAcusePrevio(carga.codigoReferencia).subscribe({
+    const descarga = this.esActualizacion(carga)
+      ? this.federalActualizacionService.descargarAcusePrevio(carga.codigoReferencia)
+      : this.federalCargaService.descargarAcusePrevio(carga.codigoReferencia);
+
+    descarga.subscribe({
       next: (blob) => {
         this.descargandoAcuse.set(null);
 
@@ -138,7 +173,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         this.acuseObjectUrl = pdf.objectUrl;
         this.acuseUrl.set(pdf.safeUrl);
         this.acuseTitulo.set(
-          `Informe previo Federal — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
+          `Informe previo ${this.esActualizacion(carga) ? 'de actualización ' : ''}Federal — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
         );
       },
       error: (error: unknown) => {
@@ -154,9 +189,9 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
 
   async aprobar(carga: CargaPendienteAdministracionItem): Promise<void> {
     const confirmacion = await confirmarAccion(
-      'Aprobar carga Federal',
-      `Se incorporará definitivamente la información Federal correspondiente a ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}.`,
-      'Aprobar carga',
+      `Aprobar ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
+      `${this.esActualizacion(carga) ? 'Se reemplazará' : 'Se incorporará'} definitivamente la información Federal correspondiente a ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}.`,
+      `Aprobar ${this.esActualizacion(carga) ? 'actualización' : 'carga'}`,
     );
 
     if (!confirmacion.isConfirmed) return;
@@ -164,7 +199,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     this.procesando.set(carga.codigoReferencia);
 
     Swal.fire({
-      title: 'Aprobando carga Federal',
+      title: `Aprobando ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
       html: 'Se está incorporando definitivamente la información.<br>Espere un momento...',
       allowOutsideClick: false,
       allowEscapeKey: false,
@@ -180,7 +215,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         Swal.close();
 
         mostrarExitoInstitucional(
-          'Carga Federal aprobada',
+          `${this.esActualizacion(carga) ? 'Actualización' : 'Carga'} Federal aprobada`,
           response.mensaje || 'La información fue incorporada correctamente.',
         );
 
@@ -191,7 +226,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         Swal.close();
 
         mostrarError(
-          'No fue posible aprobar la carga Federal',
+          `No fue posible aprobar la ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
         );
 
@@ -203,7 +238,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
   async rechazar(carga: CargaPendienteAdministracionItem): Promise<void> {
     const resultado = await Swal.fire({
       icon: 'warning',
-      title: 'Rechazar carga Federal',
+      title: `Rechazar ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
       text: this.periodoTexto(carga.mesCorte, carga.anioCorte),
       input: 'textarea',
       inputLabel: 'Motivo del rechazo',
@@ -213,7 +248,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         'aria-label': 'Motivo del rechazo',
       },
       showCancelButton: true,
-      confirmButtonText: 'Rechazar carga',
+      confirmButtonText: `Rechazar ${this.esActualizacion(carga) ? 'actualización' : 'carga'}`,
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#691C32',
       inputValidator: (valor) => {
@@ -235,7 +270,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         this.cerrarAcuse();
 
         mostrarExitoInstitucional(
-          'Carga Federal rechazada',
+          `${this.esActualizacion(carga) ? 'Actualización' : 'Carga'} Federal rechazada`,
           response.mensaje || 'La carga fue rechazada correctamente.',
         );
 
@@ -245,7 +280,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         this.procesando.set(null);
 
         mostrarError(
-          'No fue posible rechazar la carga Federal',
+          `No fue posible rechazar la ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
         );
 
@@ -284,6 +319,98 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
   archivoTexto(archivo: string): string {
     const texto = archivo.replaceAll('_', ' ').trim().toLowerCase();
     return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
+
+  esActualizacion(carga: CargaPendienteAdministracionItem): boolean {
+    return carga.tipoCarga === 'ACTUALIZACION';
+  }
+
+  tipoCargaTexto(carga: CargaPendienteAdministracionItem): string {
+    return this.esActualizacion(carga) ? 'Actualización' : 'Carga inicial';
+  }
+
+  alternarDiferencias(codigoReferencia: string): void {
+    if (this.mostrarDiferencias()) {
+      this.mostrarDiferencias.set(false);
+      return;
+    }
+
+    this.mostrarDiferencias.set(true);
+    if (this.diferenciasDetalle() || this.cargandoDiferencias()) return;
+
+    this.cargandoDiferencias.set(true);
+    this.errorDiferencias.set('');
+
+    this.federalActualizacionService.obtenerDiferencias(codigoReferencia, 100, false).subscribe({
+      next: (response) => {
+        this.cargandoDiferencias.set(false);
+
+        const resumen = this.diferenciasResumen();
+        this.diferenciasDetalle.set({
+          ...response,
+          totalCarpetas: resumen?.totalCarpetas ?? response.totalCarpetas,
+          totalDelitos: resumen?.totalDelitos ?? response.totalDelitos,
+          totalVictimas: resumen?.totalVictimas ?? response.totalVictimas,
+          totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
+          resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
+          resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
+          resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
+          resumenTotal: resumen?.resumenTotal ?? response.resumenTotal,
+          detalleLimitado:
+            (resumen?.totalCarpetas ?? 0) > response.carpetas.length ||
+            (resumen?.totalDelitos ?? 0) > response.delitos.length ||
+            (resumen?.totalVictimas ?? 0) > response.victimas.length,
+        });
+      },
+      error: (error: unknown) => {
+        this.cargandoDiferencias.set(false);
+        this.errorDiferencias.set(
+          obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización Federal.'),
+        );
+      },
+    });
+  }
+
+  obtenerIdentificadores(registro: ActualizacionDiferenciaRegistro): string[] {
+    const campos = registro.campoIdentificador.split('+').map((x) => x.trim().toUpperCase());
+    const valores = registro.identificadorFiscalia.split('|').map((x) => x.trim());
+    return campos.map((campo, index) => `${campo}: ${valores[index] || '-'}`);
+  }
+
+  tipoMovimientoTexto(tipo: string): string {
+    if (tipo === 'NUEVO') return 'Nuevo';
+    if (tipo === 'MODIFICADO') return 'Modificado';
+    if (tipo === 'ELIMINADO' || tipo === 'BAJA') return 'Eliminado';
+    return tipo;
+  }
+
+  valorDiferencia(valor: string | null): string {
+    return valor === null || valor === '' ? 'Sin información' : valor;
+  }
+
+  esNuevo(tipo: string): boolean {
+    return tipo === 'NUEVO';
+  }
+
+  esEliminado(tipo: string): boolean {
+    return tipo === 'ELIMINADO' || tipo === 'BAJA';
+  }
+
+  private cargarResumenDiferencias(codigoReferencia: string): void {
+    this.cargandoDiferencias.set(true);
+
+    this.federalActualizacionService.obtenerDiferencias(codigoReferencia, 0).subscribe({
+      next: (response) => {
+        this.cargandoDiferencias.set(false);
+        this.diferenciasResumen.set(response);
+      },
+      error: (error: unknown) => {
+        this.cargandoDiferencias.set(false);
+        this.errorDiferencias.set(
+          obtenerMensajeErrorHttp(error, 'No fue posible consultar el resumen de diferencias.'),
+        );
+      },
+    });
   }
 
   cerrarAcuse(): void {

@@ -492,10 +492,7 @@ export class FederalCarga {
   }
 
   irAActualizacion(): void {
-    void mostrarAdvertencia(
-      'Actualización federal pendiente',
-      'La carga inicial federal ya existe para este periodo. El flujo de actualización federal se incorporará en el siguiente bloque.',
-    );
+    void this.router.navigateByUrl('/federal/actualizacion');
   }
 
   private abrirAcusePrevio(codigoReferencia: string): void {

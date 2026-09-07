@@ -177,10 +177,11 @@ export class FederalEnvios implements OnInit, OnDestroy {
 
         this.acuseObjectUrl = pdf.objectUrl;
         this.acuseUrl.set(pdf.safeUrl);
+        const tipo = envio.tipoCarga === 'ACTUALIZACION' ? ' de actualización' : '';
         this.acuseTitulo.set(
-          envio.esRechazadoAdministrador
-            ? `Informe previo Federal — ${envio.corte}`
-            : `Acuse Federal — ${envio.corte}`,
+          envio.esConfirmado
+            ? `Acuse${tipo} Federal — ${envio.corte}`
+            : `Informe previo${tipo} Federal — ${envio.corte}`,
         );
       },
       error: (error: unknown) => {

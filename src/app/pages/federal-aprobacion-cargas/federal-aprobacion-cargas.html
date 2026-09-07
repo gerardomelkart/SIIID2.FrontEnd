@@ -48,6 +48,7 @@
         <thead>
           <tr>
             <th>Periodo</th>
+            <th>Tipo</th>
             <th>Usuario que envió</th>
             <th>Fecha de validación</th>
             <th>Registros</th>
@@ -61,6 +62,12 @@
           <tr [class.fila-seleccionada]="detalle()?.idCarga === carga.idCarga">
             <td>
               <strong>{{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</strong>
+            </td>
+
+            <td>
+              <span class="tipo-badge" [class.tipo-actualizacion]="esActualizacion(carga)">
+                {{ tipoCargaTexto(carga) }}
+              </span>
             </td>
 
             <td>
@@ -115,7 +122,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="estado-vacio">
                 <i class="fa-solid fa-circle-check"></i>
                 <span>No hay cargas federales pendientes de aprobación.</span>
@@ -135,7 +142,7 @@
       <div>
         <span class="detalle-eyebrow">Solicitud Federal pendiente</span>
         <h2>{{ periodoTexto(carga.mesCorte, carga.anioCorte) }}</h2>
-        <p>Carga inicial Federal</p>
+        <p>{{ tipoCargaTexto(carga) }} Federal</p>
       </div>
 
       <button type="button" class="btn-cerrar" title="Cerrar detalle"
@@ -206,6 +213,94 @@
         </div>
       </div>
     </div>
+
+    @if (esActualizacion(carga)) {
+    <section class="cambios-admin-section">
+      <div class="cambios-admin-title">
+        <div>
+          <h3>Resumen de cambios</h3>
+          <p>Comparación entre la información Federal confirmada y la nueva versión enviada por FGR.</p>
+        </div>
+      </div>
+
+      @if (diferenciasResumen(); as diferencias) {
+      <div class="table-responsive">
+        <table class="table table-sm resumen-cambios-table">
+          <thead>
+            <tr><th>Tipo de registro</th><th>Nuevos</th><th>Modificados</th><th>Eliminados</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>Carpetas</th><td>{{ diferencias.resumenCarpetas.nuevos }}</td><td>{{ diferencias.resumenCarpetas.modificados }}</td><td>{{ diferencias.resumenCarpetas.eliminados }}</td></tr>
+            <tr><th>Delitos</th><td>{{ diferencias.resumenDelitos.nuevos }}</td><td>{{ diferencias.resumenDelitos.modificados }}</td><td>{{ diferencias.resumenDelitos.eliminados }}</td></tr>
+            <tr><th>Víctimas</th><td>{{ diferencias.resumenVictimas.nuevos }}</td><td>{{ diferencias.resumenVictimas.modificados }}</td><td>{{ diferencias.resumenVictimas.eliminados }}</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><th>Total</th><th>{{ diferencias.resumenTotal.nuevos }}</th><th>{{ diferencias.resumenTotal.modificados }}</th><th>{{ diferencias.resumenTotal.eliminados }}</th></tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="cambios-admin-acciones">
+        <button type="button" class="btn-muestra-diferencias" [disabled]="cargandoDiferencias()"
+          (click)="alternarDiferencias(carga.codigoReferencia)">
+          <i class="fa-solid" [class.fa-eye]="!mostrarDiferencias()" [class.fa-eye-slash]="mostrarDiferencias()"></i>
+          {{ mostrarDiferencias() ? 'Ocultar muestra de diferencias' : 'Ver muestra de diferencias' }}
+        </button>
+        <span>Se mostrarán hasta 100 registros de cada sección.</span>
+      </div>
+
+      @if (mostrarDiferencias()) {
+      @if (cargandoDiferencias()) {
+      <div class="cambios-admin-cargando"><i class="fa-solid fa-spinner fa-spin"></i> Consultando diferencias...</div>
+      } @else if (errorDiferencias()) {
+      <div class="alert alert-warning mt-3 mb-0">{{ errorDiferencias() }}</div>
+      } @else if (diferenciasDetalle(); as detalleDiferencias) {
+      @if (detalleDiferencias.detalleLimitado) {
+      <div class="alert alert-info mt-3 mb-0">La muestra está limitada; los conteos del resumen corresponden al total completo.</div>
+      }
+
+      <div class="diferencias-admin-grid">
+        @for (seccion of seccionesDiferencias(); track seccion.clave) {
+        <section class="diferencias-admin-seccion">
+          <div class="diferencias-admin-seccion-title"><h4>{{ seccion.titulo }}</h4><span>{{ seccion.registros.length }} mostrados</span></div>
+
+          @for (item of seccion.registros; track $index) {
+          <article class="diferencia-admin-registro">
+            <div class="diferencia-admin-registro-head">
+              <span class="movimiento-admin-badge">{{ tipoMovimientoTexto(item.tipoMovimiento) }}</span>
+              <div class="identificadores-admin">
+                @for (identificador of obtenerIdentificadores(item); track identificador) { <span>{{ identificador }}</span> }
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered diferencias-admin-table">
+                <thead><tr><th>Campo</th><th>Valor anterior</th><th>Valor nuevo</th></tr></thead>
+                <tbody>
+                  @for (campo of item.camposModificados; track $index) {
+                  <tr>
+                    <td class="campo-admin-nombre">{{ campo.campo }}</td>
+                    <td>{{ esNuevo(item.tipoMovimiento) ? '—' : valorDiferencia(campo.valorAnterior) }}</td>
+                    <td>{{ esEliminado(item.tipoMovimiento) ? '—' : valorDiferencia(campo.valorNuevo) }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </article>
+          } @empty { <div class="sin-diferencias-admin">Sin cambios en {{ seccion.titulo.toLowerCase() }}.</div> }
+        </section>
+        }
+      </div>
+      }
+      }
+      } @else if (errorDiferencias()) {
+      <div class="alert alert-warning mt-3 mb-0">{{ errorDiferencias() }}</div>
+      } @else {
+      <div class="cambios-admin-cargando"><i class="fa-solid fa-spinner fa-spin"></i> Calculando resumen de cambios...</div>
+      }
+    </section>
+    }
 
     <div class="descargas-row">
       <button type="button" class="btn-descarga btn-pdf"
@@ -281,7 +376,7 @@
         } @else {
         <i class="fa-solid fa-check"></i>
         }
-        Aprobar carga
+        Aprobar {{ esActualizacion(carga) ? 'actualización' : 'carga' }}
       </button>
     </div>
   </section>
