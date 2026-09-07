@@ -93,11 +93,20 @@
               <div class="acciones">
                 <button type="button" class="btn-icon btn-pdf"
                   [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
-                  [disabled]="!envio.endpointAcuse || descargandoAcuse() !== null" (click)="verAcuse(envio)">
+                  [disabled]="descargaEnProceso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
                   @if (descargandoAcuse() === envio.codigoReferencia) {
                   <i class="fa-solid fa-spinner fa-spin"></i>
                   } @else {
                   <i class="fa-solid fa-file-pdf"></i>
+                  }
+                </button>
+
+                <button type="button" class="btn-icon btn-excel" title="Descargar archivos enviados"
+                  [disabled]="descargaEnProceso() || !envio.endpointExcel" (click)="descargarArchivos(envio)">
+                  @if (descargandoArchivos() === envio.codigoReferencia) {
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  } @else {
+                  <i class="fa-solid fa-file-excel"></i>
                   }
                 </button>
 
