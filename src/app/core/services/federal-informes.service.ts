@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { InformeEnvioItem, InformeReporteCargasResponse, PeriodoCorteInforme } from '../models/informes.models';
 
+import type { ModoPlanoDescarga, SabanaTicketResponse, TipoSabanaDescarga } from './informes.service';
 import { FederalArchivosOriginalesResponse } from '../models/federal-archivos-originales.models';
 
 interface FederalAcusesTicketResponse {
@@ -53,6 +54,15 @@ export class FederalInformesService {
 
   obtenerUrlDescargaAcuses(ticket: string): string {
     return `${this.apiUrl}/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
+  }
+
+  crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA', modo: ModoPlanoDescarga = 'CONFIRMADO') {
+    const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo).set('modo', modo);
+    return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, { params });
+  }
+
+  obtenerUrlDescargaSabanas(ticket: string): string {
+    return `${this.apiUrl}/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
   }
 
   descargarDesdeEndpoint(endpoint: string) {

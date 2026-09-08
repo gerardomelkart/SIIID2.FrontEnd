@@ -201,6 +201,14 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'informes/sabanas',
+        loadComponent: () => import('./pages/federal-planos/federal-planos').then((m) => m.FederalPlanos),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+        },
+      },
+      {
         path: 'informes/originales',
         loadComponent: () => import('./pages/federal-originales/federal-originales').then((m) => m.FederalOriginales),
         canActivate: [permissionGuard],

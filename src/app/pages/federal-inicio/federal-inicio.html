@@ -65,6 +65,13 @@
     </div>
 
     <div class="quick-access-grid">
+      <a class="quick-link" routerLink="/federal/informes/sabanas">
+        <div class="quick-icon"><i class="fa-solid fa-table"></i></div>
+        <div>
+          <strong>Planos estadísticos</strong>
+          <span>Descargue los planos estadísticos anuales de información federal.</span>
+        </div>
+      </a>
       @if (esSuperUsuario()) {
       <a class="quick-link" routerLink="/federal/informes/originales">
         <div class="quick-icon"><i class="fa-solid fa-box-archive"></i></div>
