@@ -1,0 +1,152 @@
+<div class="informes-page">
+  <div class="informes-header">
+    <div>
+      <h1>Informes</h1>
+      <p>Monitoreo de cargas y actualizaciones federales de cobertura nacional.</p>
+    </div>
+    <div class="rol-chip"><i class="fa-solid fa-user-shield"></i> {{ usuario()?.rol }}</div>
+  </div>
+
+  @if (puedeVerCargas()) {
+  <section class="siiid-card">
+    <div class="siiid-card-header reporte-card-header">
+      <span>
+        <i class="fa-solid fa-chart-simple"></i>
+        Reporte de cargas federal
+      </span>
+
+      <div class="reporte-actions">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoCargas()"
+          (click)="cargarReporteCargas()">
+          @if (cargandoCargas()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-rotate"></i>
+          }
+          Actualizar
+        </button>
+
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoCargas() || exportandoExcel()"
+          (click)="exportarExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar carga..." [ngModel]="busquedaCargas()"
+            (ngModelChange)="buscarCargas($event)">
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="corte-selector">
+      <div class="corte-selector-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Corte consultado
+      </div>
+
+      <div class="corte-selector-controls">
+        <select class="form-select form-select-sm" [disabled]="cargandoCargas()" [ngModel]="periodoCorteSeleccionado()"
+          (ngModelChange)="periodoCorteSeleccionado.set($event); cambiarCorteReporte()">
+          @for (periodo of periodosCorte(); track periodo.mesCorte + '-' + periodo.anioCorte) {
+          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
+            {{ periodo.corte }}
+          </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm reporte-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenarCargasPor('claveEntidad')">
+              Institución
+              <i [class]="iconoOrdenCargas('claveEntidad')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarCargasPor('corte')">
+              Periodo
+              <i [class]="iconoOrdenCargas('corte')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarCargasPor('intentos')">
+              Intentos
+              <i [class]="iconoOrdenCargas('intentos')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarCargasPor('estatusUltimoIntento')">
+              Estatus
+              <i [class]="iconoOrdenCargas('estatusUltimoIntento')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarCargasPor('fechaCargaActualizacionTexto')">
+              Fecha de carga/actualización
+              <i [class]="iconoOrdenCargas('fechaCargaActualizacionTexto')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarCargasPor('fechaAprobacionTexto')">
+              Fecha de aprobación
+              <i [class]="iconoOrdenCargas('fechaAprobacionTexto')"></i>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (carga of cargasPaginadas(); track carga.anioCorte + '-' + carga.mesCorte) {
+          <tr>
+            <td>{{ carga.claveEntidad }}</td>
+            <td>{{ carga.corte }}</td>
+            <td>
+              <span class="intentos-chip">{{ carga.intentos }}</span>
+            </td>
+
+            <td>
+              <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
+                [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
+                [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
+                {{ etiquetaEstatusCarga(carga) }}
+              </span>
+            </td>
+            <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
+            <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="text-center p-4">{{ cargandoCargas() ? 'Consultando cargas...' : 'No se encontraron cargas.' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <span>
+        Mostrando {{ cargasPaginadas().length }} de {{ cargasFiltradas().length }} registros
+      </span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaCargas() === 1"
+          (click)="cambiarPaginaCargas(paginaCargas() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaCargas() }} / {{ totalPaginasCargas() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaCargas() === totalPaginasCargas()" (click)="cambiarPaginaCargas(paginaCargas() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </section>
+  }
+</div>

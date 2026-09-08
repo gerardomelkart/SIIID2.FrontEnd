@@ -70,6 +70,12 @@
           <i class="fa-solid fa-paper-plane"></i>
           Reporte de envíos
         </a>
+        @if (esSuperUsuario()) {
+        <a class="menu-link level-2" routerLink="/federal/informes/cargas" routerLinkActive="active">
+          <i class="fa-solid fa-chart-simple"></i>
+          Reporte de cargas
+        </a>
+        }
         }
 
         @if (esSuperUsuario()) {

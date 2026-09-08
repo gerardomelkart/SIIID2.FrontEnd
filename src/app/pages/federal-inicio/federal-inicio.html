@@ -65,6 +65,17 @@
     </div>
 
     <div class="quick-access-grid">
+      @if (esSuperUsuario()) {
+      <a class="quick-link" routerLink="/federal/informes/cargas">
+        <div class="quick-icon">
+          <i class="fa-solid fa-chart-simple"></i>
+        </div>
+        <div>
+          <strong>Reporte de cargas</strong>
+          <span>Consulte los intentos, estados y fechas de las cargas federales.</span>
+        </div>
+      </a>
+      }
       @if (puedeVerCarga()) {
       <a class="quick-link" routerLink="/federal/carga-inicial">
         <div class="quick-icon">

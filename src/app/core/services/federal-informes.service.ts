@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
-import { InformeEnvioItem, PeriodoCorteInforme } from '../models/informes.models';
+import { InformeEnvioItem, InformeReporteCargasResponse, PeriodoCorteInforme } from '../models/informes.models';
 
 interface FederalAcusesTicketResponse {
   esValido: boolean;
@@ -22,6 +22,13 @@ export class FederalInformesService {
   obtenerEnvios(mesCorte: number, anioCorte: number) {
     const params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
     return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
+  }
+
+  obtenerReporteCargas(mesCorte?: number, anioCorte?: number) {
+    let params = new HttpParams();
+    if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
+    if (anioCorte !== undefined) params = params.set('anioCorte', anioCorte);
+    return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
   }
 
   crearTicketDescargaAcuses(mesCorte: number, anioCorte: number) {

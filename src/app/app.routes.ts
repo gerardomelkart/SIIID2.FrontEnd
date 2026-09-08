@@ -193,6 +193,14 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'informes/cargas',
+        loadComponent: () => import('./pages/federal-reporte-cargas/federal-reporte-cargas').then((m) => m.FederalReporteCargas),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+      {
         path: 'administracion/cargas-pendientes',
         loadComponent: () =>
           import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then(
