@@ -1,23 +1,52 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
-
 import {
   CargaPendienteAdministracionDetalle,
   CargaPendienteAdministracionItem,
 } from '../../core/models/administracion-cargas.models';
-
 import { FederalAdministracionCargasService } from '../../core/services/federal-administracion-cargas.service';
-import { FederalCargaService } from '../../core/services/federal-carga.service';
-import { FederalActualizacionService } from '../../core/services/federal-actualizacion.service';
+import {
+  confirmarAccion,
+  mostrarError,
+  mostrarExitoInstitucional,
+} from '../../core/utils/alert.utils';
+import {
+  obtenerMensajeErrorHttp,
+  obtenerMensajeErrorHttpAsync,
+} from '../../core/utils/http-error.utils';
+
 import {
   ActualizacionDiferenciaRegistro,
   ActualizacionDiferenciasResponse,
 } from '../../core/models/actualizacion.models';
-import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
-import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { FederalActualizacionService } from '../../core/services/federal-actualizacion.service';
+
+type DireccionOrden = 'asc' | 'desc';
+type ColumnaOrdenFederal =
+  | 'periodo'
+  | 'tipo'
+  | 'usuario'
+  | 'fecha'
+  | 'registros'
+  | 'advertencias';
+
+interface SeccionDiferenciasAdmin {
+  clave: string;
+  titulo: string;
+  registros: ActualizacionDiferenciaRegistro[];
+}
 
 @Component({
   selector: 'app-federal-aprobacion-cargas',
@@ -27,23 +56,31 @@ import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 })
 export class FederalAprobacionCargas implements OnInit, OnDestroy {
   private readonly administracionService = inject(FederalAdministracionCargasService);
-  private readonly federalCargaService = inject(FederalCargaService);
-  private readonly federalActualizacionService = inject(FederalActualizacionService);
+  private readonly actualizacionService = inject(FederalActualizacionService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
-
   private acuseObjectUrl: string | null = null;
 
   pendientes = signal<CargaPendienteAdministracionItem[]>([]);
   detalle = signal<CargaPendienteAdministracionDetalle | null>(null);
   busqueda = signal('');
-  diferenciasResumen = signal<ActualizacionDiferenciasResponse | null>(null);
+
+  diferenciasPorReferencia = signal<Record<string, ActualizacionDiferenciasResponse>>({});
   diferenciasDetalle = signal<ActualizacionDiferenciasResponse | null>(null);
-  cargandoDiferencias = signal(false);
-  mostrarDiferencias = signal(false);
-  errorDiferencias = signal('');
+  cargandoDiferenciasDetalle = signal(false);
+  mostrarDiferenciasDetalle = signal(false);
+  errorDiferenciasDetalle = signal('');
+  private codigoDiferenciasDetalle = '';
+
+  columnaOrden = signal<ColumnaOrdenFederal>('fecha');
+  direccionOrden = signal<DireccionOrden>('desc');
+
+  paginaActual = signal(1);
+  readonly tamanioPagina = 10;
 
   cargando = signal(false);
   cargandoDetalle = signal<string | null>(null);
+  descargandoArchivos = signal<string | null>(null);
   descargandoAcuse = signal<string | null>(null);
   procesando = signal<string | null>(null);
 
@@ -52,27 +89,56 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
 
   pendientesFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
+    const registros = texto
+      ? this.pendientes().filter(
+          (carga) =>
+            carga.codigoReferencia.toLowerCase().includes(texto) ||
+            carga.usuarioCarga.toLowerCase().includes(texto) ||
+            carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
+            this.tipoCargaTexto(carga.tipoCarga).toLowerCase().includes(texto) ||
+            this.periodoTexto(carga.mesCorte, carga.anioCorte).toLowerCase().includes(texto),
+        )
+      : [...this.pendientes()];
 
-    if (!texto) return this.pendientes();
+    return registros.sort((a, b) => this.compararCargas(a, b));
+  });
 
-    return this.pendientes().filter(
-      (carga) =>
-        carga.codigoReferencia.toLowerCase().includes(texto) ||
-        carga.usuarioCarga.toLowerCase().includes(texto) ||
-        carga.nombreUsuarioCarga.toLowerCase().includes(texto) ||
-        this.periodoTexto(carga.mesCorte, carga.anioCorte).toLowerCase().includes(texto),
+  totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.pendientesFiltrados().length / this.tamanioPagina)),
+  );
+
+  paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, indice) => indice + 1));
+
+  pendientesPaginados = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
+    return this.pendientesFiltrados().slice(inicio, inicio + this.tamanioPagina);
+  });
+
+  primerRegistroVisible = computed(() => {
+    if (this.pendientesFiltrados().length === 0) {
+      return 0;
+    }
+
+    return (this.paginaActual() - 1) * this.tamanioPagina + 1;
+  });
+
+  ultimoRegistroVisible = computed(() =>
+    Math.min(this.paginaActual() * this.tamanioPagina, this.pendientesFiltrados().length),
+  );
+
+  hayOperacionEnCurso = computed(() => {
+    return (
+      this.cargandoDetalle() !== null ||
+      this.cargandoDiferenciasDetalle() ||
+      this.descargandoArchivos() !== null ||
+      this.descargandoAcuse() !== null ||
+      this.procesando() !== null
     );
   });
 
-  hayOperacionEnCurso = computed(
-    () =>
-      this.cargandoDetalle() !== null ||
-      this.descargandoAcuse() !== null ||
-      this.procesando() !== null,
-  );
-
-  seccionesDiferencias = computed(() => {
+  seccionesDiferenciasDetalle = computed<SeccionDiferenciasAdmin[]>(() => {
     const diferencias = this.diferenciasDetalle();
+
     if (!diferencias) return [];
 
     return [
@@ -91,12 +157,20 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
 
     this.administracionService.obtenerPendientes().subscribe({
       next: (response) => {
-        this.pendientes.set(response.registros ?? []);
+        const registros = response.registros ?? [];
 
-        const actual = this.detalle();
+        const resumenes = this.diferenciasPorReferencia();
+        this.diferenciasPorReferencia.set(Object.fromEntries(registros.filter((item) => resumenes[item.codigoReferencia]).map((item) => [item.codigoReferencia, resumenes[item.codigoReferencia]])));
+        this.pendientes.set(registros);
+        if (this.paginaActual() > this.totalPaginas()) {
+          this.paginaActual.set(this.totalPaginas());
+        }
 
-        if (actual && !this.pendientes().some((x) => x.idCarga === actual.idCarga))
+        const seleccionada = this.detalle();
+
+        if (seleccionada && !registros.some((item) => item.idCarga === seleccionada.idCarga)) {
           this.cerrarDetalle();
+        }
 
         this.cargando.set(false);
       },
@@ -104,7 +178,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
         this.cargando.set(false);
 
         mostrarError(
-          'No fue posible consultar las cargas federales pendientes',
+          'No fue posible consultar las cargas pendientes',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
@@ -113,6 +187,31 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
 
   buscar(valor: string): void {
     this.busqueda.set(valor);
+    this.paginaActual.set(1);
+  }
+
+  ordenarPor(columna: ColumnaOrdenFederal): void {
+    if (this.columnaOrden() === columna)
+      this.direccionOrden.update((direccion) => (direccion === 'asc' ? 'desc' : 'asc'));
+    else {
+      this.columnaOrden.set(columna);
+      this.direccionOrden.set('asc');
+    }
+
+    this.paginaActual.set(1);
+  }
+
+  iconoOrden(columna: ColumnaOrdenFederal): string {
+    if (this.columnaOrden() !== columna) return 'fa-sort';
+    return this.direccionOrden() === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+  }
+
+  irPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas()) {
+      return;
+    }
+
+    this.paginaActual.set(pagina);
   }
 
   verDetalle(codigoReferencia: string): void {
@@ -121,22 +220,26 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     this.administracionService.obtenerDetalle(codigoReferencia).subscribe({
       next: (response) => {
         this.detalle.set(response.detalle);
-        this.diferenciasResumen.set(null);
+        this.codigoDiferenciasDetalle = '';
         this.diferenciasDetalle.set(null);
-        this.mostrarDiferencias.set(false);
-        this.errorDiferencias.set('');
+        this.cargandoDiferenciasDetalle.set(false);
+        this.mostrarDiferenciasDetalle.set(false);
+        this.errorDiferenciasDetalle.set('');
         this.cargandoDetalle.set(null);
-        if (this.esActualizacion(response.detalle)) this.cargarResumenDiferencias(response.detalle.codigoReferencia);
-
+        if (this.esActualizacion(response.detalle)) this.cargarResumenDiferencias(codigoReferencia);
+        this.cdr.detectChanges();
         requestAnimationFrame(() =>
-          document
-            .getElementById('resolucion-carga-federal')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
+          requestAnimationFrame(() =>
+            document
+              .getElementById('resolucion-carga-federal')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
+          ),
         );
       },
       error: (error: unknown) => {
         this.cargandoDetalle.set(null);
         this.detalle.set(null);
+        this.cerrarAcuse();
 
         mostrarError(
           'No fue posible consultar el detalle',
@@ -150,38 +253,63 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
 
   cerrarDetalle(): void {
     this.detalle.set(null);
-    this.diferenciasResumen.set(null);
     this.diferenciasDetalle.set(null);
-    this.mostrarDiferencias.set(false);
-    this.errorDiferencias.set('');
+    this.cargandoDiferenciasDetalle.set(false);
+    this.mostrarDiferenciasDetalle.set(false);
+    this.errorDiferenciasDetalle.set('');
+    this.codigoDiferenciasDetalle = '';
     this.cerrarAcuse();
   }
 
-  verAcuse(carga: CargaPendienteAdministracionItem): void {
-    this.descargandoAcuse.set(carga.codigoReferencia);
+  descargarArchivos(carga: CargaPendienteAdministracionItem): void {
+    this.descargandoArchivos.set(carga.codigoReferencia);
 
-    const descarga = this.esActualizacion(carga)
-      ? this.federalActualizacionService.descargarAcusePrevio(carga.codigoReferencia)
-      : this.federalCargaService.descargarAcusePrevio(carga.codigoReferencia);
+    this.administracionService.descargarArchivos(carga.codigoReferencia).subscribe({
+      next: (response) => {
+        this.descargandoArchivos.set(null);
 
-    descarga.subscribe({
-      next: (blob) => {
-        this.descargandoAcuse.set(null);
+        if (!response.body) {
+          mostrarError('Archivo vacío', 'La API no devolvió los archivos de la carga.');
+          return;
+        }
 
-        const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseObjectUrl);
+        const nombreArchivo =
+          this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
+          `ARCHIVOS_REVISION_${carga.codigoReferencia}.zip`;
 
-        this.acuseObjectUrl = pdf.objectUrl;
-        this.acuseUrl.set(pdf.safeUrl);
-        this.acuseTitulo.set(
-          `Informe previo ${this.esActualizacion(carga) ? 'de actualización ' : ''}Federal — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
+        this.descargarBlob(response.body, nombreArchivo);
+      },
+      error: async (error: unknown) => {
+        this.descargandoArchivos.set(null);
+
+        mostrarError(
+          'No fue posible descargar los archivos',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
         );
       },
-      error: (error: unknown) => {
+    });
+  }
+
+  descargarAcuse(carga: CargaPendienteAdministracionItem): void {
+    this.descargandoAcuse.set(carga.codigoReferencia);
+
+    this.administracionService.descargarAcuse(carga.codigoReferencia, carga.tipoCarga).subscribe({
+      next: (response) => {
+        this.descargandoAcuse.set(null);
+
+        if (!response.body) {
+          mostrarError('Informe vacío', 'La API no devolvió el informe previo.');
+          return;
+        }
+
+        this.mostrarAcuse(response.body, carga);
+      },
+      error: async (error: unknown) => {
         this.descargandoAcuse.set(null);
 
         mostrarError(
-          'No fue posible consultar el informe previo',
-          obtenerMensajeErrorHttp(error, 'Intente nuevamente.'),
+          'No fue posible consultar el informe',
+          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
         );
       },
     });
@@ -210,8 +338,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     this.administracionService.aprobar(carga.codigoReferencia).subscribe({
       next: (response) => {
         this.procesando.set(null);
-        this.detalle.set(null);
-        this.cerrarAcuse();
+        this.cerrarDetalle();
         Swal.close();
 
         mostrarExitoInstitucional(
@@ -266,8 +393,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     this.administracionService.rechazar(carga.codigoReferencia, motivo).subscribe({
       next: (response) => {
         this.procesando.set(null);
-        this.detalle.set(null);
-        this.cerrarAcuse();
+        this.cerrarDetalle();
 
         mostrarExitoInstitucional(
           `${this.esActualizacion(carga) ? 'Actualización' : 'Carga'} Federal rechazada`,
@@ -289,6 +415,10 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     });
   }
 
+  tipoCargaTexto(tipoCarga: string): string {
+    return tipoCarga === 'ACTUALIZACION' ? 'Actualización' : 'Carga inicial';
+  }
+
   periodoTexto(mesCorte: number, anioCorte: number): string {
     const fecha = new Date(anioCorte, mesCorte - 1, 1);
 
@@ -301,10 +431,15 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   fechaTexto(fecha: string | null | undefined): string {
-    if (!fecha) return '-';
+    if (!fecha) {
+      return '-';
+    }
 
     const valor = new Date(fecha);
-    if (Number.isNaN(valor.getTime())) return '-';
+
+    if (Number.isNaN(valor.getTime())) {
+      return '-';
+    }
 
     return new Intl.DateTimeFormat('es-MX', {
       dateStyle: 'medium',
@@ -321,98 +456,19 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
-  esActualizacion(carga: CargaPendienteAdministracionItem): boolean {
-    return carga.tipoCarga === 'ACTUALIZACION';
+  private descargarBlob(blob: Blob, nombreArchivo: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = nombreArchivo;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
   }
-
-  tipoCargaTexto(carga: CargaPendienteAdministracionItem): string {
-    return this.esActualizacion(carga) ? 'Actualización' : 'Carga inicial';
-  }
-
-  alternarDiferencias(codigoReferencia: string): void {
-    if (this.mostrarDiferencias()) {
-      this.mostrarDiferencias.set(false);
-      return;
-    }
-
-    this.mostrarDiferencias.set(true);
-    if (this.diferenciasDetalle() || this.cargandoDiferencias()) return;
-
-    this.cargandoDiferencias.set(true);
-    this.errorDiferencias.set('');
-
-    this.federalActualizacionService.obtenerDiferencias(codigoReferencia, 100, false).subscribe({
-      next: (response) => {
-        this.cargandoDiferencias.set(false);
-
-        const resumen = this.diferenciasResumen();
-        this.diferenciasDetalle.set({
-          ...response,
-          totalCarpetas: resumen?.totalCarpetas ?? response.totalCarpetas,
-          totalDelitos: resumen?.totalDelitos ?? response.totalDelitos,
-          totalVictimas: resumen?.totalVictimas ?? response.totalVictimas,
-          totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
-          resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
-          resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
-          resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
-          resumenTotal: resumen?.resumenTotal ?? response.resumenTotal,
-          detalleLimitado:
-            (resumen?.totalCarpetas ?? 0) > response.carpetas.length ||
-            (resumen?.totalDelitos ?? 0) > response.delitos.length ||
-            (resumen?.totalVictimas ?? 0) > response.victimas.length,
-        });
-      },
-      error: (error: unknown) => {
-        this.cargandoDiferencias.set(false);
-        this.errorDiferencias.set(
-          obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización Federal.'),
-        );
-      },
-    });
-  }
-
-  obtenerIdentificadores(registro: ActualizacionDiferenciaRegistro): string[] {
-    const campos = registro.campoIdentificador.split('+').map((x) => x.trim().toUpperCase());
-    const valores = registro.identificadorFiscalia.split('|').map((x) => x.trim());
-    return campos.map((campo, index) => `${campo}: ${valores[index] || '-'}`);
-  }
-
-  tipoMovimientoTexto(tipo: string): string {
-    if (tipo === 'NUEVO') return 'Nuevo';
-    if (tipo === 'MODIFICADO') return 'Modificado';
-    if (tipo === 'ELIMINADO' || tipo === 'BAJA') return 'Eliminado';
-    return tipo;
-  }
-
-  valorDiferencia(valor: string | null): string {
-    return valor === null || valor === '' ? 'Sin información' : valor;
-  }
-
-  esNuevo(tipo: string): boolean {
-    return tipo === 'NUEVO';
-  }
-
-  esEliminado(tipo: string): boolean {
-    return tipo === 'ELIMINADO' || tipo === 'BAJA';
-  }
-
-  private cargarResumenDiferencias(codigoReferencia: string): void {
-    this.cargandoDiferencias.set(true);
-
-    this.federalActualizacionService.obtenerDiferencias(codigoReferencia, 0).subscribe({
-      next: (response) => {
-        this.cargandoDiferencias.set(false);
-        this.diferenciasResumen.set(response);
-      },
-      error: (error: unknown) => {
-        this.cargandoDiferencias.set(false);
-        this.errorDiferencias.set(
-          obtenerMensajeErrorHttp(error, 'No fue posible consultar el resumen de diferencias.'),
-        );
-      },
-    });
-  }
-
   cerrarAcuse(): void {
     revocarObjectUrl(this.acuseObjectUrl);
     this.acuseObjectUrl = null;
@@ -420,6 +476,236 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.cerrarAcuse();
+    this.cerrarDetalle();
+  }
+
+  private mostrarAcuse(blob: Blob, carga: CargaPendienteAdministracionItem): void {
+    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseObjectUrl);
+
+    this.acuseObjectUrl = pdf.objectUrl;
+    this.acuseUrl.set(pdf.safeUrl);
+    this.acuseTitulo.set(
+      `Informe previo ${this.esActualizacion(carga) ? 'de actualización ' : ''}Federal — ${this.periodoTexto(carga.mesCorte, carga.anioCorte)}`,
+    );
+  }
+
+  private obtenerNombreArchivo(contentDisposition: string | null): string {
+    if (!contentDisposition) {
+      return '';
+    }
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+
+    const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
+    return normalMatch?.[1] ?? '';
+  }
+
+  private compararCargas(
+    a: CargaPendienteAdministracionItem,
+    b: CargaPendienteAdministracionItem,
+  ): number {
+    let resultado = 0;
+
+    switch (this.columnaOrden()) {
+      case 'periodo':
+        resultado = a.anioCorte * 100 + a.mesCorte - (b.anioCorte * 100 + b.mesCorte);
+        break;
+      case 'tipo':
+        resultado = this.compararTexto(
+          this.tipoCargaTexto(a.tipoCarga),
+          this.tipoCargaTexto(b.tipoCarga),
+        );
+        break;
+      case 'usuario':
+        resultado = this.compararTexto(this.usuarioTexto(a), this.usuarioTexto(b));
+        break;
+      case 'fecha':
+        resultado = this.fechaOrden(a.fechaValidacion) - this.fechaOrden(b.fechaValidacion);
+        break;
+      case 'registros':
+        resultado =
+          a.totalCarpetas +
+          a.totalDelitos +
+          a.totalVictimas -
+          (b.totalCarpetas + b.totalDelitos + b.totalVictimas);
+        break;
+      case 'advertencias':
+        resultado = a.totalAdvertencias - b.totalAdvertencias;
+        break;
+    }
+
+    if (resultado === 0) resultado = a.idCarga - b.idCarga;
+    return this.direccionOrden() === 'asc' ? resultado : -resultado;
+  }
+
+  private compararTexto(a: string, b: string): number {
+    return (a ?? '').localeCompare(b ?? '', 'es', { sensitivity: 'base', numeric: true });
+  }
+
+  private fechaOrden(fecha: string): number {
+    const valor = new Date(fecha).getTime();
+    return Number.isNaN(valor) ? 0 : valor;
+  }
+
+  esActualizacion(carga: CargaPendienteAdministracionItem): boolean {
+    return carga.tipoCarga === 'ACTUALIZACION';
+  }
+
+  diferenciasResumen(codigoReferencia: string): ActualizacionDiferenciasResponse | null {
+    return this.diferenciasPorReferencia()[codigoReferencia] ?? null;
+  }
+
+  diferenciasParaDetalle(codigoReferencia: string): ActualizacionDiferenciasResponse | null {
+    return this.diferenciasDetalle() ?? this.diferenciasResumen(codigoReferencia);
+  }
+
+  alternarDiferenciasDetalle(codigoReferencia: string): void {
+    if (this.mostrarDiferenciasDetalle()) {
+      this.mostrarDiferenciasDetalle.set(false);
+      return;
+    }
+
+    this.mostrarDiferenciasDetalle.set(true);
+
+    if (this.diferenciasDetalle() || this.cargandoDiferenciasDetalle()) return;
+
+    this.cargarDiferenciasDetalle(codigoReferencia);
+  }
+
+  obtenerIdentificadoresDesdeBackend(
+    campoIdentificador: string,
+    identificadorFiscalia: string,
+  ): string[] {
+    const campos = campoIdentificador
+      .split('+')
+      .map((x) => x.trim().toUpperCase())
+      .filter((x) => x.length > 0);
+    const valores = identificadorFiscalia.split('|').map((x) => x.trim());
+
+    if (campos.length === 0) return [identificadorFiscalia];
+
+    return campos.map((campo, index) => `${campo}: ${valores[index] || '-'}`);
+  }
+
+  normalizarValorDiferencia(valor: string | null): string {
+    return valor === null || valor === undefined || valor === '' ? 'Sin información' : valor;
+  }
+
+  normalizarTipoMovimiento(tipoMovimiento: string): string {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+
+    if (valor === 'NUEVO') return 'Nuevo';
+    if (valor === 'MODIFICADO') return 'Modificado';
+    if (valor === 'ELIMINADO' || valor === 'BAJA') return 'Eliminado';
+
+    return tipoMovimiento;
+  }
+
+  esMovimientoNuevo(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'NUEVO';
+  }
+
+  esMovimientoModificado(tipoMovimiento: string): boolean {
+    return (tipoMovimiento?.toUpperCase() ?? '') === 'MODIFICADO';
+  }
+
+  esMovimientoEliminado(tipoMovimiento: string): boolean {
+    const valor = tipoMovimiento?.toUpperCase() ?? '';
+    return valor === 'ELIMINADO' || valor === 'BAJA';
+  }
+
+  private cargarResumenDiferencias(codigoReferencia: string): void {
+    this.codigoDiferenciasDetalle = codigoReferencia;
+    this.cargandoDiferenciasDetalle.set(true);
+    this.errorDiferenciasDetalle.set('');
+
+    this.actualizacionService.obtenerDiferencias(codigoReferencia, 0).subscribe({
+      next: (response) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+
+        if (!response.esValido) {
+          this.errorDiferenciasDetalle.set(
+            response.mensaje || 'No fue posible consultar el resumen de diferencias.',
+          );
+          return;
+        }
+
+        this.diferenciasPorReferencia.update((actual) => ({
+          ...actual,
+          [codigoReferencia]: response,
+        }));
+      },
+      error: (error: unknown) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+        this.errorDiferenciasDetalle.set(
+          obtenerMensajeErrorHttp(
+            error,
+            'No fue posible consultar el resumen de diferencias de la actualización.',
+          ),
+        );
+      },
+    });
+  }
+
+  private cargarDiferenciasDetalle(codigoReferencia: string): void {
+    this.codigoDiferenciasDetalle = codigoReferencia;
+    this.cargandoDiferenciasDetalle.set(true);
+    this.errorDiferenciasDetalle.set('');
+
+    this.actualizacionService.obtenerDiferencias(codigoReferencia, 100, false).subscribe({
+      next: (response) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+
+        if (!response.esValido) {
+          this.errorDiferenciasDetalle.set(
+            response.mensaje || 'No fue posible consultar las diferencias.',
+          );
+          return;
+        }
+
+        const resumen = this.diferenciasResumen(codigoReferencia);
+        const totalCarpetas = resumen?.totalCarpetas ?? response.totalCarpetas;
+        const totalDelitos = resumen?.totalDelitos ?? response.totalDelitos;
+        const totalVictimas = resumen?.totalVictimas ?? response.totalVictimas;
+
+        this.diferenciasDetalle.set({
+          ...response,
+          totalCarpetas,
+          totalDelitos,
+          totalVictimas,
+          totalDiferencias: resumen?.totalDiferencias ?? response.totalDiferencias,
+          detalleLimitado:
+            totalCarpetas > response.carpetas.length ||
+            totalDelitos > response.delitos.length ||
+            totalVictimas > response.victimas.length,
+          resumenCarpetas: resumen?.resumenCarpetas ?? response.resumenCarpetas,
+          resumenDelitos: resumen?.resumenDelitos ?? response.resumenDelitos,
+          resumenVictimas: resumen?.resumenVictimas ?? response.resumenVictimas,
+          resumenTotal: resumen?.resumenTotal ?? response.resumenTotal,
+        });
+      },
+      error: (error: unknown) => {
+        if (this.codigoDiferenciasDetalle !== codigoReferencia) return;
+
+        this.cargandoDiferenciasDetalle.set(false);
+        this.errorDiferenciasDetalle.set(
+          obtenerMensajeErrorHttp(
+            error,
+            'No fue posible consultar las diferencias de la actualización.',
+          ),
+        );
+      },
+    });
   }
 }

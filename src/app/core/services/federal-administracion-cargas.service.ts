@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import {
   CargaPendienteAdministracionDetalleResponse,
@@ -21,24 +20,34 @@ export class FederalAdministracionCargasService {
   }
 
   obtenerDetalle(codigoReferencia: string) {
-    return this.http.get<CargaPendienteAdministracionDetalleResponse>(
-      `${this.apiUrl}/${codigoReferencia}`,
-    );
+    return this.http.get<CargaPendienteAdministracionDetalleResponse>(`${this.apiUrl}/${codigoReferencia}`);
+  }
+
+  descargarArchivos(codigoReferencia: string) {
+    return this.http.get(`${API_ENDPOINTS.federalInformes}/envios/${codigoReferencia}/archivos`, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
+  descargarAcuse(codigoReferencia: string, tipoCarga: string) {
+    const endpoint =
+      tipoCarga === 'ACTUALIZACION'
+        ? `${API_ENDPOINTS.federalActualizaciones}/${codigoReferencia}/acuse`
+        : `${API_ENDPOINTS.federalCargas}/${codigoReferencia}/acuse`;
+
+    return this.http.get(endpoint, {
+      responseType: 'blob',
+      observe: 'response',
+    });
   }
 
   aprobar(codigoReferencia: string) {
-    return this.http.post<ResolverCargaAdministracionResponse>(
-      `${this.apiUrl}/${codigoReferencia}/aprobar`,
-      {},
-    );
+    return this.http.post<ResolverCargaAdministracionResponse>(`${this.apiUrl}/${codigoReferencia}/aprobar`, {});
   }
 
   rechazar(codigoReferencia: string, motivo: string) {
     const request: RechazarCargaAdministracionRequest = { motivo };
-
-    return this.http.post<ResolverCargaAdministracionResponse>(
-      `${this.apiUrl}/${codigoReferencia}/rechazar`,
-      request,
-    );
+    return this.http.post<ResolverCargaAdministracionResponse>(`${this.apiUrl}/${codigoReferencia}/rechazar`, request);
   }
 }
