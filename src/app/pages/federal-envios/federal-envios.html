@@ -74,7 +74,6 @@
             <th>Fecha de envío</th>
             <th>Corte</th>
             <th>Usuario envío</th>
-            <th>Tipo</th>
             <th>Estatus</th>
             <th class="acciones-col">Acciones</th>
           </tr>
@@ -86,7 +85,6 @@
             <td>{{ envio.fechaEnvioTexto }}</td>
             <td>{{ envio.corte }}</td>
             <td>{{ envio.usuarioEnvio }}</td>
-            <td>{{ tipoCargaTexto(envio.tipoCarga) }}</td>
             <td>{{ envio.estadoTexto }}</td>
 
             <td>
@@ -146,7 +144,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="text-center p-4">
+            <td colspan="5" class="text-center p-4">
               @if (cargando()) {
               Consultando envíos...
               } @else {

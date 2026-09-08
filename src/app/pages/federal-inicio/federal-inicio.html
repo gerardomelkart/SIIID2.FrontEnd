@@ -66,6 +66,13 @@
 
     <div class="quick-access-grid">
       @if (esSuperUsuario()) {
+      <a class="quick-link" routerLink="/federal/informes/originales">
+        <div class="quick-icon"><i class="fa-solid fa-box-archive"></i></div>
+        <div>
+          <strong>Archivos originales</strong>
+          <span>Descargue los últimos archivos originales federales recibidos.</span>
+        </div>
+      </a>
       <a class="quick-link" routerLink="/federal/informes/cargas">
         <div class="quick-icon">
           <i class="fa-solid fa-chart-simple"></i>

@@ -3,6 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { InformeEnvioItem, InformeReporteCargasResponse, PeriodoCorteInforme } from '../models/informes.models';
 
+import { FederalArchivosOriginalesResponse } from '../models/federal-archivos-originales.models';
+
 interface FederalAcusesTicketResponse {
   esValido: boolean;
   ticket: string;
@@ -29,6 +31,14 @@ export class FederalInformesService {
     if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
     if (anioCorte !== undefined) params = params.set('anioCorte', anioCorte);
     return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
+  }
+
+  obtenerArchivosOriginales() {
+    return this.http.get<FederalArchivosOriginalesResponse>(`${this.apiUrl}/archivos-originales`);
+  }
+
+  descargarArchivosOriginales() {
+    return this.http.get(`${this.apiUrl}/archivos-originales/descargar`, { responseType: 'blob', observe: 'response' });
   }
 
   crearTicketDescargaAcuses(mesCorte: number, anioCorte: number) {

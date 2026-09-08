@@ -11,7 +11,7 @@ import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { EstadoOrden, ValorOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
 
-type CampoOrdenCargas = 'claveEntidad' | 'corte' | 'intentos' | 'estatusUltimoIntento' | 'fechaCargaActualizacionTexto' | 'fechaAprobacionTexto';
+type CampoOrdenCargas = 'corte' | 'intentos' | 'estatusUltimoIntento' | 'fechaCargaActualizacionTexto' | 'fechaAprobacionTexto';
 
 @Component({
   selector: 'app-federal-reporte-cargas',
@@ -42,7 +42,7 @@ export class FederalReporteCargas implements OnInit {
     const corte = this.corteOperativo();
     const filtradas = this.cargas().filter((carga) => {
       if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte || !carga.intentos) return false;
-      return !texto || [carga.claveEntidad, carga.entidadFederativa, carga.corte, carga.intentos,
+      return !texto || [carga.corte, carga.intentos,
         carga.tipoCargaUltimoIntento, carga.estatusUltimoIntento, this.etiquetaEstatusCarga(carga),
         carga.fechaCargaActualizacionTexto, carga.fechaAprobacionTexto]
         .some((valor) => String(valor ?? '').toLocaleLowerCase('es').includes(texto));
@@ -85,7 +85,6 @@ export class FederalReporteCargas implements OnInit {
     this.exportandoExcel.set(true);
     try {
       const filas = this.cargasFiltradas().map((carga) => ({
-        Institución: carga.claveEntidad,
         Periodo: carga.corte,
         Intentos: carga.intentos,
         Estatus: this.etiquetaEstatusCarga(carga),

@@ -298,7 +298,6 @@ export class FederalEnvios implements OnInit, OnDestroy {
         'Fecha de envío': envio.fechaEnvioTexto,
         Corte: envio.corte,
         'Usuario envío': envio.usuarioEnvio,
-        'Tipo de carga': this.tipoCargaTexto(envio.tipoCarga),
         Estatus: envio.estadoTexto,
         'Código de referencia': envio.codigoReferencia,
         'Motivo de rechazo': envio.motivoRechazo ?? '',
@@ -308,12 +307,6 @@ export class FederalEnvios implements OnInit, OnDestroy {
     } finally {
       this.exportandoExcel.set(false);
     }
-  }
-
-  tipoCargaTexto(tipoCarga: string): string {
-    if (tipoCarga === 'CARGA_INICIAL') return 'Carga inicial';
-    if (tipoCarga === 'ACTUALIZACION') return 'Actualización';
-    return tipoCarga.replaceAll('_', ' ');
   }
 
   ajustarPosicionMotivo(event: Event): void {

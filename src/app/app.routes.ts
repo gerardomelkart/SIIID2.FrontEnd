@@ -201,6 +201,14 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'informes/originales',
+        loadComponent: () => import('./pages/federal-originales/federal-originales').then((m) => m.FederalOriginales),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+      {
         path: 'administracion/cargas-pendientes',
         loadComponent: () =>
           import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then(

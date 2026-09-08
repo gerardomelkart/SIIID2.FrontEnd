@@ -68,11 +68,6 @@
       <table class="table table-sm reporte-table">
         <thead>
           <tr>
-            <th class="sortable" (click)="ordenarCargasPor('claveEntidad')">
-              Institución
-              <i [class]="iconoOrdenCargas('claveEntidad')"></i>
-            </th>
-
             <th class="sortable" (click)="ordenarCargasPor('corte')">
               Periodo
               <i [class]="iconoOrdenCargas('corte')"></i>
@@ -103,7 +98,6 @@
         <tbody>
           @for (carga of cargasPaginadas(); track carga.anioCorte + '-' + carga.mesCorte) {
           <tr>
-            <td>{{ carga.claveEntidad }}</td>
             <td>{{ carga.corte }}</td>
             <td>
               <span class="intentos-chip">{{ carga.intentos }}</span>
@@ -121,7 +115,7 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="text-center p-4">{{ cargandoCargas() ? 'Consultando cargas...' : 'No se encontraron cargas.' }}</td>
+            <td colspan="5" class="text-center p-4">{{ cargandoCargas() ? 'Consultando cargas...' : 'No se encontraron cargas.' }}</td>
           </tr>
           }
         </tbody>
