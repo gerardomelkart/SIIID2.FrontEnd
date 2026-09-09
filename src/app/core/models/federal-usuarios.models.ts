@@ -13,6 +13,8 @@ export interface FederalUsuarioDetalleResponse {
 
 export interface FederalUsuarioDetalle {
   idUsuario: number;
+  idEntidadFederativa: number | null;
+  entidadFederativa: string | null;
   usuario: string;
   nombre: string;
   primerApellido: string;

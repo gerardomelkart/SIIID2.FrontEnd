@@ -50,34 +50,34 @@
     <section class="siiid-card">
       <div class="siiid-card-header">
         <i class="fa-solid fa-map-location-dot"></i>
-        Resumen nacional
+        Resumen por entidad
       </div>
 
       <div class="config-body">
         <div class="mini-stat">
           <div>
-            <span>{{ totalUsuarios() }}</span>
-            Usuarios activos
+            <span>{{ totalGrupos() }}</span>
+            Entidades
           </div>
 
           <div>
-            <span>{{ totalUsuariosAccesoActivo() }}</span>
+            <span>{{ totalGruposAccesoActivo() }}</span>
             Con acceso activo
           </div>
 
           <div>
-            <span>{{ totalUsuariosCargaActiva() }}</span>
+            <span>{{ totalGruposCargaActiva() }}</span>
             Con carga activada
           </div>
 
           <div>
-            <span>{{ totalUsuariosModificacionActiva() }}</span>
+            <span>{{ totalGruposModificacionActiva() }}</span>
             Con actualización activada
           </div>
         </div>
 
         <div class="config-note">
-          El alcance Federal es nacional. Administre el acceso y los permisos de cada usuario.
+          La configuración por entidad permite bloquear temporalmente una entidad sin afectar al resto.
         </div>
       </div>
     </section>
@@ -87,7 +87,7 @@
     <div class="siiid-card-header usuarios-card-header">
       <span>
         <i class="fa-solid fa-table-list"></i>
-        Configuración nacional
+        Configuración por entidad
       </span>
 
       <div class="usuarios-tools">
@@ -103,7 +103,7 @@
 
         <div class="buscador">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Buscar alcance..." [ngModel]="busquedaGrupo()"
+          <input type="text" placeholder="Buscar entidad..." [ngModel]="busquedaGrupo()"
             (ngModelChange)="buscarGrupos($event)">
         </div>
       </div>
@@ -114,7 +114,7 @@
         <thead>
           <tr>
             <th class="sortable" (click)="ordenarGruposPor('alcance')">
-              Alcance
+              Entidad federativa
               <i [class]="iconoOrdenGrupos('alcance')"></i>
             </th>
 
@@ -190,7 +190,7 @@
     </div>
     @if (gruposFiltradas().length > 0) {
     <div class="pagination-row">
-      <span>Mostrando {{ gruposPaginadas().length }} de {{ gruposFiltradas().length }} alcances</span>
+      <span>Mostrando {{ gruposPaginadas().length }} de {{ gruposFiltradas().length }} entidades</span>
 
       <div class="pagination-actions">
         <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaGrupos() === 1"
@@ -219,7 +219,7 @@
 <aside class="permisos-grupo-drawer">
   <div class="drawer-header">
     <div>
-      <h2>Permisos de usuarios</h2>
+      <h2>Permisos por entidad</h2>
       <p>{{ grupoSeleccionada()?.alcance }}</p>
     </div>
 
@@ -228,7 +228,7 @@
 
   <div class="drawer-body">
     <div class="config-info">
-      <strong>Usuarios activos</strong>
+      <strong>Usuarios activos de la entidad</strong>
       <p>
         Ajusta el acceso al Federal y los permisos individuales de carga inicial y actualización. Los usuarios de
         consulta no pueden cargar ni actualizar.

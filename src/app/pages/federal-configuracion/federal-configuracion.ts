@@ -98,25 +98,34 @@ export class FederalConfiguracion implements OnInit {
   usuarioActual = this.sessionService.usuario;
 
   gruposConfiguracion = computed<ConfiguracionGrupo[]>(() => {
-    const lista = this.usuarios().filter((usuario) => usuario.activo);
-    if (lista.length === 0) return [];
+    const grupos = new Map<string, FederalUsuarioDetalle[]>();
+    for (const usuario of this.usuarios()) {
+      if (!usuario.activo) continue;
+      const clave = this.claveGrupoUsuario(usuario);
+      const lista = grupos.get(clave) ?? [];
+      lista.push(usuario);
+      grupos.set(clave, lista);
+    }
 
-    const usuariosOperativos = lista.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
-    const usuariosAcceso = lista.filter((usuario) => usuario.habilitaFederal).length;
-    const usuariosCarga = usuariosOperativos.filter((usuario) => usuario.habilitaFederal && usuario.habilitaCarga).length;
-    const usuariosModificacion = usuariosOperativos.filter((usuario) => usuario.habilitaFederal && usuario.habilitaModificacion).length;
-    const resultado: ConfiguracionGrupo[] = [{
-      clave: 'NACIONAL',
-      alcance: 'Nacional',
-      totalUsuarios: lista.length,
-      totalUsuariosOperativos: usuariosOperativos.length,
-      usuariosAcceso,
-      usuariosCarga,
-      usuariosModificacion,
-      estadoAcceso: this.obtenerEstadoPermiso(usuariosAcceso, lista.length),
-      estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, usuariosOperativos.length),
-      estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, usuariosOperativos.length),
-    }];
+    const resultado: ConfiguracionGrupo[] = [];
+    grupos.forEach((lista, clave) => {
+      const usuariosOperativos = lista.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
+      const usuariosAcceso = lista.filter((usuario) => usuario.habilitaFederal).length;
+      const usuariosCarga = usuariosOperativos.filter((usuario) => usuario.habilitaFederal && usuario.habilitaCarga).length;
+      const usuariosModificacion = usuariosOperativos.filter((usuario) => usuario.habilitaFederal && usuario.habilitaModificacion).length;
+      resultado.push({
+        clave,
+        alcance: lista[0].entidadFederativa || 'Nacional',
+        totalUsuarios: lista.length,
+        totalUsuariosOperativos: usuariosOperativos.length,
+        usuariosAcceso,
+        usuariosCarga,
+        usuariosModificacion,
+        estadoAcceso: this.obtenerEstadoPermiso(usuariosAcceso, lista.length),
+        estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, usuariosOperativos.length),
+        estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, usuariosOperativos.length),
+      });
+    });
 
     return resultado;
   });
@@ -142,10 +151,10 @@ export class FederalConfiguracion implements OnInit {
     Math.max(1, Math.ceil(this.gruposFiltradas().length / this.tamanioPaginaGrupos)),
   );
 
-  totalUsuarios = computed(() => this.gruposConfiguracion()[0]?.totalUsuarios ?? 0);
-  totalUsuariosAccesoActivo = computed(() => this.gruposConfiguracion()[0]?.usuariosAcceso ?? 0);
-  totalUsuariosCargaActiva = computed(() => this.gruposConfiguracion()[0]?.usuariosCarga ?? 0);
-  totalUsuariosModificacionActiva = computed(() => this.gruposConfiguracion()[0]?.usuariosModificacion ?? 0);
+  totalGrupos = computed(() => this.gruposConfiguracion().length);
+  totalGruposAccesoActivo = computed(() => this.gruposConfiguracion().filter((grupo) => grupo.usuariosAcceso > 0).length);
+  totalGruposCargaActiva = computed(() => this.gruposConfiguracion().filter((grupo) => grupo.usuariosCarga > 0).length);
+  totalGruposModificacionActiva = computed(() => this.gruposConfiguracion().filter((grupo) => grupo.usuariosModificacion > 0).length);
 
   ngOnInit(): void {
     this.cargarUsuarios();
@@ -201,7 +210,7 @@ export class FederalConfiguracion implements OnInit {
 
     try {
       const filas = this.gruposFiltradas().map((grupo) => ({
-        'Alcance': grupo.alcance,
+        'Entidad federativa': grupo.alcance,
         'Acceso al módulo Federal': this.etiquetaEstado(grupo.estadoAcceso),
         'Usuarios con acceso': `${grupo.usuariosAcceso} de ${grupo.totalUsuarios}`,
         'Carga de archivos': this.etiquetaEstado(grupo.estadoCarga),
@@ -298,13 +307,13 @@ export class FederalConfiguracion implements OnInit {
     const idUsuarioActual = this.usuarioActual()?.idUsuario ?? null;
 
     const usuariosGrupo = this.usuarios()
-      .filter((usuario) => usuario.activo)
+      .filter((usuario) => usuario.activo && this.claveGrupoUsuario(usuario) === grupo.clave)
       .map((usuario) => ({
         idUsuario: usuario.idUsuario,
         usuario: usuario.usuario,
         nombreCompleto: usuario.nombreCompleto,
         rol: usuario.rol,
-        alcance: 'Nacional',
+        alcance: usuario.entidadFederativa || 'Nacional',
         habilitaFederalOriginal: usuario.habilitaFederal,
         habilitaCargaOriginal: usuario.habilitaCarga,
         habilitaModificacionOriginal: usuario.habilitaModificacion,
@@ -467,6 +476,10 @@ export class FederalConfiguracion implements OnInit {
         },
       });
     });
+  }
+
+  private claveGrupoUsuario(usuario: FederalUsuarioDetalle): string {
+    return usuario.idEntidadFederativa?.toString() ?? 'NACIONAL';
   }
 
   private obtenerEstadoPermiso(
