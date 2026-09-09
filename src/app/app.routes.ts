@@ -194,7 +194,10 @@ export const routes: Routes = [
       },
       {
         path: 'informes/cargas',
-        loadComponent: () => import('./pages/federal-reporte-cargas/federal-reporte-cargas').then((m) => m.FederalReporteCargas),
+        loadComponent: () =>
+          import('./pages/federal-reporte-cargas/federal-reporte-cargas').then(
+            (m) => m.FederalReporteCargas,
+          ),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO],
@@ -202,7 +205,8 @@ export const routes: Routes = [
       },
       {
         path: 'informes/sabanas',
-        loadComponent: () => import('./pages/federal-planos/federal-planos').then((m) => m.FederalPlanos),
+        loadComponent: () =>
+          import('./pages/federal-planos/federal-planos').then((m) => m.FederalPlanos),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
@@ -210,7 +214,8 @@ export const routes: Routes = [
       },
       {
         path: 'informes/originales',
-        loadComponent: () => import('./pages/federal-originales/federal-originales').then((m) => m.FederalOriginales),
+        loadComponent: () =>
+          import('./pages/federal-originales/federal-originales').then((m) => m.FederalOriginales),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO],
@@ -222,6 +227,15 @@ export const routes: Routes = [
           import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then(
             (m) => m.FederalAprobacionCargas,
           ),
+        canActivate: [permissionGuard],
+        data: {
+          roles: [ROLES.SUPER_USUARIO],
+        },
+      },
+      {
+        path: 'administracion/usuarios',
+        loadComponent: () =>
+          import('./pages/federal-usuarios/federal-usuarios').then((m) => m.FederalUsuarios),
         canActivate: [permissionGuard],
         data: {
           roles: [ROLES.SUPER_USUARIO],
