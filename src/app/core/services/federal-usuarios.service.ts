@@ -1,78 +1,52 @@
-export interface FederalUsuariosListadoResponse {
-  esValido: boolean;
-  total: number;
-  usuarios: FederalUsuarioDetalle[];
-}
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 
-export interface FederalUsuarioDetalleResponse {
-  esValido: boolean;
-  codigo: string;
-  mensaje: string;
-  usuario: FederalUsuarioDetalle | null;
-}
+import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import {
+  CrearUsuarioFederalRequest,
+  EditarUsuarioFederalRequest,
+  FederalUsuarioDetalleResponse,
+  FederalUsuarioOperacionResponse,
+  FederalUsuariosListadoResponse,
+  ReactivarUsuarioFederalRequest,
+} from '../models/federal-usuarios.models';
 
-export interface FederalUsuarioDetalle {
-  idUsuario: number;
-  usuario: string;
-  nombre: string;
-  primerApellido: string;
-  segundoApellido: string | null;
-  nombreCompleto: string;
-  correoElectronico: string;
-  rfc: string | null;
-  curp: string | null;
-  telefonoContacto: string | null;
-  idRol: number;
-  rol: string;
-  habilitaFederal: boolean;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
-  activo: boolean;
-  activoCuenta: boolean;
-  tieneOtrosModulos: boolean;
-  fechaAlta: string;
-  fechaModificacion: string;
-}
+@Injectable({
+  providedIn: 'root',
+})
+export class FederalUsuariosService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = API_ENDPOINTS.federalUsuarios;
 
-export interface FederalUsuarioDatos {
-  usuario: string;
-  nombre: string;
-  primerApellido: string;
-  segundoApellido: string | null;
-  correoElectronico: string;
-  rfc: string | null;
-  curp: string | null;
-  telefonoContacto: string | null;
-  rol: string;
-  habilitaFederal: boolean;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
-}
+  obtenerUsuarios(incluirInactivos: boolean) {
+    const params = new HttpParams().set('incluirInactivos', incluirInactivos);
 
-export interface CrearUsuarioFederalRequest extends FederalUsuarioDatos {
-  password: string;
-}
+    return this.http.get<FederalUsuariosListadoResponse>(this.apiUrl, { params });
+  }
 
-export interface EditarUsuarioFederalRequest extends FederalUsuarioDatos {
-  nuevaPassword: string | null;
-}
+  obtenerDetalle(idUsuario: number) {
+    return this.http.get<FederalUsuarioDetalleResponse>(`${this.apiUrl}/${idUsuario}`);
+  }
 
-export interface ReactivarUsuarioFederalRequest {
-  habilitaFederal: boolean;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
-}
+  crearUsuario(request: CrearUsuarioFederalRequest) {
+    return this.http.post<FederalUsuarioOperacionResponse>(this.apiUrl, request);
+  }
 
-export interface FederalUsuarioOperacionResponse {
-  esValido: boolean;
-  codigo: string;
-  mensaje: string;
-  idUsuario?: number;
-  errores?: FederalUsuarioValidacionError[];
-}
+  editarUsuario(idUsuario: number, request: EditarUsuarioFederalRequest) {
+    return this.http.put<FederalUsuarioOperacionResponse>(
+      `${this.apiUrl}/${idUsuario}`,
+      request,
+    );
+  }
 
-export interface FederalUsuarioValidacionError {
-  campo: string;
-  codigo: string;
-  mensaje: string;
+  desactivarUsuario(idUsuario: number) {
+    return this.http.delete<FederalUsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}`);
+  }
+
+  reactivarUsuario(idUsuario: number, request: ReactivarUsuarioFederalRequest) {
+    return this.http.put<FederalUsuarioOperacionResponse>(
+      `${this.apiUrl}/${idUsuario}/reactivar`,
+      request,
+    );
+  }
 }
