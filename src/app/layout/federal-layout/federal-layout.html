@@ -60,7 +60,7 @@
 
         <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
           <span>
-            <i class="fa-solid fa-file-lines"></i>
+            <i class="fa-solid fa-bars"></i>
             Informes
           </span>
         </button>
@@ -68,17 +68,19 @@
         @if (informesAbierto()) {
         <a class="menu-link level-2" routerLink="/federal/informes/envios" routerLinkActive="active">
           <i class="fa-solid fa-paper-plane"></i>
-          Reporte de envíos
+          Consultar Envíos
         </a>
+        @if (esSuperUsuario()) {
+        <a class="menu-link level-2" routerLink="/federal/informes/cargas" routerLinkActive="active">
+          <i class="fa-solid fa-chart-simple"></i>
+          Reporte de Cargas
+        </a>
+        }
         <a class="menu-link level-2" routerLink="/federal/informes/sabanas" routerLinkActive="active">
           <i class="fa-solid fa-table"></i>
           Planos estadísticos
         </a>
         @if (esSuperUsuario()) {
-        <a class="menu-link level-2" routerLink="/federal/informes/cargas" routerLinkActive="active">
-          <i class="fa-solid fa-chart-simple"></i>
-          Reporte de cargas
-        </a>
         <a class="menu-link level-2" routerLink="/federal/informes/originales" routerLinkActive="active">
           <i class="fa-solid fa-box-archive"></i>
           Archivos originales
