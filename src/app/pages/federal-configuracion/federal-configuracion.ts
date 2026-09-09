@@ -165,7 +165,7 @@ export class FederalConfiguracion implements OnInit {
 
     this.usuariosService.obtenerUsuarios(true).subscribe({
       next: (response) => {
-        const usuarios = response.usuarios ?? [];
+        const usuarios = (response.usuarios ?? []).filter((usuario) => usuario.idEntidadFederativa === null);
 
         this.usuarios.set(usuarios);
         this.paginaGrupos.set(1);
