@@ -243,7 +243,7 @@ export class FederalConfiguracion implements OnInit {
     if (this.guardandoGlobal() || this.guardandoGrupo() || this.cargando()) return;
     confirmarAccion(
       'Actualizar permisos globales',
-      'Esta acción actualizará carga y actualización para todos los usuarios activos con acceso al módulo Federal, excepto usuarios con rol CONSULTA.',
+      'Esta acción actualizará carga y actualización para todos los usuarios nacionales activos con acceso al módulo Federal, excepto usuarios con rol CONSULTA.',
       'Sí, actualizar',
     ).then((result) => {
       if (!result.isConfirmed) {

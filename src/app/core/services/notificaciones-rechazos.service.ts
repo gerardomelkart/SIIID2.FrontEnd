@@ -18,6 +18,10 @@ export class NotificacionesRechazosService {
     return this.http.post<NotificacionRechazoResponse>(`${this.apiUrl}/mensual/consumir`, null);
   }
 
+  consumirFederal() {
+    return this.http.post<NotificacionRechazoResponse>(`${this.apiUrl}/federal/consumir`, null);
+  }
+
   consumirSemanal() {
     return this.http.post<NotificacionRechazoResponse>(`${this.apiUrl}/semanal/consumir`, null);
   }

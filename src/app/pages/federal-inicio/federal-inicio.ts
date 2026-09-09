@@ -1,12 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { RecordatorioCarga } from '../../shared/recordatorio-carga/recordatorio-carga';
 
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 
 @Component({
   selector: 'app-federal-inicio',
-  imports: [RouterLink],
+  imports: [RouterLink, RecordatorioCarga],
   templateUrl: './federal-inicio.html',
   styleUrls: ['../dashboard/dashboard.css', './federal-inicio.css'],
 })
@@ -33,5 +34,25 @@ export class FederalInicio {
 
   puedeVerCarga = computed(() => {
     return !this.esConsulta() && this.habilitaCarga();
+  });
+
+  puedeVerActualizacion = computed(() => {
+    return !this.esConsulta() && this.habilitaModificacion();
+  });
+
+  puedeVerEnvios = computed(() => {
+    return this.esSuperUsuario() || this.esEnlaceFederal() || this.esConsulta();
+  });
+
+  puedeVerCargas = computed(() => {
+    return this.esSuperUsuario();
+  });
+
+  puedeVerSabanas = computed(() => {
+    return this.esSuperUsuario() || this.esEnlaceFederal() || this.esConsulta();
+  });
+
+  puedeVerAdministracion = computed(() => {
+    return this.esSuperUsuario();
   });
 }

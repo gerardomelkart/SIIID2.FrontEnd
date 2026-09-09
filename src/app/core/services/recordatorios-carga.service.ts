@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { API_BASE_URL } from '../constants/api-endpoints.constants';
 
-export type ModuloRecordatorioCarga = 'mensual' | 'semanal';
+export type ModuloRecordatorioCarga = 'mensual' | 'semanal' | 'federal';
 
 export interface RecordatorioCargaResponse {
   hayPendiente: boolean;

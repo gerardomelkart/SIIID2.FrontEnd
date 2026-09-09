@@ -1,4 +1,8 @@
 <div class="dashboard-page">
+  @if (esEnlaceFederal() && habilitaCarga()) {
+  <app-recordatorio-carga modulo="federal"></app-recordatorio-carga>
+  }
+
   <section class="welcome-card">
     <div class="welcome-content">
       <div class="welcome-icon">
@@ -65,50 +69,6 @@
     </div>
 
     <div class="quick-access-grid">
-      <a class="quick-link" routerLink="/federal/informes/sabanas">
-        <div class="quick-icon"><i class="fa-solid fa-table"></i></div>
-        <div>
-          <strong>Planos estadísticos</strong>
-          <span>Descargue los planos estadísticos anuales de información federal.</span>
-        </div>
-      </a>
-      @if (esSuperUsuario()) {
-      <a class="quick-link" routerLink="/federal/informes/originales">
-        <div class="quick-icon"><i class="fa-solid fa-box-archive"></i></div>
-        <div>
-          <strong>Archivos originales</strong>
-          <span>Descargue los últimos archivos originales federales recibidos.</span>
-        </div>
-      </a>
-      <a class="quick-link" routerLink="/federal/informes/cargas">
-        <div class="quick-icon">
-          <i class="fa-solid fa-chart-simple"></i>
-        </div>
-        <div>
-          <strong>Reporte de cargas</strong>
-          <span>Consulte los intentos, estados y fechas de las cargas federales.</span>
-        </div>
-      </a>
-      <a class="quick-link" routerLink="/federal/administracion/usuarios">
-        <div class="quick-icon">
-          <i class="fa-solid fa-users"></i>
-        </div>
-
-        <div>
-          <strong>Administración de usuarios</strong>
-          <span>Gestione cuentas, roles y permisos del módulo Federal.</span>
-        </div>
-      </a>
-      <a class="quick-link" routerLink="/federal/administracion/configuracion">
-        <div class="quick-icon">
-          <i class="fa-solid fa-sliders"></i>
-        </div>
-        <div>
-          <strong>Configuración de módulos</strong>
-          <span>Administre los permisos globales e individuales del módulo Federal.</span>
-        </div>
-      </a>
-      }
       @if (puedeVerCarga()) {
       <a class="quick-link" routerLink="/federal/carga-inicial">
         <div class="quick-icon">
@@ -117,7 +77,107 @@
 
         <div>
           <strong>Integrar información</strong>
-          <span>Carga inicial de incidencia delictiva federal de alcance nacional.</span>
+          <span>Carga inicial de incidencia delictiva federal.</span>
+        </div>
+      </a>
+      }
+
+      @if (puedeVerActualizacion()) {
+      <a class="quick-link" routerLink="/federal/actualizacion">
+        <div class="quick-icon">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </div>
+
+        <div>
+          <strong>Actualizar información</strong>
+          <span>Modificación de periodos previamente confirmados.</span>
+        </div>
+      </a>
+      }
+
+      @if (puedeVerEnvios()) {
+      <a class="quick-link" routerLink="/federal/informes/envios">
+        <div class="quick-icon">
+          <i class="fa-solid fa-paper-plane"></i>
+        </div>
+
+        <div>
+          <strong>Consultar envíos</strong>
+          <span>Histórico de envíos confirmados.</span>
+        </div>
+      </a>
+      }
+
+      @if (puedeVerCargas()) {
+      <a class="quick-link" routerLink="/federal/informes/cargas">
+        <div class="quick-icon">
+          <i class="fa-solid fa-chart-simple"></i>
+        </div>
+
+        <div>
+          <strong>Reporte de cargas</strong>
+          <span>Monitoreo de intentos y estatus de cargas federales.</span>
+        </div>
+      </a>
+      }
+
+      @if (puedeVerSabanas()) {
+      <a class="quick-link" routerLink="/federal/informes/sabanas">
+        <div class="quick-icon">
+          <i class="fa-solid fa-table"></i>
+        </div>
+
+        <div>
+          <strong>Planos estadísticos</strong>
+          <span>Generación anual de planos estatales y municipales.</span>
+        </div>
+      </a>
+      }
+
+      @if (puedeVerAdministracion()) {
+
+      <a class="quick-link" routerLink="/federal/informes/originales">
+        <div class="quick-icon">
+          <i class="fa-solid fa-folder-open"></i>
+        </div>
+
+        <div>
+          <strong>Archivos originales</strong>
+          <span>Consulta y descarga de los últimos archivos federales recibidos.</span>
+        </div>
+      </a>
+
+
+      <a class="quick-link" routerLink="/federal/administracion/cargas-pendientes">
+        <div class="quick-icon">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+
+        <div>
+          <strong>Aprobación de cargas</strong>
+          <span>Revisión y aceptación administrativa de cargas pendientes.</span>
+        </div>
+      </a>
+
+      <a class="quick-link" routerLink="/federal/administracion/usuarios">
+        <div class="quick-icon">
+          <i class="fa-solid fa-users"></i>
+        </div>
+
+        <div>
+          <strong>Administración de usuarios</strong>
+          <span>Gestión de cuentas, roles y permisos.</span>
+        </div>
+      </a>
+
+      <a class="quick-link" routerLink="/federal/administracion/configuracion">
+        <div class="quick-icon">
+          <i class="fa-solid fa-sliders"></i>
+        </div>
+
+        <div>
+          <strong>Configuración de módulos</strong>
+          <span>Control global e individual de permisos operativos de alcance nacional.</span>
         </div>
       </a>
       }
