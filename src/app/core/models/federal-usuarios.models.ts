@@ -77,3 +77,12 @@ export interface FederalUsuarioValidacionError {
   codigo: string;
   mensaje: string;
 }
+
+export interface PermisosGlobalesFederalRequest {
+  habilitaCarga: boolean;
+  habilitaModificacion: boolean;
+}
+
+export interface ActualizarPermisosFederalRequest extends PermisosGlobalesFederalRequest {
+  habilitaFederal: boolean;
+}

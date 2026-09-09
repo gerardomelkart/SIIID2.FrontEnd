@@ -1,0 +1,301 @@
+<div class="config-page">
+  <div class="admin-header">
+    <div>
+      <h1>Configuración de módulos</h1>
+      <p>Control global de carga y actualización, y control individual del acceso al módulo Federal.</p>
+    </div>
+  </div>
+
+  <div class="config-grid">
+    <section class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-globe"></i>
+        Configuración global
+      </div>
+
+      <div class="config-body">
+        <div class="config-info">
+          <strong>Aplicación general</strong>
+          <p>Estos switches habilitan o bloquean la carga y la actualización para los usuarios operativos con acceso al
+            Federal.</p>
+        </div>
+
+        <div class="config-switch-list">
+          <label class="module-switch">
+            <div>
+              <strong>Carga de información</strong>
+              <span>Permite el envío de archivos de carga inicial.</span>
+            </div>
+            <input type="checkbox" [disabled]="cargando() || guardandoGlobal() || guardandoGrupo()" [ngModel]="habilitaCargaGlobal()" (ngModelChange)="cambiarCargaGlobal($event)">
+          </label>
+
+          <label class="module-switch">
+            <div>
+              <strong>Actualización de información</strong>
+              <span>Permite modificar periodos previamente confirmados.</span>
+            </div>
+            <input type="checkbox" [disabled]="cargando() || guardandoGlobal() || guardandoGrupo()" [ngModel]="habilitaModificacionGlobal()"
+              (ngModelChange)="cambiarModificacionGlobal($event)">
+          </label>
+        </div>
+
+        <button type="button" class="btn btn-siiid mt-3" [disabled]="cargando() || guardandoGlobal() || guardandoGrupo()"
+          (click)="guardarConfiguracionGlobal()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          {{ guardandoGlobal() ? 'Guardando...' : 'Guardar configuración global' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="siiid-card">
+      <div class="siiid-card-header">
+        <i class="fa-solid fa-map-location-dot"></i>
+        Resumen nacional
+      </div>
+
+      <div class="config-body">
+        <div class="mini-stat">
+          <div>
+            <span>{{ totalUsuarios() }}</span>
+            Usuarios activos
+          </div>
+
+          <div>
+            <span>{{ totalUsuariosAccesoActivo() }}</span>
+            Con acceso activo
+          </div>
+
+          <div>
+            <span>{{ totalUsuariosCargaActiva() }}</span>
+            Con carga activada
+          </div>
+
+          <div>
+            <span>{{ totalUsuariosModificacionActiva() }}</span>
+            Con actualización activada
+          </div>
+        </div>
+
+        <div class="config-note">
+          El alcance Federal es nacional. Administre el acceso y los permisos de cada usuario.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="siiid-card mt-4">
+    <div class="siiid-card-header usuarios-card-header">
+      <span>
+        <i class="fa-solid fa-table-list"></i>
+        Configuración nacional
+      </span>
+
+      <div class="usuarios-tools">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()"
+          (click)="exportarConfiguracionExcel()">
+          @if (exportandoExcel()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          }
+          Excel
+        </button>
+
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Buscar alcance..." [ngModel]="busquedaGrupo()"
+            (ngModelChange)="buscarGrupos($event)">
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm grupo-table">
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenarGruposPor('alcance')">
+              Alcance
+              <i [class]="iconoOrdenGrupos('alcance')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarGruposPor('usuariosAcceso')">
+              Acceso Federal
+              <i [class]="iconoOrdenGrupos('usuariosAcceso')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarGruposPor('usuariosCarga')">
+              Carga de archivos
+              <i [class]="iconoOrdenGrupos('usuariosCarga')"></i>
+            </th>
+
+            <th class="sortable" (click)="ordenarGruposPor('usuariosModificacion')">
+              Actualización
+              <i [class]="iconoOrdenGrupos('usuariosModificacion')"></i>
+            </th>
+
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (grupo of gruposPaginadas(); track grupo.clave) {
+          <tr>
+            <td><strong>{{ grupo.alcance }}</strong></td>
+
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="grupo.estadoAcceso === 'ACTIVO'"
+                [class.estado-config-inactivo]="grupo.estadoAcceso === 'INACTIVO'"
+                [class.estado-config-mixto]="grupo.estadoAcceso === 'MIXTO'">
+                {{ etiquetaEstado(grupo.estadoAcceso) }}
+              </span>
+              <div class="config-subtexto">
+                {{ grupo.usuariosAcceso }} de {{ grupo.totalUsuarios }} usuarios
+              </div>
+            </td>
+
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="grupo.estadoCarga === 'ACTIVO'"
+                [class.estado-config-inactivo]="grupo.estadoCarga === 'INACTIVO'"
+                [class.estado-config-mixto]="grupo.estadoCarga === 'MIXTO'">
+                {{ etiquetaEstado(grupo.estadoCarga) }}
+              </span>
+              <div class="config-subtexto">
+                {{ grupo.usuariosCarga }} de {{ grupo.totalUsuariosOperativos }} usuarios
+              </div>
+            </td>
+
+            <td>
+              <span class="estado-config" [class.estado-config-activo]="grupo.estadoModificacion === 'ACTIVO'"
+                [class.estado-config-inactivo]="grupo.estadoModificacion === 'INACTIVO'"
+                [class.estado-config-mixto]="grupo.estadoModificacion === 'MIXTO'">
+                {{ etiquetaEstado(grupo.estadoModificacion) }}
+              </span>
+              <div class="config-subtexto">
+                {{ grupo.usuariosModificacion }} de {{ grupo.totalUsuariosOperativos }} usuarios
+              </div>
+            </td>
+            <td>
+              <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando() || guardandoGlobal() || guardandoGrupo()" (click)="abrirPermisosGrupo(grupo)">
+                Administrar permisos
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="text-center p-4">No se encontraron usuarios activos.</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (gruposFiltradas().length > 0) {
+    <div class="pagination-row">
+      <span>Mostrando {{ gruposPaginadas().length }} de {{ gruposFiltradas().length }} alcances</span>
+
+      <div class="pagination-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaGrupos() === 1"
+          (click)="cambiarPaginaGrupos(paginaGrupos() - 1)">
+          Anterior
+        </button>
+
+        <span class="page-indicator">{{ paginaGrupos() }} / {{ totalPaginasGrupos() }}</span>
+
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+          [disabled]="paginaGrupos() === totalPaginasGrupos()"
+          (click)="cambiarPaginaGrupos(paginaGrupos() + 1)">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
+
+
+  </section>
+</div>
+
+@if (modalGrupoAbierto()) {
+<div class="drawer-backdrop" (click)="cerrarPermisosGrupo()"></div>
+
+<aside class="permisos-grupo-drawer">
+  <div class="drawer-header">
+    <div>
+      <h2>Permisos de usuarios</h2>
+      <p>{{ grupoSeleccionada()?.alcance }}</p>
+    </div>
+
+    <button type="button" class="drawer-close" (click)="cerrarPermisosGrupo()">×</button>
+  </div>
+
+  <div class="drawer-body">
+    <div class="config-info">
+      <strong>Usuarios activos</strong>
+      <p>
+        Ajusta el acceso al Federal y los permisos individuales de carga inicial y actualización. Los usuarios de
+        consulta no pueden cargar ni actualizar.
+      </p>
+    </div>
+
+    <div class="usuarios-permisos-list">
+      @for (usuario of usuariosGrupo(); track usuario.idUsuario) {
+      <div class="usuario-permiso-card" [class.usuario-sin-acceso]="!usuario.habilitaFederal">
+        <div class="usuario-permiso-info">
+          <strong>{{ usuario.nombreCompleto }}</strong>
+          <span>{{ usuario.usuario }} · {{ usuario.rol }}</span>
+
+          @if (usuario.esUsuarioActual) {
+          <small>Tu propio acceso al Federal no puede deshabilitarse.</small>
+          }
+
+          @if (usuario.bloqueaOperacion) {
+          <small>El rol CONSULTA no puede cargar ni actualizar.</small>
+          }
+        </div>
+
+        <div class="usuario-permisos-grid">
+          <label class="permiso-mini-switch">
+            <input type="checkbox" [disabled]="usuario.esUsuarioActual || guardandoGrupo()"
+              [ngModel]="usuario.habilitaFederal"
+              (ngModelChange)="cambiarPermisoUsuarioGrupo(usuario.idUsuario, 'habilitaFederal', $event)">
+
+            <span>Acceso</span>
+          </label>
+
+          <label class="permiso-mini-switch">
+            <input type="checkbox"
+              [disabled]="!usuario.habilitaFederal || usuario.bloqueaOperacion || guardandoGrupo()"
+              [ngModel]="usuario.habilitaCarga"
+              (ngModelChange)="cambiarPermisoUsuarioGrupo(usuario.idUsuario, 'habilitaCarga', $event)">
+
+            <span>Carga</span>
+          </label>
+
+          <label class="permiso-mini-switch">
+            <input type="checkbox"
+              [disabled]="!usuario.habilitaFederal || usuario.bloqueaOperacion || guardandoGrupo()"
+              [ngModel]="usuario.habilitaModificacion"
+              (ngModelChange)="cambiarPermisoUsuarioGrupo(usuario.idUsuario, 'habilitaModificacion', $event)">
+
+            <span>Actualización</span>
+          </label>
+        </div>
+      </div>
+      } @empty {
+      <div class="sin-usuarios-grupo">
+        No hay usuarios activos.
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="drawer-actions">
+    <button type="button" class="btn btn-secondary" [disabled]="guardandoGrupo()" (click)="cerrarPermisosGrupo()">
+      Cancelar
+    </button>
+
+    <button type="button" class="btn btn-siiid" [disabled]="guardandoGrupo() || !hayCambiosGrupo()"
+      (click)="guardarPermisosGrupo()">
+      {{ guardandoGrupo() ? 'Guardando...' : 'Guardar permisos' }}
+    </button>
+  </div>
+</aside>
+}

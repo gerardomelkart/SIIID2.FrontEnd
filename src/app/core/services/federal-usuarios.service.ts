@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import {
+  ActualizarPermisosFederalRequest,
+  PermisosGlobalesFederalRequest,
   CrearUsuarioFederalRequest,
   EditarUsuarioFederalRequest,
   FederalUsuarioDetalleResponse,
@@ -48,5 +50,12 @@ export class FederalUsuariosService {
       `${this.apiUrl}/${idUsuario}/reactivar`,
       request,
     );
+  }
+  actualizarPermisos(idUsuario: number, request: ActualizarPermisosFederalRequest) {
+    return this.http.put<FederalUsuarioOperacionResponse>(`${this.apiUrl}/${idUsuario}/permisos`, request);
+  }
+
+  actualizarPermisosGlobales(request: PermisosGlobalesFederalRequest) {
+    return this.http.put<FederalUsuarioOperacionResponse>(`${this.apiUrl}/permisos-globales`, request);
   }
 }

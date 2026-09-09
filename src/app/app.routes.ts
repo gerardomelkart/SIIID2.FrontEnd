@@ -241,6 +241,12 @@ export const routes: Routes = [
           roles: [ROLES.SUPER_USUARIO],
         },
       },
+      {
+        path: 'administracion/configuracion',
+        loadComponent: () => import('./pages/federal-configuracion/federal-configuracion').then((m) => m.FederalConfiguracion),
+        canActivate: [permissionGuard],
+        data: { roles: [ROLES.SUPER_USUARIO] },
+      },
     ],
   },
 
