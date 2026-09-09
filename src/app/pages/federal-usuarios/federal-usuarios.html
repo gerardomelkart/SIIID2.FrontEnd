@@ -2,7 +2,7 @@
   <div class="admin-header">
     <div>
       <h1>Administración de usuarios</h1>
-      <p>Gestión de cuentas, roles y permisos exclusivos del módulo Federal.</p>
+      <p>Gestión de cuentas, roles y permisos operativos del módulo Federal.</p>
     </div>
 
     <button type="button" class="btn btn-siiid" (click)="abrirNuevoUsuario()">
@@ -28,8 +28,8 @@
     </div>
 
     <div class="kpi-card kpi-gold">
-      <div class="kpi-value">{{ totalConFederal() }}</div>
-      <div class="kpi-label">Con acceso Federal</div>
+      <div class="kpi-value">{{ totalSuperUsuarios() }}</div>
+      <div class="kpi-label">Super usuarios</div>
     </div>
   </div>
 
@@ -37,7 +37,7 @@
     <div class="siiid-card-header usuarios-card-header">
       <span>
         <i class="fa-solid fa-users"></i>
-        Usuarios del módulo Federal
+        Usuarios del sistema
       </span>
 
       <div class="usuarios-tools">
@@ -53,6 +53,11 @@
           }
           Excel
         </button>
+
+        <label class="ver-inactivos">
+          <input type="checkbox" [ngModel]="mostrarTodos()" (ngModelChange)="cambiarFiltroTodos($event)">
+          Ver todos
+        </label>
 
         <label class="ver-inactivos">
           <input
@@ -114,7 +119,7 @@
             </th>
 
             <th class="sortable" (click)="ordenarUsuariosPor('habilitaModificacion')">
-              Actualización
+              Modificación
               <i [class]="iconoOrdenUsuarios('habilitaModificacion')"></i>
             </th>
 
@@ -210,7 +215,7 @@
           } @empty {
           <tr>
             <td colspan="9" class="text-center p-4">
-              No se encontraron usuarios Federal.
+              No se encontraron usuarios.
             </td>
           </tr>
           }

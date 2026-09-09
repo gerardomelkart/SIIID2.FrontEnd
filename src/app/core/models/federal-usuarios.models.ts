@@ -29,6 +29,7 @@ export interface FederalUsuarioDetalle {
   habilitaModificacion: boolean;
   activo: boolean;
   activoCuenta: boolean;
+  tieneFederal: boolean;
   tieneOtrosModulos: boolean;
   fechaAlta: string;
   fechaModificacion: string;

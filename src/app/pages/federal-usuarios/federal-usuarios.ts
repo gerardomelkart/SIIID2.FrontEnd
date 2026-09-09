@@ -79,6 +79,7 @@ export class FederalUsuarios implements OnInit {
   formulario = signal<UsuarioFederalForm>(this.crearFormularioVacio());
 
   busqueda = signal('');
+  mostrarTodos = signal(false);
   mostrarInactivos = signal(false);
 
   paginaUsuarios = signal(1);
@@ -97,14 +98,14 @@ export class FederalUsuarios implements OnInit {
     const texto = this.busqueda().trim().toLowerCase();
 
     const filtrados = this.usuarios().filter((usuario) => {
-      if (!texto) return true;
-
-      return (
+      const pasaModulo = this.mostrarTodos() || usuario.habilitaFederal;
+      const pasaBusqueda = !texto ||
         usuario.nombreCompleto?.toLowerCase().includes(texto) ||
         usuario.usuario?.toLowerCase().includes(texto) ||
         usuario.correoElectronico?.toLowerCase().includes(texto) ||
-        usuario.rol?.toLowerCase().includes(texto)
-      );
+        usuario.rol?.toLowerCase().includes(texto);
+
+      return pasaModulo && pasaBusqueda;
     });
 
     return this.ordenarListaUsuarios(filtrados);
@@ -136,11 +137,8 @@ export class FederalUsuarios implements OnInit {
     () => this.usuarios().filter((usuario) => !usuario.activo).length,
   );
 
-  totalConFederal = computed(
-    () =>
-      this.usuarios().filter(
-        (usuario) => usuario.activo && usuario.habilitaFederal,
-      ).length,
+  totalSuperUsuarios = computed(
+    () => this.usuarios().filter((usuario) => usuario.rol === ROLES.SUPER_USUARIO).length,
   );
 
   totalSuperUsuariosActivos = computed(
@@ -209,6 +207,11 @@ export class FederalUsuarios implements OnInit {
     this.paginaUsuarios.set(pagina);
   }
 
+  cambiarFiltroTodos(valor: boolean): void {
+    this.mostrarTodos.set(valor);
+    this.paginaUsuarios.set(1);
+  }
+
   cambiarFiltroInactivos(valor: boolean): void {
     this.mostrarInactivos.set(valor);
     this.paginaUsuarios.set(1);
@@ -246,8 +249,7 @@ export class FederalUsuarios implements OnInit {
         Rol: usuario.rol,
         'Acceso Federal': usuario.habilitaFederal ? 'Sí' : 'No',
         Carga: usuario.habilitaCarga ? 'Sí' : 'No',
-        Actualización: usuario.habilitaModificacion ? 'Sí' : 'No',
-        'Otros módulos': usuario.tieneOtrosModulos ? 'Sí' : 'No',
+        Modificación: usuario.habilitaModificacion ? 'Sí' : 'No',
         Estado: usuario.activo ? 'ACTIVO' : 'INACTIVO',
       }));
 
@@ -397,6 +399,8 @@ export class FederalUsuarios implements OnInit {
   }
 
   puedeCambiarEstado(usuario: FederalUsuarioDetalle): boolean {
+    if (!usuario.tieneFederal) return false;
+    if (!usuario.activoCuenta && usuario.tieneOtrosModulos) return false;
     if (this.esUsuarioActual(usuario)) return false;
     if (this.esUnicoSuperUsuarioActivo(usuario)) return false;
 
@@ -404,6 +408,9 @@ export class FederalUsuarios implements OnInit {
   }
 
   motivoBloqueoEstado(usuario: FederalUsuarioDetalle): string {
+    if (!usuario.tieneFederal) return 'Habilite el acceso Federal desde Editar usuario';
+    if (!usuario.activoCuenta && usuario.tieneOtrosModulos) return 'Reactive la cuenta desde su administración de origen';
+
     if (this.esUsuarioActual(usuario)) {
       return 'No puedes desactivar tu propio usuario';
     }
