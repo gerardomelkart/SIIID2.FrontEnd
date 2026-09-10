@@ -22,8 +22,9 @@ export class FederalInformesService {
     return this.http.get<PeriodoCorteInforme[]>(`${this.apiUrl}/envios/periodos`);
   }
 
-  obtenerEnvios(mesCorte: number, anioCorte: number) {
-    const params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
+  obtenerEnvios(mesCorte: number | undefined, anioCorte: number) {
+    let params = new HttpParams().set('anioCorte', anioCorte);
+    if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
     return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
   }
 
@@ -42,8 +43,9 @@ export class FederalInformesService {
     return this.http.get(`${this.apiUrl}/archivos-originales/descargar`, { responseType: 'blob', observe: 'response' });
   }
 
-  crearTicketDescargaAcuses(mesCorte: number, anioCorte: number) {
-    const params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
+  crearTicketDescargaAcuses(mesCorte: number | undefined, anioCorte: number) {
+    let params = new HttpParams().set('anioCorte', anioCorte);
+    if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
 
     return this.http.post<FederalAcusesTicketResponse>(
       `${this.apiUrl}/envios/acuses/ticket`,

@@ -49,16 +49,17 @@
     <div class="corte-selector">
       <div class="corte-selector-title">
         <i class="fa-solid fa-calendar-days"></i>
-        Corte consultado
+        Año consultado
       </div>
 
       <div class="corte-selector-controls">
-        <select class="form-select form-select-sm" [disabled]="cargandoCargas()" [ngModel]="periodoCorteSeleccionado()"
-          (ngModelChange)="periodoCorteSeleccionado.set($event); cambiarCorteReporte()">
-          @for (periodo of periodosCorte(); track periodo.mesCorte + '-' + periodo.anioCorte) {
-          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
-            {{ periodo.corte }}
-          </option>
+        <select class="form-select form-select-sm" aria-label="Año del reporte de cargas"
+          [disabled]="cargandoCargas() || !aniosDisponibles().length" [ngModel]="anioSeleccionado()"
+          (ngModelChange)="anioSeleccionado.set($event); cambiarAnioReporte()">
+          @for (anio of aniosDisponibles(); track anio) {
+          <option [ngValue]="anio">{{ anio }}</option>
+          } @empty {
+          <option [ngValue]="null">Sin años disponibles</option>
           }
         </select>
       </div>

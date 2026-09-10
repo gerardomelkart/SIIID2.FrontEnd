@@ -24,7 +24,8 @@
         </button>
 
         <button type="button" class="btn btn-sm btn-secondary"
-          [disabled]="descargaEnProceso() || !periodoSeleccionado()" (click)="descargarAcusesCorte()">
+          [disabled]="cargando() || descargaEnProceso() || !anioSeleccionado() || !envios().length" (click)="descargarAcusesAnio()"
+          title="Descargar los acuses disponibles del año seleccionado">
           @if (descargandoAcuses()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
           } @else {
@@ -33,7 +34,7 @@
           Descargar acuses
         </button>
 
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()" (click)="exportarExcel()">
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando() || exportandoExcel() || !enviosFiltrados().length" (click)="exportarExcel()">
           @if (exportandoExcel()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
           } @else {
@@ -52,16 +53,17 @@
     <div class="corte-selector">
       <div class="corte-selector-title">
         <i class="fa-solid fa-calendar-days"></i>
-        Corte consultado
+        Año consultado
       </div>
 
       <div class="corte-selector-controls">
-        <select class="form-select form-select-sm" [ngModel]="periodoSeleccionado()"
-          (ngModelChange)="periodoSeleccionado.set($event); cambiarPeriodo()">
-          @for (periodo of periodos(); track periodo.mesCorte + '-' + periodo.anioCorte) {
-          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
-            {{ periodo.corte }}
-          </option>
+        <select class="form-select form-select-sm" aria-label="Año del reporte de envíos"
+          [disabled]="cargando() || descargaEnProceso() || !aniosDisponibles().length" [ngModel]="anioSeleccionado()"
+          (ngModelChange)="anioSeleccionado.set($event); cambiarAnio()">
+          @for (anio of aniosDisponibles(); track anio) {
+          <option [ngValue]="anio">{{ anio }}</option>
+          } @empty {
+          <option [ngValue]="null">Sin años disponibles</option>
           }
         </select>
       </div>

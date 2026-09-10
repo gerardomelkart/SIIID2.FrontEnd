@@ -5,7 +5,7 @@ import { finalize } from 'rxjs';
 import { ROLES } from '../../core/constants/roles.constants';
 import { SessionService } from '../../core/services/session.service';
 import { FederalInformesService } from '../../core/services/federal-informes.service';
-import { CorteOperativo, InformeReporteCargaItem, PeriodoCorteInforme } from '../../core/models/informes.models';
+import { InformeReporteCargaItem } from '../../core/models/informes.models';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
@@ -32,16 +32,17 @@ export class FederalReporteCargas implements OnInit {
   exportandoExcel = signal(false);
   busquedaCargas = signal('');
   paginaCargas = signal(1);
-  periodosCorte = signal<PeriodoCorteInforme[]>([]);
-  periodoCorteSeleccionado = signal('');
-  corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
+  aniosDisponibles = computed(() => Array.from(new Set(
+    this.cargas().filter((carga) => carga.intentos > 0).map((carga) => carga.anioCorte),
+  )).sort((a, b) => b - a));
+  anioSeleccionado = signal<number | null>(null);
   ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>({ campo: 'fechaCargaActualizacionTexto', direccion: 'desc' });
 
   cargasFiltradas = computed(() => {
     const texto = this.busquedaCargas().trim().toLocaleLowerCase('es');
-    const corte = this.corteOperativo();
+    const anio = this.anioSeleccionado();
     const filtradas = this.cargas().filter((carga) => {
-      if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte || !carga.intentos) return false;
+      if (carga.anioCorte !== anio || !carga.intentos) return false;
       return !texto || [carga.corte, carga.intentos,
         carga.tipoCargaUltimoIntento, carga.estatusUltimoIntento, this.etiquetaEstatusCarga(carga),
         carga.fechaCargaActualizacionTexto, carga.fechaAprobacionTexto]
@@ -73,7 +74,7 @@ export class FederalReporteCargas implements OnInit {
           return;
         }
         this.cargas.set(response.registros);
-        this.sincronizarPeriodosCorte(response.registros);
+        this.sincronizarAnioSeleccionado();
         this.paginaCargas.set(1);
       },
       error: (error: unknown) => mostrarError('No fue posible consultar el reporte de cargas', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.')),
@@ -91,8 +92,8 @@ export class FederalReporteCargas implements OnInit {
         'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
         'Fecha de aprobación': carga.fechaAprobacionTexto || '',
       }));
-      const exportado = await exportarFilasExcel(filas, 'reporte_cargas_federal.xlsx', 'Cargas');
-      if (!exportado) mostrarAdvertencia('Sin registros para exportar', 'No hay registros que coincidan con el corte y la búsqueda.');
+      const exportado = await exportarFilasExcel(filas, `reporte_cargas_federal_${this.anioSeleccionado()}.xlsx`, 'Cargas');
+      if (!exportado) mostrarAdvertencia('Sin registros para exportar', 'No hay registros que coincidan con el año y la búsqueda.');
     } catch {
       mostrarError('No fue posible exportar', 'Intente nuevamente.');
     } finally {
@@ -107,8 +108,7 @@ export class FederalReporteCargas implements OnInit {
     return carga[campo] ?? '';
   }
 
-  cambiarCorteReporte(): void {
-    this.sincronizarCorteSeleccionado();
+  cambiarAnioReporte(): void {
     this.paginaCargas.set(1);
   }
 
@@ -188,111 +188,12 @@ export class FederalReporteCargas implements OnInit {
     return obtenerIconoOrden(this.ordenCargas(), campo);
   }
 
-  private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void {
-    const periodos = this.obtenerPeriodosDesdeCargas(registros);
-    const corteActual = this.obtenerCorteOperativoActual();
-    const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
+  private sincronizarAnioSeleccionado(): void {
+    const anios = this.aniosDisponibles();
+    const seleccionado = this.anioSeleccionado();
 
-    const existeCorteActual = periodos.some(
-      (periodo) => this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual,
-    );
-
-    if (!existeCorteActual) {
-      periodos.unshift({
-        mesCorte: corteActual.mesCorte,
-        anioCorte: corteActual.anioCorte,
-        corte: corteActual.corte,
-      });
+    if (seleccionado === null || !anios.includes(seleccionado)) {
+      this.anioSeleccionado.set(anios[0] ?? null);
     }
-
-    this.periodosCorte.set(periodos);
-
-    if (!periodos.some((periodo) => this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === this.periodoCorteSeleccionado())) {
-      this.periodoCorteSeleccionado.set(keyActual);
-      this.corteOperativo.set(corteActual);
-      return;
-    }
-
-    this.sincronizarCorteSeleccionado();
-  }
-
-  private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {
-    const mapa = new Map<string, PeriodoCorteInforme>();
-
-    for (const registro of registros) {
-      if (!registro.mesCorte || !registro.anioCorte) {
-        continue;
-      }
-
-      const key = this.obtenerKeyPeriodo(registro.mesCorte, registro.anioCorte);
-
-      if (!mapa.has(key)) {
-        mapa.set(key, {
-          mesCorte: registro.mesCorte,
-          anioCorte: registro.anioCorte,
-          corte: registro.corte,
-        });
-      }
-    }
-
-    return Array.from(mapa.values()).sort((a, b) => {
-      const valorA = a.anioCorte * 100 + a.mesCorte;
-      const valorB = b.anioCorte * 100 + b.mesCorte;
-
-      return valorB - valorA;
-    });
-  }
-
-  private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
-    return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
-  }
-
-  private sincronizarCorteSeleccionado(): void {
-    const key = this.periodoCorteSeleccionado();
-
-    if (!key) {
-      return;
-    }
-
-    const periodo = this.periodosCorte().find(
-      (x) => this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key,
-    );
-
-    if (!periodo) {
-      return;
-    }
-
-    this.corteOperativo.set({
-      mesCorte: periodo.mesCorte,
-      anioCorte: periodo.anioCorte,
-      corte: periodo.corte,
-    });
-  }
-
-  private obtenerCorteOperativoActual(): CorteOperativo {
-    const fecha = new Date();
-    let mesCorte = fecha.getMonth();
-    let anioCorte = fecha.getFullYear();
-
-    if (mesCorte === 0) {
-      mesCorte = 12;
-      anioCorte--;
-    }
-
-    return {
-      mesCorte,
-      anioCorte,
-      corte: this.obtenerNombreCorte(mesCorte, anioCorte),
-    };
-  }
-
-  private obtenerNombreCorte(mesCorte: number, anioCorte: number): string {
-    const fecha = new Date(anioCorte, mesCorte - 1, 1);
-    const texto = new Intl.DateTimeFormat('es-MX', {
-      month: 'long',
-      year: 'numeric',
-    }).format(fecha);
-
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 }

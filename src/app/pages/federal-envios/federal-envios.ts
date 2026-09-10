@@ -1,6 +1,7 @@
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FederalInformesService } from '../../core/services/federal-informes.service';
 import { InformeEnvioItem, PeriodoCorteInforme } from '../../core/models/informes.models';
@@ -20,11 +21,15 @@ import {
 })
 export class FederalEnvios implements OnInit, OnDestroy {
   private readonly federalInformesService = inject(FederalInformesService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private acuseObjectUrl: string | null = null;
 
   periodos = signal<PeriodoCorteInforme[]>([]);
-  periodoSeleccionado = signal('');
+  aniosDisponibles = computed(() => Array.from(new Set(
+    this.periodos().map((periodo) => periodo.anioCorte),
+  )).sort((a, b) => b - a));
+  anioSeleccionado = signal<number | null>(null);
   envios = signal<InformeEnvioItem[]>([]);
   busqueda = signal('');
   pagina = signal(1);
@@ -78,66 +83,57 @@ export class FederalEnvios implements OnInit, OnDestroy {
   }
 
   cargarEnvios(): void {
+    if (this.cargando()) return;
     this.cargando.set(true);
+    this.envios.set([]);
+    this.pagina.set(1);
 
-    this.federalInformesService.obtenerPeriodosEnvios().subscribe({
+    this.federalInformesService.obtenerPeriodosEnvios().pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
       next: (periodos) => {
         this.periodos.set(periodos);
+        const anios = this.aniosDisponibles();
+        const seleccionado = this.anioSeleccionado();
 
-        if (!periodos.length) {
-          this.periodoSeleccionado.set('');
-          this.envios.set([]);
-          this.pagina.set(1);
-          this.cargando.set(false);
-          return;
+        if (seleccionado === null || !anios.includes(seleccionado)) {
+          this.anioSeleccionado.set(anios[0] ?? null);
         }
 
-        const seleccionado = this.periodoSeleccionado();
-        const existe = periodos.some(
-          (periodo) =>
-            `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado,
-        );
-
-        if (!existe) {
-          const periodo = periodos[0];
-          this.periodoSeleccionado.set(
-            `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}`,
-          );
-        }
-
-        this.cargarPeriodo();
+        this.cargarAnio();
       },
       error: (error: unknown) => {
+        this.periodos.set([]);
+        this.anioSeleccionado.set(null);
         this.cargando.set(false);
         mostrarError(
-          'No fue posible consultar los periodos de envíos federales',
+          'No fue posible consultar los años de envíos federales',
           obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
         );
       },
     });
   }
 
-  cargarPeriodo(): void {
-    const periodo = this.periodoSeleccionado();
+  cargarAnio(): void {
+    const anioCorte = this.anioSeleccionado();
+    this.envios.set([]);
+    this.pagina.set(1);
 
-    if (!periodo) {
-      this.envios.set([]);
+    if (anioCorte === null) {
       this.cargando.set(false);
       return;
     }
 
-    const [anioCorte, mesCorte] = periodo.split('-').map(Number);
-
     this.cargando.set(true);
 
-    this.federalInformesService.obtenerEnvios(mesCorte, anioCorte).subscribe({
+    this.federalInformesService.obtenerEnvios(undefined, anioCorte).pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
       next: (envios) => {
         this.envios.set(envios);
-        this.pagina.set(1);
         this.cargando.set(false);
       },
       error: (error: unknown) => {
-        this.envios.set([]);
         this.cargando.set(false);
         mostrarError(
           'No fue posible consultar los envíos federales',
@@ -147,9 +143,8 @@ export class FederalEnvios implements OnInit, OnDestroy {
     });
   }
 
-  cambiarPeriodo(): void {
-    this.pagina.set(1);
-    this.cargarPeriodo();
+  cambiarAnio(): void {
+    this.cargarAnio();
   }
 
   buscar(valor: string): void {
@@ -241,25 +236,18 @@ export class FederalEnvios implements OnInit, OnDestroy {
     });
   }
 
-  descargarAcusesCorte(): void {
-    const periodo = this.periodoSeleccionado();
-    const [anioTexto, mesTexto] = periodo.split('-');
-    const anioCorte = Number(anioTexto);
-    const mesCorte = Number(mesTexto);
+  descargarAcusesAnio(): void {
+    if (this.cargando() || this.descargaEnProceso()) return;
+    const anioCorte = this.anioSeleccionado();
 
-    if (
-      !Number.isInteger(mesCorte) ||
-      mesCorte < 1 ||
-      mesCorte > 12 ||
-      !Number.isInteger(anioCorte)
-    ) {
-      mostrarAdvertencia('Corte inválido', 'Seleccione un corte válido.');
+    if (anioCorte === null || !Number.isInteger(anioCorte) || !this.aniosDisponibles().includes(anioCorte)) {
+      mostrarAdvertencia('Año inválido', 'Seleccione un año válido.');
       return;
     }
 
     this.descargandoAcuses.set(true);
 
-    this.federalInformesService.crearTicketDescargaAcuses(mesCorte, anioCorte).subscribe({
+    this.federalInformesService.crearTicketDescargaAcuses(undefined, anioCorte).subscribe({
       next: (response) => {
         if (!response.ticket) {
           this.descargandoAcuses.set(false);
@@ -291,6 +279,7 @@ export class FederalEnvios implements OnInit, OnDestroy {
   }
 
   async exportarExcel(): Promise<void> {
+    if (this.cargando() || this.exportandoExcel()) return;
     this.exportandoExcel.set(true);
 
     try {
@@ -303,7 +292,7 @@ export class FederalEnvios implements OnInit, OnDestroy {
         'Motivo de rechazo': envio.motivoRechazo ?? '',
       }));
 
-      await exportarFilasExcel(filas, 'reporte_envios_federal.xlsx', 'Envíos Federal');
+      await exportarFilasExcel(filas, `reporte_envios_federal_${this.anioSeleccionado()}.xlsx`, 'Envíos Federal');
     } finally {
       this.exportandoExcel.set(false);
     }
