@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
+import { tieneAlcanceNacionalConsulta } from '../../core/utils/alcance-consulta.utils';
 import { SessionService } from '../../core/services/session.service';
 import {
   InformesService,
@@ -148,6 +149,7 @@ export class Informes implements OnInit {
     });
   }
 
+  tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
   esSuperUsuario = computed(() => {
     return this.usuario()?.rol === ROLES.SUPER_USUARIO;
   });

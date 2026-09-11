@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ROLES } from '../../core/constants/roles.constants';
+import { tieneAlcanceNacionalConsulta } from '../../core/utils/alcance-consulta.utils';
 import { SemanalEnviosService } from '../../core/services/semanal-envios.service';
 import { SessionService } from '../../core/services/session.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
@@ -20,6 +21,7 @@ export class SemanalSabanas {
   private readonly sessionService = inject(SessionService);
 
   usuario = this.sessionService.usuario;
+  tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   entidadUsuario = computed(() => this.usuario()?.entidadFederativa ?? '');
 

@@ -281,10 +281,16 @@
         <select class="form-select form-select-sm" [disabled]="formulario().rol === 'SUPER_USUARIO'"
           [ngModel]="formulario().idEntidadFederativa" (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
           <option value="">Seleccione entidad...</option>
+          @if (formulario().rol === 'CONSULTA') {
+          <option value="NACIONAL">Nacional — todas las entidades</option>
+          }
           @for (entidad of entidades(); track entidad.idEntidadFederativa) {
           <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
           }
         </select>
+        @if (formulario().rol === 'CONSULTA') {
+        <small>Consulta únicamente la entidad elegida, o todas si selecciona Nacional, en los módulos habilitados.</small>
+        }
       </div>
 
       <div class="form-group span-2">

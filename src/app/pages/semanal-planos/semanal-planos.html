@@ -88,7 +88,7 @@
         }
 
 
-        @if (esSuperUsuario()) {
+        @if (tieneAlcanceNacionalConsulta()) {
         <div class="reporte-campo">
           <label for="reporte-entidad">
             <i class="fa-solid fa-map-location-dot"></i>
@@ -111,7 +111,7 @@
 
         <div class="reporte-alcance">
           <div class="reporte-alcance-icono">
-            @if (esSuperUsuario()) {
+            @if (tieneAlcanceNacionalConsulta()) {
             <i class="fa-solid fa-earth-americas"></i>
             } @else {
             <i class="fa-solid fa-user-lock"></i>

@@ -30,8 +30,10 @@
         <p>
           @if (esSuperUsuario()) {
           Genere planos nacionales con información confirmada, previa o mixta.
+          } @else if (tieneAlcanceNacionalConsulta()) {
+          Descargue los planos confirmados de todas las entidades federativas.
           } @else {
-          Descargue los planos confirmados correspondientes a la información cargada por su usuario en
+          Descargue los planos confirmados correspondientes a la información de
           <strong>{{ entidadUsuario() }}</strong>.
           }
         </p>
@@ -99,10 +101,10 @@
           <li><strong>Periodo:</strong> año seleccionado hasta el último mes disponible.</li>
           <li><strong>Presentación:</strong> columnas mensuales de enero al último corte.</li>
 
-          @if (esSuperUsuario()) {
+          @if (tieneAlcanceNacionalConsulta()) {
           <li><strong>Alcance:</strong> información nacional de todas las entidades.</li>
           } @else {
-          <li><strong>Alcance:</strong> únicamente información confirmada cargada por su usuario.</li>
+          <li><strong>Alcance:</strong> únicamente información confirmada de su entidad.</li>
           }
 
           <li><strong>Formato:</strong> archivos Excel agrupados dentro de un ZIP.</li>

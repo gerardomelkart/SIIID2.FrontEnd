@@ -77,7 +77,7 @@
       </div>
     </div>
 
-    @if (!esSuperUsuario()) {
+    @if (!tieneAlcanceNacionalConsulta()) {
     <div class="filtro-entidad-info">
       <i class="fa-solid fa-location-dot"></i>
       Mostrando únicamente envíos de la entidad:
@@ -401,6 +401,8 @@
           @if (esSuperUsuario()) {
           Genere archivos estadísticos en formato ZIP por año de corte.
           Puede descargar la versión completa o únicamente la parte estatal o municipal.
+          } @else if (tieneAlcanceNacionalConsulta()) {
+          Descargue los planos estadísticos confirmados de todas las entidades federativas.
           } @else {
           Descargue los planos estadísticos de su entidad federativa:
           <strong>{{ entidadUsuario() }}</strong>.
@@ -461,7 +463,7 @@
       <div class="sabana-info-card">
         <div class="sabana-info-badge">
           <i class="fa-solid fa-circle-info"></i>
-          @if (esSuperUsuario()) {
+          @if (tieneAlcanceNacionalConsulta()) {
           Tipos disponibles
           } @else {
           Descarga limitada a su entidad

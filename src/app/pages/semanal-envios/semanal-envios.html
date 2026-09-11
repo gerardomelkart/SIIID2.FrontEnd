@@ -84,7 +84,7 @@
           }
         </select>
 
-        @if (esSuperUsuario()) {
+        @if (esSuperUsuario() || usuario()?.rol === 'CONSULTA') {
         <select class="form-select form-select-sm" [ngModel]="idUsuarioSeleccionado()"
           (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
           <option [ngValue]="null">Todos los usuarios</option>
@@ -113,8 +113,12 @@
     @if (!esSuperUsuario()) {
     <div class="filtro-entidad-info">
       <i class="fa-solid fa-user"></i>
-      Mostrando únicamente operaciones registradas por su usuario en:
+      @if (tieneAlcanceNacionalConsulta()) {
+      Consulta nacional: operaciones de todas las entidades.
+      } @else {
+      {{ usuario()?.rol === 'CONSULTA' ? 'Mostrando operaciones de:' : 'Mostrando únicamente operaciones registradas por su usuario en:' }}
       <strong>{{ usuario()?.entidadFederativa }}</strong>
+      }
     </div>
     }
 

@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ROLES } from '../../core/constants/roles.constants';
+import { tieneAlcanceNacionalConsulta } from '../../core/utils/alcance-consulta.utils';
 import {
   SemanalReportePreliminarDelitoItem,
   SemanalReportePreliminarEntidadItem,
@@ -23,6 +24,7 @@ export class SemanalPlanos implements OnInit {
   private readonly sessionService = inject(SessionService);
 
   usuario = this.sessionService.usuario;
+  tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
   entidadUsuario = computed(() => this.usuario()?.entidadFederativa ?? '');
 
@@ -67,7 +69,7 @@ export class SemanalPlanos implements OnInit {
   });
 
   alcanceSeleccionado = computed(() => {
-    if (!this.esSuperUsuario())
+    if (!this.tieneAlcanceNacionalConsulta())
       return this.entidadUsuario() || this.entidades()[0]?.entidadFederativa || 'Mi entidad';
 
     const idEntidad = this.idEntidadSeleccionada();
@@ -81,8 +83,10 @@ export class SemanalPlanos implements OnInit {
   });
 
   descripcionAlcance = computed(() => {
-    if (!this.esSuperUsuario())
-      return 'Incluye únicamente los registros confirmados que fueron cargados por tu usuario.';
+    if (!this.tieneAlcanceNacionalConsulta())
+      return this.usuario()?.rol === ROLES.CONSULTA
+        ? 'Incluye los registros confirmados de todos los usuarios de tu entidad.'
+        : 'Incluye únicamente los registros confirmados que fueron cargados por tu usuario.';
     if (this.idEntidadSeleccionada())
       return `${this.descripcionModo()} Alcance: todos los usuarios de la entidad seleccionada.`;
     return `${this.descripcionModo()} Alcance: todas las entidades y todos los usuarios.`;
@@ -149,7 +153,7 @@ export class SemanalPlanos implements OnInit {
         this.anioCorte(),
         this.mesCorte(),
         this.esSuperUsuario() ? this.modoReporte() : 'CONFIRMADO',
-        this.esSuperUsuario() ? this.idEntidadSeleccionada() : null,
+        this.tieneAlcanceNacionalConsulta() ? this.idEntidadSeleccionada() : null,
       )
       .subscribe({
         next: (response) => {
@@ -197,7 +201,7 @@ export class SemanalPlanos implements OnInit {
         this.mesCorte(),
         idDelito,
         this.esSuperUsuario() ? this.modoReporte() : 'CONFIRMADO',
-        this.esSuperUsuario() ? this.idEntidadSeleccionada() : null,
+        this.tieneAlcanceNacionalConsulta() ? this.idEntidadSeleccionada() : null,
       )
       .subscribe({
         next: (response) => {

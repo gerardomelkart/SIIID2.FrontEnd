@@ -530,7 +530,7 @@ export class SemanalUsuarios implements OnInit {
       usuario: usuario.usuario ?? '',
       password: '',
       rol: usuario.rol ?? '',
-      idEntidadFederativa: usuario.idEntidadFederativa?.toString() ?? '',
+      idEntidadFederativa: usuario.idEntidadFederativa?.toString() ?? (usuario.rol === ROLES.CONSULTA ? 'NACIONAL' : ''),
       habilitaSemanal: usuario.habilitaSemanal ?? false,
       habilitaCargaSemanal: usuario.habilitaCargaSemanal ?? false,
       administraDelitosSemanal: usuario.administraDelitosSemanal ?? false,
@@ -559,6 +559,7 @@ export class SemanalUsuarios implements OnInit {
 
   private obtenerEntidadParaRequest(form: UsuarioSemanalForm): number | null {
     if (form.rol === ROLES.SUPER_USUARIO) return null;
+    if (form.rol === ROLES.CONSULTA && form.idEntidadFederativa === 'NACIONAL') return null;
     return form.idEntidadFederativa ? Number(form.idEntidadFederativa) : null;
   }
 
@@ -570,7 +571,9 @@ export class SemanalUsuarios implements OnInit {
   private normalizarPermisosPorRol(rol: string): void {
     this.formulario.update((actual) => ({
       ...actual,
-      idEntidadFederativa: rol === ROLES.SUPER_USUARIO ? '' : actual.idEntidadFederativa,
+      idEntidadFederativa:
+        rol === ROLES.SUPER_USUARIO || rol !== ROLES.CONSULTA && actual.idEntidadFederativa === 'NACIONAL'
+          ? '' : actual.idEntidadFederativa,
       habilitaCargaSemanal:
         actual.habilitaSemanal && rol !== ROLES.CONSULTA ? actual.habilitaCargaSemanal : false,
       administraDelitosSemanal:

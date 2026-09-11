@@ -3,6 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ROLES } from '../../core/constants/roles.constants';
+import { tieneAlcanceNacionalConsulta } from '../../core/utils/alcance-consulta.utils';
 import {
   SemanalEnvioItem,
   SemanalEnvioSemanaOpcionItem,
@@ -57,6 +58,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
   private readonly router = inject(Router);
 
   usuario = this.sessionService.usuario;
+  tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
   esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
 
   envios = signal<SemanalEnvioItem[]>([]);
@@ -284,7 +286,7 @@ export class SemanalEnvios implements OnInit, OnDestroy {
         anioCorte,
         mesCorte,
         null,
-        this.esSuperUsuario() ? this.idUsuarioSeleccionado() : null,
+        this.esSuperUsuario() || this.usuario()?.rol === ROLES.CONSULTA ? this.idUsuarioSeleccionado() : null,
       )
       .subscribe({
         next: (response) => {
