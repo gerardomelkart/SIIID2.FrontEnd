@@ -1,0 +1,14 @@
+:host {
+  --siiid-guinda: #6F2C91;
+  --siiid-dorado: #BC955C;
+  --siiid-bg: #F7F3F9;
+}
+
+.sidebar {
+  border-top: 5px solid var(--siiid-dorado);
+}
+
+.system-info span {
+  color: var(--siiid-guinda);
+  font-weight: 900;
+}

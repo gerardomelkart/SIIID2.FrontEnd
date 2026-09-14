@@ -1,0 +1,8 @@
+.banci-inicio { max-width: 1100px; margin: 0 auto; }
+.encabezado { border-left: 7px solid #6F2C91; background: #fff; padding: 24px; margin-bottom: 24px; box-shadow: 0 3px 12px rgba(0,0,0,.1); }
+.encabezado h1 { margin: 0 0 8px; color: #6F2C91; }
+.encabezado p { margin: 0; color: #667085; }
+.opcion { max-width: 360px; min-height: 190px; text-decoration: none; color: #667085; border-left: 7px solid #6F2C91; background: #fff; padding: 24px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 3px 12px rgba(0,0,0,.12); }
+.opcion i { color: #6F2C91; font-size: 32px; }
+.opcion strong { color: #6F2C91; font-size: 21px; }
+.opcion:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(111,44,145,.2); }

@@ -3,6 +3,7 @@
   --modulo-neutral: #667085;
   --modulo-preliminar: #235B4E;
   --modulo-federal: #1F4E79;
+  --modulo-banci: #6F2C91;
 }
 
 .modulo-page {
@@ -82,6 +83,11 @@
   --modulo-shadow: rgba(31, 78, 121, .22);
 }
 
+.modulo-card-banci {
+  --modulo-color: var(--modulo-banci);
+  --modulo-shadow: rgba(111, 44, 145, .24);
+}
+
 .modulo-card:hover {
   border-color: var(--modulo-color);
   transform: translateY(-4px);
@@ -111,7 +117,7 @@
   font-weight: 900;
 }
 
-.modulo-card > span:last-child {
+.modulo-card>span:last-child {
   margin-top: 8px;
   color: #667085;
   font-size: 14px;
@@ -208,7 +214,7 @@
     line-height: 1.2;
   }
 
-  .modulo-card > span:last-child {
+  .modulo-card>span:last-child {
     line-height: 1.4;
   }
 

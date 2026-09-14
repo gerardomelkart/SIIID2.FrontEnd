@@ -1,0 +1,120 @@
+.carga-banci {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    border-left: 7px solid #6F2C91;
+    background: #fff;
+    padding: 22px;
+    margin-bottom: 22px;
+}
+
+header h1 {
+    margin: 0;
+    color: #6F2C91;
+}
+
+header p {
+    margin: 7px 0 0;
+    color: #667085;
+}
+
+.modalidades {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.panel {
+    background: #fff;
+    border-top: 5px solid #6F2C91;
+    padding: 22px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .1);
+}
+
+.panel h2 {
+    margin-top: 0;
+    color: #6F2C91;
+}
+
+.archivo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 0;
+    font-weight: 800;
+}
+
+.seleccionado {
+    margin-top: 10px;
+    color: #6F2C91;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.procesar {
+    margin-top: 24px;
+    border: 0;
+    background: #6F2C91;
+    color: #fff;
+    padding: 13px 28px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.procesar:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+.mensaje,
+.resultado {
+    margin-top: 22px;
+    background: #fff;
+    padding: 20px;
+}
+
+.error,
+.incorrecto {
+    border-left: 6px solid #B42318;
+}
+
+.correcto {
+    border-left: 6px solid #027A48;
+}
+
+.resumen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 28px;
+    margin: 16px 0;
+}
+
+.tabla-contenedor {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px;
+    border-bottom: 1px solid #e4e7ec;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    color: #6F2C91;
+}
+
+@media (max-width: 800px) {
+    .modalidades {
+        grid-template-columns: 1fr;
+    }
+}

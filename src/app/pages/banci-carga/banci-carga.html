@@ -1,0 +1,121 @@
+<section class="carga-banci">
+  <header>
+    <h1>Carga masiva BANCI</h1>
+    <p>Selecciona una de las dos modalidades de carga.</p>
+  </header>
+
+  <div class="modalidades">
+    <article class="panel">
+      <h2>Un solo archivo</h2>
+      <p>Excel con las hojas <strong>CI</strong>, <strong>Delitos</strong> y <strong>Victimas</strong>.</p>
+
+      <label class="archivo">
+        <span>Seleccionar Excel</span>
+        <input type="file" accept=".xlsx" (change)="seleccionarLibro($event)">
+      </label>
+
+      @if (archivoLibro) {
+      <div class="seleccionado">{{ archivoLibro.name }}</div>
+      }
+    </article>
+
+    <article class="panel">
+      <h2>Tres archivos</h2>
+      <p>Archivos independientes de Carpetas, Delitos y Victimas.</p>
+
+      <label class="archivo">
+        <span>Carpetas</span>
+        <input type="file" accept=".xlsx,.csv" (change)="seleccionarCarpetas($event)">
+      </label>
+
+      <label class="archivo">
+        <span>Delitos</span>
+        <input type="file" accept=".xlsx,.csv" (change)="seleccionarDelitos($event)">
+      </label>
+
+      <label class="archivo">
+        <span>Victimas</span>
+        <input type="file" accept=".xlsx,.csv" (change)="seleccionarVictimas($event)">
+      </label>
+    </article>
+  </div>
+
+  <button type="button" class="procesar" [disabled]="cargando()" (click)="procesar()">
+    @if (cargando()) {
+    Procesando...
+    } @else {
+    Validar y cargar
+    }
+  </button>
+
+  @if (mensajeLocal()) {
+  <div class="mensaje error">{{ mensajeLocal() }}</div>
+  }
+
+  @if (resultado(); as r) {
+  <section class="resultado" [class.correcto]="r.esValido" [class.incorrecto]="!r.esValido">
+    <h2>{{ r.mensaje }}</h2>
+
+    <div class="resumen">
+      <span>Carpetas: <strong>{{ r.totalCarpetas }}</strong></span>
+      <span>Delitos: <strong>{{ r.totalDelitos }}</strong></span>
+      <span>Víctimas: <strong>{{ r.totalVictimas }}</strong></span>
+      <span>Referencia: <strong>{{ r.codigoReferencia }}</strong></span>
+    </div>
+
+    @if (r.errores.length > 0) {
+    <h3>Errores</h3>
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th>Archivo</th>
+            <th>Fila</th>
+            <th>Campo</th>
+            <th>Valor</th>
+            <th>Mensaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (error of r.errores; track $index) {
+          <tr>
+            <td>{{ error.archivo }}</td>
+            <td>{{ error.numeroFila ?? '-' }}</td>
+            <td>{{ error.campo ?? '-' }}</td>
+            <td>{{ error.valor ?? '-' }}</td>
+            <td>{{ error.mensaje }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    @if (r.advertencias.length > 0) {
+    <h3>Advertencias</h3>
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th>Archivo</th>
+            <th>Fila</th>
+            <th>Campo</th>
+            <th>Mensaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (advertencia of r.advertencias; track $index) {
+          <tr>
+            <td>{{ advertencia.archivo }}</td>
+            <td>{{ advertencia.numeroFila ?? '-' }}</td>
+            <td>{{ advertencia.campo ?? '-' }}</td>
+            <td>{{ advertencia.mensaje }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  }
+</section>

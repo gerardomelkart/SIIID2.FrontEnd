@@ -243,9 +243,31 @@ export const routes: Routes = [
       },
       {
         path: 'administracion/configuracion',
-        loadComponent: () => import('./pages/federal-configuracion/federal-configuracion').then((m) => m.FederalConfiguracion),
+        loadComponent: () =>
+          import('./pages/federal-configuracion/federal-configuracion').then(
+            (m) => m.FederalConfiguracion,
+          ),
         canActivate: [permissionGuard],
         data: { roles: [ROLES.SUPER_USUARIO] },
+      },
+    ],
+  },
+
+  {
+    path: 'banci',
+    loadComponent: () => import('./layout/banci-layout/banci-layout').then((m) => m.BanciLayout),
+    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    data: {
+      modulo: 'BANCI',
+    },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio),
+      },
+      {
+        path: 'carga-masiva',
+        loadComponent: () => import('./pages/banci-carga/banci-carga').then((m) => m.BanciCarga),
       },
     ],
   },

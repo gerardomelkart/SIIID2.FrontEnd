@@ -1,0 +1,81 @@
+<div class="siiid-shell">
+  <app-topbar nombreModulo="BANCI" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
+
+  <div class="siiid-body">
+    @if (menuAbierto()) {
+    <button type="button" class="menu-backdrop" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
+    }
+
+    <aside id="siiid-navigation" class="sidebar" [class.mobile-open]="menuAbierto()"
+      (click)="cerrarMenuSiEsNavegacion($event)">
+
+      <div class="user-card">
+        <div class="user-main">
+          <div class="avatar">
+            <img src="img/logoMujBandera.png" alt="Usuario">
+          </div>
+
+          <div class="user-info">
+            <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
+
+            <button type="button" class="user-home-button" (click)="regresarInicio()">
+              <i class="fa-solid fa-house"></i>
+              Regresar al inicio
+            </button>
+          </div>
+        </div>
+
+        <div class="system-info">
+          <span>SIIID2 BANCI</span>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
+          <span>
+            <i class="fa-solid fa-upload"></i>
+            Carga de Información
+          </span>
+        </button>
+
+        @if (cargaAbierta()) {
+        <a class="menu-link level-2" routerLink="/banci/carga-masiva" routerLinkActive="active">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          Carga masiva
+        </a>
+        }
+
+        <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
+          <span>
+            <i class="fa-solid fa-user"></i>
+            Sesión
+          </span>
+        </button>
+
+        @if (sesionAbierta()) {
+        @if (puedeRegresarSeleccionModulo()) {
+        <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
+          <span>
+            <i class="fa-solid fa-arrow-left"></i>
+            Regresar a selección de módulo
+          </span>
+        </button>
+        }
+
+        <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
+          <span>
+            <i class="fa-solid fa-power-off"></i>
+            Cerrar sesión
+          </span>
+        </button>
+        }
+      </nav>
+    </aside>
+
+    <main class="siiid-main">
+      <section class="siiid-content">
+        <router-outlet></router-outlet>
+      </section>
+    </main>
+  </div>
+</div>

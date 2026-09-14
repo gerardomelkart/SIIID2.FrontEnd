@@ -103,6 +103,7 @@ export class SessionService {
 
     if (claveNormalizada === 'SEMANAL') return '/semanal';
     if (claveNormalizada === 'FEDERAL') return '/federal';
+    if (claveNormalizada === 'BANCI') return '/banci';
 
     return '/';
   }

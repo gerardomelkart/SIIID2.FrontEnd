@@ -1,6 +1,5 @@
 <div class="modulo-page" style="background-image: url('img/ImgFondo2.png')">
-  <img class="modulo-logo" src="img/LogoSEGURIDAD.png"
-    alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
+  <img class="modulo-logo" src="img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
 
   <section class="modulo-panel">
     <h1>Seleccione un módulo</h1>
@@ -8,11 +7,9 @@
 
     <div class="modulo-grid">
       @for (modulo of modulos(); track modulo.idModulo) {
-      <button type="button"
-        class="modulo-card"
-        [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'"
+      <button type="button" class="modulo-card" [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'"
         [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'"
-        [class.modulo-card-federal]="modulo.clave === 'FEDERAL'"
+        [class.modulo-card-federal]="modulo.clave === 'FEDERAL'" [class.modulo-card-banci]="modulo.clave === 'BANCI'"
         (click)="seleccionar(modulo)">
 
         <span class="modulo-icon">
@@ -20,8 +17,10 @@
           <i class="fa-solid fa-calendar-days"></i>
           } @else if (modulo.clave === 'SEMANAL') {
           <i class="fa-solid fa-calendar-week"></i>
-          } @else {
+          } @else if (modulo.clave === 'FEDERAL') {
           <i class="fa-solid fa-landmark"></i>
+          } @else {
+          <i class="fa-solid fa-database"></i>
           }
         </span>
 
@@ -30,8 +29,10 @@
           Consolidado
           } @else if (modulo.clave === 'SEMANAL') {
           Preliminar
-          } @else {
+          } @else if (modulo.clave === 'FEDERAL') {
           Federal
+          } @else {
+          BANCI
           }
         </strong>
 
@@ -40,8 +41,10 @@
           Integración consolidada de incidencia delictiva.
           } @else if (modulo.clave === 'SEMANAL') {
           Integración y seguimiento preliminar de delitos configurados.
-          } @else {
+          } @else if (modulo.clave === 'FEDERAL') {
           Integración nacional de información de incidencia delictiva federal.
+          } @else {
+          Base Nacional de Carpetas de Investigación para DFPyCPP.
           }
         </span>
       </button>
