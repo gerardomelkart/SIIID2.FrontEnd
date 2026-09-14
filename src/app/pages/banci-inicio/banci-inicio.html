@@ -1,12 +1,121 @@
-<section class="banci-inicio">
-  <div class="encabezado">
-    <h1>BANCI / DFPyCPP</h1>
-    <p>Base Nacional de Carpetas de Investigación para Desaparición Forzada de Personas y Desaparición Cometida por Particulares.</p>
-  </div>
+<div class="dashboard-page">
+  <section class="welcome-card">
+    <div class="welcome-content">
+      <div class="welcome-icon">
+        <i class="fa-solid fa-database"></i>
+      </div>
 
-  <a routerLink="/banci/carga-masiva" class="opcion">
-    <i class="fa-solid fa-file-arrow-up"></i>
-    <strong>Carga masiva</strong>
-    <span>Integra información mediante un Excel con tres hojas o tres archivos independientes.</span>
-  </a>
-</section>
+      <div>
+        <h1>Bienvenido, {{ nombreUsuario() }}</h1>
+
+        <p>
+          Base Nacional de Carpetas de Investigación para Desaparición Forzada de Personas
+          y Desaparición Cometida por Particulares.
+        </p>
+
+        <div class="welcome-meta">
+          <span>
+            <i class="fa-solid fa-user-shield"></i>
+            {{ rolDescripcion() }}
+          </span>
+
+          <span>
+            <i class="fa-solid fa-location-dot"></i>
+            {{ entidadUsuario() }}
+          </span>
+
+          <span>
+            <i class="fa-solid fa-layer-group"></i>
+            BANCI / DFPyCPP
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="status-grid">
+    <div class="status-card status-card-activo">
+      <div class="status-number status-activo">
+        Activo
+      </div>
+
+      <div class="status-label">
+        Carga de información
+      </div>
+    </div>
+
+    <div class="status-card status-card-activo">
+      <div class="status-number status-activo">
+        Activo
+      </div>
+
+      <div class="status-label">
+        Actualización
+      </div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-number">
+        DFPyCPP
+      </div>
+
+      <div class="status-label">
+        Universo BANCI
+      </div>
+    </div>
+  </section>
+
+  <section class="quick-access-card">
+    <div class="section-header">
+      <div>
+        <h2>Accesos disponibles</h2>
+        <p>Seleccione una opción para continuar.</p>
+      </div>
+    </div>
+
+    <div class="quick-access-grid">
+      <a class="quick-link" routerLink="/banci/carga-masiva">
+        <div class="quick-icon">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+
+        <div>
+          <strong>Carga masiva</strong>
+          <span>
+            Integra un libro Excel con tres hojas o los archivos Carpetas, Delitos y Víctimas.
+          </span>
+        </div>
+      </a>
+
+      <div class="quick-link quick-link-pendiente">
+        <div class="quick-icon">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </div>
+
+        <div>
+          <strong>Formulario BANCI</strong>
+          <span>
+            Captura y complementación directa de registros.
+          </span>
+        </div>
+
+        <span class="estado-desarrollo">En desarrollo</span>
+      </div>
+
+      <div class="quick-link quick-link-pendiente">
+        <div class="quick-icon">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+
+        <div>
+          <strong>Histórico BANCI</strong>
+          <span>
+            Consulta y actualización del histórico de Carpetas, Delitos y Víctimas.
+          </span>
+        </div>
+
+        <span class="estado-desarrollo">En desarrollo</span>
+      </div>
+    </div>
+  </section>
+</div>
