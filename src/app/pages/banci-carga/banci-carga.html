@@ -52,12 +52,13 @@
 
           <div class="modalidad-body">
             <label class="file-upload-card"
-  [class.file-upload-ready]="archivoLibro"
-  [class.file-upload-dragging]="archivoArrastrado() === 'libro'"
-  (dragenter)="arrastrarArchivo($event, 'libro')"
-  (dragover)="arrastrarArchivo($event, 'libro')"
-  (dragleave)="salirArrastreArchivo($event, 'libro')"
-  (drop)="soltarArchivo($event, 'libro')">
+              [class.file-upload-ready]="archivoLibro"
+              [class.file-upload-dragging]="archivoArrastrado() === 'libro'"
+              (dragenter)="arrastrarArchivo($event, 'libro')"
+              (dragover)="arrastrarArchivo($event, 'libro')"
+              (dragleave)="salirArrastreArchivo($event, 'libro')"
+              (drop)="soltarArchivo($event, 'libro')">
+
               <div class="file-upload-header">
                 <div class="file-type-icon">
                   <i class="fa-solid fa-file-excel"></i>
@@ -69,17 +70,22 @@
                 </div>
               </div>
 
-<span class="btn btn-sm btn-outline-secondary">
-  <i class="fa-solid fa-folder-open"></i>
-  {{ archivoArrastrado() === 'libro' ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}
-</span>
+              <span class="btn btn-sm btn-outline-secondary">
+                <i class="fa-solid fa-folder-open"></i>
+                {{ archivoArrastrado() === 'libro' ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}
+              </span>
 
-              <input type="file" class="file-input" accept=".xlsx" (change)="seleccionarLibro($event)">
+              <input type="file"
+                class="file-input"
+                accept=".xlsx"
+                (change)="seleccionarLibro($event)">
             </label>
 
             <div class="modalidad-note">
               <i class="fa-solid fa-circle-info"></i>
-              El libro debe contener las hojas <strong>CI</strong>, <strong>Delitos</strong> y
+              El libro debe contener las hojas
+              <strong>CI</strong>,
+              <strong>Delitos</strong> y
               <strong>Víctimas</strong>.
             </div>
           </div>
@@ -101,12 +107,13 @@
 
           <div class="modalidad-body file-upload-grid">
             <label class="file-upload-card"
-  [class.file-upload-ready]="archivoCarpetas"
-  [class.file-upload-dragging]="archivoArrastrado() === 'carpetas'"
-  (dragenter)="arrastrarArchivo($event, 'carpetas')"
-  (dragover)="arrastrarArchivo($event, 'carpetas')"
-  (dragleave)="salirArrastreArchivo($event, 'carpetas')"
-  (drop)="soltarArchivo($event, 'carpetas')">
+              [class.file-upload-ready]="archivoCarpetas"
+              [class.file-upload-dragging]="archivoArrastrado() === 'carpetas'"
+              (dragenter)="arrastrarArchivo($event, 'carpetas')"
+              (dragover)="arrastrarArchivo($event, 'carpetas')"
+              (dragleave)="salirArrastreArchivo($event, 'carpetas')"
+              (drop)="soltarArchivo($event, 'carpetas')">
+
               <div class="file-upload-header">
                 <div class="file-type-icon">
                   <i class="fa-solid fa-folder-open"></i>
@@ -118,19 +125,24 @@
                 </div>
               </div>
 
-<label class="file-upload-card"
-  [class.file-upload-ready]="archivoDelitos"
-  [class.file-upload-dragging]="archivoArrastrado() === 'delitos'"
-  (dragenter)="arrastrarArchivo($event, 'delitos')"
-  (dragover)="arrastrarArchivo($event, 'delitos')"
-  (dragleave)="salirArrastreArchivo($event, 'delitos')"
-  (drop)="soltarArchivo($event, 'delitos')">
+              <span class="btn btn-sm btn-outline-secondary">
+                {{ archivoArrastrado() === 'carpetas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
+              </span>
 
-              <input type="file" class="file-input" accept=".xlsx,.csv"
+              <input type="file"
+                class="file-input"
+                accept=".xlsx,.csv"
                 (change)="seleccionarCarpetas($event)">
             </label>
 
-            <label class="file-upload-card" [class.file-upload-ready]="archivoDelitos">
+            <label class="file-upload-card"
+              [class.file-upload-ready]="archivoDelitos"
+              [class.file-upload-dragging]="archivoArrastrado() === 'delitos'"
+              (dragenter)="arrastrarArchivo($event, 'delitos')"
+              (dragover)="arrastrarArchivo($event, 'delitos')"
+              (dragleave)="salirArrastreArchivo($event, 'delitos')"
+              (drop)="soltarArchivo($event, 'delitos')">
+
               <div class="file-upload-header">
                 <div class="file-type-icon">
                   <i class="fa-solid fa-scale-balanced"></i>
@@ -142,15 +154,24 @@
                 </div>
               </div>
 
-<span class="btn btn-sm btn-outline-secondary">
-  {{ archivoArrastrado() === 'delitos' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
-</span>
+              <span class="btn btn-sm btn-outline-secondary">
+                {{ archivoArrastrado() === 'delitos' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
+              </span>
 
-              <input type="file" class="file-input" accept=".xlsx,.csv"
+              <input type="file"
+                class="file-input"
+                accept=".xlsx,.csv"
                 (change)="seleccionarDelitos($event)">
             </label>
 
-            <label class="file-upload-card" [class.file-upload-ready]="archivoVictimas">
+            <label class="file-upload-card"
+              [class.file-upload-ready]="archivoVictimas"
+              [class.file-upload-dragging]="archivoArrastrado() === 'victimas'"
+              (dragenter)="arrastrarArchivo($event, 'victimas')"
+              (dragover)="arrastrarArchivo($event, 'victimas')"
+              (dragleave)="salirArrastreArchivo($event, 'victimas')"
+              (drop)="soltarArchivo($event, 'victimas')">
+
               <div class="file-upload-header">
                 <div class="file-type-icon">
                   <i class="fa-solid fa-users"></i>
@@ -163,10 +184,12 @@
               </div>
 
               <span class="btn btn-sm btn-outline-secondary">
-                Seleccionar
+                {{ archivoArrastrado() === 'victimas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input type="file" class="file-input" accept=".xlsx,.csv"
+              <input type="file"
+                class="file-input"
+                accept=".xlsx,.csv"
                 (change)="seleccionarVictimas($event)">
             </label>
           </div>
@@ -179,7 +202,11 @@
           Usa solamente una modalidad por carga. Los archivos serán validados antes de integrarse a BANCI.
         </div>
 
-        <button type="button" class="btn btn-siiid px-4" [disabled]="cargando()" (click)="procesar()">
+        <button type="button"
+          class="btn btn-siiid px-4"
+          [disabled]="cargando()"
+          (click)="procesar()">
+
           @if (cargando()) {
           <i class="fa-solid fa-spinner fa-spin"></i>
           Procesando...
