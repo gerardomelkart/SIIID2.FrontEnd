@@ -5,7 +5,7 @@ import {
 } from '../../core/models/banci-carga.models';
 import { CargaValidacionError } from '../../core/models/carga.models';
 import { BanciCargaService } from '../../core/services/banci-carga.service';
-import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
+import { mostrarAdvertencia, mostrarError, mostrarExito } from '../../core/utils/alert.utils';
 import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 
 type TipoArchivoBanci = 'libro' | 'carpetas' | 'delitos' | 'victimas';
@@ -156,11 +156,32 @@ export class BanciCarga {
     this.cargando.set(true);
 
     peticion.subscribe({
-      next: (response) => {
-        this.resultado.set(response);
-        this.cargando.set(false);
-        this.enfocarResultado();
-      },
+next: async (response) => {
+  this.resultado.set(response);
+  this.cargando.set(false);
+
+  if (!response.esValido) {
+    this.enfocarResultado();
+    return;
+  }
+
+  this.limpiarArchivosSeleccionados();
+  this.enfocarResultado();
+
+  if ((response.advertencias?.length ?? 0) > 0) {
+    await mostrarAdvertencia(
+      'Carga procesada con advertencias',
+      `La carga BANCI fue procesada correctamente, pero se detectaron ${response.advertencias.length} advertencias. Revise el detalle o descargue el archivo de advertencias.`,
+    );
+
+    return;
+  }
+
+  await mostrarExito(
+    'Carga BANCI completada',
+    'La información fue validada e integrada correctamente.',
+  );
+},
       error: (error) => {
         const response = error?.error as BanciCargaValidacionResponse | undefined;
 
@@ -179,11 +200,7 @@ export class BanciCarga {
   }
 
 prepararNuevaValidacion(): void {
-  this.archivoLibro = null;
-  this.archivoCarpetas = null;
-  this.archivoDelitos = null;
-  this.archivoVictimas = null;
-  this.archivoArrastrado.set(null);
+  this.limpiarArchivosSeleccionados();
   this.resultado.set(null);
   this.mensajeLocal.set('');
 
@@ -298,6 +315,18 @@ prepararNuevaValidacion(): void {
       totalRegistrosAfectados: 1,
     };
   }
+
+  private limpiarArchivosSeleccionados(): void {
+  this.archivoLibro = null;
+  this.archivoCarpetas = null;
+  this.archivoDelitos = null;
+  this.archivoVictimas = null;
+  this.archivoArrastrado.set(null);
+
+  document
+    .querySelectorAll<HTMLInputElement>('.carga-banci input[type="file"]')
+    .forEach((input) => input.value = '');
+}
 
   private limpiarResultado(): void {
     this.mensajeLocal.set('');
