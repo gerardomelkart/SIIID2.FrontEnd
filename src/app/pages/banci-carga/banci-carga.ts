@@ -178,13 +178,17 @@ export class BanciCarga {
     });
   }
 
-  prepararNuevaValidacion(): void {
-    this.resultado.set(null);
-    this.mensajeLocal.set('');
+prepararNuevaValidacion(): void {
+  this.archivoLibro = null;
+  this.archivoCarpetas = null;
+  this.archivoDelitos = null;
+  this.archivoVictimas = null;
+  this.archivoArrastrado.set(null);
+  this.resultado.set(null);
+  this.mensajeLocal.set('');
 
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  }
-
+  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
   async descargarValidacion(): Promise<void> {
     if (this.detallesValidacion().length === 0 || this.exportandoValidacion()) return;
 
