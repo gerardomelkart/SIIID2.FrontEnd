@@ -1,4 +1,6 @@
 <section class="carga-banci">
+
+  @if (!resultadoConErrores()) {
   <div class="siiid-card">
     <div class="siiid-card-header">
       <i class="fa-solid fa-file-arrow-up"></i>
@@ -51,7 +53,8 @@
           </div>
 
           <div class="modalidad-body">
-            <label class="file-upload-card"
+            <label
+              class="file-upload-card"
               [class.file-upload-ready]="archivoLibro"
               [class.file-upload-dragging]="archivoArrastrado() === 'libro'"
               (dragenter)="arrastrarArchivo($event, 'libro')"
@@ -75,7 +78,8 @@
                 {{ archivoArrastrado() === 'libro' ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input type="file"
+              <input
+                type="file"
                 class="file-input"
                 accept=".xlsx"
                 (change)="seleccionarLibro($event)">
@@ -91,7 +95,8 @@
           </div>
         </section>
 
-        <section class="modalidad-card"
+        <section
+          class="modalidad-card"
           [class.modalidad-activa]="archivoCarpetas || archivoDelitos || archivoVictimas">
 
           <div class="modalidad-header">
@@ -106,7 +111,8 @@
           </div>
 
           <div class="modalidad-body file-upload-grid">
-            <label class="file-upload-card"
+            <label
+              class="file-upload-card"
               [class.file-upload-ready]="archivoCarpetas"
               [class.file-upload-dragging]="archivoArrastrado() === 'carpetas'"
               (dragenter)="arrastrarArchivo($event, 'carpetas')"
@@ -129,13 +135,15 @@
                 {{ archivoArrastrado() === 'carpetas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input type="file"
+              <input
+                type="file"
                 class="file-input"
                 accept=".xlsx,.csv"
                 (change)="seleccionarCarpetas($event)">
             </label>
 
-            <label class="file-upload-card"
+            <label
+              class="file-upload-card"
               [class.file-upload-ready]="archivoDelitos"
               [class.file-upload-dragging]="archivoArrastrado() === 'delitos'"
               (dragenter)="arrastrarArchivo($event, 'delitos')"
@@ -158,13 +166,15 @@
                 {{ archivoArrastrado() === 'delitos' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input type="file"
+              <input
+                type="file"
                 class="file-input"
                 accept=".xlsx,.csv"
                 (change)="seleccionarDelitos($event)">
             </label>
 
-            <label class="file-upload-card"
+            <label
+              class="file-upload-card"
               [class.file-upload-ready]="archivoVictimas"
               [class.file-upload-dragging]="archivoArrastrado() === 'victimas'"
               (dragenter)="arrastrarArchivo($event, 'victimas')"
@@ -187,7 +197,8 @@
                 {{ archivoArrastrado() === 'victimas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input type="file"
+              <input
+                type="file"
                 class="file-input"
                 accept=".xlsx,.csv"
                 (change)="seleccionarVictimas($event)">
@@ -202,18 +213,14 @@
           Usa solamente una modalidad por carga. Los archivos serán validados antes de integrarse a BANCI.
         </div>
 
-        <button type="button"
+        <button
+          type="button"
           class="btn btn-siiid px-4"
           [disabled]="cargando()"
           (click)="procesar()">
 
-          @if (cargando()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Procesando...
-          } @else {
           <i class="fa-solid fa-shield-halved"></i>
           Validar y cargar
-          }
         </button>
       </div>
 
@@ -225,33 +232,212 @@
       }
     </div>
   </div>
+  }
 
-  @if (resultado(); as r) {
-  <div class="siiid-card resultado-card mt-4">
-    <div class="siiid-card-header"
-      [class.resultado-header-correcto]="r.esValido"
-      [class.resultado-header-error]="!r.esValido">
+  @if (cargando()) {
+  <div class="processing-overlay">
+    <div class="processing-content">
+      <div class="processing-spinner"></div>
+      <div class="processing-text">Procesando...</div>
+    </div>
+  </div>
+  }
 
-      @if (r.esValido) {
+  @if (resultadoConErrores()) {
+  <div id="resultado-banci">
+    <div class="validation-result-header">
+      <div>
+        <h2>
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Validación con inconsistencias
+        </h2>
+
+        <p>
+          Revise los errores detectados. Corrija la información y vuelva a realizar la carga.
+        </p>
+
+        <div class="pending-reference">
+          Código de referencia:
+          <strong>{{ resultado()?.codigoReferencia }}</strong>
+        </div>
+      </div>
+
+      <div class="validation-actions">
+        <button
+          type="button"
+          class="btn btn-siiid"
+          (click)="prepararNuevaValidacion()">
+
+          <i class="fa-solid fa-rotate-left"></i>
+          Corregir archivos y volver a cargar
+        </button>
+      </div>
+    </div>
+
+    <div class="validacion-grid mt-4">
+      <div class="validacion-panel">
+        <div class="validacion-title">
+          Validación. Archivo Carpetas
+        </div>
+
+        <table class="tabla-validacion">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Total<br>Registros</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (item of resumenCarpetas(); track $index) {
+            <tr
+              [class.error-row]="item.esError"
+              [class.warning-row]="item.esAdvertencia">
+
+              <td>{{ item.descripcion }}</td>
+              <td>{{ item.totalRegistros }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="validacion-panel">
+        <div class="validacion-title">
+          Validación. Archivo Delitos
+        </div>
+
+        <table class="tabla-validacion">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Total<br>Registros</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (item of resumenDelitos(); track $index) {
+            <tr
+              [class.error-row]="item.esError"
+              [class.warning-row]="item.esAdvertencia">
+
+              <td>{{ item.descripcion }}</td>
+              <td>{{ item.totalRegistros }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="validacion-panel">
+        <div class="validacion-title">
+          Validación. Archivo Víctimas
+        </div>
+
+        <table class="tabla-validacion">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Total<br>Registros</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (item of resumenVictimas(); track $index) {
+            <tr
+              [class.error-row]="item.esError"
+              [class.warning-row]="item.esAdvertencia">
+
+              <td>{{ item.descripcion }}</td>
+              <td>{{ item.totalRegistros }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="texto-ayuda-validacion">
+      La información que se muestra permite identificar las inconsistencias detectadas.
+      Es necesario atender los errores y volver a cargar el archivo.
+    </div>
+
+    @if (detallesValidacion().length > 0) {
+    <div class="siiid-card mt-3">
+      <div class="siiid-card-header d-flex align-items-center">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Detalle de errores y advertencias</span>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary ms-auto"
+          [disabled]="exportandoValidacion()"
+          (click)="descargarValidacion()">
+
+          @if (exportandoValidacion()) {
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Descargando...
+          } @else {
+          <i class="fa-solid fa-file-excel"></i>
+          Descargar errores/advertencias
+          }
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0 detalle-errores">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Archivo</th>
+              <th>Fila</th>
+              <th>Campo</th>
+              <th>Valor</th>
+              <th>Mensaje</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (error of errores(); track $index) {
+            <tr>
+              <td><span class="detalle-tipo-error">Error</span></td>
+              <td>{{ error.archivo }}</td>
+              <td>{{ error.numeroFila ?? '-' }}</td>
+              <td>{{ error.campo ?? '-' }}</td>
+              <td>{{ error.valor ?? '-' }}</td>
+              <td>{{ error.mensaje }}</td>
+            </tr>
+            }
+
+            @for (advertencia of advertencias(); track $index) {
+            <tr>
+              <td><span class="detalle-tipo-advertencia">Advertencia</span></td>
+              <td>{{ advertencia.archivo }}</td>
+              <td>{{ advertencia.numeroFila ?? '-' }}</td>
+              <td>{{ advertencia.campo ?? '-' }}</td>
+              <td>{{ advertencia.valor ?? '-' }}</td>
+              <td>{{ advertencia.mensaje }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  @if (resultadoCorrecto(); as r) {
+  <div id="resultado-banci" class="siiid-card resultado-card mt-4">
+    <div class="siiid-card-header resultado-header-correcto">
       <i class="fa-solid fa-circle-check"></i>
-      Resultado de la carga
-      } @else {
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      Se encontraron inconsistencias
-      }
+      Carga BANCI procesada
     </div>
 
     <div class="p-4">
-      <div class="resultado-mensaje"
-        [class.resultado-mensaje-correcto]="r.esValido"
-        [class.resultado-mensaje-error]="!r.esValido">
-
+      <div class="resultado-mensaje resultado-mensaje-correcto">
         <div class="resultado-icono">
-          @if (r.esValido) {
           <i class="fa-solid fa-check"></i>
-          } @else {
-          <i class="fa-solid fa-xmark"></i>
-          }
         </div>
 
         <div>
@@ -286,76 +472,19 @@
         </div>
       </div>
 
-      @if (r.errores.length > 0) {
-      <div class="resultado-seccion">
-        <div class="resultado-seccion-titulo error">
-          <i class="fa-solid fa-circle-xmark"></i>
-          Errores detectados
-          <span>{{ r.errores.length }}</span>
-        </div>
+      @if (advertencias().length > 0) {
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="exportandoValidacion()"
+        (click)="descargarValidacion()">
 
-        <div class="tabla-contenedor">
-          <table class="tabla-validacion">
-            <thead>
-              <tr>
-                <th>Archivo</th>
-                <th>Fila</th>
-                <th>Campo</th>
-                <th>Valor</th>
-                <th>Detalle</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              @for (error of r.errores; track $index) {
-              <tr>
-                <td>{{ error.archivo }}</td>
-                <td>{{ error.numeroFila ?? '-' }}</td>
-                <td>{{ error.campo ?? '-' }}</td>
-                <td>{{ error.valor ?? '-' }}</td>
-                <td>{{ error.mensaje }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-      }
-
-      @if (r.advertencias.length > 0) {
-      <div class="resultado-seccion">
-        <div class="resultado-seccion-titulo advertencia">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          Advertencias
-          <span>{{ r.advertencias.length }}</span>
-        </div>
-
-        <div class="tabla-contenedor">
-          <table class="tabla-validacion">
-            <thead>
-              <tr>
-                <th>Archivo</th>
-                <th>Fila</th>
-                <th>Campo</th>
-                <th>Detalle</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              @for (advertencia of r.advertencias; track $index) {
-              <tr>
-                <td>{{ advertencia.archivo }}</td>
-                <td>{{ advertencia.numeroFila ?? '-' }}</td>
-                <td>{{ advertencia.campo ?? '-' }}</td>
-                <td>{{ advertencia.mensaje }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <i class="fa-solid fa-file-excel"></i>
+        Descargar advertencias
+      </button>
       }
     </div>
   </div>
   }
+
 </section>
