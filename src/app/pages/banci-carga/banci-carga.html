@@ -1,46 +1,10 @@
 <section class="carga-banci">
 
-  <div class="siiid-card mb-4 recuperacion-banci">
-    <div class="siiid-card-header">Mis cargas pendientes de decisión</div>
-    <div class="p-3">
-      <p>Valide, revise las advertencias y decida sobre su propia carga. No hay aprobación administrativa.</p>
-      <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="actualizarPendientes()">
-        {{ buscandoPendientes() ? 'Consultando...' : 'Actualizar pendientes' }}
-      </button>
-      @if (errorPendientes()) { <p class="text-danger mt-2" role="alert">{{ errorPendientes() }}</p> }
-      @if (!buscandoPendientes() && !errorPendientes() && pendientes().length === 0) {
-        <p class="mt-2">No tiene cargas pendientes de decisión.</p>
-      }
-      @if (pendientes().length > 0) {
-        <div class="table-responsive mt-3">
-          <table class="table table-sm">
-            <thead><tr><th>Referencia</th><th>Fecha de carga</th><th>Registros</th><th>Advertencias</th><th>Acciones</th></tr></thead>
-            <tbody>
-              @for (carga of pendientes(); track carga.codigoReferencia) {
-                <tr>
-                  <td>{{ carga.codigoReferencia }}</td>
-                  <td>{{ carga.fechaCarga | date:'dd/MM/yyyy HH:mm' }}</td>
-                  <td>{{ carga.totalCarpetas + carga.totalDelitos + carga.totalVictimas }}</td>
-                  <td>{{ carga.totalAdvertencias }}</td>
-                  <td><button type="button" class="btn btn-sm btn-siiid" [disabled]="bloqueado()"
-                    (click)="recuperarCarga(carga.codigoReferencia)">Revisar carga</button></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-      <div class="recuperar-referencia mt-3">
-        <label for="referencia-banci">Recuperar por referencia</label>
-        <input id="referencia-banci" class="form-control" maxlength="50" [disabled]="bloqueado()"
-          [value]="referenciaRecuperar()" (input)="referenciaRecuperar.set($any($event.target).value)" />
-        <button type="button" class="btn btn-secondary" [disabled]="bloqueado() || !referenciaRecuperar().trim()"
-          (click)="recuperarCarga(referenciaRecuperar())">Consultar estado</button>
-      </div>
-    </div>
-  </div>
-
   @if (mensajeLocal()) { <div class="alert alert-warning" role="alert">{{ mensajeLocal() }}</div> }
+  @if (necesitaActualizar() && !resultado()) {
+    <button type="button" class="btn btn-secondary mb-3" [disabled]="bloqueado()"
+      (click)="recuperarCarga(referenciaEnCurso())">Reintentar recuperación de la carga</button>
+  }
 
   @if (!resultado()) {
   <div class="siiid-card">
@@ -258,7 +222,7 @@
         <button
           type="button"
           class="btn btn-siiid px-4"
-          [disabled]="bloqueado() || validacionIncierta() || necesitaActualizar()"
+          [disabled]="bloqueado() || necesitaActualizar()"
           (click)="procesar()">
 
           <i class="fa-solid fa-shield-halved"></i>

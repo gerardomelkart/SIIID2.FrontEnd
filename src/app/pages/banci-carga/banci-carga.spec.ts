@@ -153,15 +153,24 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     expect(servicio.confirmar).not.toHaveBeenCalled();
   });
 
-  it('recupera pendientes si se pierde la respuesta de validación', () => {
+  it('no integra ni reenvía automáticamente si se pierde la respuesta de validación', () => {
     servicio.validarLibro.mockReturnValue(throwError(() => ({ status: 0 })));
     servicio.obtenerPendientes.mockReturnValue(of([carga()]));
     const c = TestBed.createComponent(BanciCarga).componentInstance;
     c.archivoLibro = new File([''], 'BANCI.xlsx');
     c.procesar();
-    expect(c.pendientes()).toHaveLength(1);
+    expect(c.mensajeLocal()).toContain('ninguna carga se integra sin su confirmación');
+    expect(servicio.obtenerPendientes).not.toHaveBeenCalled();
     expect(servicio.validarLibro).toHaveBeenCalledTimes(1);
     expect(servicio.confirmar).not.toHaveBeenCalled();
+  });
+
+  it('no muestra el panel de pendientes ni búsqueda por referencia', () => {
+    const fixture = TestBed.createComponent(BanciCarga);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Mis cargas pendientes');
+    expect(fixture.nativeElement.textContent).not.toContain('Recuperar por referencia');
+    expect(servicio.obtenerPendientes).not.toHaveBeenCalled();
   });
 
   it('recuperar otra referencia exige respuesta del servidor y conserva todas las advertencias', () => {

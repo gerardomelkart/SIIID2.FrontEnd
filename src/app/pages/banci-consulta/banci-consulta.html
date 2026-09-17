@@ -1,0 +1,111 @@
+<section class="consulta-banci">
+  <h1>Consulta de información BANCI</h1>
+  <p>Carpetas, delitos y víctimas integrados. El periodo corresponde a la fecha de inicio de la carpeta.</p>
+
+  <div class="siiid-card">
+    <div class="siiid-card-header"><i class="fa-solid fa-magnifying-glass"></i> Consultar información</div>
+    <form class="filtros" (ngSubmit)="consultar()">
+      <label>Año
+        <select class="form-select" name="anio" [(ngModel)]="anio" [disabled]="cargando() || !opciones()">
+          @for (valor of opciones()?.anios ?? []; track valor) { <option [ngValue]="valor">{{ valor }}</option> }
+        </select>
+      </label>
+      <label>Mes
+        <select class="form-select" name="mes" [(ngModel)]="mes" [disabled]="cargando()">
+          <option [ngValue]="null">Todo el año</option>
+          @for (nombre of meses; track $index) { <option [ngValue]="$index + 1">{{ nombre }}</option> }
+        </select>
+      </label>
+      @if (opciones()?.alcanceNacional) {
+        <label>Entidad federativa
+          <select class="form-select" name="entidad" [(ngModel)]="entidad" [disabled]="cargando()">
+            <option [ngValue]="null">Todas las entidades</option>
+            @for (e of opciones()?.entidades ?? []; track e.idEntidadFederativa) {
+              <option [ngValue]="e.idEntidadFederativa">{{ e.nombre }}</option>
+            }
+          </select>
+        </label>
+      } @else if (opciones()) {
+        <div class="entidad-fija">Entidad federativa<strong>{{ opciones()?.entidades?.[0]?.nombre }}</strong></div>
+      }
+      <label class="busqueda">Carpeta
+        <input class="form-control" name="busqueda" [(ngModel)]="busqueda" maxlength="250"
+          placeholder="Buscar ID_CI o NTRA_CI" [disabled]="cargando()" />
+      </label>
+      <button class="btn btn-siiid" type="submit" [disabled]="cargando() || !opciones()">Consultar</button>
+    </form>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-danger mt-3" role="alert">{{ error() }}
+      @if (!opciones()) { <button class="btn btn-secondary ms-2" type="button" (click)="cargarOpciones()">Reintentar</button> }
+    </div>
+  }
+  @if (cargando()) { <p role="status" class="mt-3"><i class="fa-solid fa-spinner fa-spin"></i> Consultando...</p> }
+
+  @if (resultado(); as r) {
+    <div class="resumen" aria-label="Totales del filtro aplicado">
+      <div><span>Carpetas</span><strong>{{ r.totalCarpetas | number }}</strong></div>
+      <div><span>Delitos</span><strong>{{ r.totalDelitos | number }}</strong></div>
+      <div><span>Víctimas</span><strong>{{ r.totalVictimas | number }}</strong></div>
+    </div>
+    <div class="siiid-card mt-3">
+      <div class="siiid-card-header">Carpetas — {{ periodoConsultado() }}</div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Entidad</th><th>ID_CI</th><th>NTRA_CI</th><th>Fecha de inicio</th><th>Delitos</th><th>Víctimas</th><th>Acciones</th></tr></thead>
+          <tbody>
+            @for (c of r.carpetas; track c.idBanciCarpetaInvestigacion) {
+              <tr><td>{{ c.entidad }}</td><td>{{ c.idCi }}</td><td>{{ c.ntraCi }}</td><td>{{ c.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                <td>{{ c.totalDelitos }}</td><td>{{ c.totalVictimas }}</td>
+                <td><button class="btn btn-sm btn-secondary" type="button" (click)="abrirDetalle(c)">Ver detalle</button></td></tr>
+            } @empty {
+              <tr><td colspan="7" class="text-center py-4">No hay carpetas para los filtros seleccionados.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="paginacion">
+        <span>{{ r.totalCarpetas | number }} carpetas · Página {{ r.totalPaginas ? r.pagina : 0 }} de {{ r.totalPaginas }}</span>
+        <div><button type="button" class="btn btn-sm btn-outline-secondary me-2" [disabled]="r.pagina <= 1" (click)="cambiarPagina(r.pagina - 1)">Anterior</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="r.pagina >= r.totalPaginas" (click)="cambiarPagina(r.pagina + 1)">Siguiente</button></div>
+      </div>
+    </div>
+  }
+
+  @if (carpetaSeleccionada(); as seleccionada) {
+    <section id="detalle-banci" class="siiid-card mt-4" aria-labelledby="titulo-detalle-banci">
+      <div class="siiid-card-header cabecera-detalle">
+        <h2 id="titulo-detalle-banci">Carpeta {{ seleccionada.idCi }}</h2>
+        <button type="button" class="btn btn-sm btn-light" (click)="cerrarDetalle()">Cerrar detalle</button>
+      </div>
+      <div class="p-3">
+        @if (cargandoDetalle()) { <p role="status">Cargando detalle...</p> }
+        @if (errorDetalle()) { <p class="text-danger" role="alert">{{ errorDetalle() }}</p> }
+        @if (detalle(); as d) {
+          <h3>Datos de la carpeta</h3>
+          <dl class="campos">
+            @for (campo of d.carpeta; track campo.nombre) { <div><dt>{{ campo.nombre }}</dt><dd>{{ campo.valor ?? '—' }}</dd></div> }
+          </dl>
+          <h3>Delitos y víctimas</h3>
+          @for (delito of d.delitos; track delito.id) {
+            <details class="registro">
+              <summary>Delito {{ valor(delito.campos, 'ID_DELITO') }} · {{ valor(delito.campos, 'Delito') }} · {{ delito.victimas.length }} víctimas</summary>
+              <dl class="campos">
+                @for (campo of delito.campos; track campo.nombre) { <div><dt>{{ campo.nombre }}</dt><dd>{{ campo.valor ?? '—' }}</dd></div> }
+              </dl>
+              @for (victima of delito.victimas; track $index) {
+                <details class="registro victima">
+                  <summary>Víctima {{ valor(victima, 'ID_VICF') }} · {{ valor(victima, 'Nombre') }} {{ valor(victima, 'Primer apellido') }} {{ valor(victima, 'Segundo apellido') }}</summary>
+                  <dl class="campos">
+                    @for (campo of victima; track campo.nombre) { <div><dt>{{ campo.nombre }}</dt><dd>{{ campo.valor ?? '—' }}</dd></div> }
+                  </dl>
+                </details>
+              } @empty { <p>No hay víctimas activas asociadas a este delito.</p> }
+            </details>
+          } @empty { <p>No hay delitos activos asociados a esta carpeta.</p> }
+        }
+      </div>
+    </section>
+  }
+</section>

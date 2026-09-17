@@ -1,5 +1,4 @@
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   BanciCargaValidacionError,
@@ -23,7 +22,7 @@ interface ResumenBanci {
 
 @Component({
   selector: 'app-banci-carga',
-  imports: [DatePipe],
+  imports: [],
   templateUrl: './banci-carga.html',
   styleUrl: './banci-carga.css',
 })
@@ -32,50 +31,28 @@ export class BanciCarga implements OnInit {
   private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
 
-  pendientes = signal<BanciCargaValidacionResponse[]>([]);
-  buscandoPendientes = signal(false);
-  errorPendientes = signal('');
   necesitaActualizar = signal(false);
-  validacionIncierta = signal(false);
-  referenciaRecuperar = signal('');
-  bloqueado = computed(() => this.cargando() || this.buscandoPendientes());
+  referenciaEnCurso = signal('');
+  bloqueado = computed(() => this.cargando());
   pendiente = computed(() => this.resultado()?.estado === 'VALIDADO_PENDIENTE');
   rechazado = computed(() => this.resultado()?.estado === 'RECHAZADO_VALIDACION');
 
   ngOnInit(): void {
-    this.actualizarPendientes();
     try {
       const referencia = localStorage.getItem(this.claveRecuperacion());
       if (referencia) this.recuperarCarga(referencia);
     } catch { /* La recuperación manual funciona aunque el almacenamiento no esté disponible. */ }
   }
 
-  actualizarPendientes(): void {
-    if (this.cargando() || this.buscandoPendientes()) return;
-    this.buscandoPendientes.set(true);
-    this.errorPendientes.set('');
-    this.banciCargaService.obtenerPendientes().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (cargas) => {
-        this.pendientes.set(cargas);
-        this.buscandoPendientes.set(false);
-        this.validacionIncierta.set(false);
-      },
-      error: () => {
-        this.buscandoPendientes.set(false);
-        this.errorPendientes.set('No fue posible consultar sus pendientes. Actualice la lista antes de repetir una carga cuya respuesta se perdió.');
-      },
-    });
-  }
-
   recuperarCarga(referencia: string): void {
     referencia = referencia.trim();
     if (!referencia || referencia.length > 50 || this.cargando()) return;
+    this.referenciaEnCurso.set(referencia);
     this.cargando.set(true);
     this.mensajeLocal.set('');
     this.banciCargaService.obtenerCarga(referencia).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (carga) => {
         this.resultado.set(carga);
-        this.referenciaRecuperar.set(referencia);
         this.recordarReferencia(referencia);
         this.necesitaActualizar.set(false);
         this.cargando.set(false);
@@ -84,7 +61,10 @@ export class BanciCarga implements OnInit {
       },
       error: (error) => {
         this.cargando.set(false);
-        this.necesitaActualizar.set(true);
+        this.necesitaActualizar.set(error?.status !== 404);
+        if (error?.status === 404) {
+          try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
+        }
         this.mensajeLocal.set(error?.error?.mensaje || 'No se pudo recuperar el estado. Conserve la referencia e intente actualizar; no vuelva a subir los archivos.');
       },
     });
@@ -102,7 +82,6 @@ export class BanciCarga implements OnInit {
           // Confirmar devuelve los totales reales; las observaciones ya estaban guardadas.
           this.resultado.set({ ...respuesta, modalidadIngreso: carga.modalidadIngreso,
             fechaCarga: carga.fechaCarga, errores: carga.errores, advertencias: carga.advertencias });
-          this.pendientes.update((items) => items.filter((item) => item.codigoReferencia !== carga.codigoReferencia));
           this.cargando.set(false);
           this.enfocarResultado();
         },
@@ -120,7 +99,7 @@ export class BanciCarga implements OnInit {
   }
 
   private recordarReferencia(referencia: string): void {
-    this.referenciaRecuperar.set(referencia);
+    this.referenciaEnCurso.set(referencia);
     try { localStorage.setItem(this.claveRecuperacion(), referencia); } catch { /* Sólo se guarda la referencia. */ }
   }
 
@@ -236,7 +215,7 @@ export class BanciCarga implements OnInit {
   }
 
   procesar(): void {
-    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar() || this.validacionIncierta()) return;
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
     this.mensajeLocal.set('');
     this.resultado.set(null);
 
@@ -266,7 +245,6 @@ export class BanciCarga implements OnInit {
         if (response.estado === 'VALIDADO_PENDIENTE') {
           this.recordarReferencia(response.codigoReferencia);
           this.limpiarArchivosSeleccionados();
-          this.actualizarPendientes();
         }
         this.enfocarResultado();
       },
@@ -278,23 +256,20 @@ export class BanciCarga implements OnInit {
           this.enfocarResultado();
         } else {
           this.mensajeLocal.set(
-            'No se recibió el resultado de la validación. Consulte sus cargas pendientes antes de volver a subir los archivos.',
+            error?.error?.mensaje || 'No se recibió el resultado de la validación. Puede volver a validar los archivos; ninguna carga se integra sin su confirmación.',
           );
-          this.validacionIncierta.set(true);
         }
 
         this.cargando.set(false);
-        if (this.validacionIncierta()) this.actualizarPendientes();
       },
     });
   }
 
 prepararNuevaValidacion(): void {
-  if (this.bloqueado() || this.pendiente() || this.necesitaActualizar() || this.validacionIncierta()) return;
+  if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
   this.limpiarArchivosSeleccionados();
   this.resultado.set(null);
   this.mensajeLocal.set('');
-  this.referenciaRecuperar.set('');
   try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
 
   setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
