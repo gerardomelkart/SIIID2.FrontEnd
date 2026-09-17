@@ -58,17 +58,12 @@ describe('Consulta BANCI', () => {
     expect(c.periodoConsultado()).toBe('Febrero 2026');
   });
 
-  it('busca al terminar de escribir y cancela el temporizador anterior', () => {
-    vi.useFakeTimers();
+  it('no muestra búsqueda por carpeta ni entidad redundante a usuarios estatales', () => {
     const f = TestBed.createComponent(BanciConsulta); f.detectChanges();
-    const c = f.componentInstance;
-    service.consultar.mockClear();
-    c.cambiarBusqueda('CI'); vi.advanceTimersByTime(200); c.cambiarBusqueda('CI-7');
-    expect(c.resultado()).toBeNull();
-    vi.advanceTimersByTime(349); expect(service.consultar).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
-    expect(service.consultar).toHaveBeenCalledTimes(1);
-    expect(service.consultar).toHaveBeenCalledWith(expect.objectContaining({ busqueda: 'CI-7', pagina: 1 }));
+    expect(f.nativeElement.querySelector('input[name="busqueda"]')).toBeNull();
+    expect(f.nativeElement.querySelector('.entidad-fija')).toBeNull();
+    expect([...f.nativeElement.querySelectorAll('th')].some((th: any) => th.textContent === 'Entidad')).toBe(false);
+    expect(service.consultar).toHaveBeenLastCalledWith(expect.objectContaining({ busqueda: '', idEntidadFederativa: 14 }));
   });
 
   it('descarga un solo Excel con los filtros aplicados y conserva el nombre del servidor', () => {
@@ -107,7 +102,7 @@ describe('Consulta BANCI', () => {
     f.detectChanges();
     expect(service.consultar).toHaveBeenCalledWith(expect.objectContaining({ anio: 2026, mes: null, idEntidadFederativa: 14, pagina: 1 }));
     expect(f.nativeElement.querySelector('select[name="entidad"]')).toBeNull();
-    expect(f.nativeElement.textContent).toContain('Jalisco');
+    expect(f.nativeElement.querySelector('.entidad-fija')).toBeNull();
     expect(service.obtenerDetalle).not.toHaveBeenCalled();
   });
 
@@ -122,8 +117,8 @@ describe('Consulta BANCI', () => {
 
   it('filtra por mes y año y reinicia en la primera página', () => {
     const c = TestBed.createComponent(BanciConsulta).componentInstance;
-    c.ngOnInit(); c.anio = 2025; c.mes = 10; c.busqueda = ' CI-7 '; c.consultar();
-    expect(service.consultar).toHaveBeenLastCalledWith(expect.objectContaining({ anio: 2025, mes: 10, busqueda: 'CI-7', pagina: 1 }));
+    c.ngOnInit(); c.anio = 2025; c.mes = 10; c.consultar();
+    expect(service.consultar).toHaveBeenLastCalledWith(expect.objectContaining({ anio: 2025, mes: 10, busqueda: '', pagina: 1 }));
     expect(c.periodoConsultado()).toBe('Octubre 2025');
   });
 

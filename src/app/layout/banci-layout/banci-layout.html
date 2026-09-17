@@ -31,6 +31,7 @@
       </div>
 
       <nav class="menu">
+        @if (puedeCapturar()) {
         <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
           <span>
             <i class="fa-solid fa-upload"></i>
@@ -43,6 +44,9 @@
           <i class="fa-solid fa-file-arrow-up"></i>
           Carga masiva
         </a>
+        <a class="menu-link level-2" routerLink="/banci/formulario" routerLinkActive="active"><i class="fa-solid fa-pen-to-square"></i> Formulario</a>
+        }
+
         }
 
         <button type="button" class="menu-link menu-button" (click)="toggleInformes()">

@@ -1,3 +1,4 @@
+import { BanciFormularioOpciones, BanciFormularioRequest } from '../models/banci-formulario.models';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -24,6 +25,10 @@ export class BanciCargaService {
       aceptar,
     });
   }
+
+  obtenerFormularioOpciones(): Observable<BanciFormularioOpciones> { return this.http.get<BanciFormularioOpciones>(`${API_ENDPOINTS.banciCargas}/formulario/opciones`); }
+
+  validarFormulario(datos: BanciFormularioRequest): Observable<BanciCargaValidacionResponse> { return this.http.post<BanciCargaValidacionResponse>(`${API_ENDPOINTS.banciCargas}/formulario/validar`, datos); }
 
   validarLibro(archivo: File): Observable<BanciCargaValidacionResponse> {
     const formData = new FormData();

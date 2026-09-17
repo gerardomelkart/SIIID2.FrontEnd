@@ -1,0 +1,92 @@
+<section class="formulario-banci">
+  <h1>Formulario BANCI</h1>
+  <p>Registre una carpeta nueva con sus delitos y víctimas. Los campos con * son obligatorios; las validaciones pueden requerir información adicional según el tipo de víctima.</p>
+  @if (errorOpciones()) { <div class="alert alert-danger" role="alert">{{ errorOpciones() }} <button type="button" class="btn btn-secondary" (click)="cargarOpciones()">Reintentar</button></div> }
+  @if (cargandoOpciones()) { <p role="status">Cargando catálogos...</p> }
+  @if (mensaje()) { <div class="alert alert-warning" role="alert">{{ mensaje() }}</div> }
+  @if (necesitaActualizar()) { <button type="button" class="btn btn-secondary mb-3" [disabled]="cargando()" (click)="actualizarEstado()">Actualizar estado de la captura</button> }
+
+  @if (opciones(); as o) {
+    @if (!pendiente() && !terminado() && resultado()?.estado !== 'RECHAZADO_VALIDACION' && !necesitaActualizar()) {
+      <form (ngSubmit)="validar()">
+        <fieldset [disabled]="bloqueado()">
+          @if (o.esSuperUsuario) {
+            <div class="siiid-card p-3 mb-3">
+              <label>Entidad que reporta *
+                <select class="form-select" name="entidadReporte" [(ngModel)]="entidad" required>
+                  <option [ngValue]="null">Seleccione...</option>
+                  @for (e of entidades(); track e.clave) { <option [ngValue]="+e.clave">{{ e.descripcion }}</option> }
+                </select>
+              </label>
+            </div>
+          }
+          <div class="siiid-card mb-3">
+            <div class="siiid-card-header"><i class="fa-solid fa-folder-open"></i> Datos de la carpeta</div>
+            <div class="p-3"><app-banci-campos [campos]="camposCarpeta" [datos]="carpeta" [catalogos]="o.catalogos" [bloqueado]="bloqueado()" /></div>
+          </div>
+          @for (d of delitos; track d; let i = $index) {
+            <section class="siiid-card mb-3">
+              <div class="siiid-card-header cabecera">
+                <span>Delito {{ i + 1 }} · {{ d.datos['id_delito'] || 'Nuevo delito' }}</span>
+                <button type="button" class="btn btn-sm btn-outline-light" [disabled]="delitos.length === 1" (click)="quitarDelito(i)">Quitar delito</button>
+              </div>
+              <div class="p-3">
+                <app-banci-campos [campos]="camposDelito" [datos]="d.datos" [catalogos]="o.catalogos" [bloqueado]="bloqueado()" />
+                <h2 class="mt-4">Víctimas del delito {{ i + 1 }}</h2>
+                @for (v of d.victimas; track v; let j = $index) {
+                  <details class="victima" [open]="j === 0">
+                    <summary>Víctima {{ j + 1 }} · {{ v['id_vicf'] || 'Nueva víctima' }} {{ v['nomb'] || '' }}</summary>
+                    <div class="py-3"><app-banci-campos [campos]="camposVictima" [datos]="v" [catalogos]="o.catalogos" [bloqueado]="bloqueado()" /></div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="d.victimas.length === 1" (click)="quitarVictima(d, j)">Quitar víctima</button>
+                  </details>
+                }
+                <button type="button" class="btn btn-secondary mt-3" [disabled]="d.victimas.length >= 500 || totalVictimas() >= 1000" (click)="agregarVictima(d)"><i class="fa-solid fa-user-plus"></i> Agregar víctima</button>
+              </div>
+            </section>
+          }
+          <div class="acciones">
+            <button type="button" class="btn btn-secondary" [disabled]="delitos.length >= 100" (click)="agregarDelito()"><i class="fa-solid fa-plus"></i> Agregar delito</button>
+            <span>1 carpeta · {{ delitos.length }} delitos · {{ totalVictimas() }} víctimas</span>
+            <button type="submit" class="btn btn-siiid"><i class="fa-solid fa-check"></i> Validar captura</button>
+          </div>
+        </fieldset>
+      </form>
+    }
+  }
+
+  @if (cargando()) { <p class="mt-3" role="status"><i class="fa-solid fa-spinner fa-spin"></i> Procesando...</p> }
+  @if (resultado(); as r) {
+    <section id="resultado-formulario-banci" class="siiid-card mt-4">
+      <div class="siiid-card-header">{{ terminado() ? 'Carpeta registrada' : pendiente() ? 'Revise la captura antes de aceptar' : 'Resultado de la captura' }}</div>
+      <div class="p-3">
+        <p>{{ r.mensaje }}</p>
+        <p>Referencia: <strong>{{ r.codigoReferencia }}</strong></p>
+        <p>{{ r.totalCarpetas }} carpetas · {{ r.totalDelitos }} delitos · {{ r.totalVictimas }} víctimas</p>
+        @if (r.errores.length || r.advertencias.length) {
+          <div class="table-responsive observaciones">
+            <table class="table table-sm table-bordered">
+              <thead><tr><th>Tipo</th><th>Sección</th><th>Registro</th><th>Campo</th><th>Mensaje</th></tr></thead>
+              <tbody>
+                @for (e of r.errores; track $index) { <tr><td>Error</td><td>{{ e.archivo }}</td><td>{{ e.numeroFila ?? '—' }}</td><td>{{ e.campo }}</td><td>{{ e.mensaje }}</td></tr> }
+                @for (e of r.advertencias; track $index) { <tr><td>Advertencia</td><td>{{ e.archivo }}</td><td>{{ e.numeroFila ?? '—' }}</td><td>{{ e.campo }}</td><td>{{ e.mensaje }}</td></tr> }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (pendiente()) {
+          <p>Los datos aún no están integrados. Revise las advertencias y decida sobre su captura.</p>
+          <div class="acciones">
+            <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="actualizarEstado()">Actualizar estado</button>
+            <button type="button" class="btn btn-outline-danger" [disabled]="cargando() || necesitaActualizar()" (click)="confirmar(false)">Rechazar captura</button>
+            <button type="button" class="btn btn-siiid" [disabled]="cargando() || necesitaActualizar()" (click)="confirmar(true)">Aceptar y registrar carpeta</button>
+          </div>
+        } @else if (terminado()) {
+          <p>{{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.</p>
+          <div class="acciones"><button type="button" class="btn btn-siiid" [disabled]="cargando()" (click)="nuevaCaptura()">Capturar otra carpeta</button><a class="btn btn-secondary" routerLink="/banci/consulta">Consultar información</a></div>
+        } @else if (r.estado === 'RECHAZADO_VALIDACION') {
+          <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="corregirCaptura()">Volver al formulario</button>
+        }
+      </div>
+    </section>
+  }
+</section>

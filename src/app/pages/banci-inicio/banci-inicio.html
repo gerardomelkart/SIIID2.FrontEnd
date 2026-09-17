@@ -74,6 +74,7 @@
     </div>
 
     <div class="quick-access-grid">
+      @if (puedeCapturar()) {
       <a class="quick-link" routerLink="/banci/carga-masiva">
         <div class="quick-icon">
           <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -87,6 +88,7 @@
         </div>
       </a>
 
+      }
       <a class="quick-link" routerLink="/banci/consulta">
         <div class="quick-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
         <div>
@@ -95,20 +97,12 @@
         </div>
       </a>
 
-      <div class="quick-link quick-link-pendiente">
-        <div class="quick-icon">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </div>
-
-        <div>
-          <strong>Formulario BANCI</strong>
-          <span>
-            Captura y complementación directa de registros.
-          </span>
-        </div>
-
-        <span class="estado-desarrollo">En desarrollo</span>
-      </div>
+      @if (puedeCapturar()) {
+        <a class="quick-link" routerLink="/banci/formulario">
+          <div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+          <div><strong>Formulario BANCI</strong><span>Registre una carpeta nueva con sus delitos y víctimas.</span></div>
+        </a>
+      }
 
       <div class="quick-link quick-link-pendiente">
         <div class="quick-icon">

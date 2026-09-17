@@ -268,6 +268,14 @@ export const routes: Routes = [
       {
         path: 'carga-masiva',
         loadComponent: () => import('./pages/banci-carga/banci-carga').then((m) => m.BanciCarga),
+        canActivate: [permissionGuard],
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL] },
+      },
+      {
+        path: 'formulario',
+        loadComponent: () => import('./pages/banci-formulario/banci-formulario').then((m) => m.BanciFormulario),
+        canActivate: [permissionGuard],
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL] },
       },
       {
         path: 'consulta',

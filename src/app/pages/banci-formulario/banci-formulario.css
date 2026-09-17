@@ -1,0 +1,56 @@
+.formulario-banci>p {
+    color: #64748b;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.cabecera,
+.acciones {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cabecera {
+    justify-content: space-between;
+}
+
+.acciones {
+    margin-top: 16px;
+}
+
+.victima {
+    border: 1px solid #ddd;
+    border-left: 4px solid #6f2c91;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.observaciones {
+    max-height: 420px;
+    overflow: auto;
+}
+
+#resultado-formulario-banci {
+    scroll-margin-top: 24px;
+}

@@ -25,13 +25,7 @@
             }
           </select>
         </label>
-      } @else if (opciones()) {
-        <div class="entidad-fija">Entidad federativa<strong>{{ opciones()?.entidades?.[0]?.nombre }}</strong></div>
       }
-      <label class="busqueda">Carpeta
-        <input class="form-control" name="busqueda" [ngModel]="busqueda" (ngModelChange)="cambiarBusqueda($event)" maxlength="250"
-          placeholder="Buscar ID_CI o NTRA_CI" [disabled]="exportando() || !opciones()" />
-      </label>
     </form>
   </div>
 
@@ -59,14 +53,14 @@
       @if (errorDescarga()) { <div class="alert alert-danger m-3" role="alert">{{ errorDescarga() }}</div> }
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead><tr><th>Entidad</th><th>ID_CI</th><th>NTRA_CI</th><th>Fecha de inicio</th><th>Delitos</th><th>Víctimas</th><th>Acciones</th></tr></thead>
+          <thead><tr>@if (opciones()?.alcanceNacional) { <th>Entidad</th> }<th>ID_CI</th><th>NTRA_CI</th><th>Fecha de inicio</th><th>Delitos</th><th>Víctimas</th><th>Acciones</th></tr></thead>
           <tbody>
             @for (c of r.carpetas; track c.idBanciCarpetaInvestigacion) {
-              <tr><td>{{ c.entidad }}</td><td>{{ c.idCi }}</td><td>{{ c.ntraCi }}</td><td>{{ c.fechaInicio | date:'dd/MM/yyyy' }}</td>
+              <tr>@if (opciones()?.alcanceNacional) { <td>{{ c.entidad }}</td> }<td>{{ c.idCi }}</td><td>{{ c.ntraCi }}</td><td>{{ c.fechaInicio | date:'dd/MM/yyyy' }}</td>
                 <td>{{ c.totalDelitos }}</td><td>{{ c.totalVictimas }}</td>
                 <td><button class="btn btn-sm btn-secondary" type="button" (click)="abrirDetalle(c)">Ver detalle</button></td></tr>
             } @empty {
-              <tr><td colspan="7" class="text-center py-4">No hay carpetas para los filtros seleccionados.</td></tr>
+              <tr><td [attr.colspan]="opciones()?.alcanceNacional ? 7 : 6" class="text-center py-4">No hay carpetas para los filtros seleccionados.</td></tr>
             }
           </tbody>
         </table>

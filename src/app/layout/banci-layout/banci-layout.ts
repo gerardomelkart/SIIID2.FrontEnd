@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionService } from '../../core/services/session.service';
@@ -21,6 +21,7 @@ export class BanciLayout {
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
+  puedeCapturar = computed(() => ['SUPER_USUARIO', 'ENLACE_ESTATAL'].includes(this.usuario()?.rol ?? ''));
   puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   toggleMenu(): void { this.menuAbierto.update((valor) => !valor); }

@@ -18,7 +18,6 @@ export class BanciConsulta implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private peticionDetalle?: Subscription;
   private peticionConsulta?: Subscription;
-  private temporizadorBusqueda?: ReturnType<typeof setTimeout>;
   private aplicado: BanciConsultaFiltro | null = null;
 
   opciones = signal<BanciConsultaOpciones | null>(null);
@@ -35,27 +34,15 @@ export class BanciConsulta implements OnInit {
   anio = new Date().getFullYear();
   mes: number | null = null;
   entidad: number | null = null;
-  busqueda = '';
   periodoConsultado = signal('');
   readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
   ngOnInit(): void {
-    this.destroyRef.onDestroy(() => clearTimeout(this.temporizadorBusqueda));
     this.cargarOpciones();
   }
 
   cambiarFiltros(): void { this.consultar(); }
-
-  cambiarBusqueda(valor: string): void {
-    this.busqueda = valor;
-    clearTimeout(this.temporizadorBusqueda);
-    this.peticionConsulta?.unsubscribe();
-    this.resultado.set(null);
-    this.cerrarDetalle();
-    this.cargando.set(false);
-    this.temporizadorBusqueda = setTimeout(() => this.consultar(), 350);
-  }
 
   cargarOpciones(): void {
     if (this.cargando()) return;
@@ -79,9 +66,8 @@ export class BanciConsulta implements OnInit {
 
   consultar(): void {
     if (!this.opciones() || this.exportando()) return;
-    clearTimeout(this.temporizadorBusqueda);
     this.aplicado = { anio: this.anio, mes: this.mes, idEntidadFederativa: this.entidad,
-      busqueda: this.busqueda.trim(), pagina: 1, tamanoPagina: 25 };
+      busqueda: '', pagina: 1, tamanoPagina: 25 };
     this.cargarPagina(1);
   }
 
