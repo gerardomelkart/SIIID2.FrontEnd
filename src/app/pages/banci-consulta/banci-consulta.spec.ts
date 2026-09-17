@@ -4,6 +4,8 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { BanciConsulta } from './banci-consulta';
 import { BanciConsultaService } from '../../core/services/banci-consulta.service';
 import { BanciConsultaDetalle, BanciConsultaResultado } from '../../core/models/banci-consulta.models';
+import { HttpHeaders, HttpResponse } from '@angular/common/http';
+import { By } from '@angular/platform-browser';
 
 const carpeta = { idBanciCarpetaInvestigacion: 7, idEntidadFederativa: 14, entidad: 'Jalisco',
   idCi: 'CI-7', ntraCi: 'NUC-7', fechaInicio: '2026-08-01', totalDelitos: 1, totalVictimas: 1 };
@@ -15,17 +17,90 @@ const detalle: BanciConsultaDetalle = { carpeta: [{ nombre: 'ID_CI', valor: 'CI-
 ] };
 
 describe('Consulta BANCI', () => {
-  let service: { obtenerOpciones: ReturnType<typeof vi.fn>; consultar: ReturnType<typeof vi.fn>; obtenerDetalle: ReturnType<typeof vi.fn> };
+  let service: { obtenerOpciones: ReturnType<typeof vi.fn>; consultar: ReturnType<typeof vi.fn>; obtenerDetalle: ReturnType<typeof vi.fn>; descargarExcel: ReturnType<typeof vi.fn> };
   beforeEach(() => {
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() });
     service = {
       obtenerOpciones: vi.fn(() => of({ alcanceNacional: false, anios: [2026, 2025],
         entidades: [{ idEntidadFederativa: 14, nombre: 'Jalisco' }] })),
       consultar: vi.fn(() => of(resultado)), obtenerDetalle: vi.fn(() => of(detalle)),
+      descargarExcel: vi.fn(() => of(new HttpResponse({ body: new Blob(['excel']), headers: new HttpHeaders({ 'Content-Disposition': 'attachment; filename="BANCI_PRUEBA.xlsx"' }) }))),
     };
     TestBed.configureTestingModule({ imports: [BanciConsulta], providers: [{ provide: BanciConsultaService, useValue: service }] });
   });
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => { TestBed.resetTestingModule(); vi.useRealTimers(); vi.restoreAllMocks(); });
+
+  it('al cambiar el mes consulta automáticamente y no muestra botón Consultar', () => {
+    const f = TestBed.createComponent(BanciConsulta); f.detectChanges();
+    f.debugElement.query(By.css('select[name="mes"]')).triggerEventHandler('ngModelChange', 8);
+    expect(service.consultar).toHaveBeenLastCalledWith(expect.objectContaining({ mes: 8, pagina: 1 }));
+    f.detectChanges();
+    expect([...f.nativeElement.querySelectorAll('button')].some((b: any) => b.textContent.trim() === 'Consultar')).toBe(false);
+    expect(f.nativeElement.textContent).toContain('Descargar Excel del mes');
+  });
+
+  it('al cambiar año y entidad aplica de inmediato ambos filtros', () => {
+    service.obtenerOpciones.mockReturnValue(of({ alcanceNacional: true, anios: [2026, 2025], entidades: [] }));
+    const f = TestBed.createComponent(BanciConsulta); f.detectChanges();
+    f.debugElement.query(By.css('select[name="anio"]')).triggerEventHandler('ngModelChange', 2025);
+    f.debugElement.query(By.css('select[name="entidad"]')).triggerEventHandler('ngModelChange', 14);
+    expect(service.consultar).toHaveBeenLastCalledWith(expect.objectContaining({ anio: 2025, idEntidadFederativa: 14 }));
+  });
+
+  it('una respuesta de filtros anteriores no sobrescribe la selección actual', () => {
+    const c = TestBed.createComponent(BanciConsulta).componentInstance; c.ngOnInit();
+    const vieja = new Subject<BanciConsultaResultado>();
+    service.consultar.mockReturnValueOnce(vieja);
+    c.mes = 1; c.cambiarFiltros();
+    c.mes = 2; c.cambiarFiltros();
+    vieja.next({ ...resultado, totalCarpetas: 999 });
+    expect(c.resultado()?.totalCarpetas).toBe(30);
+    expect(c.periodoConsultado()).toBe('Febrero 2026');
+  });
+
+  it('busca al terminar de escribir y cancela el temporizador anterior', () => {
+    vi.useFakeTimers();
+    const f = TestBed.createComponent(BanciConsulta); f.detectChanges();
+    const c = f.componentInstance;
+    service.consultar.mockClear();
+    c.cambiarBusqueda('CI'); vi.advanceTimersByTime(200); c.cambiarBusqueda('CI-7');
+    expect(c.resultado()).toBeNull();
+    vi.advanceTimersByTime(349); expect(service.consultar).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(service.consultar).toHaveBeenCalledTimes(1);
+    expect(service.consultar).toHaveBeenCalledWith(expect.objectContaining({ busqueda: 'CI-7', pagina: 1 }));
+  });
+
+  it('descarga un solo Excel con los filtros aplicados y conserva el nombre del servidor', () => {
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:prueba') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    let nombre = '';
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { nombre = this.download; });
+    const c = TestBed.createComponent(BanciConsulta).componentInstance; c.ngOnInit();
+    c.mes = 8; c.cambiarFiltros(); c.descargarExcel();
+    expect(service.descargarExcel).toHaveBeenCalledWith(expect.objectContaining({ anio: 2026, mes: 8, idEntidadFederativa: 14 }));
+    expect(nombre).toBe('BANCI_PRUEBA.xlsx');
+    expect(c.exportando()).toBe(false);
+  });
+
+  it('bloquea doble descarga y cambios de filtro mientras se genera el archivo', () => {
+    service.descargarExcel.mockReturnValue(new Subject());
+    const c = TestBed.createComponent(BanciConsulta).componentInstance; c.ngOnInit();
+    c.descargarExcel(); c.descargarExcel();
+    service.consultar.mockClear(); c.cambiarFiltros();
+    expect(service.descargarExcel).toHaveBeenCalledTimes(1);
+    expect(service.consultar).not.toHaveBeenCalled();
+    expect(c.exportando()).toBe(true);
+  });
+
+  it('un error de descarga mantiene la consulta y permite reintentar', async () => {
+    service.descargarExcel.mockReturnValue(throwError(() => ({ error: { mensaje: 'No autorizado' } })));
+    const c = TestBed.createComponent(BanciConsulta).componentInstance; c.ngOnInit();
+    c.descargarExcel();
+    expect(c.errorDescarga()).toBe('No autorizado');
+    expect(c.resultado()).not.toBeNull();
+    expect(c.exportando()).toBe(false);
+  });
 
   it('consulta el último año con datos y restringe los filtros visibles al alcance recibido', () => {
     const f = TestBed.createComponent(BanciConsulta);

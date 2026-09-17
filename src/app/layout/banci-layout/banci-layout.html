@@ -45,10 +45,16 @@
         </a>
         }
 
-        <a class="menu-link" routerLink="/banci/consulta" routerLinkActive="active">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          Consulta de información
-        </a>
+        <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+          <span><i class="fa-solid fa-bars"></i> Informes</span>
+        </button>
+
+        @if (informesAbierto()) {
+          <a class="menu-link level-2" routerLink="/banci/consulta" routerLinkActive="active">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Consulta de información
+          </a>
+        }
 
         <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
           <span>

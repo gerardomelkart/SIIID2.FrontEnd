@@ -37,4 +37,23 @@ describe('Contrato HTTP consulta BANCI', () => {
     const req = http.expectOne(`${API_BASE_URL}/banci/consulta/carpetas/7`);
     expect(req.request.params.keys()).toHaveLength(0); req.flush({});
   });
+
+  it('exporta el mes completo del filtro sin enviar paginación', () => {
+    service.descargarExcel({ anio: 2025, mes: 11, idEntidadFederativa: 14, busqueda: ' CI-7 ', pagina: 2, tamanoPagina: 25 }).subscribe();
+    const req = http.expectOne(r => r.url === `${API_BASE_URL}/banci/consulta/excel`);
+    expect(req.request.responseType).toBe('blob');
+    expect(req.request.params.get('mes')).toBe('11');
+    expect(req.request.params.get('busqueda')).toBe('CI-7');
+    expect(req.request.params.get('idEntidadFederativa')).toBe('14');
+    expect(req.request.params.has('pagina')).toBe(false);
+    expect(req.request.params.has('tamanoPagina')).toBe(false);
+    req.flush(new Blob(['excel']));
+  });
+
+  it('exporta todo el año omitiendo mes, sin roles ni usuario del cliente', () => {
+    service.descargarExcel({ anio: 2026, mes: null, idEntidadFederativa: null, busqueda: '', pagina: 1, tamanoPagina: 25 }).subscribe();
+    const req = http.expectOne(r => r.url === `${API_BASE_URL}/banci/consulta/excel`);
+    expect(req.request.params.keys()).toEqual(['anio']);
+    req.flush(new Blob(['excel']));
+  });
 });

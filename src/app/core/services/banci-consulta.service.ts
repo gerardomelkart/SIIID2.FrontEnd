@@ -11,12 +11,22 @@ export class BanciConsultaService {
   obtenerOpciones() { return this.http.get<BanciConsultaOpciones>(`${this.url}/opciones`); }
 
   consultar(filtro: BanciConsultaFiltro) {
-    let params = new HttpParams().set('anio', filtro.anio).set('pagina', filtro.pagina)
-      .set('tamanoPagina', filtro.tamanoPagina);
+    const params = this.parametrosFiltro(filtro).set('pagina', filtro.pagina).set('tamanoPagina', filtro.tamanoPagina);
+    return this.http.get<BanciConsultaResultado>(this.url, { params });
+  }
+
+  descargarExcel(filtro: BanciConsultaFiltro) {
+    return this.http.get(`${this.url}/excel`, {
+      params: this.parametrosFiltro(filtro), responseType: 'blob', observe: 'response',
+    });
+  }
+
+  private parametrosFiltro(filtro: BanciConsultaFiltro): HttpParams {
+    let params = new HttpParams().set('anio', filtro.anio);
     if (filtro.mes != null) params = params.set('mes', filtro.mes);
     if (filtro.idEntidadFederativa != null) params = params.set('idEntidadFederativa', filtro.idEntidadFederativa);
     if (filtro.busqueda.trim()) params = params.set('busqueda', filtro.busqueda.trim());
-    return this.http.get<BanciConsultaResultado>(this.url, { params });
+    return params;
   }
 
   obtenerDetalle(idCarpeta: number) {

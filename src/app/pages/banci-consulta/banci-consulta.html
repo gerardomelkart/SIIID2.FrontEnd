@@ -6,19 +6,19 @@
     <div class="siiid-card-header"><i class="fa-solid fa-magnifying-glass"></i> Consultar información</div>
     <form class="filtros" (ngSubmit)="consultar()">
       <label>Año
-        <select class="form-select" name="anio" [(ngModel)]="anio" [disabled]="cargando() || !opciones()">
+        <select class="form-select" name="anio" [ngModel]="anio" (ngModelChange)="anio = $event; cambiarFiltros()" [disabled]="exportando() || !opciones()">
           @for (valor of opciones()?.anios ?? []; track valor) { <option [ngValue]="valor">{{ valor }}</option> }
         </select>
       </label>
       <label>Mes
-        <select class="form-select" name="mes" [(ngModel)]="mes" [disabled]="cargando()">
+        <select class="form-select" name="mes" [ngModel]="mes" (ngModelChange)="mes = $event; cambiarFiltros()" [disabled]="exportando() || !opciones()">
           <option [ngValue]="null">Todo el año</option>
           @for (nombre of meses; track $index) { <option [ngValue]="$index + 1">{{ nombre }}</option> }
         </select>
       </label>
       @if (opciones()?.alcanceNacional) {
         <label>Entidad federativa
-          <select class="form-select" name="entidad" [(ngModel)]="entidad" [disabled]="cargando()">
+          <select class="form-select" name="entidad" [ngModel]="entidad" (ngModelChange)="entidad = $event; cambiarFiltros()" [disabled]="exportando() || !opciones()">
             <option [ngValue]="null">Todas las entidades</option>
             @for (e of opciones()?.entidades ?? []; track e.idEntidadFederativa) {
               <option [ngValue]="e.idEntidadFederativa">{{ e.nombre }}</option>
@@ -29,10 +29,9 @@
         <div class="entidad-fija">Entidad federativa<strong>{{ opciones()?.entidades?.[0]?.nombre }}</strong></div>
       }
       <label class="busqueda">Carpeta
-        <input class="form-control" name="busqueda" [(ngModel)]="busqueda" maxlength="250"
-          placeholder="Buscar ID_CI o NTRA_CI" [disabled]="cargando()" />
+        <input class="form-control" name="busqueda" [ngModel]="busqueda" (ngModelChange)="cambiarBusqueda($event)" maxlength="250"
+          placeholder="Buscar ID_CI o NTRA_CI" [disabled]="exportando() || !opciones()" />
       </label>
-      <button class="btn btn-siiid" type="submit" [disabled]="cargando() || !opciones()">Consultar</button>
     </form>
   </div>
 
@@ -50,7 +49,14 @@
       <div><span>Víctimas</span><strong>{{ r.totalVictimas | number }}</strong></div>
     </div>
     <div class="siiid-card mt-3">
-      <div class="siiid-card-header">Carpetas — {{ periodoConsultado() }}</div>
+      <div class="siiid-card-header cabecera-detalle">
+        <span>Carpetas — {{ periodoConsultado() }}</span>
+        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportando() || cargando() || r.totalCarpetas === 0" (click)="descargarExcel()">
+          <i class="fa-solid" [class.fa-file-excel]="!exportando()" [class.fa-spinner]="exportando()" [class.fa-spin]="exportando()"></i>
+          {{ exportando() ? 'Descargando...' : 'Descargar Excel del ' + tipoDescarga() }}
+        </button>
+      </div>
+      @if (errorDescarga()) { <div class="alert alert-danger m-3" role="alert">{{ errorDescarga() }}</div> }
       <div class="table-responsive">
         <table class="table table-hover mb-0">
           <thead><tr><th>Entidad</th><th>ID_CI</th><th>NTRA_CI</th><th>Fecha de inicio</th><th>Delitos</th><th>Víctimas</th><th>Acciones</th></tr></thead>

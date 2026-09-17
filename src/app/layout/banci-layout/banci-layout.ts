@@ -17,6 +17,7 @@ export class BanciLayout {
 
   menuAbierto = signal(false);
   cargaAbierta = signal(true);
+  informesAbierto = signal(true);
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
@@ -24,6 +25,7 @@ export class BanciLayout {
 
   toggleMenu(): void { this.menuAbierto.update((valor) => !valor); }
   toggleCarga(): void { this.cargaAbierta.update((valor) => !valor); }
+  toggleInformes(): void { this.informesAbierto.update((valor) => !valor); }
   toggleSesion(): void { this.sesionAbierta.update((valor) => !valor); }
   cerrarMenu(): void { this.menuAbierto.set(false); }
   cerrarMenuSiEsNavegacion(event: MouseEvent): void { if ((event.target as HTMLElement).closest('a')) this.cerrarMenu(); }
