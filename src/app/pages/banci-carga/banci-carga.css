@@ -683,3 +683,29 @@
     width: 100%;
   }
 }
+.validacion-pendiente {
+  border-left-color: #b8860b;
+  background: #fff9e6;
+  color: #624b0a;
+}
+
+.decision-banci {
+  padding: 1.25rem;
+  background: #fff9e6;
+  border-left: 4px solid #b8860b;
+}
+
+.decision-banci button + button {
+  margin-left: .75rem;
+}
+
+.recuperar-referencia {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.recuperar-referencia input {
+  max-width: 28rem;
+}

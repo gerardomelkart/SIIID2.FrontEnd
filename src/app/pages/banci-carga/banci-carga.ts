@@ -1,11 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   BanciCargaValidacionError,
   BanciCargaValidacionResponse,
 } from '../../core/models/banci-carga.models';
 import { CargaValidacionError } from '../../core/models/carga.models';
 import { BanciCargaService } from '../../core/services/banci-carga.service';
-import { mostrarAdvertencia, mostrarError, mostrarExito } from '../../core/utils/alert.utils';
+import { SessionService } from '../../core/services/session.service';
+import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 
 type TipoArchivoBanci = 'libro' | 'carpetas' | 'delitos' | 'victimas';
@@ -20,12 +23,106 @@ interface ResumenBanci {
 
 @Component({
   selector: 'app-banci-carga',
-  imports: [],
+  imports: [DatePipe],
   templateUrl: './banci-carga.html',
   styleUrl: './banci-carga.css',
 })
-export class BanciCarga {
+export class BanciCarga implements OnInit {
   private readonly banciCargaService = inject(BanciCargaService);
+  private readonly session = inject(SessionService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  pendientes = signal<BanciCargaValidacionResponse[]>([]);
+  buscandoPendientes = signal(false);
+  errorPendientes = signal('');
+  necesitaActualizar = signal(false);
+  validacionIncierta = signal(false);
+  referenciaRecuperar = signal('');
+  bloqueado = computed(() => this.cargando() || this.buscandoPendientes());
+  pendiente = computed(() => this.resultado()?.estado === 'VALIDADO_PENDIENTE');
+  rechazado = computed(() => this.resultado()?.estado === 'RECHAZADO_VALIDACION');
+
+  ngOnInit(): void {
+    this.actualizarPendientes();
+    try {
+      const referencia = localStorage.getItem(this.claveRecuperacion());
+      if (referencia) this.recuperarCarga(referencia);
+    } catch { /* La recuperación manual funciona aunque el almacenamiento no esté disponible. */ }
+  }
+
+  actualizarPendientes(): void {
+    if (this.cargando() || this.buscandoPendientes()) return;
+    this.buscandoPendientes.set(true);
+    this.errorPendientes.set('');
+    this.banciCargaService.obtenerPendientes().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (cargas) => {
+        this.pendientes.set(cargas);
+        this.buscandoPendientes.set(false);
+        this.validacionIncierta.set(false);
+      },
+      error: () => {
+        this.buscandoPendientes.set(false);
+        this.errorPendientes.set('No fue posible consultar sus pendientes. Actualice la lista antes de repetir una carga cuya respuesta se perdió.');
+      },
+    });
+  }
+
+  recuperarCarga(referencia: string): void {
+    referencia = referencia.trim();
+    if (!referencia || referencia.length > 50 || this.cargando()) return;
+    this.cargando.set(true);
+    this.mensajeLocal.set('');
+    this.banciCargaService.obtenerCarga(referencia).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (carga) => {
+        this.resultado.set(carga);
+        this.referenciaRecuperar.set(referencia);
+        this.recordarReferencia(referencia);
+        this.necesitaActualizar.set(false);
+        this.cargando.set(false);
+        this.limpiarArchivosSeleccionados();
+        this.enfocarResultado();
+      },
+      error: (error) => {
+        this.cargando.set(false);
+        this.necesitaActualizar.set(true);
+        this.mensajeLocal.set(error?.error?.mensaje || 'No se pudo recuperar el estado. Conserve la referencia e intente actualizar; no vuelva a subir los archivos.');
+      },
+    });
+  }
+
+  confirmar(aceptar: boolean): void {
+    const carga = this.resultado();
+    if (!carga || !this.pendiente() || !carga.esValido || this.bloqueado() || this.necesitaActualizar()) return;
+    this.cargando.set(true);
+    this.mensajeLocal.set('');
+    this.recordarReferencia(carga.codigoReferencia);
+    this.banciCargaService.confirmar(carga.codigoReferencia, aceptar)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: (respuesta) => {
+          // Confirmar devuelve los totales reales; las observaciones ya estaban guardadas.
+          this.resultado.set({ ...respuesta, modalidadIngreso: carga.modalidadIngreso,
+            fechaCarga: carga.fechaCarga, errores: carga.errores, advertencias: carga.advertencias });
+          this.pendientes.update((items) => items.filter((item) => item.codigoReferencia !== carga.codigoReferencia));
+          this.cargando.set(false);
+          this.enfocarResultado();
+        },
+        error: (error) => {
+          this.cargando.set(false);
+          this.necesitaActualizar.set(true);
+          this.mensajeLocal.set((error?.error?.mensaje || 'No se recibió la confirmación de la operación.') +
+            ' Pulse «Actualizar estado» para conocer el resultado antes de decidir nuevamente.');
+        },
+      });
+  }
+
+  private claveRecuperacion(): string {
+    return `siiid_banci_carga_${this.session.usuario()?.idUsuario ?? 'sin_sesion'}`;
+  }
+
+  private recordarReferencia(referencia: string): void {
+    this.referenciaRecuperar.set(referencia);
+    try { localStorage.setItem(this.claveRecuperacion(), referencia); } catch { /* Sólo se guarda la referencia. */ }
+  }
 
   archivoLibro: File | null = null;
   archivoCarpetas: File | null = null;
@@ -44,7 +141,8 @@ export class BanciCarga {
   resultadoConErrores = computed(() => !!this.resultado() && !this.resultado()!.esValido);
   resultadoCorrecto = computed(() => {
     const resultado = this.resultado();
-    return resultado?.esValido ? resultado : null;
+    return resultado?.esValido && ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado)
+      ? resultado : null;
   });
 
   resumenCarpetas = computed(() => this.construirResumen('carpetas'));
@@ -52,6 +150,7 @@ export class BanciCarga {
   resumenVictimas = computed(() => this.construirResumen('victimas'));
 
   seleccionarLibro(event: Event): void {
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
     this.archivoLibro = this.obtenerArchivo(event);
     this.archivoCarpetas = null;
     this.archivoDelitos = null;
@@ -60,18 +159,21 @@ export class BanciCarga {
   }
 
   seleccionarCarpetas(event: Event): void {
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
     this.archivoCarpetas = this.obtenerArchivo(event);
     this.archivoLibro = null;
     this.limpiarResultado();
   }
 
   seleccionarDelitos(event: Event): void {
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
     this.archivoDelitos = this.obtenerArchivo(event);
     this.archivoLibro = null;
     this.limpiarResultado();
   }
 
   seleccionarVictimas(event: Event): void {
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
     this.archivoVictimas = this.obtenerArchivo(event);
     this.archivoLibro = null;
     this.limpiarResultado();
@@ -97,6 +199,7 @@ export class BanciCarga {
   soltarArchivo(event: DragEvent, tipo: TipoArchivoBanci): void {
     event.preventDefault();
     event.stopPropagation();
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
 
     this.archivoArrastrado.set(null);
 
@@ -133,6 +236,7 @@ export class BanciCarga {
   }
 
   procesar(): void {
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar() || this.validacionIncierta()) return;
     this.mensajeLocal.set('');
     this.resultado.set(null);
 
@@ -155,33 +259,17 @@ export class BanciCarga {
 
     this.cargando.set(true);
 
-    peticion.subscribe({
-next: async (response) => {
-  this.resultado.set(response);
-  this.cargando.set(false);
-
-  if (!response.esValido) {
-    this.enfocarResultado();
-    return;
-  }
-
-  this.limpiarArchivosSeleccionados();
-  this.enfocarResultado();
-
-  if ((response.advertencias?.length ?? 0) > 0) {
-    await mostrarAdvertencia(
-      'Carga procesada con advertencias',
-      `La carga BANCI fue procesada correctamente, pero se detectaron ${response.advertencias.length} advertencias. Revise el detalle o descargue el archivo de advertencias.`,
-    );
-
-    return;
-  }
-
-  await mostrarExito(
-    'Carga BANCI completada',
-    'La información fue validada e integrada correctamente.',
-  );
-},
+    peticion.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (response) => {
+        this.resultado.set(response);
+        this.cargando.set(false);
+        if (response.estado === 'VALIDADO_PENDIENTE') {
+          this.recordarReferencia(response.codigoReferencia);
+          this.limpiarArchivosSeleccionados();
+          this.actualizarPendientes();
+        }
+        this.enfocarResultado();
+      },
       error: (error) => {
         const response = error?.error as BanciCargaValidacionResponse | undefined;
 
@@ -190,19 +278,24 @@ next: async (response) => {
           this.enfocarResultado();
         } else {
           this.mensajeLocal.set(
-            error?.error?.mensaje || 'No fue posible procesar la carga BANCI.',
+            'No se recibió el resultado de la validación. Consulte sus cargas pendientes antes de volver a subir los archivos.',
           );
+          this.validacionIncierta.set(true);
         }
 
         this.cargando.set(false);
+        if (this.validacionIncierta()) this.actualizarPendientes();
       },
     });
   }
 
 prepararNuevaValidacion(): void {
+  if (this.bloqueado() || this.pendiente() || this.necesitaActualizar() || this.validacionIncierta()) return;
   this.limpiarArchivosSeleccionados();
   this.resultado.set(null);
   this.mensajeLocal.set('');
+  this.referenciaRecuperar.set('');
+  try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
 
   setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }

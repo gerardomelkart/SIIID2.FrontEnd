@@ -1,6 +1,48 @@
 <section class="carga-banci">
 
-  @if (!resultadoConErrores()) {
+  <div class="siiid-card mb-4 recuperacion-banci">
+    <div class="siiid-card-header">Mis cargas pendientes de decisión</div>
+    <div class="p-3">
+      <p>Valide, revise las advertencias y decida sobre su propia carga. No hay aprobación administrativa.</p>
+      <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="actualizarPendientes()">
+        {{ buscandoPendientes() ? 'Consultando...' : 'Actualizar pendientes' }}
+      </button>
+      @if (errorPendientes()) { <p class="text-danger mt-2" role="alert">{{ errorPendientes() }}</p> }
+      @if (!buscandoPendientes() && !errorPendientes() && pendientes().length === 0) {
+        <p class="mt-2">No tiene cargas pendientes de decisión.</p>
+      }
+      @if (pendientes().length > 0) {
+        <div class="table-responsive mt-3">
+          <table class="table table-sm">
+            <thead><tr><th>Referencia</th><th>Fecha de carga</th><th>Registros</th><th>Advertencias</th><th>Acciones</th></tr></thead>
+            <tbody>
+              @for (carga of pendientes(); track carga.codigoReferencia) {
+                <tr>
+                  <td>{{ carga.codigoReferencia }}</td>
+                  <td>{{ carga.fechaCarga | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ carga.totalCarpetas + carga.totalDelitos + carga.totalVictimas }}</td>
+                  <td>{{ carga.totalAdvertencias }}</td>
+                  <td><button type="button" class="btn btn-sm btn-siiid" [disabled]="bloqueado()"
+                    (click)="recuperarCarga(carga.codigoReferencia)">Revisar carga</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="recuperar-referencia mt-3">
+        <label for="referencia-banci">Recuperar por referencia</label>
+        <input id="referencia-banci" class="form-control" maxlength="50" [disabled]="bloqueado()"
+          [value]="referenciaRecuperar()" (input)="referenciaRecuperar.set($any($event.target).value)" />
+        <button type="button" class="btn btn-secondary" [disabled]="bloqueado() || !referenciaRecuperar().trim()"
+          (click)="recuperarCarga(referenciaRecuperar())">Consultar estado</button>
+      </div>
+    </div>
+  </div>
+
+  @if (mensajeLocal()) { <div class="alert alert-warning" role="alert">{{ mensajeLocal() }}</div> }
+
+  @if (!resultado()) {
   <div class="siiid-card">
     <div class="siiid-card-header">
       <i class="fa-solid fa-file-arrow-up"></i>
@@ -216,20 +258,14 @@
         <button
           type="button"
           class="btn btn-siiid px-4"
-          [disabled]="cargando()"
+          [disabled]="bloqueado() || validacionIncierta() || necesitaActualizar()"
           (click)="procesar()">
 
           <i class="fa-solid fa-shield-halved"></i>
-          Validar y cargar
+          Validar archivos
         </button>
       </div>
 
-      @if (mensajeLocal()) {
-      <div class="alert alert-danger mt-3 mb-0">
-        <i class="fa-solid fa-circle-exclamation"></i>
-        {{ mensajeLocal() }}
-      </div>
-      }
     </div>
   </div>
   }
@@ -243,17 +279,17 @@
   </div>
   }
 
-  @if (resultadoConErrores()) {
+  @if (resultadoConErrores() || pendiente()) {
   <div id="resultado-banci">
-    <div class="validation-result-header">
+    <div class="validation-result-header" [class.validacion-pendiente]="pendiente()">
       <div>
         <h2>
           <i class="fa-solid fa-triangle-exclamation"></i>
-          Validación con inconsistencias
+          {{ pendiente() ? 'Validación terminada — pendiente de su decisión' : 'Validación con inconsistencias' }}
         </h2>
 
         <p>
-          Revise los errores detectados. Corrija la información y vuelva a realizar la carga.
+          {{ pendiente() ? 'Los datos todavía no se han integrado. Revise las advertencias antes de aceptar o rechazar.' : 'Revise los errores detectados. Corrija la información y vuelva a realizar la carga.' }}
         </p>
 
         <div class="pending-reference">
@@ -263,6 +299,10 @@
       </div>
 
       <div class="validation-actions">
+        @if (pendiente()) {
+        <button type="button" class="btn btn-secondary" [disabled]="bloqueado()"
+          (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar estado</button>
+        } @else {
         <button
           type="button"
           class="btn btn-siiid"
@@ -271,6 +311,7 @@
           <i class="fa-solid fa-rotate-left"></i>
           Corregir archivos y volver a cargar
         </button>
+        }
       </div>
     </div>
 
@@ -358,8 +399,12 @@
     </div>
 
     <div class="texto-ayuda-validacion">
-      La información que se muestra permite identificar las inconsistencias detectadas.
-      Es necesario atender los errores y volver a cargar el archivo.
+      @if (pendiente()) {
+        Hay {{ advertencias().length }} advertencias. Aceptar integrará la carga; rechazar conservará la validación sin modificar los datos definitivos.
+      } @else {
+        La información que se muestra permite identificar las inconsistencias detectadas.
+        Es necesario atender los errores y volver a cargar el archivo.
+      }
     </div>
 
     @if (detallesValidacion().length > 0) {
@@ -424,6 +469,15 @@
       </div>
     </div>
     }
+    @if (pendiente()) {
+      <div class="decision-banci mt-3">
+        <p>La decisión corresponde únicamente a quien subió estos archivos, incluso cuando no hay advertencias.</p>
+        <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
+          (click)="confirmar(false)">Rechazar carga</button>
+        <button type="button" class="btn btn-siiid" [disabled]="bloqueado() || necesitaActualizar()"
+          (click)="confirmar(true)">Aceptar e integrar carga</button>
+      </div>
+    }
   </div>
   }
 
@@ -472,6 +526,10 @@
         </div>
       </div>
 
+      <p class="mt-3"><strong>Resultado de integración:</strong>
+        {{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.
+      </p>
+      <button type="button" class="btn btn-siiid me-2" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva carga</button>
       @if (advertencias().length > 0) {
       <button
         type="button"
@@ -487,4 +545,23 @@
   </div>
   }
 
+  @if (rechazado()) {
+    <div id="resultado-banci" class="siiid-card p-4 mt-4">
+      <h2>Carga rechazada</h2>
+      <p>{{ resultado()?.mensaje }}</p>
+      <p>Referencia: <strong>{{ resultado()?.codigoReferencia }}</strong></p>
+      <p>Se conservan la validación y sus advertencias. No se modificaron datos definitivos.</p>
+      @if (advertencias().length > 0) {
+        <button type="button" class="btn btn-secondary me-2" [disabled]="exportandoValidacion()" (click)="descargarValidacion()">Descargar advertencias</button>
+      }
+      <button type="button" class="btn btn-siiid" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva carga</button>
+    </div>
+  }
+
+  @if (resultado() && !resultadoConErrores() && !pendiente() && !rechazado() && !resultadoCorrecto()) {
+    <div id="resultado-banci" class="alert alert-info">
+      Estado: {{ resultado()?.estado || 'Sin estado de confirmación' }}. Actualice para consultar el resultado; no repita la carga.
+      <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar estado</button>
+    </div>
+  }
 </section>

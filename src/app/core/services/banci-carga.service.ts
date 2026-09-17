@@ -8,6 +8,23 @@ import { BanciCargaValidacionResponse } from '../models/banci-carga.models';
 export class BanciCargaService {
   private readonly http = inject(HttpClient);
 
+  obtenerPendientes(): Observable<BanciCargaValidacionResponse[]> {
+    return this.http.get<BanciCargaValidacionResponse[]>(`${API_ENDPOINTS.banciCargas}/pendientes`);
+  }
+
+  obtenerCarga(codigoReferencia: string): Observable<BanciCargaValidacionResponse> {
+    return this.http.get<BanciCargaValidacionResponse>(
+      `${API_ENDPOINTS.banciCargas}/${encodeURIComponent(codigoReferencia)}`,
+    );
+  }
+
+  confirmar(codigoReferencia: string, aceptar: boolean): Observable<BanciCargaValidacionResponse> {
+    return this.http.post<BanciCargaValidacionResponse>(`${API_ENDPOINTS.banciCargas}/confirmar`, {
+      codigoReferencia,
+      aceptar,
+    });
+  }
+
   validarLibro(archivo: File): Observable<BanciCargaValidacionResponse> {
     const formData = new FormData();
     formData.append('ArchivoLibro', archivo);
