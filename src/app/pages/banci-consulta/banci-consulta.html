@@ -38,9 +38,9 @@
 
   @if (resultado(); as r) {
     <div class="resumen" aria-label="Totales del filtro aplicado">
-      <div><span>Carpetas</span><strong>{{ r.totalCarpetas | number }}</strong></div>
-      <div><span>Delitos</span><strong>{{ r.totalDelitos | number }}</strong></div>
-      <div><span>Víctimas</span><strong>{{ r.totalVictimas | number }}</strong></div>
+      <div><span>Carpetas</span><strong>{{ r.totalCarpetas | number }}</strong><i class="fa-solid fa-folder-open" aria-hidden="true"></i></div>
+      <div><span>Delitos</span><strong>{{ r.totalDelitos | number }}</strong><i class="fa-solid fa-list" aria-hidden="true"></i></div>
+      <div><span>Víctimas</span><strong>{{ r.totalVictimas | number }}</strong><i class="fa-solid fa-users" aria-hidden="true"></i></div>
     </div>
     <div class="siiid-card mt-3">
       <div class="siiid-card-header cabecera-detalle">

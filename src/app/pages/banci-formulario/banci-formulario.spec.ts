@@ -9,6 +9,8 @@ import { BanciCargaValidacionResponse } from '../../core/models/banci-carga.mode
 
 const pendiente: BanciCargaValidacionResponse = { idBanciCarga: 1, estado: 'VALIDADO_PENDIENTE', esValido: true, codigoReferencia: 'BANCI-prueba', modalidadIngreso: 'FORMULARIO', fechaCarga: null, aceptadaUsuario: null, idUsuarioConfirmacion: null, fechaConfirmacion: null, yaResuelta: false, totalCarpetas: 1, totalDelitos: 1, totalVictimas: 1, totalAltas: 0, totalActualizaciones: 0, totalSinCambio: 0, totalAdvertencias: 0, mensaje: 'Pendiente', errores: [], advertencias: [] };
 
+pendiente.vistaPrevia = { huella: 'A'.repeat(64), totalCambios: 0, resumen: [{ tipo: 'CARPETA', altas: 1, actualizaciones: 0, sinCambio: 0 }], cambios: [] };
+
 describe('Formulario BANCI', () => {
   let service: any;
   beforeEach(() => {
@@ -94,7 +96,7 @@ describe('Formulario BANCI', () => {
     service.confirmar.mockReturnValueOnce(throwError(() => ({ error: { codigo: 'BANCI_52424', mensaje: 'Ya existe' } })));
     const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit(); c.validar(); c.confirmar(true);
     expect(c.necesitaActualizar()).toBe(false); expect(c.mensaje()).toBe('Ya existe'); c.confirmar(false);
-    expect(service.confirmar).toHaveBeenLastCalledWith('BANCI-prueba', false);
+    expect(service.confirmar).toHaveBeenLastCalledWith('BANCI-prueba', false, undefined);
   });
 
   it('un doble clic no duplica la validación ni la confirmación', () => {
@@ -103,6 +105,34 @@ describe('Formulario BANCI', () => {
     expect(service.validarFormulario).toHaveBeenCalledTimes(1); validacion.next(pendiente);
     service.confirmar.mockReturnValue(new Subject()); c.confirmar(true); c.confirmar(true);
     expect(service.confirmar).toHaveBeenCalledTimes(1);
+  });
+
+  it('preselecciona la entidad de hechos para el enlace en cada delito y nueva captura', () => {
+    service.obtenerFormularioOpciones.mockReturnValue(of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [{ campo: 'id_ent_hchos', clave: '14', descripcion: 'Jalisco', idEntidadFederativa: 14 }] }));
+    const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit(); c.agregarDelito();
+    expect(c.delitos.every(d => d.datos['id_ent_hchos'] === '14' && d.datos['nom_ent_hchos'] === 'Jalisco')).toBe(true);
+    c.delitos[0].datos['id_ent_hchos'] = '15'; c.cargarOpciones(); expect(c.delitos[0].datos['id_ent_hchos']).toBe('15');
+    c.nuevaCaptura(); expect(c.delitos[0].datos['id_ent_hchos']).toBe('14');
+  });
+
+  it('sin vista previa bloquea aceptar, pero permite rechazar', () => {
+    const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit(); c.resultado.set({ ...pendiente, vistaPrevia: null });
+    c.confirmar(true); expect(service.confirmar).not.toHaveBeenCalled();
+    c.confirmar(false); expect(service.confirmar).toHaveBeenCalledWith('BANCI-prueba', false, undefined);
+  });
+
+  it('manda la huella revisada y obliga a recuperar ante una vista previa obsoleta', () => {
+    service.confirmar.mockReturnValue(throwError(() => ({ error: { codigo: 'BANCI_52425', mensaje: 'Vista previa cambió' } })));
+    const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit(); c.validar(); c.confirmar(true);
+    expect(service.confirmar).toHaveBeenCalledWith('BANCI-prueba', true, 'A'.repeat(64));
+    expect(c.necesitaActualizar()).toBe(true); c.confirmar(true); expect(service.confirmar).toHaveBeenCalledTimes(1);
+  });
+
+  it('presenta agregar y quitar arriba y abajo, sin retirar el último registro', () => {
+    const f = TestBed.createComponent(BanciFormulario); f.detectChanges();
+    const botones = [...f.nativeElement.querySelectorAll('button')] as HTMLButtonElement[];
+    for (const texto of ['Agregar delito', 'Agregar víctima', 'Quitar víctima']) expect(botones.filter(b => b.textContent?.trim() === texto)).toHaveLength(2);
+    expect(botones.filter(b => b.textContent?.includes('Quitar delito'))).toHaveLength(2);
   });
 });
 
@@ -121,5 +151,23 @@ describe('Catálogos del formulario BANCI', () => {
     f.componentInstance.cambiar('id_ent_hchos', '15');
     expect(datos.id_mun_hchos).toBe(''); expect(datos.nom_mun_hchos).toBe(''); expect(datos.nom_ent_hchos).toBe('México');
     expect(f.componentInstance.opciones('id_mun_hchos')).toHaveLength(1);
+  });
+
+  it.each([
+    ['edad', '35', true], ['edad', '121', false], ['edad', '999', true], ['dic', '256', false],
+    ['ord_apreh', '2147483648', false], ['ord_apreh', '0', true], ['cp', '01234', true],
+    ['coord_x', '-103.123456', true], ['coord_y', '20.123456', true],
+  ])('valida en HTML el campo %s con %s', (campo, valor, valido) => {
+    const f = TestBed.createComponent(BanciCampos); const datos: Record<string, string> = {};
+    f.componentRef.setInput('datos', datos); f.componentRef.setInput('campos', [{ clave: campo, etiqueta: campo, tipo: 'text' }]); f.componentRef.setInput('catalogos', []); f.detectChanges();
+    const input = f.nativeElement.querySelector('input') as HTMLInputElement; input.value = valor; input.dispatchEvent(new Event('input'));
+    expect(datos[campo]).toBe(valor); expect(input.checkValidity()).toBe(valido);
+  });
+
+  it.each(['12e3', '-1', '4.5', '12abc'])('no acepta letras, signos ni decimales en edad: %s', valor => {
+    const f = TestBed.createComponent(BanciCampos); const datos = { edad: '12' };
+    f.componentRef.setInput('datos', datos); f.componentRef.setInput('campos', [{ clave: 'edad', etiqueta: 'Edad', tipo: 'text' }]); f.componentRef.setInput('catalogos', []); f.detectChanges();
+    const input = f.nativeElement.querySelector('input') as HTMLInputElement; input.value = valor; input.dispatchEvent(new Event('input'));
+    expect(datos.edad).toBe('12'); expect(input.value).toBe('12');
   });
 });

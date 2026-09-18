@@ -1,14 +1,24 @@
+.formulario-banci {
+    padding: 6px;
+}
+
 .formulario-banci>p {
-    color: #64748b;
+    color: #667085;
+    font-size: 14px;
+    margin: 4px 0 18px;
 }
 
 h1 {
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0;
+    color: #333;
 }
 
 h2 {
-    font-size: 20px;
+    font-size: 18px;
+    margin: 0;
+    font-weight: 700;
 }
 
 fieldset {
@@ -16,6 +26,74 @@ fieldset {
     padding: 0;
     margin: 0;
     min-width: 0;
+}
+
+.module-intro {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f8f8f8;
+    border-left: 6px solid var(--siiid-guinda);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+}
+
+.intro-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 8px;
+    background: var(--siiid-guinda);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+}
+
+.module-intro p {
+    margin: 3px 0 0;
+    color: #667085;
+    font-size: 13px;
+}
+
+.pasos,
+.resumen-captura {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.pasos span {
+    background: white;
+    border: 1px solid #ddd;
+    border-left: 5px solid #bbb;
+    padding: 10px 12px;
+    font-weight: 700;
+    color: #667085;
+}
+
+.pasos .activo {
+    border-left-color: var(--siiid-guinda);
+    color: var(--siiid-guinda);
+    background: #faf5fc;
+}
+
+.resumen-captura>div {
+    padding: 12px 16px;
+    background: white;
+    border: 1px solid #e1dce5;
+    border-left: 5px solid var(--siiid-guinda);
+}
+
+.resumen-captura span,
+.resumen-captura strong {
+    display: block;
+}
+
+.resumen-captura strong {
+    color: var(--siiid-guinda);
+    font-size: 24px;
 }
 
 .cabecera,
@@ -34,16 +112,30 @@ fieldset {
     margin-top: 16px;
 }
 
+.barra-seccion {
+    padding: 12px 0;
+    margin-top: 12px;
+}
+
+.pie-delito {
+    border-top: 1px solid #e5e0e9;
+    padding-top: 12px;
+    justify-content: end;
+}
+
 .victima {
     border: 1px solid #ddd;
-    border-left: 4px solid #6f2c91;
+    border-left: 4px solid var(--siiid-guinda);
     padding: 16px;
     margin-top: 12px;
+    background: #fdfbfe;
 }
 
 summary {
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    color: #4c285e;
+    overflow-wrap: anywhere;
 }
 
 .observaciones {
@@ -51,6 +143,33 @@ summary {
     overflow: auto;
 }
 
+.siiid-card-header {
+    border-left: 5px solid var(--siiid-guinda);
+}
+
+.siiid-card-header i {
+    margin-right: 8px;
+}
+
 #resultado-formulario-banci {
     scroll-margin-top: 24px;
+}
+
+@media (max-width: 650px) {
+    .pasos {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .resumen-captura {
+        gap: 6px;
+    }
+
+    .resumen-captura>div {
+        padding: 10px;
+    }
+
+    .acciones>button {
+        width: 100%;
+    }
 }

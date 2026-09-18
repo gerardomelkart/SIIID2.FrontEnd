@@ -9,6 +9,7 @@ import { BanciCargaService } from '../../core/services/banci-carga.service';
 import { SessionService } from '../../core/services/session.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
+import { BanciVistaPreviaComponent } from './banci-vista-previa';
 
 type TipoArchivoBanci = 'libro' | 'carpetas' | 'delitos' | 'victimas';
 type TipoResumen = 'carpetas' | 'delitos' | 'victimas';
@@ -22,7 +23,7 @@ interface ResumenBanci {
 
 @Component({
   selector: 'app-banci-carga',
-  imports: [],
+  imports: [BanciVistaPreviaComponent],
   templateUrl: './banci-carga.html',
   styleUrl: './banci-carga.css',
 })
@@ -73,10 +74,11 @@ export class BanciCarga implements OnInit {
   confirmar(aceptar: boolean): void {
     const carga = this.resultado();
     if (!carga || !this.pendiente() || !carga.esValido || this.bloqueado() || this.necesitaActualizar()) return;
+    if (aceptar && !carga.vistaPrevia?.huella) { this.mensajeLocal.set('Actualice el estado y revise la vista previa antes de aceptar.'); return; }
     this.cargando.set(true);
     this.mensajeLocal.set('');
     this.recordarReferencia(carga.codigoReferencia);
-    this.banciCargaService.confirmar(carga.codigoReferencia, aceptar)
+    this.banciCargaService.confirmar(carga.codigoReferencia, aceptar, aceptar ? carga.vistaPrevia?.huella : undefined)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (respuesta) => {
           // Confirmar devuelve los totales reales; las observaciones ya estaban guardadas.

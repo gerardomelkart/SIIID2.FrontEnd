@@ -8,6 +8,7 @@ import { BanciCargaValidacionResponse } from '../../core/models/banci-carga.mode
 
 function carga(estado = 'VALIDADO_PENDIENTE', advertencias = 0): BanciCargaValidacionResponse {
   return {
+    vistaPrevia: { huella: 'A'.repeat(64), totalCambios: 0, resumen: [{ tipo: 'CARPETA', altas: 210, actualizaciones: 0, sinCambio: 0 }], cambios: [] },
     idBanciCarga: 7, codigoReferencia: 'BANCI_PRUEBA_7', modalidadIngreso: 'LIBRO_EXCEL',
     estado, fechaCarga: '2026-09-16T10:00:00', aceptadaUsuario: null,
     idUsuarioConfirmacion: null, fechaConfirmacion: null, yaResuelta: false,
@@ -92,7 +93,7 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     c.resultado.set(carga('VALIDADO_PENDIENTE', 641));
     servicio.confirmar.mockReturnValue(of({ ...carga('PROCESADO_CON_ADVERTENCIAS'), totalSinCambio: 669 }));
     c.confirmar(true);
-    expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', true);
+    expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', true, 'A'.repeat(64));
     expect(c.resultadoCorrecto()?.totalSinCambio).toBe(669);
     expect(c.advertencias()).toHaveLength(641);
     expect(c.pendiente()).toBe(false);
@@ -103,7 +104,7 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     c.resultado.set(carga());
     servicio.confirmar.mockReturnValue(of(carga('RECHAZADO_VALIDACION')));
     c.confirmar(false);
-    expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', false);
+    expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', false, undefined);
     expect(c.rechazado()).toBe(true);
     expect(c.resultadoCorrecto()).toBeNull();
     c.confirmar(true);
@@ -189,5 +190,18 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     expect(c.pendiente()).toBe(true);
     expect(servicio.validarLibro).not.toHaveBeenCalled();
     expect(servicio.validarArchivos).not.toHaveBeenCalled();
+  });
+
+  it('avisa las actualizaciones antes de aceptar y muestra el dato actual y propuesto', () => {
+    const f = TestBed.createComponent(BanciCarga);
+    f.componentInstance.resultado.set({ ...carga(), vistaPrevia: { huella: 'B'.repeat(64), totalCambios: 1, resumen: [{ tipo: 'CARPETA', altas: 0, actualizaciones: 1, sinCambio: 209 }], cambios: [{ tipo: 'CARPETA', idCi: 'CI-PRUEBA', idDelito: null, idVictima: null, campo: 'rmen_de_hchos', anterior: 'Texto anterior', nuevo: 'Texto nuevo' }] } });
+    f.detectChanges(); expect(f.nativeElement.textContent).toContain('actualizará información que ya está registrada');
+    expect(f.nativeElement.textContent).toContain('Texto anterior'); expect(f.nativeElement.textContent).toContain('Texto nuevo'); expect(servicio.confirmar).not.toHaveBeenCalled();
+    f.componentInstance.confirmar(true); expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', true, 'B'.repeat(64));
+  });
+
+  it('no acepta una carga si la vista previa no está disponible', () => {
+    const c = TestBed.createComponent(BanciCarga).componentInstance; c.resultado.set({ ...carga(), vistaPrevia: null }); c.confirmar(true);
+    expect(servicio.confirmar).not.toHaveBeenCalled(); c.confirmar(false); expect(servicio.confirmar).toHaveBeenCalledTimes(1);
   });
 });

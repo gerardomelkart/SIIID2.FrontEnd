@@ -435,10 +435,11 @@
     }
     @if (pendiente()) {
       <div class="decision-banci mt-3">
+        <app-banci-vista-previa [previa]="resultado()?.vistaPrevia" />
         <p>La decisión corresponde únicamente a quien subió estos archivos, incluso cuando no hay advertencias.</p>
         <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
           (click)="confirmar(false)">Rechazar carga</button>
-        <button type="button" class="btn btn-siiid" [disabled]="bloqueado() || necesitaActualizar()"
+        <button type="button" class="btn btn-siiid" [disabled]="bloqueado() || necesitaActualizar() || !resultado()?.vistaPrevia?.huella"
           (click)="confirmar(true)">Aceptar e integrar carga</button>
       </div>
     }

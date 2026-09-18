@@ -8,10 +8,11 @@ import { BanciCargaValidacionResponse } from '../../core/models/banci-carga.mode
 import { BanciFormularioDelito, BanciFormularioOpciones } from '../../core/models/banci-formulario.models';
 import { BanciCampos } from './banci-campos';
 import { CAMPOS_CARPETAS, CAMPOS_DELITOS, CAMPOS_VICTIMAS } from './banci-formulario-campos';
+import { BanciVistaPreviaComponent } from '../banci-carga/banci-vista-previa';
 
 @Component({
   selector: 'app-banci-formulario',
-  imports: [FormsModule, RouterLink, BanciCampos],
+  imports: [FormsModule, RouterLink, BanciCampos, BanciVistaPreviaComponent],
   templateUrl: './banci-formulario.html',
   styleUrl: './banci-formulario.css',
 })
@@ -52,13 +53,20 @@ export class BanciFormulario implements OnInit {
       next: opciones => {
         this.opciones.set(opciones);
         this.entidad = opciones.esSuperUsuario ? null : opciones.idEntidadFederativa;
+        for (const delito of this.delitos) this.preseleccionarEntidad(delito);
         this.cargandoOpciones.set(false);
       },
       error: e => { this.cargandoOpciones.set(false); this.errorOpciones.set(e?.error?.mensaje || 'No fue posible cargar las opciones del formulario.'); },
     });
   }
 
-  agregarDelito(): void { if (!this.bloqueado() && this.delitos.length < 100) this.delitos.push({ datos: {}, victimas: [{}] }); }
+  private preseleccionarEntidad(delito: BanciFormularioDelito): void {
+    const opciones = this.opciones();
+    if (!opciones || opciones.esSuperUsuario || !opciones.idEntidadFederativa || delito.datos['id_ent_hchos']) return;
+    const entidad = opciones.catalogos.find(c => c.campo === 'id_ent_hchos' && Number(c.clave) === opciones.idEntidadFederativa);
+    if (entidad) { delito.datos['id_ent_hchos'] = entidad.clave; delito.datos['nom_ent_hchos'] = entidad.descripcion; }
+  }
+  agregarDelito(): void { if (!this.bloqueado() && this.delitos.length < 100) { const delito = { datos: {}, victimas: [{}] }; this.preseleccionarEntidad(delito); this.delitos.push(delito); } }
   quitarDelito(indice: number): void { if (!this.bloqueado() && this.delitos.length > 1) this.delitos.splice(indice, 1); }
   agregarVictima(delito: BanciFormularioDelito): void { if (!this.bloqueado() && delito.victimas.length < 500 && this.totalVictimas() < 1000) delito.victimas.push({}); }
   quitarVictima(delito: BanciFormularioDelito, indice: number): void { if (!this.bloqueado() && delito.victimas.length > 1) delito.victimas.splice(indice, 1); }
@@ -85,9 +93,10 @@ export class BanciFormulario implements OnInit {
   confirmar(aceptar: boolean): void {
     const carga = this.resultado();
     if (!carga || !this.pendiente() || this.cargando() || this.necesitaActualizar()) return;
+    if (aceptar && !carga.vistaPrevia?.huella) { this.mensaje.set('Actualice el estado y revise la vista previa antes de aceptar.'); return; }
     this.cargando.set(true);
     this.mensaje.set('');
-    this.service.confirmar(carga.codigoReferencia, aceptar).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.service.confirmar(carga.codigoReferencia, aceptar, aceptar ? carga.vistaPrevia?.huella : undefined).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: respuesta => { this.recibir({ ...respuesta, modalidadIngreso: 'FORMULARIO', errores: carga.errores, advertencias: carga.advertencias }); this.enfocarResultado(); },
       error: e => {
         this.cargando.set(false);
@@ -116,6 +125,7 @@ export class BanciFormulario implements OnInit {
     if (this.cargando() || this.pendiente() || this.necesitaActualizar()) return;
     this.carpeta = {};
     this.delitos = [{ datos: {}, victimas: [{}] }];
+    this.preseleccionarEntidad(this.delitos[0]);
     this.resultado.set(null);
     this.mensaje.set('');
     this.olvidarReferencia();

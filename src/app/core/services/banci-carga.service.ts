@@ -19,10 +19,11 @@ export class BanciCargaService {
     );
   }
 
-  confirmar(codigoReferencia: string, aceptar: boolean): Observable<BanciCargaValidacionResponse> {
+  confirmar(codigoReferencia: string, aceptar: boolean, huellaVistaPrevia?: string): Observable<BanciCargaValidacionResponse> {
     return this.http.post<BanciCargaValidacionResponse>(`${API_ENDPOINTS.banciCargas}/confirmar`, {
       codigoReferencia,
       aceptar,
+      ...(aceptar && huellaVistaPrevia ? { huellaVistaPrevia } : {}),
     });
   }
 

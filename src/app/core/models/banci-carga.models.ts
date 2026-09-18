@@ -9,6 +9,7 @@ export interface BanciCargaValidacionError {
 }
 
 export interface BanciCargaValidacionResponse {
+  vistaPrevia?: BanciVistaPrevia | null;
   idBanciCarga: number;
   estado: string;
   fechaCarga: string | null;
@@ -30,3 +31,5 @@ export interface BanciCargaValidacionResponse {
   errores: BanciCargaValidacionError[];
   advertencias: BanciCargaValidacionError[];
 }
+
+export interface BanciVistaPrevia { huella: string; totalCambios: number; resumen: { tipo: string; altas: number; actualizaciones: number; sinCambio: number }[]; cambios: { tipo: string; idCi: string; idDelito: string | null; idVictima: string | null; campo: string; anterior: string | null; nuevo: string | null }[]; }
