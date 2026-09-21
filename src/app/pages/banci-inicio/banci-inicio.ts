@@ -12,7 +12,7 @@ export class BanciInicio {
   private readonly sessionService = inject(SessionService);
 
   usuario = this.sessionService.usuario;
-  puedeCapturar = computed(() => ['SUPER_USUARIO', 'ENLACE_ESTATAL'].includes(this.usuario()?.rol ?? ''));
+  puedeCapturar = computed(() => this.usuario()?.rol === 'SUPER_USUARIO' || (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaCarga()));
 
   nombreUsuario = computed(() => {
     return this.usuario()?.nombreCompleto || this.usuario()?.nombre || this.usuario()?.usuario || 'usuario';

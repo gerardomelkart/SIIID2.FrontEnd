@@ -261,6 +261,7 @@ export const routes: Routes = [
       modulo: 'BANCI',
     },
     children: [
+      { path: 'usuarios', loadComponent: () => import('./pages/banci-usuarios/banci-usuarios').then(m => m.BanciUsuarios), canActivate: [permissionGuard], data: { roles: [ROLES.SUPER_USUARIO] } },
       {
         path: '',
         loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio),
@@ -269,13 +270,13 @@ export const routes: Routes = [
         path: 'carga-masiva',
         loadComponent: () => import('./pages/banci-carga/banci-carga').then((m) => m.BanciCarga),
         canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL] },
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
       },
       {
         path: 'formulario',
         loadComponent: () => import('./pages/banci-formulario/banci-formulario').then((m) => m.BanciFormulario),
         canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL] },
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
       },
       {
         path: 'consulta',

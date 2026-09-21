@@ -51,6 +51,35 @@ describe('BANCI: decisión explícita de la propia carga', () => {
 
   afterEach(() => { TestBed.resetTestingModule(); vi.restoreAllMocks(); });
 
+  it('oculta la referencia y el botón lleva a la decisión', () => {
+    const fixture = TestBed.createComponent(BanciCarga); fixture.detectChanges();
+    const c = fixture.componentInstance; c.resultado.set(carga()); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('BANCI_PRUEBA_7');
+    const destino = fixture.nativeElement.querySelector('#decision-banci');
+    const buscar = vi.spyOn(document, 'getElementById').mockReturnValue(destino);
+    c.irADecision();
+    expect(buscar).toHaveBeenCalledWith('decision-banci');
+    expect(destino.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(fixture.nativeElement.textContent).toContain('Revisar y decidir');
+  });
+
+  it('no acepta una actualización sin permiso y sí permite rechazarla', () => {
+    const fixture = TestBed.createComponent(BanciCarga); fixture.detectChanges();
+    const c = fixture.componentInstance; const respuesta = carga();
+    respuesta.vistaPrevia!.puedeAceptar = false; respuesta.vistaPrevia!.motivoBloqueo = 'Actualización deshabilitada';
+    c.resultado.set(respuesta); fixture.detectChanges();
+    c.confirmar(true); expect(servicio.confirmar).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Actualización deshabilitada');
+    c.confirmar(false); expect(servicio.confirmar).toHaveBeenCalledWith(respuesta.codigoReferencia, false, undefined);
+  });
+
+  it('un estado transitorio conserva la recuperación sin ofrecer decisión inexistente', () => {
+    const fixture = TestBed.createComponent(BanciCarga); fixture.detectChanges();
+    fixture.componentInstance.resultado.set(carga('PROCESANDO')); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Actualizar estado');
+    expect(fixture.nativeElement.textContent).not.toContain('Revisar y decidir');
+  });
+
   it.each([0, 641])('validar con %i advertencias no integra automáticamente', (advertencias) => {
     servicio.validarLibro.mockReturnValue(of(carga('VALIDADO_PENDIENTE', advertencias)));
     const fixture = TestBed.createComponent(BanciCarga);

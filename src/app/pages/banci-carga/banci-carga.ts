@@ -66,7 +66,7 @@ export class BanciCarga implements OnInit {
         if (error?.status === 404) {
           try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
         }
-        this.mensajeLocal.set(error?.error?.mensaje || 'No se pudo recuperar el estado. Conserve la referencia e intente actualizar; no vuelva a subir los archivos.');
+        this.mensajeLocal.set(error?.error?.mensaje || 'No se pudo recuperar el estado. Intente recuperar el estado; no vuelva a subir los archivos.');
       },
     });
   }
@@ -74,6 +74,7 @@ export class BanciCarga implements OnInit {
   confirmar(aceptar: boolean): void {
     const carga = this.resultado();
     if (!carga || !this.pendiente() || !carga.esValido || this.bloqueado() || this.necesitaActualizar()) return;
+    if (aceptar && carga.vistaPrevia?.puedeAceptar === false) { this.mensajeLocal.set(carga.vistaPrevia.motivoBloqueo || 'No tiene permisos para integrar esta carga.'); return; }
     if (aceptar && !carga.vistaPrevia?.huella) { this.mensajeLocal.set('Actualice el estado y revise la vista previa antes de aceptar.'); return; }
     this.cargando.set(true);
     this.mensajeLocal.set('');
@@ -91,7 +92,7 @@ export class BanciCarga implements OnInit {
           this.cargando.set(false);
           this.necesitaActualizar.set(true);
           this.mensajeLocal.set((error?.error?.mensaje || 'No se recibió la confirmación de la operación.') +
-            ' Pulse «Actualizar estado» para conocer el resultado antes de decidir nuevamente.');
+            ' Pulse «Actualizar revisión» para conocer el resultado antes de decidir nuevamente.');
         },
       });
   }
@@ -283,12 +284,11 @@ prepararNuevaValidacion(): void {
 
     try {
       const resultado = this.resultado();
-      const referencia = resultado?.codigoReferencia || 'sin_referencia';
 
       const exportado = await exportarValidacionExcel(
         this.errores().map((detalle) => this.convertirDetalle(detalle)),
         this.advertencias().map((detalle) => this.convertirDetalle(detalle)),
-        `validacion_banci_${referencia}`,
+        `validacion_banci_${new Date().toISOString().slice(0, 10)}`,
       );
 
       if (!exportado) {
@@ -403,10 +403,13 @@ prepararNuevaValidacion(): void {
     this.resultado.set(null);
   }
 
+  irADecision(): void { const destino = document.getElementById('decision-banci'); destino?.focus({ preventScroll: true }); destino?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  verAdvertencias(): void { document.getElementById('resultado-banci')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
   private enfocarResultado(): void {
     setTimeout(() => {
       document
-        .getElementById('resultado-banci')
+        .getElementById(this.pendiente() ? 'decision-banci' : 'resultado-banci')
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }

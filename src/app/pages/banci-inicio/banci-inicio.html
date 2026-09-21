@@ -104,6 +104,8 @@
         </a>
       }
 
+      @if (usuario()?.rol === 'SUPER_USUARIO') { <a class="quick-link" routerLink="/banci/usuarios"><div class="quick-icon"><i class="fa-solid fa-users"></i></div><div><strong>Usuarios</strong><span>Administre el acceso y los permisos de BANCI.</span></div></a> }
+
       <div class="quick-link quick-link-pendiente">
         <div class="quick-icon">
           <i class="fa-solid fa-clock-rotate-left"></i>

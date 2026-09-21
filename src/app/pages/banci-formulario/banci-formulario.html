@@ -66,7 +66,6 @@
       <div class="siiid-card-header">{{ terminado() ? 'Carpeta registrada' : pendiente() ? 'Revise la captura antes de aceptar' : 'Resultado de la captura' }}</div>
       <div class="p-3">
         <p>{{ r.mensaje }}</p>
-        <p>Referencia: <strong>{{ r.codigoReferencia }}</strong></p>
         <p>{{ r.totalCarpetas }} carpetas · {{ r.totalDelitos }} delitos · {{ r.totalVictimas }} víctimas</p>
         @if (r.errores.length || r.advertencias.length) {
           <div class="table-responsive observaciones">
@@ -80,12 +79,12 @@
           </div>
         }
         @if (pendiente()) {
-          <app-banci-vista-previa [previa]="r.vistaPrevia" />
+          <div id="decision-formulario-banci" tabindex="-1"><app-banci-vista-previa [previa]="r.vistaPrevia" /></div>
           <p>Los datos aún no están integrados. Revise las advertencias y decida sobre su captura.</p>
           <div class="acciones">
             <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="actualizarEstado()">Actualizar estado</button>
             <button type="button" class="btn btn-outline-danger" [disabled]="cargando() || necesitaActualizar()" (click)="confirmar(false)">Rechazar captura</button>
-            <button type="button" class="btn btn-siiid" [disabled]="cargando() || necesitaActualizar() || !r.vistaPrevia?.huella" (click)="confirmar(true)">Aceptar y registrar carpeta</button>
+            <button type="button" class="btn btn-siiid" [disabled]="cargando() || necesitaActualizar() || !r.vistaPrevia?.huella || r.vistaPrevia?.puedeAceptar === false" (click)="confirmar(true)">Aceptar y registrar carpeta</button>
           </div>
         } @else if (terminado()) {
           <p>{{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.</p>

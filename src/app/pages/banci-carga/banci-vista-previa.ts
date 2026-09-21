@@ -6,6 +6,7 @@ import { BanciVistaPrevia } from '../../core/models/banci-carga.models';
   template: `
     @if (previa(); as p) {
       <section class="previa" aria-label="Cambios antes de aceptar">
+        @if (p.puedeAceptar === false) { <p class="alert alert-warning" role="alert">{{ p.motivoBloqueo || 'No tiene permisos para integrar esta carga.' }}</p> }
         <h3><i class="fa-solid fa-code-compare"></i> Lo que se integrará al aceptar</h3>
         <p>Las carpetas existentes se identifican por entidad e ID_CI, no por su fecha. Los campos vacíos conservan la información anterior.</p>
         <div class="table-responsive"><table class="table table-sm">

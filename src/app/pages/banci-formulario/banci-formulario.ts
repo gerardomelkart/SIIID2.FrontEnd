@@ -93,6 +93,7 @@ export class BanciFormulario implements OnInit {
   confirmar(aceptar: boolean): void {
     const carga = this.resultado();
     if (!carga || !this.pendiente() || this.cargando() || this.necesitaActualizar()) return;
+    if (aceptar && carga.vistaPrevia?.puedeAceptar === false) { this.mensaje.set(carga.vistaPrevia.motivoBloqueo || 'No tiene permisos para integrar esta carga.'); return; }
     if (aceptar && !carga.vistaPrevia?.huella) { this.mensaje.set('Actualice el estado y revise la vista previa antes de aceptar.'); return; }
     this.cargando.set(true);
     this.mensaje.set('');
@@ -148,5 +149,5 @@ export class BanciFormulario implements OnInit {
 
   private claveReferencia(): string { return `siiid_banci_formulario_${this.session.usuario()?.idUsuario ?? 'sin_sesion'}`; }
   private olvidarReferencia(): void { this.referencia.set(''); try { localStorage.removeItem(this.claveReferencia()); } catch { /* Sin almacenamiento local. */ } }
-  private enfocarResultado(): void { setTimeout(() => document.getElementById('resultado-formulario-banci')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }
+  private enfocarResultado(): void { setTimeout(() => document.getElementById(this.pendiente() ? 'decision-formulario-banci' : 'resultado-formulario-banci')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }
 }

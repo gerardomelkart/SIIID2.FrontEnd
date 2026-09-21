@@ -18,10 +18,11 @@ export class BanciLayout {
   menuAbierto = signal(false);
   cargaAbierta = signal(true);
   informesAbierto = signal(true);
+  administracionAbierta = signal(true);
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
-  puedeCapturar = computed(() => ['SUPER_USUARIO', 'ENLACE_ESTATAL'].includes(this.usuario()?.rol ?? ''));
+  puedeCapturar = computed(() => this.usuario()?.rol === 'SUPER_USUARIO' || (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaCarga()));
   puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
   toggleMenu(): void { this.menuAbierto.update((valor) => !valor); }

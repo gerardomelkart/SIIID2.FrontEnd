@@ -32,4 +32,4 @@ export interface BanciCargaValidacionResponse {
   advertencias: BanciCargaValidacionError[];
 }
 
-export interface BanciVistaPrevia { huella: string; totalCambios: number; resumen: { tipo: string; altas: number; actualizaciones: number; sinCambio: number }[]; cambios: { tipo: string; idCi: string; idDelito: string | null; idVictima: string | null; campo: string; anterior: string | null; nuevo: string | null }[]; }
+export interface BanciVistaPrevia { puedeAceptar?: boolean; motivoBloqueo?: string | null; huella: string; totalCambios: number; resumen: { tipo: string; altas: number; actualizaciones: number; sinCambio: number }[]; cambios: { tipo: string; idCi: string; idDelito: string | null; idVictima: string | null; campo: string; anterior: string | null; nuevo: string | null }[]; }

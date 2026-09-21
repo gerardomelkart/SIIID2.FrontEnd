@@ -60,6 +60,10 @@
           </a>
         }
 
+        @if (usuario()?.rol === 'SUPER_USUARIO') {
+          <button type="button" class="menu-link menu-button" (click)="administracionAbierta.set(!administracionAbierta())"><span><i class="fa-solid fa-screwdriver-wrench"></i> Administración</span></button>
+          @if (administracionAbierta()) { <a class="menu-link level-2" routerLink="/banci/usuarios" routerLinkActive="active"><i class="fa-solid fa-users"></i> Usuarios</a> }
+        }
         <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
           <span>
             <i class="fa-solid fa-user"></i>
