@@ -16,7 +16,14 @@ export class SeleccionarModulo {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  modulos = this.sessionService.modulos;
+  modulos = computed(() => {
+    const orden = ['MENSUAL', 'FEDERAL', 'SEMANAL', 'BANCI'];
+    return [...this.sessionService.modulos()].sort(
+      (a, b) =>
+        (orden.indexOf(a.clave) < 0 ? orden.length : orden.indexOf(a.clave)) -
+        (orden.indexOf(b.clave) < 0 ? orden.length : orden.indexOf(b.clave)),
+    );
+  });
 
   nombreUsuario = computed(() => {
     return this.sessionService.usuario()?.nombreCompleto || this.sessionService.usuario()?.usuario;
