@@ -9,6 +9,7 @@ export interface BanciCargaValidacionError {
 }
 
 export interface BanciCargaValidacionResponse {
+  versionFormato?: number;
   vistaPrevia?: BanciVistaPrevia | null;
   idBanciCarga: number;
   estado: string;

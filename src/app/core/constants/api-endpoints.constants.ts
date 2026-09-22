@@ -24,5 +24,6 @@ export const API_ENDPOINTS = {
   banciUsuarios: `${API_BASE_URL}/banci/usuarios`,
   federalUsuarios: `${API_BASE_URL}/federal/usuarios`,
   banciCargas: `${API_BASE_URL}/banci/cargas`,
+  banciActualizaciones: `${API_BASE_URL}/banci/actualizaciones`,
   notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
 } as const;
