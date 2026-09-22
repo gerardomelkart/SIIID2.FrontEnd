@@ -11,17 +11,17 @@ import { BanciFormularioCampo, BanciFormularioOpcion } from '../../core/models/b
         <label [class.ancho]="campo.tipo === 'textarea'">
           <span>{{ campo.etiqueta }} @if (campo.obligatorio) { <b aria-label="obligatorio">*</b> }</span>
           @if (campo.tipo === 'select') {
-            <select class="form-select" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [required]="!!campo.obligatorio">
+            <select class="form-select" [attr.id]="idCampo(campo.clave)" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [required]="!!campo.obligatorio">
               <option value="">Seleccione...</option>
               @for (opcion of opciones(campo.clave); track opcion.clave) { <option [value]="opcion.clave">{{ opcion.clave }} · {{ opcion.descripcion }}</option> }
             </select>
           } @else if (campo.tipo === 'textarea') {
-            <textarea class="form-control" rows="3" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [attr.maxlength]="campo.maximo" [required]="!!campo.obligatorio"></textarea>
+            <textarea class="form-control" [attr.id]="idCampo(campo.clave)" rows="3" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [attr.maxlength]="campo.maximo" [required]="!!campo.obligatorio"></textarea>
           } @else if (regla(campo.clave); as r) {
-            <input class="form-control" type="text" [attr.inputmode]="r.decimal ? 'decimal' : 'numeric'" [value]="datos()[campo.clave] || ''" (input)="capturarNumero(campo.clave, $event)" [disabled]="bloqueado()" [attr.maxlength]="r.longitud" [attr.pattern]="r.patron" [required]="!!campo.obligatorio" [attr.title]="r.ayuda" />
+            <input class="form-control" [attr.id]="idCampo(campo.clave)" type="text" [attr.inputmode]="r.decimal ? 'decimal' : 'numeric'" [value]="datos()[campo.clave] || ''" (input)="capturarNumero(campo.clave, $event)" [disabled]="bloqueado()" [attr.maxlength]="r.longitud" [attr.pattern]="r.patron" [required]="!!campo.obligatorio" [attr.title]="r.ayuda" />
             <small>{{ r.ayuda }}</small>
           } @else {
-            <input class="form-control" [type]="campo.tipo" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [attr.maxlength]="campo.maximo" [required]="!!campo.obligatorio" [attr.step]="campo.tipo === 'time' ? 1 : null" />
+            <input class="form-control" [attr.id]="idCampo(campo.clave)" [type]="campo.tipo" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [attr.maxlength]="campo.maximo" [required]="!!campo.obligatorio" [attr.step]="campo.tipo === 'time' ? 1 : null" />
           }
           @if (campo.ayuda) { <small>{{ campo.ayuda }}</small> }
         </label>
@@ -42,6 +42,11 @@ export class BanciCampos {
   datos = input.required<Record<string, string>>();
   catalogos = input.required<BanciFormularioOpcion[]>();
   bloqueado = input(false);
+  idPrefijo = input('');
+
+  idCampo(clave: string): string | null {
+    return this.idPrefijo() ? `${this.idPrefijo()}-${clave}` : null;
+  }
 
   regla(campo: string): { decimal: boolean; longitud: number; patron: string; maximo: number; ayuda: string } | null {
     if (campo === 'edad') return { decimal: false, longitud: 3, patron: '(?:[0-9]{1,2}|1[01][0-9]|120|999)', maximo: 999, ayuda: 'De 0 a 120 años, o 999 para no identificado.' };

@@ -1,3 +1,4 @@
+import { BanciResumenRegistro } from '../models/banci-resumen.models';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -9,6 +10,10 @@ import { BanciFormularioOpciones, BanciFormularioRequest } from '../models/banci
 export class BanciCargaService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = API_ENDPOINTS.banciCargas;
+
+  obtenerResumen(referencia: string): Observable<BanciResumenRegistro[]> {
+    return this.http.get<BanciResumenRegistro[]>(`${this.apiUrl}/${encodeURIComponent(referencia)}/resumen`);
+  }
 
   obtenerPendientes(): Observable<BanciCargaValidacionResponse[]> {
     return this.http.get<BanciCargaValidacionResponse[]>(`${this.apiUrl}/pendientes`);

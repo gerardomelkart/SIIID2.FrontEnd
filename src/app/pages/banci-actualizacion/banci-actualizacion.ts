@@ -70,6 +70,17 @@ export class BanciActualizacion implements OnInit {
   archivo: File | null = null;
   edicion: Record<string, string> = {};
   aceptarAdvertencias = false;
+  modalidad = signal<'manual' | 'masiva'>('manual');
+  pestanaManual = signal<'localizacion' | 'personales'>('localizacion');
+  archivoArrastrado = signal(false);
+  mostrarResumen = signal(false);
+  cambiosConfirmados: BanciActualizacionResultado['cambios'] = [];
+  private referenciaConfirmada = '';
+
+  readonly camposLocalizacion = this.campos.filter(c =>
+    ['localizado_o_no_localizado','con_o_sin_vida','fecha_localizacion','voluntaria_o_fue_delito',
+     'delito','acciones_busqueda','obs'].includes(c.clave));
+  readonly camposPersonales = this.campos.filter(c => !this.camposLocalizacion.includes(c));
 
   readonly esSuperUsuario = computed(() => this.opciones()?.esSuperUsuario === true);
   readonly pendiente = computed(() => this.resultado()?.estado === 'PENDIENTE' && !!this.referencia());
@@ -163,6 +174,7 @@ export class BanciActualizacion implements OnInit {
     if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
     this.seleccionada.set(victima);
     this.edicion = {};
+    this.pestanaManual.set('localizacion');
     this.archivo = null;
     this.resultado.set(null);
     this.confirmacion.set(null);
@@ -213,19 +225,51 @@ export class BanciActualizacion implements OnInit {
     }));
   }
 
-  seleccionarArchivo(event: Event): void {
+  cambiarModalidad(modo: 'manual' | 'masiva'): void {
     if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+    this.modalidad.set(modo);
+    this.mensaje.set('');
+  }
 
-    const archivo = (event.target as HTMLInputElement).files?.item(0) ?? null;
+  arrastrarArchivo(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.ocupado() && !this.pendiente() && !this.necesitaActualizar()) this.archivoArrastrado.set(true);
+  }
 
+  salirArrastreArchivo(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(false);
+  }
+
+  soltarArchivo(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.archivoArrastrado.set(false);
+    if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+    this.asignarArchivo(event.dataTransfer?.files.item(0) ?? null);
+  }
+
+  private asignarArchivo(archivo: File | null): void {
     if (archivo && !archivo.name.toLowerCase().endsWith('.xlsx')) {
       this.archivo = null;
       this.mensaje.set('Seleccione un archivo Excel .xlsx.');
       return;
     }
-
+    if (archivo && archivo.size > 20 * 1024 * 1024) {
+      this.archivo = null;
+      this.mensaje.set('El archivo supera 20 MB. Reduzca su tamaño antes de validar.');
+      return;
+    }
     this.archivo = archivo;
     this.mensaje.set('');
+  }
+
+  seleccionarArchivo(event: Event): void {
+    if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+
+    this.asignarArchivo((event.target as HTMLInputElement).files?.item(0) ?? null);
   }
 
   validarExcel(): void {
@@ -360,6 +404,14 @@ export class BanciActualizacion implements OnInit {
       aceptarAdvertencias: aceptar && resultado.advertencias.length > 0 && this.aceptarAdvertencias
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: respuesta => {
+        if (aceptar && ['INTEGRADA'].includes(respuesta.estado)) {
+          this.cambiosConfirmados = resultado.cambios;
+          this.referenciaConfirmada = referencia;
+          this.mostrarResumen.set(true);
+        } else {
+          this.cambiosConfirmados = [];
+          this.referenciaConfirmada = '';
+        }
         this.confirmacion.set(respuesta);
         this.resultado.set(null);
         this.cargandoOperacion.set(false);
@@ -408,11 +460,26 @@ export class BanciActualizacion implements OnInit {
     });
   }
 
+  async descargarResumenActualizacion(): Promise<void> {
+    if (!this.confirmacion() || !this.cambiosConfirmados.length || !this.referenciaConfirmada) return;
+    const { exportarFilasExcel } = await import('../../core/utils/excel-export.utils');
+    const filas = this.cambiosConfirmados.map(c => ({
+      Referencia: this.referenciaConfirmada, NO_BANCI: c.no_banci, ID_CI: c.id_ci,
+      ID_DELITO: c.id_delito, ID_VICF: c.id_vicf,
+      Campo: c.campo, Anterior: c.anterior ?? '', Nuevo: c.nuevo ?? ''
+    }));
+    await exportarFilasExcel(filas, `BANCI_actualizacion_${this.referenciaConfirmada}.xlsx`, 'Cambios');
+  }
+
   nuevaOperacion(): void {
     if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
 
     this.resultado.set(null);
     this.confirmacion.set(null);
+    this.mostrarResumen.set(false);
+    this.cambiosConfirmados = [];
+    this.referenciaConfirmada = '';
+    this.pestanaManual.set('localizacion');
     this.seleccionada.set(null);
     this.busqueda.set(null);
     this.textoBusqueda = '';

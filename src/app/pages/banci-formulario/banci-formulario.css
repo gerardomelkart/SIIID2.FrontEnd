@@ -173,3 +173,14 @@ summary {
         width: 100%;
     }
 }
+/* Revisión de advertencias: contraste accesible y navegación de campo. */
+.tabla-observaciones-banci thead th { background: #80520b; color: #fff; border-color: #80520b; }
+.tabla-observaciones-banci .fila-advertencia-banci { background: #fff0c2; color: #4f3100; }
+.tabla-observaciones-banci .fila-advertencia-banci td { border-bottom-color: #bf881f; }
+.tabla-observaciones-banci .fila-error-banci { background: #ffe1e1; color: #781414; }
+.tabla-observaciones-banci button { white-space: nowrap; }
+#inicio-formulario-banci { scroll-margin-top: 1.5rem; }
+.acuse-banci-overlay { position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,.65);
+  display: grid; place-items: center; padding: 1rem; }
+.acuse-banci-dialog { width: min(1050px, 100%); max-height: 88vh; overflow: auto; padding: 1.5rem;
+  background: #fff; border-top: 6px solid var(--siiid-guinda); box-shadow: 0 12px 40px #0005; }

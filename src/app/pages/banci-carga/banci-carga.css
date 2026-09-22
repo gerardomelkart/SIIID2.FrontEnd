@@ -778,3 +778,8 @@
     grid-template-columns: 1fr;
   }
 }
+/* Advertencias BANCI con mayor contraste; no confundir con errores. */
+.carga-banci .warning-row { background: #ffe7a1 !important; }
+.carga-banci .warning-row td { color: #4d3200 !important; border-bottom: 1px solid #a46800; }
+.carga-banci .resultado-seccion-titulo.advertencia { background: #80520b !important; color: #fff; }
+.carga-banci .detalle-tipo-advertencia { background: #ffe19a; color: #4d3200; }

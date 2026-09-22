@@ -9,6 +9,8 @@ import { BanciCargaService } from '../../core/services/banci-carga.service';
 import { SessionService } from '../../core/services/session.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
+import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
+import { BanciResumenRegistro } from '../../core/models/banci-resumen.models';
 import { BanciVistaPreviaComponent } from './banci-vista-previa';
 import { FormsModule } from '@angular/forms';
 import { BanciFormularioOpciones } from '../../core/models/banci-formulario.models';
@@ -38,6 +40,9 @@ export class BanciCarga implements OnInit {
   opciones = signal<BanciFormularioOpciones | null>(null);
   cargandoOpciones = signal(false);
   descargandoPlantilla = signal(false);
+  cargandoResumen = signal(false);
+  resumenConfirmado = signal<BanciResumenRegistro[]>([]);
+  errorResumen = signal('');
   aceptarAdvertencias = false;
   entidad: number | null = null;
 
@@ -236,6 +241,32 @@ export class BanciCarga implements OnInit {
             ' Pulse «Actualizar revisión» para conocer el resultado antes de decidir nuevamente.',
         );
       },
+    });
+  }
+
+  descargarResumen(): void {
+    const r = this.resultadoCorrecto();
+    if (!r || this.cargandoResumen()) return;
+    this.cargandoResumen.set(true);
+    this.errorResumen.set('');
+    this.banciCargaService.obtenerResumen(r.codigoReferencia).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: async filas => {
+        this.resumenConfirmado.set(filas);
+        try {
+          if (!filas.length) throw new Error('La API no devolvió registros definitivos para esta carga.');
+          const ok = await exportarFilasExcel(filas.map(f => ({
+            Entidad: f.entidad, NO_BANCI: f.noBanci, ID_CI: f.idCi, NTRA_CI: f.ntraCi,
+            ID_DELITO: f.idDelito, ID_VICF: f.idVicf, FOLIO_RNPDNO: f.folioRnpdno ?? '',
+            Resultado: f.resultado, FechaIntegracion: f.fechaIntegracion ?? '',
+            Referencia: r.codigoReferencia
+          })), `BANCI_integracion_${r.codigoReferencia}.xlsx`, 'Registros integrados');
+          if (!ok) throw new Error('No fue posible exportar el resumen.');
+        } catch(e) {
+          this.errorResumen.set(e instanceof Error ? e.message : 'No fue posible exportar el resumen.');
+        } finally { this.cargandoResumen.set(false); }
+      },
+      error: e => { this.cargandoResumen.set(false); this.errorResumen.set(e?.error?.mensaje ||
+        'No se pudo recuperar el resumen confirmado. Reintente la descarga.'); }
     });
   }
 
@@ -438,6 +469,8 @@ export class BanciCarga implements OnInit {
   }
 
   prepararNuevaValidacion(): void {
+    this.resumenConfirmado.set([]);
+    this.errorResumen.set('');
     if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
     this.aceptarAdvertencias = false;
     this.limpiarArchivosSeleccionados();

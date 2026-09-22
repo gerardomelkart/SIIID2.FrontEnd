@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BanciCargaService } from '../../core/services/banci-carga.service';
 import { SessionService } from '../../core/services/session.service';
-import { BanciCargaValidacionResponse } from '../../core/models/banci-carga.models';
+import { BanciCargaValidacionResponse, BanciCargaValidacionError } from '../../core/models/banci-carga.models';
 import {
   BanciFormularioDelito,
   BanciFormularioOpciones,
@@ -12,6 +12,7 @@ import {
 import { BanciCampos } from './banci-campos';
 import { CAMPOS_CARPETAS, CAMPOS_DELITOS, CAMPOS_VICTIMAS } from './banci-formulario-campos';
 import { BanciVistaPreviaComponent } from '../banci-carga/banci-vista-previa';
+import { BanciResumenRegistro } from '../../core/models/banci-resumen.models';
 
 @Component({
   selector: 'app-banci-formulario',
@@ -35,6 +36,10 @@ export class BanciFormulario implements OnInit {
   necesitaActualizar = signal(false);
   referencia = signal('');
   aceptarAdvertencias = false;
+  cargandoResumen = signal(false);
+  resumenConfirmado = signal<BanciResumenRegistro[]>([]);
+  mostrarAcuse = signal(false);
+  errorAcuse = signal('');
   pendiente = computed(() => this.resultado()?.estado === 'VALIDADO_PENDIENTE');
   terminado = computed(() =>
     ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(this.resultado()?.estado ?? ''),
@@ -208,6 +213,7 @@ export class BanciFormulario implements OnInit {
           advertencias: carga.advertencias,
         });
         this.enfocarResultado();
+        if (aceptar && this.terminado()) this.abrirAcuse();
       },
       error: (e) => {
         this.cargando.set(false);
@@ -250,6 +256,8 @@ export class BanciFormulario implements OnInit {
   }
 
   nuevaCaptura(): void {
+    this.mostrarAcuse.set(false);
+    this.resumenConfirmado.set([]);
     if (this.cargando() || this.pendiente() || this.necesitaActualizar()) return;
     this.aceptarAdvertencias = false;
     this.carpeta = {};
@@ -278,6 +286,84 @@ export class BanciFormulario implements OnInit {
     } catch {
       /* Referencia disponible en pantalla. */
     }
+  }
+
+  // Cancelar expresamente la validación pendiente ANTES de volver a editar.
+  // Si la red falla, se conserva la referencia: no se habilita una segunda operación.
+  volverAFormulario(aviso?: BanciCargaValidacionError): void {
+    aviso ??= this.resultado()?.advertencias.find(a => !!a.campo);
+    if (this.cargando() || this.necesitaActualizar() || this.terminado()) return;
+    const abrir = () => {
+      this.aceptarAdvertencias = false;
+      this.resultado.set(null);
+      this.olvidarReferencia();
+      this.mensaje.set('Edite el dato señalado y vuelva a validar. La revisión anterior fue rechazada sin integrar información.');
+      setTimeout(() => this.enfocarCampoAdvertido(aviso), 60);
+    };
+    if (!this.pendiente()) { abrir(); return; }
+    const referencia = this.resultado()!.codigoReferencia;
+    this.cargando.set(true);
+    this.service.confirmar(referencia, false).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: respuesta => {
+        this.cargando.set(false);
+        if (respuesta.estado !== 'RECHAZADO_VALIDACION') {
+          this.necesitaActualizar.set(true);
+          this.mensaje.set('No se confirmó el rechazo de la revisión anterior. Recupere el estado antes de editar.');
+          return;
+        }
+        abrir();
+      },
+      error: e => {
+        this.cargando.set(false);
+        this.necesitaActualizar.set(true);
+        this.mensaje.set((e?.error?.mensaje || 'No se confirmó el rechazo.') + ' Recupere el estado; la captura se conserva en esta pantalla.');
+      }
+    });
+  }
+
+  private enfocarCampoAdvertido(aviso?: BanciCargaValidacionError): void {
+    const archivo = (aviso?.archivo || '').toLowerCase();
+    const campo = (aviso?.campo || '').toLowerCase();
+    const fila = aviso?.numeroFila ?? 0;
+    let prefijo = 'banci-carpeta';
+    if (archivo.includes('delito')) prefijo = `banci-delito-${Math.max(0, fila - 1)}`;
+    else if (archivo.includes('victim')) {
+      let restante = Math.max(1, fila);
+      for (let i = 0; i < this.delitos.length; i++) {
+        if (restante <= this.delitos[i].victimas.length) {
+          prefijo = `banci-victima-${i}-${restante - 1}`;
+          break;
+        }
+        restante -= this.delitos[i].victimas.length;
+      }
+    }
+    const input = campo ? document.getElementById(`${prefijo}-${campo}`) : null;
+    if (input) {
+      input.closest('details')?.setAttribute('open', '');
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (input as HTMLElement).focus({ preventScroll: true });
+    } else {
+      document.getElementById('inicio-formulario-banci')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Acuse de una captura confirmada: las llaves y NO_BANCI se consultan en la API, no se inventan.
+  abrirAcuse(): void {
+    const r = this.resultado();
+    if (!r || !this.terminado() || this.cargandoResumen()) return;
+    this.cargandoResumen.set(true);
+    this.errorAcuse.set('');
+    this.service.obtenerResumen(r.codigoReferencia).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: filas => {
+        this.cargandoResumen.set(false);
+        this.resumenConfirmado.set(filas);
+        this.mostrarAcuse.set(true);
+      },
+      error: e => {
+        this.cargandoResumen.set(false);
+        this.errorAcuse.set(e?.error?.mensaje || 'No se pudo obtener el resumen confirmado. Reintente desde esta pantalla.');
+      }
+    });
   }
 
   private claveReferencia(): string {

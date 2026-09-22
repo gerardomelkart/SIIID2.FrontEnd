@@ -481,6 +481,14 @@
   }
 
   @if (resultadoCorrecto(); as r) {
+  <div class="siiid-card p-3 mt-3">
+    <strong><i class="fa-solid fa-file-excel"></i> Resumen de integración BANCI</strong>
+    <p>Descargue los identificadores de las víctimas que quedaron registradas en esta operación.</p>
+    @if (errorResumen()) { <div class="alert alert-warning">{{ errorResumen() }}</div> }
+    <button type="button" class="btn btn-siiid" [disabled]="cargandoResumen()" (click)="descargarResumen()">
+      {{ cargandoResumen() ? 'Preparando Excel...' : 'Descargar Excel de integración' }}
+    </button>
+  </div>
   <div id="resultado-banci" class="siiid-card resultado-card mt-4">
     <div class="siiid-card-header resultado-header-correcto">
       <i class="fa-solid fa-circle-check"></i>
