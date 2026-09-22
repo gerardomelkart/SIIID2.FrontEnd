@@ -261,7 +261,13 @@ export const routes: Routes = [
       modulo: 'BANCI',
     },
     children: [
-      { path: 'usuarios', loadComponent: () => import('./pages/banci-usuarios/banci-usuarios').then(m => m.BanciUsuarios), canActivate: [permissionGuard], data: { roles: [ROLES.SUPER_USUARIO] } },
+      {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./pages/banci-usuarios/banci-usuarios').then((m) => m.BanciUsuarios),
+        canActivate: [permissionGuard],
+        data: { roles: [ROLES.SUPER_USUARIO] },
+      },
       {
         path: '',
         loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio),
@@ -274,13 +280,24 @@ export const routes: Routes = [
       },
       {
         path: 'formulario',
-        loadComponent: () => import('./pages/banci-formulario/banci-formulario').then((m) => m.BanciFormulario),
+        loadComponent: () =>
+          import('./pages/banci-formulario/banci-formulario').then((m) => m.BanciFormulario),
         canActivate: [permissionGuard],
         data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
       },
       {
+        path: 'actualizacion',
+        loadComponent: () =>
+          import('./pages/banci-actualizacion/banci-actualizacion').then(
+            (m) => m.BanciActualizacion,
+          ),
+        canActivate: [permissionGuard],
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION' },
+      },
+      {
         path: 'consulta',
-        loadComponent: () => import('./pages/banci-consulta/banci-consulta').then((m) => m.BanciConsulta),
+        loadComponent: () =>
+          import('./pages/banci-consulta/banci-consulta').then((m) => m.BanciConsulta),
         canActivate: [permissionGuard],
         data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA] },
       },

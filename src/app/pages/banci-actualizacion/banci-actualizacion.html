@@ -1,0 +1,286 @@
+<section class="actualizacion-banci">
+  <h1>Actualización de víctimas BANCI</h1>
+  <p>Actualice información de víctimas ya registradas mediante formulario o Excel. Ningún cambio se integra sin revisar y confirmar la vista previa.</p>
+
+  @if (mensaje()) {
+    <div class="alert alert-warning" role="alert">
+      {{ mensaje() }}
+      @if (necesitaActualizar() && referencia()) {
+        <button type="button" class="btn btn-secondary ms-2" [disabled]="cargandoOperacion()" (click)="recuperar(referencia())">Recuperar estado</button>
+      }
+    </div>
+  }
+
+  @if (cargandoOpciones()) { <p role="status">Cargando catálogos...</p> }
+  @if (cargandoOperacion()) { <p role="status">Procesando operación...</p> }
+
+  @if (!opciones() && !cargandoOpciones()) {
+    <button type="button" class="btn btn-secondary mb-3" (click)="cargarOpciones()">Reintentar carga de catálogos</button>
+  }
+
+  @if (opciones(); as o) {
+    @if (o.esSuperUsuario) {
+      <div class="siiid-card p-3 mb-3">
+        <label for="entidad-actualizacion"><strong>Entidad federativa *</strong></label>
+        <select id="entidad-actualizacion" class="form-select mt-2" style="max-width: 450px"
+          [ngModel]="entidad" (ngModelChange)="cambiarEntidad($event)"
+          [disabled]="ocupado() || pendiente() || necesitaActualizar()">
+          <option [ngValue]="null">Seleccione una entidad...</option>
+          @for (e of entidades(); track e.clave) {
+            <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
+          }
+        </select>
+      </div>
+    } @else {
+      <p><strong>Entidad asignada:</strong> {{ o.idEntidadFederativa }}</p>
+    }
+
+    @if (!pendiente() && !necesitaActualizar() && !confirmacion()) {
+      <div class="siiid-card mb-3">
+        <div class="siiid-card-header"><i class="fa-solid fa-magnifying-glass"></i> Buscar víctima registrada</div>
+
+        <div class="p-3">
+          <p>Busque por NO_BANCI, CURP, folio RNPDNO o nombre. Se requieren al menos tres caracteres.</p>
+
+          <form class="barra-busqueda" (ngSubmit)="buscar()">
+            <input class="form-control" name="busqueda" [(ngModel)]="textoBusqueda"
+              maxlength="250" minlength="3" placeholder="NO_BANCI, CURP, folio o nombre..."
+              [disabled]="ocupado()" required />
+
+            <button type="submit" class="btn btn-siiid" [disabled]="ocupado() || textoBusqueda.trim().length < 3">
+              Buscar
+            </button>
+          </form>
+
+          @if (cargandoBusqueda()) { <p role="status" class="mt-3">Buscando víctimas...</p> }
+
+          @if (busqueda(); as b) {
+            <p class="mt-3"><strong>{{ b.total }}</strong> coincidencia(s).</p>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>NO_BANCI</th>
+                    <th>ID_DELITO</th>
+                    <th>ID_VICF</th>
+                    <th>Nombre</th>
+                    <th>Folio RNPDNO</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @for (v of b.victimas; track v.id_banci_victima) {
+                    <tr>
+                      <td>{{ v.no_banci }}</td>
+                      <td>{{ v.id_delito }}</td>
+                      <td>{{ v.id_vicf }}</td>
+                      <td>{{ nombre(v) }}</td>
+                      <td>{{ v.folio_rnpdno || '—' }}</td>
+                      <td>
+                        <button type="button" class="btn btn-sm btn-secondary" [disabled]="ocupado()" (click)="seleccionar(v)">
+                          Seleccionar
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="6">No se encontraron víctimas para esta búsqueda.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            @if (b.total > b.tamanoPagina) {
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-secondary" [disabled]="ocupado() || b.pagina <= 1" (click)="buscar(b.pagina - 1)">Anterior</button>
+                <span>Página {{ b.pagina }} · {{ b.total }} resultado(s) en total</span>
+                <button type="button" class="btn btn-sm btn-secondary" [disabled]="ocupado() || b.pagina * b.tamanoPagina >= b.total" (click)="buscar(b.pagina + 1)">Siguiente</button>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      @if (seleccionada(); as v) {
+        <div class="siiid-card mb-3">
+          <div class="siiid-card-header"><i class="fa-solid fa-user-pen"></i> Editar víctima seleccionada</div>
+
+          <div class="p-3">
+            <p><strong>Víctima:</strong> {{ nombre(v) }}</p>
+            <p><strong>NO_BANCI:</strong> {{ v.no_banci }} · <strong>ID_DELITO:</strong> {{ v.id_delito }} · <strong>ID_VICF:</strong> {{ v.id_vicf }}</p>
+
+            <div class="alert alert-info">
+              Modifique solamente los campos necesarios. Los campos de edición vacíos conservarán el valor actual.
+              El folio RNPDNO debe existir al finalizar la actualización.
+            </div>
+
+            <form (ngSubmit)="validarFormulario()">
+              <div class="campos-edicion">
+                @for (campo of campos; track campo.clave) {
+                  <div class="campo-edicion" [class.ancho]="campo.tipo === 'textarea'">
+                    <label [for]="'actualizar-' + campo.clave"><strong>{{ campo.etiqueta }}</strong></label>
+                    <small><strong>Valor actual:</strong> {{ actual(campo.clave) }}</small>
+
+                    @if (campo.tipo === 'select') {
+                      <select class="form-select" [id]="'actualizar-' + campo.clave" [name]="campo.clave"
+                        [(ngModel)]="edicion[campo.clave]" [disabled]="ocupado()">
+                        <option value="">No modificar</option>
+                        @for (opcion of opcionesCampo(campo.clave); track opcion.clave) {
+                          <option [value]="opcion.clave">{{ opcion.descripcion }}</option>
+                        }
+                      </select>
+                    } @else if (campo.tipo === 'textarea') {
+                      <textarea class="form-control" rows="3" [id]="'actualizar-' + campo.clave" [name]="campo.clave"
+                        [(ngModel)]="edicion[campo.clave]" [attr.maxlength]="campo.maximo"
+                        [disabled]="ocupado()" placeholder="Dejar vacío para conservar el dato actual"></textarea>
+                    } @else {
+                      <input class="form-control" [id]="'actualizar-' + campo.clave" [name]="campo.clave"
+                        [type]="campo.tipo" [(ngModel)]="edicion[campo.clave]"
+                        [attr.maxlength]="campo.maximo" [disabled]="ocupado()"
+                        placeholder="Dejar vacío para conservar el dato actual" />
+                    }
+
+                    @if (campo.ayuda) { <small>{{ campo.ayuda }}</small> }
+                  </div>
+                }
+              </div>
+
+              <div class="acciones mt-3">
+                <button type="submit" class="btn btn-siiid" [disabled]="ocupado()">Validar actualización</button>
+                <button type="button" class="btn btn-secondary" [disabled]="ocupado()" (click)="seleccionada.set(null); edicion = {}">Cancelar edición</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <div class="siiid-card mb-3">
+        <div class="siiid-card-header"><i class="fa-solid fa-file-excel"></i> Actualización mediante Excel</div>
+
+        <div class="p-3">
+          <p>Descargue la plantilla BANCI V2 y capture las víctimas que necesita actualizar.</p>
+
+          <button type="button" class="btn btn-secondary mb-3" [disabled]="descargandoPlantilla()" (click)="descargarPlantilla()">
+            {{ descargandoPlantilla() ? 'Descargando...' : 'Descargar plantilla de actualización' }}
+          </button>
+
+          <form (ngSubmit)="validarExcel()">
+            <label for="archivo-actualizacion"><strong>Archivo Excel .xlsx</strong></label>
+            <input id="archivo-actualizacion" class="form-control mt-2" type="file" accept=".xlsx"
+              (change)="seleccionarArchivo($event)" [disabled]="ocupado()" />
+
+            <button type="submit" class="btn btn-siiid mt-3" [disabled]="ocupado() || !archivo">
+              Validar Excel
+            </button>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (pendientes().length > 0) {
+      <div class="siiid-card mb-3">
+        <div class="siiid-card-header">Mis actualizaciones pendientes</div>
+
+        <div class="p-3">
+          @for (p of pendientes(); track p.codigoReferencia) {
+            <div class="pendiente-item">
+              <span>{{ p.origen }} · Entidad {{ p.idEntidadFederativa }} · {{ p.fechaRegistro }}</span>
+              <button type="button" class="btn btn-sm btn-secondary"
+                [disabled]="ocupado() || (pendiente() && referencia() !== p.codigoReferencia)"
+                (click)="recuperar(p.codigoReferencia)">
+                Revisar
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (resultado(); as r) {
+      <div class="siiid-card mb-3" id="resultado-actualizacion">
+        <div class="siiid-card-header">Resultado de validación y vista previa</div>
+
+        <div class="p-3">
+          @if (r.errores.length > 0) {
+            <div class="alert alert-danger"><strong>Hay {{ r.errores.length }} error(es). No se puede aplicar esta actualización.</strong></div>
+            @for (e of r.errores; track $index) {
+              <p class="mensaje-detalle"><strong>Fila {{ e.numeroFila ?? '—' }} · {{ e.campo ?? 'General' }}:</strong> {{ e.mensaje }}</p>
+            }
+          }
+
+          @if (r.advertencias.length > 0) {
+            <div class="alert alert-warning">
+              <strong>La actualización tiene {{ r.advertencias.length }} advertencia(s).</strong>
+              @for (a of r.advertencias; track $index) {
+                <p class="mensaje-detalle">Fila {{ a.numeroFila ?? '—' }} · {{ a.mensaje }}</p>
+              }
+            </div>
+          }
+
+          @if (pendiente()) {
+            <p>La actualización aún no se ha aplicado. Revise los cambios y decida si desea continuar.</p>
+
+            <div class="table-responsive tabla-cambios">
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr><th>NO_BANCI / víctima</th><th>Campo</th><th>Valor actual</th><th>Valor propuesto</th></tr>
+                </thead>
+
+                <tbody>
+                  @for (c of r.cambios; track $index) {
+                    <tr>
+                      <td>{{ c.no_banci }} · {{ c.id_delito }} · {{ c.id_vicf }}</td>
+                      <td>{{ c.campo }}</td>
+                      <td>{{ c.anterior ?? 'Sin información' }}</td>
+                      <td>{{ c.nuevo ?? 'Sin información' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4">No se detectaron cambios de información.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            @if (r.advertencias.length > 0) {
+              <label class="alert alert-warning d-flex align-items-start gap-2 mt-3">
+                <input type="checkbox" [(ngModel)]="aceptarAdvertencias"
+                  [disabled]="ocupado() || necesitaActualizar()" />
+                <span>He revisado las advertencias y acepto continuar con esta actualización.</span>
+              </label>
+            }
+
+            <div class="acciones mt-3">
+              <button type="button" class="btn btn-secondary" [disabled]="ocupado()" (click)="recuperar(referencia())">
+                Actualizar vista previa
+              </button>
+
+              <button type="button" class="btn btn-outline-danger"
+                [disabled]="ocupado() || necesitaActualizar()" (click)="confirmar(false)">
+                Rechazar actualización
+              </button>
+
+              <button type="button" class="btn btn-siiid"
+                [disabled]="ocupado() || necesitaActualizar() || !r.huella || r.errores.length > 0 || r.cambios.length === 0 || (r.advertencias.length > 0 && !aceptarAdvertencias)"
+                (click)="confirmar(true)">
+                Aceptar y aplicar cambios
+              </button>
+            </div>
+          } @else if (r.errores.length > 0) {
+            <button type="button" class="btn btn-secondary" (click)="resultado.set(null)">Corregir información</button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (confirmacion(); as c) {
+      <div class="siiid-card p-3 mb-3">
+        <h2>Resultado de la actualización</h2>
+        <p><strong>Estado:</strong> {{ c.estado }}</p>
+        <p><strong>Cambios aplicados:</strong> {{ c.totalCambios ?? 0 }}</p>
+
+        <button type="button" class="btn btn-siiid" (click)="nuevaOperacion()">Nueva actualización</button>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,105 @@
+.actualizacion-banci {
+  padding: 6px;
+}
+
+.actualizacion-banci h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.actualizacion-banci h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.actualizacion-banci > p {
+  color: #667085;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.barra-busqueda {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.barra-busqueda .form-control {
+  max-width: 650px;
+}
+
+.campos-edicion {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.campo-edicion {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.campo-edicion.ancho {
+  grid-column: 1 / -1;
+}
+
+.campo-edicion small {
+  color: #667085;
+  overflow-wrap: anywhere;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pendiente-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pendiente-item span {
+  overflow-wrap: anywhere;
+}
+
+.tabla-cambios {
+  max-height: 500px;
+  overflow: auto;
+}
+
+.tabla-cambios td {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  min-width: 120px;
+}
+
+.mensaje-detalle {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1000px) {
+  .campos-edicion {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .campos-edicion {
+    grid-template-columns: 1fr;
+  }
+
+  .barra-busqueda,
+  .pendiente-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

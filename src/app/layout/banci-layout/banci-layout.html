@@ -44,9 +44,17 @@
           <i class="fa-solid fa-file-arrow-up"></i>
           Carga masiva
         </a>
-        <a class="menu-link level-2" routerLink="/banci/formulario" routerLinkActive="active"><i class="fa-solid fa-pen-to-square"></i> Formulario</a>
+        <a class="menu-link level-2" routerLink="/banci/formulario" routerLinkActive="active"><i
+            class="fa-solid fa-pen-to-square"></i> Formulario</a>
         }
 
+        }
+
+        @if (puedeActualizar()) {
+        <a class="menu-link" routerLink="/banci/actualizacion" routerLinkActive="active">
+          <i class="fa-solid fa-user-pen"></i>
+          Actualización de víctimas
+        </a>
         }
 
         <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
@@ -54,15 +62,18 @@
         </button>
 
         @if (informesAbierto()) {
-          <a class="menu-link level-2" routerLink="/banci/consulta" routerLinkActive="active">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            Consulta de información
-          </a>
+        <a class="menu-link level-2" routerLink="/banci/consulta" routerLinkActive="active">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          Consulta de información
+        </a>
         }
 
         @if (usuario()?.rol === 'SUPER_USUARIO') {
-          <button type="button" class="menu-link menu-button" (click)="administracionAbierta.set(!administracionAbierta())"><span><i class="fa-solid fa-screwdriver-wrench"></i> Administración</span></button>
-          @if (administracionAbierta()) { <a class="menu-link level-2" routerLink="/banci/usuarios" routerLinkActive="active"><i class="fa-solid fa-users"></i> Usuarios</a> }
+        <button type="button" class="menu-link menu-button"
+          (click)="administracionAbierta.set(!administracionAbierta())"><span><i
+              class="fa-solid fa-screwdriver-wrench"></i> Administración</span></button>
+        @if (administracionAbierta()) { <a class="menu-link level-2" routerLink="/banci/usuarios"
+          routerLinkActive="active"><i class="fa-solid fa-users"></i> Usuarios</a> }
         }
         <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
           <span>
