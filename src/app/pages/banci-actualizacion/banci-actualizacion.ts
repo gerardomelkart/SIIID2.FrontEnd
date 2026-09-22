@@ -379,6 +379,180 @@ export class BanciActualizacion implements OnInit {
     });
   }
 
+    regresarAEdicion(
+    advertencia?: BanciActualizacionResultado['advertencias'][number]
+  ): void {
+    const resultado = this.resultado();
+    const referencia = this.referencia();
+
+    if (
+      !resultado ||
+      !referencia ||
+      !this.pendiente() ||
+      this.ocupado() ||
+      this.necesitaActualizar()
+    ) {
+      return;
+    }
+
+    const campo = advertencia?.campo
+      || resultado.advertencias.find(a =>
+        this.campos.some(c => c.clave === a.campo)
+      )?.campo
+      || null;
+
+    const numeroFila = advertencia?.numeroFila ?? null;
+
+    this.cargandoOperacion.set(true);
+    this.mensaje.set('');
+
+    // La validación anterior debe quedar rechazada antes
+    // de permitir que el usuario vuelva a modificar datos.
+    this.service.confirmar(referencia, {
+      aceptar: false,
+      huellaVistaPrevia: null,
+      aceptarAdvertencias: false
+    })
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: respuesta => {
+        this.cargandoOperacion.set(false);
+
+        if (respuesta.estado !== 'RECHAZADA') {
+          this.necesitaActualizar.set(true);
+
+          this.mensaje.set(
+            'No se confirmó el rechazo de la actualización anterior. ' +
+            'Recupere el estado de la operación antes de continuar.'
+          );
+
+          return;
+        }
+
+        // Sólo se libera la edición cuando la API confirma
+        // que la operación anterior quedó rechazada.
+        this.resultado.set(null);
+        this.confirmacion.set(null);
+        this.aceptarAdvertencias = false;
+        this.necesitaActualizar.set(false);
+
+        this.olvidarReferencia();
+        this.cargarPendientes();
+
+        if (this.modalidad() === 'masiva') {
+          // El archivo original podría seguir teniendo las
+          // inconsistencias. Debe seleccionarse el Excel corregido.
+          this.archivo = null;
+
+          const input = document.getElementById(
+            'archivo-actualizacion'
+          ) as HTMLInputElement | null;
+
+          if (input) {
+            input.value = '';
+          }
+
+          const detalle = [
+            numeroFila ? `Fila ${numeroFila}` : '',
+            campo ? `campo ${campo}` : ''
+          ].filter(Boolean).join(', ');
+
+          this.mensaje.set(
+            detalle
+              ? `Revise el Excel en ${detalle}. Seleccione el archivo corregido y vuelva a validar.`
+              : 'Revise las advertencias del Excel, seleccione el archivo corregido y vuelva a validar.'
+          );
+
+          setTimeout(() => {
+            document.getElementById('archivo-actualizacion')
+              ?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+              });
+          }, 60);
+
+          return;
+        }
+
+        // Captura manual: conservar la víctima seleccionada
+        // y los valores que el usuario ya había escrito.
+        if (!this.seleccionada()) {
+          this.mensaje.set(
+            'La validación anterior fue rechazada. ' +
+            'Busque nuevamente la víctima para continuar con la actualización.'
+          );
+
+          return;
+        }
+
+        const campoEncontrado = this.campos.find(
+          c => c.clave === campo
+        );
+
+        if (campoEncontrado) {
+          const esLocalizacion = this.camposLocalizacion.some(
+            c => c.clave === campoEncontrado.clave
+          );
+
+          this.pestanaManual.set(
+            esLocalizacion ? 'localizacion' : 'personales'
+          );
+
+          this.mensaje.set(
+            `Revise el campo «${campoEncontrado.etiqueta}» y vuelva a validar la actualización.`
+          );
+
+          setTimeout(() => {
+            const elemento = document.getElementById(
+              `actualizar-${campoEncontrado.clave}`
+            );
+
+            elemento?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+
+            elemento?.focus({
+              preventScroll: true
+            });
+          }, 60);
+
+          return;
+        }
+
+        // Advertencia general, sin un campo editable específico.
+        this.mensaje.set(
+          'Revise la información de la víctima y vuelva a validar. ' +
+          'La validación anterior fue rechazada sin aplicar cambios.'
+        );
+
+        setTimeout(() => {
+          document.querySelector('.pestanas-banci')
+            ?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+        }, 60);
+      },
+
+      error: e => {
+        this.cargandoOperacion.set(false);
+
+        // No sabemos si el servidor alcanzó a ejecutar el rechazo.
+        // Conservamos la referencia y bloqueamos nuevas validaciones.
+        this.necesitaActualizar.set(true);
+        this.aceptarAdvertencias = false;
+
+        this.mensaje.set(
+          (e?.error?.mensaje ||
+            'No fue posible confirmar el rechazo de la actualización.') +
+          ' Recupere el estado antes de volver a editar. ' +
+          'No repita la operación.'
+        );
+      }
+    });
+  }
+
   confirmar(aceptar: boolean): void {
     const resultado = this.resultado();
     const referencia = this.referencia();

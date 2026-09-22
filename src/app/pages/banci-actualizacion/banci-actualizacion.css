@@ -13,7 +13,7 @@
   font-weight: 700;
 }
 
-.actualizacion-banci > p {
+.actualizacion-banci>p {
   color: #667085;
   font-size: 14px;
   margin-bottom: 20px;
@@ -153,25 +153,195 @@
     grid-template-columns: 1fr;
   }
 }
-.modalidades-actualizacion { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:20px; }
-.modalidad-actualizacion { display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;
-  background:#fff;border:1px solid #d8d8d8;border-top:5px solid #bcbcbc;padding:18px;cursor:pointer; }
-.modalidad-actualizacion:hover,.modalidad-actualizacion.activa { border-top-color:var(--siiid-guinda);
-  box-shadow:0 5px 16px #0002; }
-.modalidad-actualizacion.activa { background:#faf5fc; }
-.modalidad-actualizacion i {font-size:24px;color:var(--siiid-guinda);}
-.modalidad-actualizacion span {font-size:13px;color:#667085;}
-.pestanas-banci {display:flex;flex-wrap:wrap;border-bottom:2px solid #ddd;gap:4px;margin:20px 0 18px;}
-.pestanas-banci button {border:1px solid #ddd;border-bottom:0;background:#f5f5f5;border-radius:9px 9px 0 0;
-  padding:13px 19px;color:#414141;cursor:pointer;font-weight:700;}
-.pestanas-banci button.activa {background:#fff;color:var(--siiid-guinda);border-color:var(--siiid-guinda);
-  box-shadow:inset 0 4px var(--siiid-guinda);}
-.zona-archivo-banci {border:2px dashed #a5a5a5;padding:25px;text-align:center;background:#fafafa;transition:.12s;}
-.zona-archivo-banci.arrastrando {border-color:var(--siiid-guinda);background:#faf0ff;}
-.zona-archivo-banci label {cursor:pointer;}
-.zona-archivo-banci label strong {display:block;margin:10px 0;}
-.zona-archivo-banci i {color:var(--siiid-guinda);}
-.resumen-modal-fondo {position:fixed;inset:0;z-index:6000;background:#0009;display:grid;place-items:center;padding:1rem;}
-.resumen-modal-banci {width:min(1100px,100%);max-height:88vh;overflow:auto;background:#fff;
-  padding:1.5rem;border-top:6px solid var(--siiid-guinda);box-shadow:0 12px 40px #0004;}
-@media(max-width:650px){.modalidades-actualizacion{grid-template-columns:1fr;}}
+
+.modalidades-actualizacion {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modalidad-actualizacion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #d8d8d8;
+  border-top: 5px solid #bcbcbc;
+  padding: 18px;
+  cursor: pointer;
+}
+
+.modalidad-actualizacion:hover,
+.modalidad-actualizacion.activa {
+  border-top-color: var(--siiid-guinda);
+  box-shadow: 0 5px 16px #0002;
+}
+
+.modalidad-actualizacion.activa {
+  background: #faf5fc;
+}
+
+.modalidad-actualizacion i {
+  font-size: 24px;
+  color: var(--siiid-guinda);
+}
+
+.modalidad-actualizacion span {
+  font-size: 13px;
+  color: #667085;
+}
+
+.pestanas-banci {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 2px solid #ddd;
+  gap: 4px;
+  margin: 20px 0 18px;
+}
+
+.pestanas-banci button {
+  border: 1px solid #ddd;
+  border-bottom: 0;
+  background: #f5f5f5;
+  border-radius: 9px 9px 0 0;
+  padding: 13px 19px;
+  color: #414141;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pestanas-banci button.activa {
+  background: #fff;
+  color: var(--siiid-guinda);
+  border-color: var(--siiid-guinda);
+  box-shadow: inset 0 4px var(--siiid-guinda);
+}
+
+.zona-archivo-banci {
+  border: 2px dashed #a5a5a5;
+  padding: 25px;
+  text-align: center;
+  background: #fafafa;
+  transition: .12s;
+}
+
+.zona-archivo-banci.arrastrando {
+  border-color: var(--siiid-guinda);
+  background: #faf0ff;
+}
+
+.zona-archivo-banci label {
+  cursor: pointer;
+}
+
+.zona-archivo-banci label strong {
+  display: block;
+  margin: 10px 0;
+}
+
+.zona-archivo-banci i {
+  color: var(--siiid-guinda);
+}
+
+.resumen-modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  background: #0009;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.resumen-modal-banci {
+  width: min(1100px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  padding: 1.5rem;
+  border-top: 6px solid var(--siiid-guinda);
+  box-shadow: 0 12px 40px #0004;
+}
+
+@media(max-width:650px) {
+  .modalidades-actualizacion {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* BANCI V2 - Advertencias de actualización */
+
+.advertencias-actualizacion {
+  margin: 20px 0;
+  border: 2px solid #b7791f;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff8e6;
+}
+
+.advertencias-actualizacion-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 18px 20px;
+  background: #80520b;
+  color: #fff;
+}
+
+.advertencias-actualizacion-header>i {
+  font-size: 25px;
+  color: #ffe29a;
+}
+
+.advertencias-actualizacion-header strong {
+  display: block;
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.advertencias-actualizacion-header p {
+  font-size: 13px;
+  color: #fff5d6;
+}
+
+.tabla-advertencias-actualizacion {
+  margin: 0;
+  border-color: #d6ad55;
+}
+
+.tabla-advertencias-actualizacion thead th {
+  background: #efcc7c;
+  color: #4f3100;
+  font-weight: 700;
+  border-color: #b7791f;
+  padding: 12px;
+}
+
+.tabla-advertencias-actualizacion tbody td {
+  background: #fff2cc;
+  color: #4f3100;
+  border-color: #d6ad55;
+  padding: 12px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.tabla-advertencias-actualizacion tbody tr:nth-child(even) td {
+  background: #ffe5a3;
+}
+
+.tabla-advertencias-actualizacion .btn-warning {
+  background: #80520b;
+  color: #fff;
+  border-color: #80520b;
+  white-space: nowrap;
+}
+
+.tabla-advertencias-actualizacion .btn-warning:hover:not(:disabled) {
+  background: #603c06;
+  color: #fff;
+  border-color: #603c06;
+}

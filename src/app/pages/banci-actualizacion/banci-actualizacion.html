@@ -25,7 +25,8 @@
   <div class="siiid-card p-3 mb-3">
     <label for="entidad-actualizacion"><strong>Entidad federativa *</strong></label>
     <select id="entidad-actualizacion" class="form-select mt-2" style="max-width: 450px" [ngModel]="entidad"
-      (ngModelChange)="cambiarEntidad($event)" [disabled]="ocupado() || pendiente() || necesitaActualizar() || !!seleccionada()">
+      (ngModelChange)="cambiarEntidad($event)"
+      [disabled]="ocupado() || pendiente() || necesitaActualizar() || !!seleccionada()">
       <option [ngValue]="null">Seleccione una entidad...</option>
       @for (e of entidades(); track e.clave) {
       <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
@@ -33,28 +34,30 @@
     </select>
   </div>
   } @else {
-      <div class="siiid-card p-3 mb-3">
-        <label for="entidad-asignada-banci"><strong>Entidad asignada</strong></label>
-        <select id="entidad-asignada-banci" class="form-select mt-2" style="max-width: 450px" disabled
-          [ngModel]="o.idEntidadFederativa">
-          @for (e of entidades(); track e.clave) { <option [ngValue]="+e.clave">{{ e.descripcion }}</option> }
-        </select>
-      </div>
-    }
+  <div class="siiid-card p-3 mb-3">
+    <label for="entidad-asignada-banci"><strong>Entidad asignada</strong></label>
+    <select id="entidad-asignada-banci" class="form-select mt-2" style="max-width: 450px" disabled
+      [ngModel]="o.idEntidadFederativa">
+      @for (e of entidades(); track e.clave) { <option [ngValue]="+e.clave">{{ e.descripcion }}</option> }
+    </select>
+  </div>
+  }
 
   @if (!pendiente() && !necesitaActualizar() && !confirmacion()) {
-      <div class="modalidades-actualizacion" role="group" aria-label="Modalidad de actualización">
-        <button type="button" class="modalidad-actualizacion" [class.activa]="modalidad() === 'manual'"
-          [attr.aria-pressed]="modalidad() === 'manual'" (click)="cambiarModalidad('manual')">
-          <i class="fa-solid fa-user-pen"></i><strong>Actualización manual</strong><span>Buscar y actualizar una víctima.</span>
-        </button>
-        <button type="button" class="modalidad-actualizacion" [class.activa]="modalidad() === 'masiva'"
-          [attr.aria-pressed]="modalidad() === 'masiva'" (click)="cambiarModalidad('masiva')">
-          <i class="fa-solid fa-file-arrow-up"></i><strong>Actualización masiva</strong><span>Actualizar mediante Excel.</span>
-        </button>
-      </div>
-      @if (modalidad() === 'manual') {
-      <div class="siiid-card mb-3">
+  <div class="modalidades-actualizacion" role="group" aria-label="Modalidad de actualización">
+    <button type="button" class="modalidad-actualizacion" [class.activa]="modalidad() === 'manual'"
+      [attr.aria-pressed]="modalidad() === 'manual'" (click)="cambiarModalidad('manual')">
+      <i class="fa-solid fa-user-pen"></i><strong>Actualización manual</strong><span>Buscar y actualizar una
+        víctima.</span>
+    </button>
+    <button type="button" class="modalidad-actualizacion" [class.activa]="modalidad() === 'masiva'"
+      [attr.aria-pressed]="modalidad() === 'masiva'" (click)="cambiarModalidad('masiva')">
+      <i class="fa-solid fa-file-arrow-up"></i><strong>Actualización masiva</strong><span>Actualizar mediante
+        Excel.</span>
+    </button>
+  </div>
+  @if (modalidad() === 'manual') {
+  <div class="siiid-card mb-3">
     <div class="siiid-card-header"><i class="fa-solid fa-magnifying-glass"></i> Buscar víctima registrada</div>
 
     <div class="p-3">
@@ -131,7 +134,8 @@
     <div class="p-3">
       <p><strong>Víctima:</strong> {{ nombre(v) }}</p>
       <p><strong>NO_BANCI:</strong> {{ v.no_banci }} · <strong>ID_DELITO:</strong> {{ v.id_delito }} ·
-        <strong>ID_VICF:</strong> {{ v.id_vicf }}</p>
+        <strong>ID_VICF:</strong> {{ v.id_vicf }}
+      </p>
 
       <div class="alert alert-info">
         Modifique solamente los campos necesarios. Los campos de edición vacíos conservarán el valor actual.
@@ -139,16 +143,17 @@
       </div>
 
       <form (ngSubmit)="validarFormulario()">
-              <div class="pestanas-banci" role="tablist" aria-label="Datos para actualizar">
-                <button type="button" role="tab" [attr.aria-selected]="pestanaManual() === 'localizacion'"
-                  [class.activa]="pestanaManual() === 'localizacion'"
-                  (click)="pestanaManual.set('localizacion')">Datos de localización</button>
-                <button type="button" role="tab" [attr.aria-selected]="pestanaManual() === 'personales'"
-                  [class.activa]="pestanaManual() === 'personales'"
-                  (click)="pestanaManual.set('personales')">Datos personales (opcionales)</button>
-              </div>
-              <div class="campos-edicion" role="tabpanel">
-                @for (campo of (pestanaManual() === 'localizacion' ? camposLocalizacion : camposPersonales); track campo.clave) {
+        <div class="pestanas-banci" role="tablist" aria-label="Datos para actualizar">
+          <button type="button" role="tab" [attr.aria-selected]="pestanaManual() === 'localizacion'"
+            [class.activa]="pestanaManual() === 'localizacion'" (click)="pestanaManual.set('localizacion')">Datos de
+            localización</button>
+          <button type="button" role="tab" [attr.aria-selected]="pestanaManual() === 'personales'"
+            [class.activa]="pestanaManual() === 'personales'" (click)="pestanaManual.set('personales')">Datos personales
+            (opcionales)</button>
+        </div>
+        <div class="campos-edicion" role="tabpanel">
+          @for (campo of (pestanaManual() === 'localizacion' ? camposLocalizacion : camposPersonales); track
+          campo.clave) {
           <div class="campo-edicion" [class.ancho]="campo.tipo === 'textarea'">
             <label [for]="'actualizar-' + campo.clave"><strong>{{ campo.etiqueta }}</strong></label>
             <small><strong>Valor actual:</strong> {{ actual(campo.clave) }}</small>
@@ -186,10 +191,10 @@
   </div>
   }
 
-      }
-      @if (modalidad() === 'masiva') {
-      <div class="siiid-card mb-3">
-        <div class="siiid-card-header"><i class="fa-solid fa-file-excel"></i> Actualización mediante Excel</div>
+  }
+  @if (modalidad() === 'masiva') {
+  <div class="siiid-card mb-3">
+    <div class="siiid-card-header"><i class="fa-solid fa-file-excel"></i> Actualización mediante Excel</div>
 
     <div class="p-3">
       <p>Descargue la plantilla BANCI V2 y capture las víctimas que necesita actualizar.</p>
@@ -209,27 +214,27 @@
       </div>
 
       <form (ngSubmit)="validarExcel()">
-            <div class="zona-archivo-banci" [class.arrastrando]="archivoArrastrado()"
-              (dragenter)="arrastrarArchivo($event)" (dragover)="arrastrarArchivo($event)"
-              (dragleave)="salirArrastreArchivo($event)" (drop)="soltarArchivo($event)">
-              <label for="archivo-actualizacion" class="d-block">
-                <i class="fa-solid fa-cloud-arrow-up fa-2x"></i>
-                <strong>Arrastre el Excel aquí o seleccione un archivo .xlsx</strong>
-              </label>
-              <input id="archivo-actualizacion" class="form-control mt-2" type="file" accept=".xlsx"
-                (change)="seleccionarArchivo($event)" [disabled]="ocupado()" />
-              <p class="mt-2 mb-0">{{ archivo?.name || 'Ningún archivo seleccionado' }}</p>
-            </div>
-            <button type="submit" class="btn btn-siiid mt-3" [disabled]="ocupado() || !archivo">
-              Validar Excel
-            </button>
-          </form>
+        <div class="zona-archivo-banci" [class.arrastrando]="archivoArrastrado()" (dragenter)="arrastrarArchivo($event)"
+          (dragover)="arrastrarArchivo($event)" (dragleave)="salirArrastreArchivo($event)"
+          (drop)="soltarArchivo($event)">
+          <label for="archivo-actualizacion" class="d-block">
+            <i class="fa-solid fa-cloud-arrow-up fa-2x"></i>
+            <strong>Arrastre el Excel aquí o seleccione un archivo .xlsx</strong>
+          </label>
+          <input id="archivo-actualizacion" class="form-control mt-2" type="file" accept=".xlsx"
+            (change)="seleccionarArchivo($event)" [disabled]="ocupado()" />
+          <p class="mt-2 mb-0">{{ archivo?.name || 'Ningún archivo seleccionado' }}</p>
+        </div>
+        <button type="submit" class="btn btn-siiid mt-3" [disabled]="ocupado() || !archivo">
+          Validar Excel
+        </button>
+      </form>
     </div>
-      </div>
-      }
-    }
+  </div>
+  }
+  }
 
-    @if (pendientes().length > 0) {
+  @if (pendientes().length > 0) {
   <div class="siiid-card mb-3">
     <div class="siiid-card-header">Mis actualizaciones pendientes</div>
 
@@ -263,12 +268,81 @@
       }
 
       @if (r.advertencias.length > 0) {
-      <div class="alert alert-warning">
-        <strong>La actualización tiene {{ r.advertencias.length }} advertencia(s).</strong>
-        @for (a of r.advertencias; track $index) {
-        <p class="mensaje-detalle">Fila {{ a.numeroFila ?? '—' }} · {{ a.mensaje }}</p>
-        }
+
+      <div class="advertencias-actualizacion">
+
+        <div class="advertencias-actualizacion-header">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+
+          <div>
+            <strong>
+              {{ r.advertencias.length }} advertencia(s) detectada(s)
+            </strong>
+
+            <p class="mb-0">
+              Revise las observaciones antes de aceptar o corregir la actualización.
+            </p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+
+          <table class="table table-bordered mb-0 tabla-advertencias-actualizacion">
+
+            <thead>
+              <tr>
+                <th>Fila</th>
+                <th>Campo</th>
+                <th>Advertencia</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (a of r.advertencias; track $index) {
+
+              <tr>
+                <td>{{ a.numeroFila ?? '—' }}</td>
+
+                <td>
+                  <strong>{{ a.campo || 'General' }}</strong>
+                </td>
+
+                <td>{{ a.mensaje }}</td>
+
+                <td>
+                  @if (pendiente()) {
+
+                  <button type="button" class="btn btn-sm btn-warning" [disabled]="ocupado() || necesitaActualizar()"
+                    (click)="regresarAEdicion(a)">
+
+                    <i class="fa-solid fa-arrow-left"></i>
+
+                    {{ modalidad() === 'manual'
+                    ? 'Revisar campo'
+                    : 'Corregir Excel' }}
+
+                  </button>
+
+                  } @else {
+                  <span class="text-muted">
+                    Revise la información
+                  </span>
+                  }
+                </td>
+              </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
       </div>
+
       }
 
       @if (pendiente()) {
@@ -310,8 +384,13 @@
       }
 
       <div class="acciones mt-3">
-        <button type="button" class="btn btn-secondary" [disabled]="ocupado()" (click)="recuperar(referencia())">
-          Actualizar vista previa
+        <button type="button" class="btn btn-secondary" [disabled]="ocupado() || necesitaActualizar()"
+          (click)="regresarAEdicion()">
+
+          <i class="fa-solid fa-arrow-left"></i>
+
+          Regresar y revisar información
+
         </button>
 
         <button type="button" class="btn btn-outline-danger" [disabled]="ocupado() || necesitaActualizar()"
@@ -338,43 +417,60 @@
     <p><strong>Estado:</strong> {{ c.estado }}</p>
     <p><strong>Cambios aplicados:</strong> {{ c.totalCambios ?? 0 }}</p>
 
-        @if (cambiosConfirmados.length > 0) {
-          <button type="button" class="btn btn-secondary me-2" (click)="descargarResumenActualizacion()">
-            <i class="fa-solid fa-file-excel"></i> Descargar Excel con cambios confirmados
-          </button>
-          <button type="button" class="btn btn-secondary me-2" (click)="mostrarResumen.set(true)">
-            Ver resumen
-          </button>
-        }
-        <button type="button" class="btn btn-siiid" (click)="nuevaOperacion()">Nueva actualización</button>
+    @if (cambiosConfirmados.length > 0) {
+    <button type="button" class="btn btn-secondary me-2" (click)="descargarResumenActualizacion()">
+      <i class="fa-solid fa-file-excel"></i> Descargar Excel con cambios confirmados
+    </button>
+    <button type="button" class="btn btn-secondary me-2" (click)="mostrarResumen.set(true)">
+      Ver resumen
+    </button>
+    }
+    <button type="button" class="btn btn-siiid" (click)="nuevaOperacion()">Nueva actualización</button>
   </div>
   }
   }
-@if (mostrarResumen() && confirmacion()) {
+  @if (mostrarResumen() && confirmacion()) {
   <div class="resumen-modal-fondo" (click)="mostrarResumen.set(false)" role="presentation">
     <div class="resumen-modal-banci" role="dialog" aria-modal="true" aria-label="Resumen de actualización BANCI"
       (click)="$event.stopPropagation()">
       <h2>Actualización confirmada</h2>
       <p>Referencia {{ confirmacion()?.codigoReferencia }} · {{ confirmacion()?.totalCambios ?? 0 }} cambios.</p>
       @if (modalidad() === 'manual') {
-        @if (seleccionada(); as v) {
-        <p><strong>NO_BANCI:</strong> {{ v.no_banci }} · <strong>ID_CI:</strong> {{ v.id_ci }} ·
+      @if (seleccionada(); as v) {
+      <p><strong>NO_BANCI:</strong> {{ v.no_banci }} · <strong>ID_CI:</strong> {{ v.id_ci }} ·
         <strong>ID_DELITO:</strong> {{ v.id_delito }} · <strong>ID_VICF:</strong> {{ v.id_vicf }} ·
-        <strong>Folio RNPDNO:</strong> {{ v.folio_rnpdno || '—' }}</p>
-        }
+        <strong>Folio RNPDNO:</strong> {{ v.folio_rnpdno || '—' }}
+      </p>
+      }
       }
       <div class="table-responsive">
-        <table class="table table-sm table-striped"><thead>
-          <tr><th>NO_BANCI</th><th>ID_DELITO</th><th>ID_VICF</th><th>Campo</th><th>Anterior</th><th>Nuevo</th></tr>
-        </thead><tbody>
-          @for (c of cambiosConfirmados; track $index) {
-            <tr><td>{{ c.no_banci }}</td><td>{{ c.id_delito }}</td><td>{{ c.id_vicf }}</td>
-              <td>{{ c.campo }}</td><td>{{ c.anterior ?? '—' }}</td><td>{{ c.nuevo ?? '—' }}</td></tr>
-          }
-        </tbody></table>
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>NO_BANCI</th>
+              <th>ID_DELITO</th>
+              <th>ID_VICF</th>
+              <th>Campo</th>
+              <th>Anterior</th>
+              <th>Nuevo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of cambiosConfirmados; track $index) {
+            <tr>
+              <td>{{ c.no_banci }}</td>
+              <td>{{ c.id_delito }}</td>
+              <td>{{ c.id_vicf }}</td>
+              <td>{{ c.campo }}</td>
+              <td>{{ c.anterior ?? '—' }}</td>
+              <td>{{ c.nuevo ?? '—' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
       </div>
       <button type="button" class="btn btn-siiid" (click)="mostrarResumen.set(false)">Cerrar</button>
     </div>
   </div>
-}
+  }
 </section>
