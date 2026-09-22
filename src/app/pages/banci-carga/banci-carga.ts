@@ -10,6 +10,8 @@ import { SessionService } from '../../core/services/session.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 import { BanciVistaPreviaComponent } from './banci-vista-previa';
+import { FormsModule } from '@angular/forms';
+import { BanciFormularioOpciones } from '../../core/models/banci-formulario.models';
 
 type TipoArchivoBanci = 'libro' | 'carpetas' | 'delitos' | 'victimas';
 type TipoResumen = 'carpetas' | 'delitos' | 'victimas';
@@ -23,7 +25,7 @@ interface ResumenBanci {
 
 @Component({
   selector: 'app-banci-carga',
-  imports: [BanciVistaPreviaComponent],
+  imports: [FormsModule, BanciVistaPreviaComponent],
   templateUrl: './banci-carga.html',
   styleUrl: './banci-carga.css',
 })
@@ -32,6 +34,19 @@ export class BanciCarga implements OnInit {
   private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
 
+  opciones = signal<BanciFormularioOpciones | null>(null);
+  cargandoOpciones = signal(false);
+  descargandoPlantilla = signal(false);
+  aceptarAdvertencias = false;
+  entidad: number | null = null;
+
+  entidades = computed(
+    () =>
+      this.opciones()?.catalogos.filter(
+        (c) => c.campo === 'id_ent_hchos' && Number(c.clave) >= 1 && Number(c.clave) <= 32,
+      ) ?? [],
+  );
+
   necesitaActualizar = signal(false);
   referenciaEnCurso = signal('');
   bloqueado = computed(() => this.cargando());
@@ -39,62 +54,183 @@ export class BanciCarga implements OnInit {
   rechazado = computed(() => this.resultado()?.estado === 'RECHAZADO_VALIDACION');
 
   ngOnInit(): void {
+    if (this.session.usuario()?.rol === 'SUPER_USUARIO') this.cargarOpciones();
     try {
       const referencia = localStorage.getItem(this.claveRecuperacion());
       if (referencia) this.recuperarCarga(referencia);
-    } catch { /* La recuperación manual funciona aunque el almacenamiento no esté disponible. */ }
+    } catch {
+      /* La recuperación manual funciona aunque el almacenamiento no esté disponible. */
+    }
+  }
+
+  cargarOpciones(): void {
+    if (this.cargandoOpciones()) return;
+
+    this.cargandoOpciones.set(true);
+    this.banciCargaService
+      .obtenerFormularioOpciones()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (opciones) => {
+          this.opciones.set(opciones);
+          this.cargandoOpciones.set(false);
+        },
+        error: (e) => {
+          this.cargandoOpciones.set(false);
+          this.mensajeLocal.set(
+            e?.error?.mensaje ||
+              'No fue posible obtener las entidades. Reintente cargar las opciones.',
+          );
+        },
+      });
+  }
+
+  descargarPlantilla(): void {
+    if (this.descargandoPlantilla()) return;
+
+    this.descargandoPlantilla.set(true);
+
+    this.banciCargaService
+      .descargarPlantilla()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          const archivo = response.body;
+
+          if (!archivo) {
+            this.mensajeLocal.set('La API no devolvió la plantilla BANCI.');
+            this.descargandoPlantilla.set(false);
+            return;
+          }
+
+          const url = URL.createObjectURL(archivo);
+          const enlace = document.createElement('a');
+
+          enlace.href = url;
+          enlace.download = 'BANCI_carga_inicial_v2.xlsx';
+          document.body.appendChild(enlace);
+          enlace.click();
+          enlace.remove();
+
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          this.descargandoPlantilla.set(false);
+        },
+        error: (e) => {
+          this.descargandoPlantilla.set(false);
+          this.mensajeLocal.set(
+            e?.error?.mensaje || 'No fue posible descargar la plantilla BANCI V2.',
+          );
+        },
+      });
   }
 
   recuperarCarga(referencia: string): void {
     referencia = referencia.trim();
+    this.aceptarAdvertencias = false;
     if (!referencia || referencia.length > 50 || this.cargando()) return;
     this.referenciaEnCurso.set(referencia);
     this.cargando.set(true);
     this.mensajeLocal.set('');
-    this.banciCargaService.obtenerCarga(referencia).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (carga) => {
-        this.resultado.set(carga);
-        this.recordarReferencia(referencia);
-        this.necesitaActualizar.set(false);
-        this.cargando.set(false);
-        this.limpiarArchivosSeleccionados();
-        this.enfocarResultado();
-      },
-      error: (error) => {
-        this.cargando.set(false);
-        this.necesitaActualizar.set(error?.status !== 404);
-        if (error?.status === 404) {
-          try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
-        }
-        this.mensajeLocal.set(error?.error?.mensaje || 'No se pudo recuperar el estado. Intente recuperar el estado; no vuelva a subir los archivos.');
-      },
-    });
-  }
-
-  confirmar(aceptar: boolean): void {
-    const carga = this.resultado();
-    if (!carga || !this.pendiente() || !carga.esValido || this.bloqueado() || this.necesitaActualizar()) return;
-    if (aceptar && carga.vistaPrevia?.puedeAceptar === false) { this.mensajeLocal.set(carga.vistaPrevia.motivoBloqueo || 'No tiene permisos para integrar esta carga.'); return; }
-    if (aceptar && !carga.vistaPrevia?.huella) { this.mensajeLocal.set('Actualice el estado y revise la vista previa antes de aceptar.'); return; }
-    this.cargando.set(true);
-    this.mensajeLocal.set('');
-    this.recordarReferencia(carga.codigoReferencia);
-    this.banciCargaService.confirmar(carga.codigoReferencia, aceptar, aceptar ? carga.vistaPrevia?.huella : undefined)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: (respuesta) => {
-          // Confirmar devuelve los totales reales; las observaciones ya estaban guardadas.
-          this.resultado.set({ ...respuesta, modalidadIngreso: carga.modalidadIngreso,
-            fechaCarga: carga.fechaCarga, errores: carga.errores, advertencias: carga.advertencias });
+    this.banciCargaService
+      .obtenerCarga(referencia)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (carga) => {
+          this.resultado.set(carga);
+          this.recordarReferencia(referencia);
+          this.necesitaActualizar.set(false);
           this.cargando.set(false);
+          this.limpiarArchivosSeleccionados();
           this.enfocarResultado();
         },
         error: (error) => {
           this.cargando.set(false);
-          this.necesitaActualizar.set(true);
-          this.mensajeLocal.set((error?.error?.mensaje || 'No se recibió la confirmación de la operación.') +
-            ' Pulse «Actualizar revisión» para conocer el resultado antes de decidir nuevamente.');
+          this.necesitaActualizar.set(error?.status !== 404);
+          if (error?.status === 404) {
+            try {
+              localStorage.removeItem(this.claveRecuperacion());
+            } catch {
+              /* Sin almacenamiento local. */
+            }
+          }
+          this.mensajeLocal.set(
+            error?.error?.mensaje ||
+              'No se pudo recuperar el estado. Intente recuperar el estado; no vuelva a subir los archivos.',
+          );
         },
       });
+  }
+
+  confirmar(aceptar: boolean): void {
+    const carga = this.resultado();
+    if (
+      !carga ||
+      !this.pendiente() ||
+      !carga.esValido ||
+      this.bloqueado() ||
+      this.necesitaActualizar()
+    )
+      return;
+
+    if (aceptar && carga.vistaPrevia?.puedeAceptar === false) {
+      this.mensajeLocal.set(
+        carga.vistaPrevia.motivoBloqueo || 'No tiene permisos para integrar esta carga.',
+      );
+      return;
+    }
+
+    if (aceptar && !carga.vistaPrevia?.huella) {
+      this.mensajeLocal.set('Actualice el estado y revise la vista previa antes de aceptar.');
+      return;
+    }
+
+    if (aceptar && carga.advertencias.length > 0 && !this.aceptarAdvertencias) {
+      this.mensajeLocal.set(
+        'Debe revisar y aceptar explícitamente las advertencias antes de integrar la carga.',
+      );
+      return;
+    }
+
+    this.cargando.set(true);
+    this.mensajeLocal.set('');
+    this.recordarReferencia(carga.codigoReferencia);
+
+    const peticion =
+      aceptar && carga.advertencias.length > 0
+        ? this.banciCargaService.confirmar(
+            carga.codigoReferencia,
+            true,
+            carga.vistaPrevia?.huella,
+            true,
+          )
+        : this.banciCargaService.confirmar(
+            carga.codigoReferencia,
+            aceptar,
+            aceptar ? carga.vistaPrevia?.huella : undefined,
+          );
+
+    peticion.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (respuesta) => {
+        this.resultado.set({
+          ...respuesta,
+          modalidadIngreso: carga.modalidadIngreso,
+          fechaCarga: carga.fechaCarga,
+          errores: carga.errores,
+          advertencias: carga.advertencias,
+        });
+        this.aceptarAdvertencias = false;
+        this.cargando.set(false);
+        this.enfocarResultado();
+      },
+      error: (error) => {
+        this.cargando.set(false);
+        this.necesitaActualizar.set(true);
+        this.mensajeLocal.set(
+          (error?.error?.mensaje || 'No se recibió la confirmación de la operación.') +
+            ' Pulse «Actualizar revisión» para conocer el resultado antes de decidir nuevamente.',
+        );
+      },
+    });
   }
 
   private claveRecuperacion(): string {
@@ -103,7 +239,11 @@ export class BanciCarga implements OnInit {
 
   private recordarReferencia(referencia: string): void {
     this.referenciaEnCurso.set(referencia);
-    try { localStorage.setItem(this.claveRecuperacion(), referencia); } catch { /* Sólo se guarda la referencia. */ }
+    try {
+      localStorage.setItem(this.claveRecuperacion(), referencia);
+    } catch {
+      /* Sólo se guarda la referencia. */
+    }
   }
 
   archivoLibro: File | null = null;
@@ -123,8 +263,10 @@ export class BanciCarga implements OnInit {
   resultadoConErrores = computed(() => !!this.resultado() && !this.resultado()!.esValido);
   resultadoCorrecto = computed(() => {
     const resultado = this.resultado();
-    return resultado?.esValido && ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado)
-      ? resultado : null;
+    return resultado?.esValido &&
+      ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado)
+      ? resultado
+      : null;
   });
 
   resumenCarpetas = computed(() => this.construirResumen('carpetas'));
@@ -219,36 +361,56 @@ export class BanciCarga implements OnInit {
 
   procesar(): void {
     if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
+
     this.mensajeLocal.set('');
-    this.resultado.set(null);
+    this.aceptarAdvertencias = false;
+
+    if (this.session.usuario()?.rol === 'SUPER_USUARIO' && !this.entidad) {
+      this.mensajeLocal.set('Seleccione la entidad federativa que reporta la información.');
+      return;
+    }
+
+    const idEntidad = this.session.usuario()?.rol === 'SUPER_USUARIO' ? this.entidad : null;
 
     const peticion = this.archivoLibro
-      ? this.banciCargaService.validarLibro(this.archivoLibro)
+      ? idEntidad == null
+        ? this.banciCargaService.validarLibro(this.archivoLibro)
+        : this.banciCargaService.validarLibro(this.archivoLibro, idEntidad)
       : this.archivoCarpetas && this.archivoDelitos && this.archivoVictimas
-        ? this.banciCargaService.validarArchivos(
-            this.archivoCarpetas,
-            this.archivoDelitos,
-            this.archivoVictimas,
-          )
+        ? idEntidad == null
+          ? this.banciCargaService.validarArchivos(
+              this.archivoCarpetas,
+              this.archivoDelitos,
+              this.archivoVictimas,
+            )
+          : this.banciCargaService.validarArchivos(
+              this.archivoCarpetas,
+              this.archivoDelitos,
+              this.archivoVictimas,
+              idEntidad,
+            )
         : null;
 
     if (!peticion) {
       this.mensajeLocal.set(
-        'Selecciona un Excel con las hojas CI, Delitos y Victimas, o los tres archivos Carpetas, Delitos y Victimas.',
+        'Seleccione un Excel con las hojas CI, Delitos y Victimas, o los tres archivos Carpetas, Delitos y Victimas.',
       );
       return;
     }
 
+    this.resultado.set(null);
     this.cargando.set(true);
 
     peticion.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.resultado.set(response);
         this.cargando.set(false);
+
         if (response.estado === 'VALIDADO_PENDIENTE') {
           this.recordarReferencia(response.codigoReferencia);
           this.limpiarArchivosSeleccionados();
         }
+
         this.enfocarResultado();
       },
       error: (error) => {
@@ -259,7 +421,8 @@ export class BanciCarga implements OnInit {
           this.enfocarResultado();
         } else {
           this.mensajeLocal.set(
-            error?.error?.mensaje || 'No se recibió el resultado de la validación. Puede volver a validar los archivos; ninguna carga se integra sin su confirmación.',
+            error?.error?.mensaje ||
+              'No se recibió el resultado de la validación. Ninguna carga se integra sin su confirmación.',
           );
         }
 
@@ -268,15 +431,19 @@ export class BanciCarga implements OnInit {
     });
   }
 
-prepararNuevaValidacion(): void {
-  if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
-  this.limpiarArchivosSeleccionados();
-  this.resultado.set(null);
-  this.mensajeLocal.set('');
-  try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
+  prepararNuevaValidacion(): void {
+    if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
+    this.limpiarArchivosSeleccionados();
+    this.resultado.set(null);
+    this.mensajeLocal.set('');
+    try {
+      localStorage.removeItem(this.claveRecuperacion());
+    } catch {
+      /* Sin almacenamiento local. */
+    }
 
-  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
-}
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
   async descargarValidacion(): Promise<void> {
     if (this.detallesValidacion().length === 0 || this.exportandoValidacion()) return;
 
@@ -298,10 +465,7 @@ prepararNuevaValidacion(): void {
         );
       }
     } catch {
-      void mostrarError(
-        'No fue posible descargar la validación',
-        'Intente nuevamente.',
-      );
+      void mostrarError('No fue posible descargar la validación', 'Intente nuevamente.');
     } finally {
       this.exportandoValidacion.set(false);
     }
@@ -330,10 +494,7 @@ prepararNuevaValidacion(): void {
 
     const agrupados = new Map<string, ResumenBanci>();
 
-    const agregar = (
-      detalles: BanciCargaValidacionError[],
-      esError: boolean,
-    ): void => {
+    const agregar = (detalles: BanciCargaValidacionError[], esError: boolean): void => {
       for (const detalle of detalles) {
         if (this.normalizarArchivo(detalle.archivo) !== tipo) continue;
 
@@ -367,7 +528,8 @@ prepararNuevaValidacion(): void {
 
     if (valor === 'carpeta' || valor === 'carpetas' || valor === 'ci') return 'carpetas';
     if (valor === 'delito' || valor === 'delitos') return 'delitos';
-    if (valor === 'victima' || valor === 'victimas' || valor === 'víctima' || valor === 'víctimas') return 'victimas';
+    if (valor === 'victima' || valor === 'victimas' || valor === 'víctima' || valor === 'víctimas')
+      return 'victimas';
 
     return null;
   }
@@ -387,24 +549,32 @@ prepararNuevaValidacion(): void {
   }
 
   private limpiarArchivosSeleccionados(): void {
-  this.archivoLibro = null;
-  this.archivoCarpetas = null;
-  this.archivoDelitos = null;
-  this.archivoVictimas = null;
-  this.archivoArrastrado.set(null);
+    this.archivoLibro = null;
+    this.archivoCarpetas = null;
+    this.archivoDelitos = null;
+    this.archivoVictimas = null;
+    this.archivoArrastrado.set(null);
 
-  document
-    .querySelectorAll<HTMLInputElement>('.carga-banci input[type="file"]')
-    .forEach((input) => input.value = '');
-}
+    document
+      .querySelectorAll<HTMLInputElement>('.carga-banci input[type="file"]')
+      .forEach((input) => (input.value = ''));
+  }
 
   private limpiarResultado(): void {
     this.mensajeLocal.set('');
     this.resultado.set(null);
   }
 
-  irADecision(): void { const destino = document.getElementById('decision-banci'); destino?.focus({ preventScroll: true }); destino?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  verAdvertencias(): void { document.getElementById('resultado-banci')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  irADecision(): void {
+    const destino = document.getElementById('decision-banci');
+    destino?.focus({ preventScroll: true });
+    destino?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  verAdvertencias(): void {
+    document
+      .getElementById('resultado-banci')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   private enfocarResultado(): void {
     setTimeout(() => {

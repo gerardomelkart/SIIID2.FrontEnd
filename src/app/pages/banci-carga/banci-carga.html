@@ -28,6 +28,42 @@
         </div>
       </div>
 
+
+      <div class="siiid-card p-3 mb-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <strong>Plantilla de carga inicial BANCI V2</strong>
+      <p class="mb-0">Descargue el Excel con las hojas CI, Delitos y Victimas y los campos vigentes del nuevo formato.</p>
+    </div>
+
+    <button type="button" class="btn btn-secondary" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla()">
+      <i class="fa-solid fa-file-excel"></i>
+      {{ descargandoPlantilla() ? 'Descargando...' : 'Descargar plantilla' }}
+    </button>
+  </div>
+
+  <p class="mt-2 mb-0">El folio NO_BANCI se generará automáticamente cuando se integre una carpeta nueva.</p>
+</div>
+
+@if (session.usuario()?.rol === 'SUPER_USUARIO') {
+  <div class="siiid-card p-3 mb-3">
+    <label for="entidad-banci-carga"><strong>Entidad que reporta la información *</strong></label>
+
+    <div class="d-flex flex-wrap gap-2 mt-2">
+      <select id="entidad-banci-carga" class="form-select" style="max-width: 420px" [(ngModel)]="entidad" [disabled]="bloqueado() || cargandoOpciones()" required>
+        <option [ngValue]="null">Seleccione una entidad...</option>
+        @for (e of entidades(); track e.clave) {
+          <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
+        }
+      </select>
+
+      @if (!opciones() && !cargandoOpciones()) {
+        <button type="button" class="btn btn-secondary" (click)="cargarOpciones()">Reintentar</button>
+      }
+    </div>
+  </div>
+}
+
       <div class="upload-steps">
         <div class="upload-step active">
           <span>1</span>
@@ -434,6 +470,18 @@
         <p>Revise también las advertencias antes de decidir. <button type="button" class="btn btn-link" (click)="verAdvertencias()">Ver advertencias</button></p>
         @if (necesitaActualizar() || !resultado()?.vistaPrevia || resultado()?.vistaPrevia?.puedeAceptar === false) { <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar revisión</button> }
         <app-banci-vista-previa [previa]="resultado()?.vistaPrevia" />
+
+        @if (advertencias().length > 0) {
+  <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
+    <p><strong>La carga presenta {{ advertencias().length }} advertencia(s).</strong></p>
+    <p>Revise el detalle anterior. Algunas CURP podrían quedar sin validar si RENAPO no está disponible.</p>
+
+    <label class="d-flex align-items-start gap-2">
+      <input type="checkbox" [(ngModel)]="aceptarAdvertencias" [disabled]="bloqueado() || necesitaActualizar()" />
+      <span>He revisado las advertencias y acepto continuar con la integración.</span>
+    </label>
+  </div>
+}
         <p>La decisión corresponde únicamente a quien subió estos archivos, incluso cuando no hay advertencias.</p>
         <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
           (click)="confirmar(false)">Rechazar carga</button>
