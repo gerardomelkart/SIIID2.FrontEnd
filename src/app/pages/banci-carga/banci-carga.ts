@@ -33,6 +33,7 @@ export class BanciCarga implements OnInit {
   private readonly banciCargaService = inject(BanciCargaService);
   private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
+  readonly esSuperUsuario = computed(() => this.session.usuario()?.rol === 'SUPER_USUARIO');
 
   opciones = signal<BanciFormularioOpciones | null>(null);
   cargandoOpciones = signal(false);
@@ -433,6 +434,7 @@ export class BanciCarga implements OnInit {
 
   prepararNuevaValidacion(): void {
     if (this.bloqueado() || this.pendiente() || this.necesitaActualizar()) return;
+    this.aceptarAdvertencias = false;
     this.limpiarArchivosSeleccionados();
     this.resultado.set(null);
     this.mensajeLocal.set('');
@@ -561,6 +563,7 @@ export class BanciCarga implements OnInit {
   }
 
   private limpiarResultado(): void {
+    this.aceptarAdvertencias = false;
     this.mensajeLocal.set('');
     this.resultado.set(null);
   }

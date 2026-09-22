@@ -45,7 +45,7 @@
   <p class="mt-2 mb-0">El folio NO_BANCI se generará automáticamente cuando se integre una carpeta nueva.</p>
 </div>
 
-@if (session.usuario()?.rol === 'SUPER_USUARIO') {
+@if (esSuperUsuario()) {
   <div class="siiid-card p-3 mb-3">
     <label for="entidad-banci-carga"><strong>Entidad que reporta la información *</strong></label>
 
@@ -485,7 +485,7 @@
         <p>La decisión corresponde únicamente a quien subió estos archivos, incluso cuando no hay advertencias.</p>
         <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
           (click)="confirmar(false)">Rechazar carga</button>
-        <button type="button" class="btn btn-siiid" [disabled]="bloqueado() || necesitaActualizar() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false"
+        <button type="button" class="btn btn-siiid" [disabled]="bloqueado() || necesitaActualizar() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
           (click)="confirmar(true)">Aceptar e integrar carga</button>
       </div>
     }
