@@ -55,7 +55,7 @@ export class BanciCarga implements OnInit {
   rechazado = computed(() => this.resultado()?.estado === 'RECHAZADO_VALIDACION');
 
   ngOnInit(): void {
-    if (this.session.usuario()?.rol === 'SUPER_USUARIO') this.cargarOpciones();
+    this.cargarOpciones();
     try {
       const referencia = localStorage.getItem(this.claveRecuperacion());
       if (referencia) this.recuperarCarga(referencia);
@@ -74,6 +74,11 @@ export class BanciCarga implements OnInit {
       .subscribe({
         next: (opciones) => {
           this.opciones.set(opciones);
+
+          if (!opciones.esSuperUsuario) {
+            this.entidad = opciones.idEntidadFederativa;
+          }
+
           this.cargandoOpciones.set(false);
         },
         error: (e) => {

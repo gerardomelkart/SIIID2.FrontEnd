@@ -16,23 +16,45 @@ export class BanciLayout {
   private readonly router = inject(Router);
 
   menuAbierto = signal(false);
-  cargaAbierta = signal(true);
-  informesAbierto = signal(true);
-  administracionAbierta = signal(true);
+  cargaAbierta = signal(false);
+  informesAbierto = signal(false);
+  administracionAbierta = signal(false);
   sesionAbierta = signal(false);
 
   usuario = this.sessionService.usuario;
-  puedeCapturar = computed(() => this.usuario()?.rol === 'SUPER_USUARIO' || (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaCarga()));
-  puedeActualizar = computed(() => this.usuario()?.rol === 'SUPER_USUARIO' || (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaModificacion()));
+  puedeCapturar = computed(
+    () =>
+      this.usuario()?.rol === 'SUPER_USUARIO' ||
+      (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaCarga()),
+  );
+  puedeActualizar = computed(
+    () =>
+      this.usuario()?.rol === 'SUPER_USUARIO' ||
+      (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaModificacion()),
+  );
   puedeRegresarSeleccionModulo = this.sessionService.tieneMultiplesModulos;
 
-  toggleMenu(): void { this.menuAbierto.update((valor) => !valor); }
-  toggleCarga(): void { this.cargaAbierta.update((valor) => !valor); }
-  toggleInformes(): void { this.informesAbierto.update((valor) => !valor); }
-  toggleSesion(): void { this.sesionAbierta.update((valor) => !valor); }
-  cerrarMenu(): void { this.menuAbierto.set(false); }
-  cerrarMenuSiEsNavegacion(event: MouseEvent): void { if ((event.target as HTMLElement).closest('a')) this.cerrarMenu(); }
-  regresarInicio(): void { void this.router.navigateByUrl('/banci'); }
+  toggleMenu(): void {
+    this.menuAbierto.update((valor) => !valor);
+  }
+  toggleCarga(): void {
+    this.cargaAbierta.update((valor) => !valor);
+  }
+  toggleInformes(): void {
+    this.informesAbierto.update((valor) => !valor);
+  }
+  toggleSesion(): void {
+    this.sesionAbierta.update((valor) => !valor);
+  }
+  cerrarMenu(): void {
+    this.menuAbierto.set(false);
+  }
+  cerrarMenuSiEsNavegacion(event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('a')) this.cerrarMenu();
+  }
+  regresarInicio(): void {
+    void this.router.navigateByUrl('/banci');
+  }
 
   regresarSeleccionModulo(): void {
     this.sessionService.limpiarModuloActivo();

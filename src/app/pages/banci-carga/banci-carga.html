@@ -2,8 +2,8 @@
 
   @if (mensajeLocal()) { <div class="alert alert-warning" role="alert">{{ mensajeLocal() }}</div> }
   @if (necesitaActualizar() && !resultado()) {
-    <button type="button" class="btn btn-secondary mb-3" [disabled]="bloqueado()"
-      (click)="recuperarCarga(referenciaEnCurso())">Reintentar recuperación de la carga</button>
+  <button type="button" class="btn btn-secondary mb-3" [disabled]="bloqueado()"
+    (click)="recuperarCarga(referenciaEnCurso())">Reintentar recuperación de la carga</button>
   }
 
   @if (!resultado()) {
@@ -29,40 +29,71 @@
       </div>
 
 
+      <div class="siiid-card mb-3">
+        <div class="siiid-card-header">
+          <i class="fa-solid fa-file-excel"></i>
+          Descargar plantillas
+        </div>
+
+        <div class="p-4">
+          <div class="plantillas-banci-nota">
+            <i class="fa-solid fa-download"></i>
+            Descargue la plantilla de carga inicial BANCI V2 antes de preparar su información.
+          </div>
+
+          <div class="plantillas-banci-grid">
+            <button type="button" class="plantilla-banci-link" [disabled]="descargandoPlantilla() || bloqueado()"
+              (click)="descargarPlantilla()">
+
+              <img src="img/logo_XLSX.png" alt="" class="plantilla-banci-icono">
+
+              <strong>
+                {{ descargandoPlantilla() ? 'Descargando...' : 'Carga inicial BANCI V2' }}
+              </strong>
+
+              <span>Excel con hojas CI, Delitos y Victimas</span>
+            </button>
+          </div>
+
+          <p class="text-muted mt-3 mb-0">
+            El NO_BANCI se asigna automáticamente cuando se integra una carpeta nueva.
+          </p>
+        </div>
+      </div>
+
+      @if (opciones(); as o) {
       <div class="siiid-card p-3 mb-3">
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-    <div>
-      <strong>Plantilla de carga inicial BANCI V2</strong>
-      <p class="mb-0">Descargue el Excel con las hojas CI, Delitos y Victimas y los campos vigentes del nuevo formato.</p>
-    </div>
+        <label for="entidad-banci-carga" class="form-label">
+          <strong>Entidad federativa que reporta *</strong>
+        </label>
 
-    <button type="button" class="btn btn-secondary" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla()">
-      <i class="fa-solid fa-file-excel"></i>
-      {{ descargandoPlantilla() ? 'Descargando...' : 'Descargar plantilla' }}
-    </button>
-  </div>
+        <select id="entidad-banci-carga" class="form-select" style="max-width: 450px" [(ngModel)]="entidad"
+          [disabled]="!o.esSuperUsuario || bloqueado() || cargandoOpciones()" required>
 
-  <p class="mt-2 mb-0">El folio NO_BANCI se generará automáticamente cuando se integre una carpeta nueva.</p>
-</div>
+          @if (o.esSuperUsuario) {
+          <option [ngValue]="null">Seleccione una entidad...</option>
+          }
 
-@if (esSuperUsuario()) {
-  <div class="siiid-card p-3 mb-3">
-    <label for="entidad-banci-carga"><strong>Entidad que reporta la información *</strong></label>
-
-    <div class="d-flex flex-wrap gap-2 mt-2">
-      <select id="entidad-banci-carga" class="form-select" style="max-width: 420px" [(ngModel)]="entidad" [disabled]="bloqueado() || cargandoOpciones()" required>
-        <option [ngValue]="null">Seleccione una entidad...</option>
-        @for (e of entidades(); track e.clave) {
+          @for (e of entidades(); track e.clave) {
           <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
-        }
-      </select>
+          }
+        </select>
 
-      @if (!opciones() && !cargandoOpciones()) {
-        <button type="button" class="btn btn-secondary" (click)="cargarOpciones()">Reintentar</button>
+        @if (!o.esSuperUsuario) {
+        <small class="text-muted d-block mt-2">
+          Entidad asignada a su cuenta. No puede modificarse.
+        </small>
+        }
+      </div>
+      } @else if (!cargandoOpciones()) {
+      <div class="alert alert-warning">
+        No fue posible cargar la información de la entidad.
+
+        <button type="button" class="btn btn-secondary ms-2" (click)="cargarOpciones()">
+          Reintentar
+        </button>
+      </div>
       }
-    </div>
-  </div>
-}
 
       <div class="upload-steps">
         <div class="upload-step active">
@@ -95,14 +126,10 @@
           </div>
 
           <div class="modalidad-body">
-            <label
-              class="file-upload-card"
-              [class.file-upload-ready]="archivoLibro"
+            <label class="file-upload-card" [class.file-upload-ready]="archivoLibro"
               [class.file-upload-dragging]="archivoArrastrado() === 'libro'"
-              (dragenter)="arrastrarArchivo($event, 'libro')"
-              (dragover)="arrastrarArchivo($event, 'libro')"
-              (dragleave)="salirArrastreArchivo($event, 'libro')"
-              (drop)="soltarArchivo($event, 'libro')">
+              (dragenter)="arrastrarArchivo($event, 'libro')" (dragover)="arrastrarArchivo($event, 'libro')"
+              (dragleave)="salirArrastreArchivo($event, 'libro')" (drop)="soltarArchivo($event, 'libro')">
 
               <div class="file-upload-header">
                 <div class="file-type-icon">
@@ -120,11 +147,7 @@
                 {{ archivoArrastrado() === 'libro' ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input
-                type="file"
-                class="file-input"
-                accept=".xlsx"
-                (change)="seleccionarLibro($event)">
+              <input type="file" class="file-input" accept=".xlsx" (change)="seleccionarLibro($event)">
             </label>
 
             <div class="modalidad-note">
@@ -137,9 +160,7 @@
           </div>
         </section>
 
-        <section
-          class="modalidad-card"
-          [class.modalidad-activa]="archivoCarpetas || archivoDelitos || archivoVictimas">
+        <section class="modalidad-card" [class.modalidad-activa]="archivoCarpetas || archivoDelitos || archivoVictimas">
 
           <div class="modalidad-header">
             <div class="modalidad-icon">
@@ -153,14 +174,10 @@
           </div>
 
           <div class="modalidad-body file-upload-grid">
-            <label
-              class="file-upload-card"
-              [class.file-upload-ready]="archivoCarpetas"
+            <label class="file-upload-card" [class.file-upload-ready]="archivoCarpetas"
               [class.file-upload-dragging]="archivoArrastrado() === 'carpetas'"
-              (dragenter)="arrastrarArchivo($event, 'carpetas')"
-              (dragover)="arrastrarArchivo($event, 'carpetas')"
-              (dragleave)="salirArrastreArchivo($event, 'carpetas')"
-              (drop)="soltarArchivo($event, 'carpetas')">
+              (dragenter)="arrastrarArchivo($event, 'carpetas')" (dragover)="arrastrarArchivo($event, 'carpetas')"
+              (dragleave)="salirArrastreArchivo($event, 'carpetas')" (drop)="soltarArchivo($event, 'carpetas')">
 
               <div class="file-upload-header">
                 <div class="file-type-icon">
@@ -177,21 +194,13 @@
                 {{ archivoArrastrado() === 'carpetas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input
-                type="file"
-                class="file-input"
-                accept=".xlsx,.csv"
-                (change)="seleccionarCarpetas($event)">
+              <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarCarpetas($event)">
             </label>
 
-            <label
-              class="file-upload-card"
-              [class.file-upload-ready]="archivoDelitos"
+            <label class="file-upload-card" [class.file-upload-ready]="archivoDelitos"
               [class.file-upload-dragging]="archivoArrastrado() === 'delitos'"
-              (dragenter)="arrastrarArchivo($event, 'delitos')"
-              (dragover)="arrastrarArchivo($event, 'delitos')"
-              (dragleave)="salirArrastreArchivo($event, 'delitos')"
-              (drop)="soltarArchivo($event, 'delitos')">
+              (dragenter)="arrastrarArchivo($event, 'delitos')" (dragover)="arrastrarArchivo($event, 'delitos')"
+              (dragleave)="salirArrastreArchivo($event, 'delitos')" (drop)="soltarArchivo($event, 'delitos')">
 
               <div class="file-upload-header">
                 <div class="file-type-icon">
@@ -208,21 +217,13 @@
                 {{ archivoArrastrado() === 'delitos' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input
-                type="file"
-                class="file-input"
-                accept=".xlsx,.csv"
-                (change)="seleccionarDelitos($event)">
+              <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarDelitos($event)">
             </label>
 
-            <label
-              class="file-upload-card"
-              [class.file-upload-ready]="archivoVictimas"
+            <label class="file-upload-card" [class.file-upload-ready]="archivoVictimas"
               [class.file-upload-dragging]="archivoArrastrado() === 'victimas'"
-              (dragenter)="arrastrarArchivo($event, 'victimas')"
-              (dragover)="arrastrarArchivo($event, 'victimas')"
-              (dragleave)="salirArrastreArchivo($event, 'victimas')"
-              (drop)="soltarArchivo($event, 'victimas')">
+              (dragenter)="arrastrarArchivo($event, 'victimas')" (dragover)="arrastrarArchivo($event, 'victimas')"
+              (dragleave)="salirArrastreArchivo($event, 'victimas')" (drop)="soltarArchivo($event, 'victimas')">
 
               <div class="file-upload-header">
                 <div class="file-type-icon">
@@ -239,11 +240,7 @@
                 {{ archivoArrastrado() === 'victimas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
               </span>
 
-              <input
-                type="file"
-                class="file-input"
-                accept=".xlsx,.csv"
-                (change)="seleccionarVictimas($event)">
+              <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarVictimas($event)">
             </label>
           </div>
         </section>
@@ -255,10 +252,7 @@
           Usa solamente una modalidad por carga. Los archivos serán validados antes de integrarse a BANCI.
         </div>
 
-        <button
-          type="button"
-          class="btn btn-siiid px-4"
-          [disabled]="bloqueado() || necesitaActualizar()"
+        <button type="button" class="btn btn-siiid px-4" [disabled]="bloqueado() || necesitaActualizar()"
           (click)="procesar()">
 
           <i class="fa-solid fa-shield-halved"></i>
@@ -289,20 +283,18 @@
         </h2>
 
         <p>
-          {{ pendiente() ? 'Los datos todavía no se han integrado. Revise las advertencias antes de aceptar o rechazar.' : 'Revise los errores detectados. Corrija la información y vuelva a realizar la carga.' }}
+          {{ pendiente() ? 'Los datos todavía no se han integrado. Revise las advertencias antes de aceptar o rechazar.'
+          : 'Revise los errores detectados. Corrija la información y vuelva a realizar la carga.' }}
         </p>
 
       </div>
 
       <div class="validation-actions">
         @if (pendiente()) {
-        <button type="button" class="btn btn-secondary" [disabled]="bloqueado()"
-          (click)="irADecision()">Revisar y decidir</button>
+        <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="irADecision()">Revisar y
+          decidir</button>
         } @else {
-        <button
-          type="button"
-          class="btn btn-siiid"
-          (click)="prepararNuevaValidacion()">
+        <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
 
           <i class="fa-solid fa-rotate-left"></i>
           Corregir archivos y volver a cargar
@@ -327,9 +319,7 @@
 
           <tbody>
             @for (item of resumenCarpetas(); track $index) {
-            <tr
-              [class.error-row]="item.esError"
-              [class.warning-row]="item.esAdvertencia">
+            <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
 
               <td>{{ item.descripcion }}</td>
               <td>{{ item.totalRegistros }}</td>
@@ -354,9 +344,7 @@
 
           <tbody>
             @for (item of resumenDelitos(); track $index) {
-            <tr
-              [class.error-row]="item.esError"
-              [class.warning-row]="item.esAdvertencia">
+            <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
 
               <td>{{ item.descripcion }}</td>
               <td>{{ item.totalRegistros }}</td>
@@ -381,9 +369,7 @@
 
           <tbody>
             @for (item of resumenVictimas(); track $index) {
-            <tr
-              [class.error-row]="item.esError"
-              [class.warning-row]="item.esAdvertencia">
+            <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
 
               <td>{{ item.descripcion }}</td>
               <td>{{ item.totalRegistros }}</td>
@@ -396,10 +382,11 @@
 
     <div class="texto-ayuda-validacion">
       @if (pendiente()) {
-        Hay {{ advertencias().length }} advertencias. Aceptar integrará la carga; rechazar conservará la validación sin modificar los datos definitivos.
+      Hay {{ advertencias().length }} advertencias. Aceptar integrará la carga; rechazar conservará la validación sin
+      modificar los datos definitivos.
       } @else {
-        La información que se muestra permite identificar las inconsistencias detectadas.
-        Es necesario atender los errores y volver a cargar el archivo.
+      La información que se muestra permite identificar las inconsistencias detectadas.
+      Es necesario atender los errores y volver a cargar el archivo.
       }
     </div>
 
@@ -409,10 +396,7 @@
         <i class="fa-solid fa-triangle-exclamation"></i>
         <span>Detalle de errores y advertencias</span>
 
-        <button
-          type="button"
-          class="btn btn-sm btn-secondary ms-auto"
-          [disabled]="exportandoValidacion()"
+        <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
           (click)="descargarValidacion()">
 
           @if (exportandoValidacion()) {
@@ -466,28 +450,32 @@
     </div>
     }
     @if (pendiente()) {
-      <div id="decision-banci" tabindex="-1" class="decision-banci mt-3">
-        <p>Revise también las advertencias antes de decidir. <button type="button" class="btn btn-link" (click)="verAdvertencias()">Ver advertencias</button></p>
-        @if (necesitaActualizar() || !resultado()?.vistaPrevia || resultado()?.vistaPrevia?.puedeAceptar === false) { <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar revisión</button> }
-        <app-banci-vista-previa [previa]="resultado()?.vistaPrevia" />
+    <div id="decision-banci" tabindex="-1" class="decision-banci mt-3">
+      <p>Revise también las advertencias antes de decidir. <button type="button" class="btn btn-link"
+          (click)="verAdvertencias()">Ver advertencias</button></p>
+      @if (necesitaActualizar() || !resultado()?.vistaPrevia || resultado()?.vistaPrevia?.puedeAceptar === false) {
+      <button type="button" class="btn btn-secondary" [disabled]="bloqueado()"
+        (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar revisión</button> }
+      <app-banci-vista-previa [previa]="resultado()?.vistaPrevia" />
 
-        @if (advertencias().length > 0) {
-  <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
-    <p><strong>La carga presenta {{ advertencias().length }} advertencia(s).</strong></p>
-    <p>Revise el detalle anterior. Algunas CURP podrían quedar sin validar si RENAPO no está disponible.</p>
+      @if (advertencias().length > 0) {
+      <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
+        <p><strong>La carga presenta {{ advertencias().length }} advertencia(s).</strong></p>
+        <p>Revise el detalle anterior. Algunas CURP podrían quedar sin validar si RENAPO no está disponible.</p>
 
-    <label class="d-flex align-items-start gap-2">
-      <input type="checkbox" [(ngModel)]="aceptarAdvertencias" [disabled]="bloqueado() || necesitaActualizar()" />
-      <span>He revisado las advertencias y acepto continuar con la integración.</span>
-    </label>
-  </div>
-}
-        <p>La decisión corresponde únicamente a quien subió estos archivos, incluso cuando no hay advertencias.</p>
-        <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
-          (click)="confirmar(false)">Rechazar carga</button>
-        <button type="button" class="btn btn-siiid" [disabled]="bloqueado() || necesitaActualizar() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
-          (click)="confirmar(true)">Aceptar e integrar carga</button>
+        <label class="d-flex align-items-start gap-2">
+          <input type="checkbox" [(ngModel)]="aceptarAdvertencias" [disabled]="bloqueado() || necesitaActualizar()" />
+          <span>He revisado las advertencias y acepto continuar con la integración.</span>
+        </label>
       </div>
+      }
+      <p>La decisión corresponde únicamente a quien subió estos archivos, incluso cuando no hay advertencias.</p>
+      <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
+        (click)="confirmar(false)">Rechazar carga</button>
+      <button type="button" class="btn btn-siiid"
+        [disabled]="bloqueado() || necesitaActualizar() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
+        (click)="confirmar(true)">Aceptar e integrar carga</button>
+    </div>
     }
   </div>
   }
@@ -539,12 +527,10 @@
       <p class="mt-3"><strong>Resultado de integración:</strong>
         {{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.
       </p>
-      <button type="button" class="btn btn-siiid me-2" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva carga</button>
+      <button type="button" class="btn btn-siiid me-2" [disabled]="bloqueado()"
+        (click)="prepararNuevaValidacion()">Nueva carga</button>
       @if (advertencias().length > 0) {
-      <button
-        type="button"
-        class="btn btn-secondary"
-        [disabled]="exportandoValidacion()"
+      <button type="button" class="btn btn-secondary" [disabled]="exportandoValidacion()"
         (click)="descargarValidacion()">
 
         <i class="fa-solid fa-file-excel"></i>
@@ -556,21 +542,25 @@
   }
 
   @if (rechazado()) {
-    <div id="resultado-banci" class="siiid-card p-4 mt-4">
-      <h2>Carga rechazada</h2>
-      <p>{{ resultado()?.mensaje }}</p>
-      <p>Se conservan la validación y sus advertencias. No se modificaron datos definitivos.</p>
-      @if (advertencias().length > 0) {
-        <button type="button" class="btn btn-secondary me-2" [disabled]="exportandoValidacion()" (click)="descargarValidacion()">Descargar advertencias</button>
-      }
-      <button type="button" class="btn btn-siiid" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva carga</button>
-    </div>
+  <div id="resultado-banci" class="siiid-card p-4 mt-4">
+    <h2>Carga rechazada</h2>
+    <p>{{ resultado()?.mensaje }}</p>
+    <p>Se conservan la validación y sus advertencias. No se modificaron datos definitivos.</p>
+    @if (advertencias().length > 0) {
+    <button type="button" class="btn btn-secondary me-2" [disabled]="exportandoValidacion()"
+      (click)="descargarValidacion()">Descargar advertencias</button>
+    }
+    <button type="button" class="btn btn-siiid" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva
+      carga</button>
+  </div>
   }
 
   @if (resultado() && !resultadoConErrores() && !pendiente() && !rechazado() && !resultadoCorrecto()) {
-    <div id="resultado-banci" class="alert alert-info">
-      Estado: {{ resultado()?.estado || 'Sin estado de confirmación' }}. Actualice para consultar el resultado; no repita la carga.
-      <button type="button" class="btn btn-secondary" [disabled]="bloqueado()" (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar estado</button>
-    </div>
+  <div id="resultado-banci" class="alert alert-info">
+    Estado: {{ resultado()?.estado || 'Sin estado de confirmación' }}. Actualice para consultar el resultado; no repita
+    la carga.
+    <button type="button" class="btn btn-secondary" [disabled]="bloqueado()"
+      (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar estado</button>
+  </div>
   }
 </section>

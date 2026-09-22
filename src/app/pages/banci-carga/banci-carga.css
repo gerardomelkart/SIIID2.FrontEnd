@@ -223,7 +223,7 @@
   justify-content: center;
 }
 
-.file-upload-header > div:last-child {
+.file-upload-header>div:last-child {
   min-width: 0;
 }
 
@@ -459,6 +459,7 @@
 }
 
 @media (max-width: 1000px) {
+
   .modalidad-grid,
   .resumen-grid {
     grid-template-columns: 1fr;
@@ -683,6 +684,7 @@
     width: 100%;
   }
 }
+
 .validacion-pendiente {
   border-left-color: #b8860b;
   background: #fff9e6;
@@ -695,7 +697,7 @@
   border-left: 4px solid #b8860b;
 }
 
-.decision-banci button + button {
+.decision-banci button+button {
   margin-left: .75rem;
 }
 
@@ -708,4 +710,71 @@
 
 .recuperar-referencia input {
   max-width: 28rem;
+}
+
+/* Plantillas BANCI: presentación homologada con las tarjetas de otros módulos */
+
+.plantillas-banci-nota {
+  background: #f8f8f8;
+  border-left: 5px solid var(--siiid-guinda);
+  padding: 10px 12px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.plantillas-banci-nota i {
+  color: var(--siiid-guinda);
+  margin-right: 6px;
+}
+
+.plantillas-banci-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.plantilla-banci-link {
+  display: flex;
+  min-height: 125px;
+  padding: 15px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+  text-align: center;
+  transition: transform .12s ease-in-out, box-shadow .12s ease-in-out;
+}
+
+.plantilla-banci-link:hover:not(:disabled) {
+  color: var(--siiid-guinda);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .14);
+}
+
+.plantilla-banci-link:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.plantilla-banci-icono {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.plantilla-banci-link span {
+  color: #667085;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .plantillas-banci-grid {
+    grid-template-columns: 1fr;
+  }
 }

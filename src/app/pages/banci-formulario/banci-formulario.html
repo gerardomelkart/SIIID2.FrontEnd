@@ -27,16 +27,33 @@
         <div><span>Delitos</span><strong>{{ delitos.length }}</strong></div>
         <div><span>Víctimas</span><strong>{{ totalVictimas() }}</strong></div>
       </div>
-      @if (o.esSuperUsuario) {
       <div class="siiid-card p-3 mb-3">
-        <label>Entidad que reporta *
-          <select class="form-select" name="entidadReporte" [(ngModel)]="entidad" required>
-            <option [ngValue]="null">Seleccione...</option>
-            @for (e of entidades(); track e.clave) { <option [ngValue]="+e.clave">{{ e.descripcion }}</option> }
-          </select>
+        <label for="entidadReporteBanci" class="form-label">
+          <strong>Entidad federativa que reporta *</strong>
         </label>
+
+        @if (o.esSuperUsuario) {
+        <select id="entidadReporteBanci" class="form-select" name="entidadReporte" [(ngModel)]="entidad"
+          [disabled]="bloqueado()" required>
+          <option [ngValue]="null">Seleccione una entidad...</option>
+
+          @for (e of entidades(); track e.clave) {
+          <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
+          }
+        </select>
+        } @else {
+        <select id="entidadReporteBanci" class="form-select" name="entidadAsignadaBanci"
+          [ngModel]="o.idEntidadFederativa" disabled>
+          @for (e of entidades(); track e.clave) {
+          <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
+          }
+        </select>
+
+        <small class="text-muted">
+          La entidad corresponde a su cuenta y no puede modificarse desde este formulario.
+        </small>
+        }
       </div>
-      }
       <div class="siiid-card mb-3">
         <div class="siiid-card-header"><i class="fa-solid fa-folder-open"></i> Datos de la carpeta</div>
         <div class="alert alert-info m-3 mb-0">
