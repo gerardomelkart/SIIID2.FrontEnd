@@ -258,6 +258,21 @@
   </div>
   }
 
+  @if (pendiente() || resultadoCorrecto()) {
+  <section id="acuse-banci" class="siiid-card mt-4">
+    <div class="siiid-card-header"><i class="fa-solid fa-file-pdf"></i> {{ pendiente() ? 'Informe previo de carga — sin integrar' : 'Acuse de integración BANCI' }}</div>
+    <div class="p-3">
+      @if (cargandoAcuse()) { <p role="status">Preparando PDF...</p> }
+      @if (errorAcuse()) { <div class="alert alert-warning" role="alert">{{ errorAcuse() }} <button type="button" class="btn btn-secondary" [disabled]="cargandoAcuse()" (click)="abrirAcuse(true)">Reintentar PDF</button></div> }
+      @if (acuseUrl(); as url) {
+      <iframe [src]="url" title="Acuse PDF BANCI" class="acuse-pdf-banci"></iframe>
+      <button type="button" class="btn btn-siiid mt-3" (click)="descargarAcusePdf()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+      }
+      @if (pendiente()) { <button type="button" class="btn btn-secondary mt-3 ms-2" (click)="verDecision()">Ir a la decisión de carga</button> }
+    </div>
+  </section>
+  }
+
   @if (cargando()) {
   <div class="processing-overlay">
     <div class="processing-content">
@@ -269,15 +284,15 @@
 
   @if (resultadoConErrores() || pendiente()) {
   <div id="resultado-banci">
-    <div class="validation-result-header" [class.validacion-pendiente]="pendiente() && advertencias().length > 0" [class.validacion-correcta]="pendiente() && !errores().length && !advertencias().length">
+    <div class="validation-result-header" [class.validacion-pendiente]="pendiente() && advertencias().length > 0" [class.validacion-correcta]="pendiente() && !contieneExistentes() && !errores().length && !advertencias().length">
       <div>
         <h2>
-          <i class="fa-solid" [class.fa-circle-check]="pendiente() && !errores().length && !advertencias().length" [class.fa-triangle-exclamation]="errores().length > 0 || advertencias().length > 0"></i>
-          {{ pendiente() ? (advertencias().length ? 'Validación con advertencias' : 'Validación correcta') : 'Validación con inconsistencias' }}
+          <i class="fa-solid" [class.fa-circle-check]="pendiente() && !contieneExistentes() && !errores().length && !advertencias().length" [class.fa-triangle-exclamation]="errores().length > 0 || advertencias().length > 0"></i>
+          {{ contieneExistentes() ? 'Carpeta ya registrada' : pendiente() ? (advertencias().length ? 'Validación con advertencias' : 'Validación correcta') : 'Validación con inconsistencias' }}
         </h2>
 
         <p>
-          {{ pendiente() ? (advertencias().length ? 'Revise las advertencias antes de confirmar la carga.' : 'Sin errores ni advertencias. Confirme la integración con el resumen que se muestra abajo.') : 'Corrija los errores y vuelva a realizar la carga.' }}
+          {{ contieneExistentes() ? 'La carga inicial sólo admite carpetas nuevas. Rechace esta operación.' : pendiente() ? (advertencias().length ? 'Revise las advertencias antes de confirmar la carga.' : 'Sin errores ni advertencias. Confirme la integración con el resumen que se muestra abajo.') : 'Corrija los errores y vuelva a realizar la carga.' }}
         </p>
 
       </div>
@@ -466,7 +481,7 @@
       <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
         (click)="confirmar(false)">Rechazar carga</button>
       <button type="button" class="btn btn-siiid"
-        [disabled]="bloqueado() || necesitaActualizar() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
+        [disabled]="bloqueado() || necesitaActualizar() || contieneExistentes() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
         (click)="confirmar(true)">Aceptar e integrar carga</button>
     </div>
     }

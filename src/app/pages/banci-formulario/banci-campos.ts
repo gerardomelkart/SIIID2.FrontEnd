@@ -10,8 +10,10 @@ import { BanciFormularioCampo, BanciFormularioOpcion } from '../../core/models/b
       @for (campo of campos(); track campo.clave) {
         <label [class.ancho]="campo.tipo === 'textarea'">
           <span>{{ campo.etiqueta }} @if (campo.obligatorio) { <b aria-label="obligatorio">*</b> }</span>
-          @if (campo.tipo === 'select') {
-            <select class="form-select" [attr.id]="idCampo(campo.clave)" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [required]="!!campo.obligatorio">
+          @if (campo.tipo === 'select' && camposFijos().includes(campo.clave)) {
+            <input class="form-control" [attr.id]="idCampo(campo.clave)" [value]="descripcionFija(campo.clave)" readonly aria-readonly="true" />
+          } @else if (campo.tipo === 'select') {
+            <select class="form-select" [attr.id]="idCampo(campo.clave)" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado() || camposFijos().includes(campo.clave)" [required]="!!campo.obligatorio">
               <option value="">Seleccione...</option>
               @for (opcion of opciones(campo.clave); track opcion.clave) { <option [value]="opcion.clave">{{ opcion.clave }} · {{ opcion.descripcion }}</option> }
             </select>
@@ -45,10 +47,13 @@ export class BanciCampos {
   catalogos = input.required<BanciFormularioOpcion[]>();
   bloqueado = input(false);
   idPrefijo = input('');
+  camposFijos = input<string[]>([]);
 
   idCampo(clave: string): string | null {
     return this.idPrefijo() ? `${this.idPrefijo()}-${clave}` : null;
   }
+
+  descripcionFija(clave: string): string { return this.opciones(clave).find(o => o.clave === this.datos()[clave])?.descripcion || this.datos()[clave] || ''; }
 
   regla(campo: string): { decimal: boolean; longitud: number; patron: string; maximo: number; ayuda: string } | null {
     if (campo === 'edad') return { decimal: false, longitud: 3, patron: '(?:[0-9]{1,2}|1[01][0-9]|120|999)', maximo: 999, ayuda: 'De 0 a 120 años, o 999 para no identificado.' };
@@ -83,7 +88,7 @@ export class BanciCampos {
   }
 
   cambiar(campo: string, valor: string): void {
-    if (this.bloqueado()) return;
+    if (this.bloqueado() || this.camposFijos().includes(campo)) return;
     const datos = this.datos();
     datos[campo] = valor;
     if (campo === 'id_ent_hchos') {

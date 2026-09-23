@@ -14,6 +14,7 @@ import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { BanciResumenRegistro } from '../../core/models/banci-resumen.models';
 import { BanciVistaPreviaComponent } from './banci-vista-previa';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { BanciFormularioOpciones } from '../../core/models/banci-formulario.models';
 
 type TipoArchivoBanci = 'libro' | 'carpetas' | 'delitos' | 'victimas';
@@ -33,6 +34,13 @@ interface ResumenBanci {
   styleUrls: ['./banci-carga.css', '../banci-plantillas.css'],
 })
 export class BanciCarga implements OnInit {
+  private readonly sanitizer = inject(DomSanitizer);
+  private acuseObjectUrl = '';
+  private acuseClave = '';
+  private acuseNombre = '';
+  acuseUrl = signal<SafeResourceUrl | null>(null);
+  cargandoAcuse = signal(false);
+  errorAcuse = signal('');
   private readonly banciCargaService = inject(BanciCargaService);
   private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
@@ -61,6 +69,7 @@ export class BanciCarga implements OnInit {
   rechazado = computed(() => this.resultado()?.estado === 'RECHAZADO_VALIDACION');
 
   ngOnInit(): void {
+    this.destroyRef.onDestroy(() => { if (this.acuseObjectUrl) URL.revokeObjectURL(this.acuseObjectUrl); });
     this.cargarOpciones();
     try {
       const referencia = localStorage.getItem(this.claveRecuperacion());
@@ -168,7 +177,10 @@ export class BanciCarga implements OnInit {
       });
   }
 
+  contieneExistentes = computed(() => !!this.resultado()?.vistaPrevia?.resumen.some(r => r.actualizaciones > 0 || r.sinCambio > 0));
+
   confirmar(aceptar: boolean): void {
+    if (aceptar && this.contieneExistentes()) { this.mensajeLocal.set('La carga inicial sólo admite carpetas nuevas. Rechace esta operación y utilice Actualización de víctimas.'); return; }
     const carga = this.resultado();
     if (
       !carga ||
@@ -611,10 +623,47 @@ export class BanciCarga implements OnInit {
     destino?.focus({ preventScroll: true });
   }
 
+  abrirAcuse(reintentar = false): void {
+    const r = this.resultado();
+    if (!r || !['VALIDADO_PENDIENTE', 'PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(r.estado)) return;
+    const clave = r.codigoReferencia + ':' + r.estado;
+    if (!reintentar && clave === this.acuseClave) return;
+    this.acuseClave = clave;
+    this.errorAcuse.set('');
+    this.acuseUrl.set(null);
+    this.cargandoAcuse.set(true);
+    if (this.acuseObjectUrl) URL.revokeObjectURL(this.acuseObjectUrl);
+    this.acuseObjectUrl = '';
+    this.banciCargaService.descargarAcuse(r.codigoReferencia).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: response => {
+        if (clave !== this.acuseClave) return;
+        this.cargandoAcuse.set(false);
+        if (!response.body?.size || !response.body.type.includes('pdf')) { this.errorAcuse.set('No se recibió un PDF válido. Reintente descargar el acuse.'); return; }
+        this.acuseObjectUrl = URL.createObjectURL(response.body);
+        this.acuseUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseObjectUrl));
+        const entidad = this.entidades().find(e => Number(e.clave) === this.entidad)?.descripcion || this.session.usuario()?.entidadFederativa || 'entidad';
+        this.acuseNombre = `BANCI_${r.estado === 'VALIDADO_PENDIENTE' ? 'previo' : 'acuse'}_${entidad.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      },
+      error: () => { if (clave === this.acuseClave) { this.cargandoAcuse.set(false); this.errorAcuse.set('No se pudo obtener el PDF. Reintente el acuse; no vuelva a subir la carga.'); } }
+    });
+  }
+
+  descargarAcusePdf(): void {
+    if (!this.acuseObjectUrl || !this.acuseUrl()) return;
+    const enlace = document.createElement('a');
+    enlace.href = this.acuseObjectUrl;
+    enlace.download = this.acuseNombre;
+    enlace.click();
+  }
+
+  verDecision(): void { document.getElementById('decision-banci')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+
   private enfocarResultado(): void {
+    const resultado = this.resultado();
+    if (resultado && ['VALIDADO_PENDIENTE', 'PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado)) this.abrirAcuse();
     setTimeout(() => {
       document
-        .getElementById(this.pendiente() && !this.advertencias().length ? 'decision-banci' : 'resultado-banci')
+        .getElementById(resultado && ['VALIDADO_PENDIENTE', 'PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado) ? 'acuse-banci' : 'resultado-banci')
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }

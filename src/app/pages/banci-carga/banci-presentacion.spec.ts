@@ -19,7 +19,7 @@ for (const [componente, tipo] of [[BanciCarga, 'carga'], [BanciFormulario, 'form
 
     beforeEach(() => {
       localStorage.clear();
-      api = { obtenerFormularioOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })), obtenerCarga: vi.fn(() => of(carga())), confirmar: vi.fn(() => of(carga('PROCESADO'))), obtenerResumen: vi.fn(() => of([])) };
+      api = { descargarAcuse: vi.fn(() => throwError(() => new Error('PDF no disponible en esta prueba'))), obtenerFormularioOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })), obtenerCarga: vi.fn(() => of(carga())), confirmar: vi.fn(() => of(carga('PROCESADO'))), obtenerResumen: vi.fn(() => of([])) };
       TestBed.configureTestingModule({ imports: [componente], providers: [provideRouter([]), { provide: BanciCargaService, useValue: api }, { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1, rol: 'ENLACE_ESTATAL' }) } }] });
       Element.prototype.scrollIntoView = vi.fn();
     });

@@ -9,6 +9,7 @@ import { BanciFormularioOpciones, BanciFormularioRequest } from '../models/banci
 
 @Injectable({ providedIn: 'root' })
 export class BanciCargaService {
+  descargarAcuse(referencia: string) { return this.http.get(`${this.apiUrl}/${encodeURIComponent(referencia)}/acuse`, { responseType: 'blob', observe: 'response' }); }
   private readonly http = inject(HttpClient);
   private readonly apiUrl = API_ENDPOINTS.banciCargas;
 

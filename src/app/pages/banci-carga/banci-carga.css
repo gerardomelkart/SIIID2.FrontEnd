@@ -644,3 +644,10 @@
     grid-template-columns: 1fr;
   }
 }
+.acuse-pdf-banci {
+  display: block;
+  width: 100%;
+  height: 65vh;
+  min-height: 380px;
+  border: 1px solid #ddd;
+}

@@ -14,6 +14,8 @@ export class BanciInicio {
   usuario = this.sessionService.usuario;
   puedeCapturar = computed(() => this.usuario()?.rol === 'SUPER_USUARIO' || (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaCarga()));
 
+  puedeActualizar = computed(() => this.usuario()?.rol === 'SUPER_USUARIO' || (this.usuario()?.rol === 'ENLACE_ESTATAL' && this.sessionService.habilitaModificacion()));
+
   nombreUsuario = computed(() => {
     return this.usuario()?.nombreCompleto || this.usuario()?.nombre || this.usuario()?.usuario || 'usuario';
   });

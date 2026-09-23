@@ -169,7 +169,10 @@ export class BanciFormulario implements OnInit {
       });
   }
 
+  contieneExistentes = computed(() => !!this.resultado()?.vistaPrevia?.resumen.some(r => r.actualizaciones > 0 || r.sinCambio > 0));
+
   confirmar(aceptar: boolean): void {
+    if (aceptar && this.contieneExistentes()) { this.mensaje.set('La carga inicial sólo admite carpetas nuevas. Rechace esta operación y utilice Actualización de víctimas.'); return; }
     const carga = this.resultado();
     if (!carga || !this.pendiente() || this.cargando() || this.necesitaActualizar()) return;
 

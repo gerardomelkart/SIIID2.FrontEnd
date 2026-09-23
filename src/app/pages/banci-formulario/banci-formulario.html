@@ -64,7 +64,7 @@
             (click)="quitarDelito(i)">Quitar delito</button>
         </div>
         <div class="p-3">
-          <app-banci-campos [idPrefijo]="'banci-delito-' + i" [campos]="camposDelito" [datos]="d.datos" [catalogos]="o.catalogos"
+          <app-banci-campos [idPrefijo]="'banci-delito-' + i" [campos]="camposDelito" [camposFijos]="o.esSuperUsuario ? [] : ['id_ent_hchos']" [datos]="d.datos" [catalogos]="o.catalogos"
             [bloqueado]="bloqueado()" />
           <div class="cabecera barra-seccion">
             <h2><i class="fa-solid fa-users"></i> Víctimas del delito {{ i + 1 }}</h2><button type="button"
@@ -179,7 +179,7 @@
         </button>
 
         <button type="button" class="btn btn-siiid"
-          [disabled]="cargando() || necesitaActualizar() || !r.vistaPrevia?.huella || r.vistaPrevia?.puedeAceptar === false || (r.advertencias.length > 0 && !aceptarAdvertencias)"
+          [disabled]="cargando() || necesitaActualizar() || contieneExistentes() || !r.vistaPrevia?.huella || r.vistaPrevia?.puedeAceptar === false || (r.advertencias.length > 0 && !aceptarAdvertencias)"
           (click)="confirmar(true)">
           Aceptar y registrar carpeta
         </button>

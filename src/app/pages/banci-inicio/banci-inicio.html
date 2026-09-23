@@ -34,9 +34,9 @@
   </section>
 
   <section class="status-grid">
-    <div class="status-card status-card-activo">
-      <div class="status-number status-activo">
-        Activo
+    <div class="status-card" [class.status-card-activo]="puedeCapturar()">
+      <div class="status-number" [class.status-activo]="puedeCapturar()">
+        {{ puedeCapturar() ? 'Habilitada' : 'Sin permiso' }}
       </div>
 
       <div class="status-label">
@@ -44,9 +44,9 @@
       </div>
     </div>
 
-    <div class="status-card status-card-activo">
-      <div class="status-number status-activo">
-        Activo
+    <div class="status-card" [class.status-card-activo]="puedeActualizar()">
+      <div class="status-number" [class.status-activo]="puedeActualizar()">
+        {{ puedeActualizar() ? 'Habilitada' : 'Sin permiso' }}
       </div>
 
       <div class="status-label">
@@ -106,20 +106,10 @@
 
       @if (usuario()?.rol === 'SUPER_USUARIO') { <a class="quick-link" routerLink="/banci/usuarios"><div class="quick-icon"><i class="fa-solid fa-users"></i></div><div><strong>Usuarios</strong><span>Administre el acceso y los permisos de BANCI.</span></div></a> }
 
-      <div class="quick-link quick-link-pendiente">
-        <div class="quick-icon">
-          <i class="fa-solid fa-clock-rotate-left"></i>
-        </div>
-
-        <div>
-          <strong>Histórico BANCI</strong>
-          <span>
-            Consulta y actualización del histórico de Carpetas, Delitos y Víctimas.
-          </span>
-        </div>
-
-        <span class="estado-desarrollo">En desarrollo</span>
-      </div>
+      @if (puedeActualizar()) {
+      <a class="quick-link" routerLink="/banci/actualizacion/manual"><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div><div><strong>Actualización manual</strong><span>Busque una víctima y actualice sus datos de localización o personales.</span></div></a>
+      <a class="quick-link" routerLink="/banci/actualizacion/masiva"><div class="quick-icon"><i class="fa-solid fa-file-excel"></i></div><div><strong>Actualización masiva</strong><span>Actualice víctimas registradas mediante la plantilla de actualización.</span></div></a>
+      }
     </div>
   </section>
 </div>

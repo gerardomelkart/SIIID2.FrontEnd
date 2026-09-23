@@ -24,6 +24,7 @@ function carga(estado = 'VALIDADO_PENDIENTE', advertencias = 0): BanciCargaValid
 
 describe('BANCI: decisión explícita de la propia carga', () => {
   let servicio: {
+    descargarAcuse: ReturnType<typeof vi.fn>;
     obtenerFormularioOpciones: ReturnType<typeof vi.fn>;
     validarLibro: ReturnType<typeof vi.fn>;
     validarArchivos: ReturnType<typeof vi.fn>;
@@ -37,6 +38,7 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() });
     servicio = {
+      descargarAcuse: vi.fn(() => throwError(() => new Error('PDF no disponible en esta prueba'))),
       obtenerFormularioOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })),
       validarLibro: vi.fn(() => of(carga())), validarArchivos: vi.fn(() => of(carga())),
       obtenerPendientes: vi.fn(() => of([])), obtenerCarga: vi.fn(() => of(carga())),
@@ -222,12 +224,12 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     expect(servicio.validarArchivos).not.toHaveBeenCalled();
   });
 
-  it('avisa las actualizaciones antes de aceptar y muestra el dato actual y propuesto', () => {
+  it('rechaza una vista previa antigua que propone actualizaciones en la carga inicial', () => {
     const f = TestBed.createComponent(BanciCarga);
     f.componentInstance.resultado.set({ ...carga(), vistaPrevia: { huella: 'B'.repeat(64), totalCambios: 1, resumen: [{ tipo: 'CARPETA', altas: 0, actualizaciones: 1, sinCambio: 209 }], cambios: [{ tipo: 'CARPETA', idCi: 'CI-PRUEBA', idDelito: null, idVictima: null, campo: 'rmen_de_hchos', anterior: 'Texto anterior', nuevo: 'Texto nuevo' }] } });
-    f.detectChanges(); expect(f.nativeElement.textContent).toContain('actualizará información que ya está registrada');
-    expect(f.nativeElement.textContent).toContain('Texto anterior'); expect(f.nativeElement.textContent).toContain('Texto nuevo'); expect(servicio.confirmar).not.toHaveBeenCalled();
-    f.componentInstance.confirmar(true); expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', true, 'B'.repeat(64));
+    f.detectChanges(); expect(f.nativeElement.textContent).toContain('Esta carga no debe integrarse');
+    f.componentInstance.confirmar(true); expect(servicio.confirmar).not.toHaveBeenCalled();
+    f.componentInstance.confirmar(false); expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', false, undefined);
   });
 
   it('no acepta una carga si la vista previa no está disponible', () => {
