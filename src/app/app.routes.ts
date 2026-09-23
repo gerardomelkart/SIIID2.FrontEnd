@@ -285,14 +285,20 @@ export const routes: Routes = [
         canActivate: [permissionGuard],
         data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
       },
+      { path: 'actualizacion', pathMatch: 'full', redirectTo: 'actualizacion/manual' },
       {
-        path: 'actualizacion',
-        loadComponent: () =>
-          import('./pages/banci-actualizacion/banci-actualizacion').then(
-            (m) => m.BanciActualizacion,
-          ),
+        path: 'actualizacion/manual',
+        loadComponent: () => import('./pages/banci-actualizacion/banci-actualizacion').then(m => m.BanciActualizacion),
         canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION' },
+        canDeactivate: [(componente: { puedeSalir: () => boolean }) => componente.puedeSalir()],
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', modalidad: 'manual' },
+      },
+      {
+        path: 'actualizacion/masiva',
+        loadComponent: () => import('./pages/banci-actualizacion/banci-actualizacion').then(m => m.BanciActualizacion),
+        canActivate: [permissionGuard],
+        canDeactivate: [(componente: { puedeSalir: () => boolean }) => componente.puedeSalir()],
+        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', modalidad: 'masiva' },
       },
       {
         path: 'consulta',

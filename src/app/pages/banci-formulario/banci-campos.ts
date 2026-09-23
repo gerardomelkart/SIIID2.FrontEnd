@@ -20,6 +20,8 @@ import { BanciFormularioCampo, BanciFormularioOpcion } from '../../core/models/b
           } @else if (regla(campo.clave); as r) {
             <input class="form-control" [attr.id]="idCampo(campo.clave)" type="text" [attr.inputmode]="r.decimal ? 'decimal' : 'numeric'" [value]="datos()[campo.clave] || ''" (input)="capturarNumero(campo.clave, $event)" [disabled]="bloqueado()" [attr.maxlength]="r.longitud" [attr.pattern]="r.patron" [required]="!!campo.obligatorio" [attr.title]="r.ayuda" />
             <small>{{ r.ayuda }}</small>
+          } @else if (campo.clave === 'curp' || campo.clave === 'rfc') {
+            <input class="form-control" [attr.id]="idCampo(campo.clave)" type="text" [value]="datos()[campo.clave] || ''" (input)="capturarMayusculas(campo.clave, $event)" [disabled]="bloqueado()" [attr.maxlength]="campo.maximo" autocomplete="off" />
           } @else {
             <input class="form-control" [attr.id]="idCampo(campo.clave)" [type]="campo.tipo" [ngModel]="datos()[campo.clave] || ''" (ngModelChange)="cambiar(campo.clave, $event)" [ngModelOptions]="{ standalone: true }" [disabled]="bloqueado()" [attr.maxlength]="campo.maximo" [required]="!!campo.obligatorio" [attr.step]="campo.tipo === 'time' ? 1 : null" />
           }
@@ -71,6 +73,13 @@ export class BanciCampos {
 
   opciones(campo: string): BanciFormularioOpcion[] {
     return this.catalogos().filter(o => o.campo === campo && (campo !== 'id_mun_hchos' || o.idEntidadFederativa === Number(this.datos()['id_ent_hchos'])));
+  }
+
+  capturarMayusculas(campo: string, evento: Event): void {
+    if (this.bloqueado()) return;
+    const input = evento.target as HTMLInputElement;
+    input.value = input.value.toUpperCase();
+    this.datos()[campo] = input.value;
   }
 
   cambiar(campo: string, valor: string): void {

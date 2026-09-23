@@ -35,25 +35,18 @@
           Descargar plantillas
         </div>
 
-        <div class="p-4">
-          <div class="plantillas-banci-nota">
-            <i class="fa-solid fa-download"></i>
-            Descargue la plantilla de carga inicial BANCI V2 antes de preparar su información.
+        <div class="p-4 plantillas-body">
+          <div class="plantillas-note"><i class="fa-solid fa-download"></i> Descargue las plantillas oficiales antes de preparar la carga.</div>
+          <div class="plantillas-grid plantillas-libro">
+            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('libro')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Libro completo (CI, Delitos y Victimas)</strong></button>
           </div>
-
-          <div class="plantillas-banci-grid">
-            <button type="button" class="plantilla-banci-link" [disabled]="descargandoPlantilla() || bloqueado()"
-              (click)="descargarPlantilla()">
-
-              <img src="img/logo_XLSX.png" alt="" class="plantilla-banci-icono">
-
-              <strong>
-                {{ descargandoPlantilla() ? 'Descargando...' : 'Carga inicial BANCI V2' }}
-              </strong>
-
-              <span>Excel con hojas CI, Delitos y Victimas</span>
-            </button>
+          <p class="mt-3 mb-2">Para cargar tres archivos separados:</p>
+          <div class="plantillas-grid">
+            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('carpetas')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Carpetas</strong></button>
+            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('delitos')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Delitos</strong></button>
+            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('victimas')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Víctimas</strong></button>
           </div>
+          @if (descargandoPlantilla()) { <p role="status" class="mt-2">Descargando plantilla...</p> }
 
           <p class="text-muted mt-3 mb-0">
             El NO_BANCI se asigna automáticamente cuando se integra una carpeta nueva.

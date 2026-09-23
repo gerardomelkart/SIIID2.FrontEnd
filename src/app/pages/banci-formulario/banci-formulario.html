@@ -19,7 +19,7 @@
     (click)="actualizarEstado()">Actualizar estado de la captura</button> }
 
   @if (opciones(); as o) {
-  @if (!pendiente() && !terminado() && resultado()?.estado !== 'RECHAZADO_VALIDACION' && !necesitaActualizar()) {
+  @if (!resultado() && !necesitaActualizar()) {
   <form id="inicio-formulario-banci" #capturaFormulario (ngSubmit)="capturaFormulario.reportValidity() && validar()">
     <fieldset [disabled]="bloqueado()">
       <div class="resumen-captura" aria-label="Resumen de captura">
@@ -138,7 +138,7 @@
               <td>{{ e.archivo }}</td>
               <td>{{ e.numeroFila ?? '—' }}</td>
               <td>{{ e.campo }}</td>
-              <td>{{ e.mensaje }}</td>
+              <td>{{ e.mensaje }} <button type="button" class="btn btn-sm btn-outline-dark ms-2" [disabled]="cargando() || necesitaActualizar()" (click)="volverAFormulario(e)">Corregir campo</button></td>
             </tr> }
             @for (e of r.advertencias; track $index) { <tr class="fila-advertencia-banci">
               <td>Advertencia</td>
@@ -205,6 +205,8 @@
         <button type="button" class="btn btn-secondary" [disabled]="cargando()"
           (click)="nuevaCaptura()">Capturar otra carpeta</button><a class="btn btn-secondary"
           routerLink="/banci/consulta">Consultar información</a></div>
+      } @else if (r.errores.length > 0) {
+      <button type="button" class="btn btn-secondary" [disabled]="cargando() || necesitaActualizar()" (click)="volverAFormulario()">Regresar y corregir formulario</button>
       } @else if (r.estado === 'RECHAZADO_VALIDACION') {
       <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="corregirCaptura()">Volver al
         formulario</button>

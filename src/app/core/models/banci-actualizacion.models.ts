@@ -64,6 +64,8 @@ export interface BanciActualizacionVictima {
   no_banci: string;
   id_ci: string;
   ntra_ci: string;
+  fha_de_ini: string | null;
+  fha_de_hchos: string | null;
   id_delito: string;
   id_vicf: string;
   folio_rnpdno: string | null;

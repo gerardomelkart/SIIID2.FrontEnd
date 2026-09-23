@@ -1,3 +1,4 @@
+import { nombreExcelBanci } from '../../core/utils/banci-archivos.utils';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -29,7 +30,7 @@ interface ResumenBanci {
   selector: 'app-banci-carga',
   imports: [FormsModule, BanciVistaPreviaComponent],
   templateUrl: './banci-carga.html',
-  styleUrl: './banci-carga.css',
+  styleUrls: ['./banci-carga.css', '../banci-plantillas.css'],
 })
 export class BanciCarga implements OnInit {
   private readonly banciCargaService = inject(BanciCargaService);
@@ -96,13 +97,13 @@ export class BanciCarga implements OnInit {
       });
   }
 
-  descargarPlantilla(): void {
+  descargarPlantilla(tipo: 'libro' | 'carpetas' | 'delitos' | 'victimas' = 'libro'): void {
     if (this.descargandoPlantilla()) return;
 
     this.descargandoPlantilla.set(true);
 
     this.banciCargaService
-      .descargarPlantilla()
+      .descargarPlantilla(tipo)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -118,7 +119,7 @@ export class BanciCarga implements OnInit {
           const enlace = document.createElement('a');
 
           enlace.href = url;
-          enlace.download = 'BANCI_carga_inicial_v2.xlsx';
+          enlace.download = tipo === 'libro' ? 'BANCI_carga_inicial_v2.xlsx' : `BANCI_${tipo}_v2.xlsx`;
           document.body.appendChild(enlace);
           enlace.click();
           enlace.remove();
@@ -259,7 +260,7 @@ export class BanciCarga implements OnInit {
             ID_DELITO: f.idDelito, ID_VICF: f.idVicf, FOLIO_RNPDNO: f.folioRnpdno ?? '',
             Resultado: f.resultado, FechaIntegracion: f.fechaIntegracion ?? '',
             Referencia: r.codigoReferencia
-          })), `BANCI_integracion_${r.codigoReferencia}.xlsx`, 'Registros integrados');
+          })), nombreExcelBanci('integracion', [...new Set(filas.map(f => f.entidad))].join('_'), undefined, filas[0]?.fechaIntegracion), 'Registros integrados');
           if (!ok) throw new Error('No fue posible exportar el resumen.');
         } catch(e) {
           this.errorResumen.set(e instanceof Error ? e.message : 'No fue posible exportar el resumen.');
@@ -495,7 +496,7 @@ export class BanciCarga implements OnInit {
       const exportado = await exportarValidacionExcel(
         this.errores().map((detalle) => this.convertirDetalle(detalle)),
         this.advertencias().map((detalle) => this.convertirDetalle(detalle)),
-        `validacion_banci_${new Date().toISOString().slice(0, 10)}`,
+        nombreExcelBanci('validacion', this.entidades().find(e => Number(e.clave) === this.entidad)?.descripcion ?? `ENTIDAD_${this.entidad ?? ''}`),
       );
 
       if (!exportado) {

@@ -104,96 +104,6 @@
   }
 }
 
-.plantillas-banci-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.plantilla-banci-link {
-  display: flex;
-  min-height: 125px;
-  padding: 15px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid #ddd;
-  background: #fff;
-  color: #222;
-  cursor: pointer;
-  text-align: center;
-  transition: transform .12s ease-in-out, box-shadow .12s ease-in-out;
-}
-
-.plantilla-banci-link:hover:not(:disabled) {
-  color: var(--siiid-guinda);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, .14);
-}
-
-.plantilla-banci-link:disabled {
-  cursor: not-allowed;
-  opacity: .6;
-}
-
-.plantilla-banci-icono {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-}
-
-.plantilla-banci-link span {
-  color: #667085;
-  font-size: 12px;
-}
-
-@media (max-width: 900px) {
-  .plantillas-banci-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.modalidades-actualizacion {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.modalidad-actualizacion {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  text-align: left;
-  background: #fff;
-  border: 1px solid #d8d8d8;
-  border-top: 5px solid #bcbcbc;
-  padding: 18px;
-  cursor: pointer;
-}
-
-.modalidad-actualizacion:hover,
-.modalidad-actualizacion.activa {
-  border-top-color: var(--siiid-guinda);
-  box-shadow: 0 5px 16px #0002;
-}
-
-.modalidad-actualizacion.activa {
-  background: #faf5fc;
-}
-
-.modalidad-actualizacion i {
-  font-size: 24px;
-  color: var(--siiid-guinda);
-}
-
-.modalidad-actualizacion span {
-  font-size: 13px;
-  color: #667085;
-}
-
 .pestanas-banci {
   display: flex;
   flex-wrap: wrap;
@@ -266,11 +176,6 @@
   box-shadow: 0 12px 40px #0004;
 }
 
-@media(max-width:650px) {
-  .modalidades-actualizacion {
-    grid-template-columns: 1fr;
-  }
-}
 
 /* BANCI V2 - Advertencias de actualización */
 

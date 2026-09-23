@@ -134,7 +134,7 @@ export class BanciFormulario implements OnInit {
   }
 
   validar(): void {
-    if (this.bloqueado() || !this.opciones()) return;
+    if (this.bloqueado() || this.resultado() || !this.opciones()) return;
     this.mensaje.set('');
     this.aceptarAdvertencias = false;
     if (this.opciones()!.esSuperUsuario && !this.entidad) {
@@ -291,13 +291,13 @@ export class BanciFormulario implements OnInit {
   // Cancelar expresamente la validación pendiente ANTES de volver a editar.
   // Si la red falla, se conserva la referencia: no se habilita una segunda operación.
   volverAFormulario(aviso?: BanciCargaValidacionError): void {
-    aviso ??= this.resultado()?.advertencias.find(a => !!a.campo);
+    aviso ??= this.resultado()?.errores.find(a => !!a.campo) ?? this.resultado()?.advertencias.find(a => !!a.campo);
     if (this.cargando() || this.necesitaActualizar() || this.terminado()) return;
     const abrir = () => {
       this.aceptarAdvertencias = false;
       this.resultado.set(null);
       this.olvidarReferencia();
-      this.mensaje.set('Edite el dato señalado y vuelva a validar. La revisión anterior fue rechazada sin integrar información.');
+      this.mensaje.set('Corrija la información y vuelva a validar. No se integraron datos de esta revisión.');
       setTimeout(() => this.enfocarCampoAdvertido(aviso), 60);
     };
     if (!this.pendiente()) { abrir(); return; }

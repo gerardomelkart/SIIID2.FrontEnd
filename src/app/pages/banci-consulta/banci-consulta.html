@@ -26,6 +26,10 @@
           </select>
         </label>
       }
+      <label class="busqueda-consulta">Buscar carpeta o víctima
+        <input class="form-control" name="busqueda" [(ngModel)]="textoBusqueda" maxlength="250" placeholder="NO_BANCI, CURP, folio RNPDNO, nombre, ID_CI o NTRA_CI" [disabled]="exportando() || !opciones()" />
+      </label>
+      <button type="submit" class="btn btn-siiid" [disabled]="cargando() || exportando() || !opciones()">Buscar</button>
     </form>
   </div>
 

@@ -1,3 +1,5 @@
+import { ActivatedRoute, Router } from '@angular/router';
+import { fechaBanci, nombreExcelBanci } from '../../core/utils/banci-archivos.utils';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,9 +26,11 @@ interface CampoActualizacion {
   selector: 'app-banci-actualizacion',
   imports: [FormsModule],
   templateUrl: './banci-actualizacion.html',
-  styleUrl: './banci-actualizacion.css'
+  styleUrls: ['./banci-actualizacion.css', '../banci-plantillas.css']
 })
 export class BanciActualizacion implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly service = inject(BanciActualizacionService);
   private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
@@ -88,6 +92,7 @@ export class BanciActualizacion implements OnInit {
   readonly entidades = computed(() => this.opciones()?.catalogos.filter(c => c.campo === 'id_ent_hchos' && Number(c.clave) >= 1 && Number(c.clave) <= 32) ?? []);
 
   ngOnInit(): void {
+    this.modalidad.set(this.route.snapshot.data['modalidad'] === 'masiva' ? 'masiva' : 'manual');
     this.cargarOpciones();
     this.cargarPendientes();
 
@@ -199,7 +204,7 @@ export class BanciActualizacion implements OnInit {
 
   validarFormulario(): void {
     const victima = this.seleccionada();
-    if (!victima || this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+    if (!victima || this.ocupado() || this.resultado() || this.necesitaActualizar()) return;
 
     const cambios = Object.fromEntries(
       Object.entries(this.edicion)
@@ -225,10 +230,32 @@ export class BanciActualizacion implements OnInit {
     }));
   }
 
-  cambiarModalidad(modo: 'manual' | 'masiva'): void {
-    if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
-    this.modalidad.set(modo);
-    this.mensaje.set('');
+  puedeSalir(): boolean {
+    if (!this.cargandoOperacion()) return true;
+    this.mensaje.set('Espere el resultado de la operación antes de cambiar de vista.');
+    return false;
+  }
+
+  fechaHoy(): string { return fechaBanci(); }
+
+  fechaMinima(): string | null {
+    const victima = this.seleccionada();
+    return [victima?.fha_de_ini, victima?.fha_de_hchos].filter((fecha): fecha is string => !!fecha).map(fecha => fecha.slice(0, 10)).sort().at(-1) ?? null;
+  }
+
+  capturarTexto(campo: string, evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    if (campo === 'curp' || campo === 'rfc') input.value = input.value.toUpperCase();
+    this.edicion[campo] = input.value;
+  }
+
+  private enfocarResultado(): void {
+    setTimeout(() => {
+      if (this.destroyRef.destroyed) return;
+      const resultado = document.getElementById('resultado-actualizacion');
+      resultado?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultado?.focus({ preventScroll: true });
+    }, 60);
   }
 
   arrastrarArchivo(event: DragEvent): void {
@@ -273,7 +300,7 @@ export class BanciActualizacion implements OnInit {
   }
 
   validarExcel(): void {
-    if (!this.archivo || this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+    if (!this.archivo || this.ocupado() || this.resultado() || this.necesitaActualizar()) return;
 
     if (this.esSuperUsuario() && !this.entidad) {
       this.mensaje.set('Seleccione la entidad federativa del archivo.');
@@ -296,7 +323,9 @@ export class BanciActualizacion implements OnInit {
       error: e => {
         this.cargandoOperacion.set(false);
         if (Array.isArray(e?.error?.errores)) this.resultado.set(e.error as BanciActualizacionResultado);
+        else if (e?.status === 400) this.resultado.set(this.resultadoConError(e?.error?.mensaje || 'Revise el archivo y los datos de actualización.'));
         else this.mensaje.set(e?.error?.mensaje || 'No fue posible validar la actualización.');
+        this.enfocarResultado();
       }
     });
   }
@@ -304,6 +333,7 @@ export class BanciActualizacion implements OnInit {
   private recibirValidacion(respuesta: BanciActualizacionResultado): void {
     this.resultado.set(respuesta);
     this.cargandoOperacion.set(false);
+    this.enfocarResultado();
 
     if (respuesta.estado === 'PENDIENTE' && respuesta.codigoReferencia) {
       this.referencia.set(respuesta.codigoReferencia);
@@ -314,6 +344,9 @@ export class BanciActualizacion implements OnInit {
 
   recuperar(referencia: string): void {
     if (!referencia || this.cargandoOperacion()) return;
+    if (this.necesitaActualizar() && this.referencia() && referencia !== this.referencia()) return;
+    this.referencia.set(referencia);
+    this.guardarReferencia(referencia);
 
     this.cargandoOperacion.set(true);
     this.necesitaActualizar.set(false);
@@ -331,6 +364,16 @@ export class BanciActualizacion implements OnInit {
           this.resultado.set(null);
           return;
         }
+
+        const modalidad = estado.origen === 'EXCEL' ? 'masiva' : 'manual';
+        if (modalidad !== this.modalidad()) {
+          this.cargandoOperacion.set(false);
+          this.necesitaActualizar.set(true);
+          this.mensaje.set('Esta operación corresponde a la otra modalidad de actualización. Se abrirá su vista para revisarla.');
+          void this.router.navigateByUrl(`/banci/actualizacion/${modalidad}`);
+          return;
+        }
+        this.entidad = estado.idEntidadFederativa;
 
         if (estado.estado !== 'PENDIENTE') {
           this.cargandoOperacion.set(false);
@@ -354,9 +397,16 @@ export class BanciActualizacion implements OnInit {
             this.guardarReferencia(referencia);
             this.cargandoOperacion.set(false);
             this.cargarPendientes();
+            this.enfocarResultado();
           },
           error: e => {
             this.cargandoOperacion.set(false);
+            if (e?.status === 400) {
+              this.resultado.set({ ...this.resultadoConError(e?.error?.mensaje || 'La revisión dejó de ser válida. Regrese y corrija los datos.'), codigoReferencia: referencia, estado: 'PENDIENTE' });
+              this.necesitaActualizar.set(false);
+              this.enfocarResultado();
+              return;
+            }
             this.necesitaActualizar.set(true);
             this.mensaje.set(e?.error?.mensaje || 'No fue posible recuperar la vista previa. Reintente antes de decidir.');
           }
@@ -379,178 +429,60 @@ export class BanciActualizacion implements OnInit {
     });
   }
 
-    regresarAEdicion(
-    advertencia?: BanciActualizacionResultado['advertencias'][number]
-  ): void {
+  private resultadoConError(mensaje: string): BanciActualizacionResultado {
+    return { esValido: false, codigoReferencia: null, estado: 'NO_VALIDADA', huella: null, cambios: [], datosPropuestos: [], errores: [{ archivo: 'actualizacion', hoja: null, valor: null, numeroFila: null, campo: null, codigo: 'BANCI_ACTUALIZACION_INVALIDA', mensaje }], advertencias: [] };
+  }
+
+  regresarAEdicion(aviso?: BanciActualizacionResultado['advertencias'][number]): void {
     const resultado = this.resultado();
-    const referencia = this.referencia();
-
-    if (
-      !resultado ||
-      !referencia ||
-      !this.pendiente() ||
-      this.ocupado() ||
-      this.necesitaActualizar()
-    ) {
-      return;
-    }
-
-    const campo = advertencia?.campo
-      || resultado.advertencias.find(a =>
-        this.campos.some(c => c.clave === a.campo)
-      )?.campo
-      || null;
-
-    const numeroFila = advertencia?.numeroFila ?? null;
-
+    if (!resultado || this.ocupado() || this.necesitaActualizar()) return;
+    aviso ??= resultado.errores.find(a => !!a.campo) ?? resultado.advertencias.find(a => !!a.campo);
+    if (!this.pendiente()) { this.abrirEdicion(aviso); return; }
     this.cargandoOperacion.set(true);
     this.mensaje.set('');
-
-    // La validación anterior debe quedar rechazada antes
-    // de permitir que el usuario vuelva a modificar datos.
-    this.service.confirmar(referencia, {
-      aceptar: false,
-      huellaVistaPrevia: null,
-      aceptarAdvertencias: false
-    })
-    .pipe(takeUntilDestroyed(this.destroyRef))
-    .subscribe({
+    this.service.confirmar(this.referencia(), { aceptar: false, huellaVistaPrevia: null, aceptarAdvertencias: false }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: respuesta => {
         this.cargandoOperacion.set(false);
-
         if (respuesta.estado !== 'RECHAZADA') {
           this.necesitaActualizar.set(true);
-
-          this.mensaje.set(
-            'No se confirmó el rechazo de la actualización anterior. ' +
-            'Recupere el estado de la operación antes de continuar.'
-          );
-
+          this.mensaje.set('No se confirmó el rechazo. Recupere el estado antes de editar.');
           return;
         }
-
-        // Sólo se libera la edición cuando la API confirma
-        // que la operación anterior quedó rechazada.
-        this.resultado.set(null);
-        this.confirmacion.set(null);
-        this.aceptarAdvertencias = false;
-        this.necesitaActualizar.set(false);
-
-        this.olvidarReferencia();
-        this.cargarPendientes();
-
-        if (this.modalidad() === 'masiva') {
-          // El archivo original podría seguir teniendo las
-          // inconsistencias. Debe seleccionarse el Excel corregido.
-          this.archivo = null;
-
-          const input = document.getElementById(
-            'archivo-actualizacion'
-          ) as HTMLInputElement | null;
-
-          if (input) {
-            input.value = '';
-          }
-
-          const detalle = [
-            numeroFila ? `Fila ${numeroFila}` : '',
-            campo ? `campo ${campo}` : ''
-          ].filter(Boolean).join(', ');
-
-          this.mensaje.set(
-            detalle
-              ? `Revise el Excel en ${detalle}. Seleccione el archivo corregido y vuelva a validar.`
-              : 'Revise las advertencias del Excel, seleccione el archivo corregido y vuelva a validar.'
-          );
-
-          setTimeout(() => {
-            document.getElementById('archivo-actualizacion')
-              ?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-          }, 60);
-
-          return;
-        }
-
-        // Captura manual: conservar la víctima seleccionada
-        // y los valores que el usuario ya había escrito.
-        if (!this.seleccionada()) {
-          this.mensaje.set(
-            'La validación anterior fue rechazada. ' +
-            'Busque nuevamente la víctima para continuar con la actualización.'
-          );
-
-          return;
-        }
-
-        const campoEncontrado = this.campos.find(
-          c => c.clave === campo
-        );
-
-        if (campoEncontrado) {
-          const esLocalizacion = this.camposLocalizacion.some(
-            c => c.clave === campoEncontrado.clave
-          );
-
-          this.pestanaManual.set(
-            esLocalizacion ? 'localizacion' : 'personales'
-          );
-
-          this.mensaje.set(
-            `Revise el campo «${campoEncontrado.etiqueta}» y vuelva a validar la actualización.`
-          );
-
-          setTimeout(() => {
-            const elemento = document.getElementById(
-              `actualizar-${campoEncontrado.clave}`
-            );
-
-            elemento?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            });
-
-            elemento?.focus({
-              preventScroll: true
-            });
-          }, 60);
-
-          return;
-        }
-
-        // Advertencia general, sin un campo editable específico.
-        this.mensaje.set(
-          'Revise la información de la víctima y vuelva a validar. ' +
-          'La validación anterior fue rechazada sin aplicar cambios.'
-        );
-
-        setTimeout(() => {
-          document.querySelector('.pestanas-banci')
-            ?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-        }, 60);
+        this.abrirEdicion(aviso);
       },
-
       error: e => {
         this.cargandoOperacion.set(false);
-
-        // No sabemos si el servidor alcanzó a ejecutar el rechazo.
-        // Conservamos la referencia y bloqueamos nuevas validaciones.
         this.necesitaActualizar.set(true);
         this.aceptarAdvertencias = false;
-
-        this.mensaje.set(
-          (e?.error?.mensaje ||
-            'No fue posible confirmar el rechazo de la actualización.') +
-          ' Recupere el estado antes de volver a editar. ' +
-          'No repita la operación.'
-        );
+        this.mensaje.set((e?.error?.mensaje || 'No se confirmó el rechazo de la actualización.') + ' Recupere el estado antes de volver a editar.');
       }
     });
+  }
+
+  private abrirEdicion(aviso?: BanciActualizacionResultado['advertencias'][number]): void {
+    this.resultado.set(null);
+    this.confirmacion.set(null);
+    this.aceptarAdvertencias = false;
+    this.necesitaActualizar.set(false);
+    this.olvidarReferencia();
+    this.cargarPendientes();
+    let destino = 'archivo-actualizacion';
+    if (this.modalidad() === 'masiva') {
+      this.archivo = null;
+      const detalle = [aviso?.numeroFila ? `fila ${aviso.numeroFila}` : '', aviso?.campo ? `campo ${aviso.campo}` : ''].filter(Boolean).join(', ');
+      this.mensaje.set(`Corrija el Excel${detalle ? ' en ' + detalle : ''} y seleccione el archivo corregido antes de validar.`);
+    } else {
+      const campo = this.campos.find(c => c.clave === aviso?.campo);
+      if (campo) this.pestanaManual.set(this.camposLocalizacion.includes(campo) ? 'localizacion' : 'personales');
+      destino = campo ? `actualizar-${campo.clave}` : 'busqueda-actualizacion';
+      this.mensaje.set(this.seleccionada() ? 'Corrija la información y vuelva a validar. Sus datos capturados se conservaron.' : 'Busque nuevamente la víctima para corregir la información.');
+    }
+    setTimeout(() => {
+      if (this.destroyRef.destroyed) return;
+      const elemento = document.getElementById(destino);
+      elemento?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      elemento?.focus({ preventScroll: true });
+    }, 60);
   }
 
   confirmar(aceptar: boolean): void {
@@ -642,7 +574,9 @@ export class BanciActualizacion implements OnInit {
       ID_DELITO: c.id_delito, ID_VICF: c.id_vicf,
       Campo: c.campo, Anterior: c.anterior ?? '', Nuevo: c.nuevo ?? ''
     }));
-    await exportarFilasExcel(filas, `BANCI_actualizacion_${this.referenciaConfirmada}.xlsx`, 'Cambios');
+    const noBanci = this.modalidad() === 'manual' ? this.cambiosConfirmados[0]?.no_banci : null;
+    const entidad = this.entidades().find(e => Number(e.clave) === this.entidad)?.descripcion ?? `ENTIDAD_${this.entidad ?? ''}`;
+    await exportarFilasExcel(filas, nombreExcelBanci('actualizacion', entidad, noBanci), 'Cambios');
   }
 
   nuevaOperacion(): void {

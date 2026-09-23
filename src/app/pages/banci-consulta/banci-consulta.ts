@@ -34,6 +34,7 @@ export class BanciConsulta implements OnInit {
   anio = new Date().getFullYear();
   mes: number | null = null;
   entidad: number | null = null;
+  textoBusqueda = '';
   periodoConsultado = signal('');
   readonly meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -67,7 +68,7 @@ export class BanciConsulta implements OnInit {
   consultar(): void {
     if (!this.opciones() || this.exportando()) return;
     this.aplicado = { anio: this.anio, mes: this.mes, idEntidadFederativa: this.entidad,
-      busqueda: '', pagina: 1, tamanoPagina: 25 };
+      busqueda: this.textoBusqueda.trim(), pagina: 1, tamanoPagina: 25 };
     this.cargarPagina(1);
   }
 

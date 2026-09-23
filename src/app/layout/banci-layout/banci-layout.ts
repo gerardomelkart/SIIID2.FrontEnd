@@ -17,6 +17,7 @@ export class BanciLayout {
 
   menuAbierto = signal(false);
   cargaAbierta = signal(false);
+  actualizacionAbierta = signal(false);
   informesAbierto = signal(false);
   administracionAbierta = signal(false);
   sesionAbierta = signal(false);

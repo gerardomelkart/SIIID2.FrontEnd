@@ -1,5 +1,5 @@
 <section class="actualizacion-banci">
-  <h1>Actualización de víctimas BANCI</h1>
+  <h1>Actualización {{ modalidad() }} de víctimas BANCI</h1>
   <p>Actualice información de víctimas ya registradas mediante formulario o Excel. Ningún cambio se integra sin revisar
     y confirmar la vista previa.</p>
 
@@ -43,19 +43,7 @@
   </div>
   }
 
-  @if (!pendiente() && !necesitaActualizar() && !confirmacion()) {
-  <div class="modalidades-actualizacion" role="group" aria-label="Modalidad de actualización">
-    <button type="button" class="modalidad-actualizacion" [class.activa]="modalidad() === 'manual'"
-      [attr.aria-pressed]="modalidad() === 'manual'" (click)="cambiarModalidad('manual')">
-      <i class="fa-solid fa-user-pen"></i><strong>Actualización manual</strong><span>Buscar y actualizar una
-        víctima.</span>
-    </button>
-    <button type="button" class="modalidad-actualizacion" [class.activa]="modalidad() === 'masiva'"
-      [attr.aria-pressed]="modalidad() === 'masiva'" (click)="cambiarModalidad('masiva')">
-      <i class="fa-solid fa-file-arrow-up"></i><strong>Actualización masiva</strong><span>Actualizar mediante
-        Excel.</span>
-    </button>
-  </div>
+  @if (!resultado() && !necesitaActualizar() && !confirmacion()) {
   @if (modalidad() === 'manual') {
   <div class="siiid-card mb-3">
     <div class="siiid-card-header"><i class="fa-solid fa-magnifying-glass"></i> Buscar víctima registrada</div>
@@ -64,7 +52,7 @@
       <p>Busque por NO_BANCI, CURP, folio RNPDNO o nombre. Se requieren al menos tres caracteres.</p>
 
       <form class="barra-busqueda" (ngSubmit)="buscar()">
-        <input class="form-control" name="busqueda" [(ngModel)]="textoBusqueda" maxlength="250" minlength="3"
+        <input class="form-control" name="busqueda" id="busqueda-actualizacion" [(ngModel)]="textoBusqueda" maxlength="250" minlength="3"
           placeholder="NO_BANCI, CURP, folio o nombre..." [disabled]="ocupado()" required />
 
         <button type="submit" class="btn btn-siiid" [disabled]="ocupado() || textoBusqueda.trim().length < 3">
@@ -171,9 +159,7 @@
               [(ngModel)]="edicion[campo.clave]" [attr.maxlength]="campo.maximo" [disabled]="ocupado()"
               placeholder="Dejar vacío para conservar el dato actual"></textarea>
             } @else {
-            <input class="form-control" [id]="'actualizar-' + campo.clave" [name]="campo.clave" [type]="campo.tipo"
-              [(ngModel)]="edicion[campo.clave]" [attr.maxlength]="campo.maximo" [disabled]="ocupado()"
-              placeholder="Dejar vacío para conservar el dato actual" />
+            <input class="form-control" [id]="'actualizar-' + campo.clave" [name]="campo.clave" [type]="campo.tipo" [value]="edicion[campo.clave] || ''" (input)="capturarTexto(campo.clave, $event)" [attr.maxlength]="campo.maximo" [attr.max]="campo.tipo === 'date' ? fechaHoy() : null" [attr.min]="campo.tipo === 'date' ? fechaMinima() : null" [disabled]="ocupado()" placeholder="Dejar vacío para conservar el dato actual" />
             }
 
             @if (campo.ayuda) { <small>{{ campo.ayuda }}</small> }
@@ -199,11 +185,11 @@
     <div class="p-3">
       <p>Descargue la plantilla BANCI V2 y capture las víctimas que necesita actualizar.</p>
 
-      <div class="plantillas-banci-grid mb-3">
-        <button type="button" class="plantilla-banci-link" [disabled]="descargandoPlantilla() || ocupado()"
+      <div class="plantillas-grid mb-3">
+        <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || ocupado()"
           (click)="descargarPlantilla()">
 
-          <img src="img/logo_XLSX.png" alt="" class="plantilla-banci-icono">
+          <img src="img/logo_XLSX.png" alt="" class="excel-icon">
 
           <strong>
             {{ descargandoPlantilla() ? 'Descargando...' : 'Actualización de víctimas BANCI V2' }}
@@ -243,7 +229,7 @@
       <div class="pendiente-item">
         <span>{{ p.origen }} · Entidad {{ p.idEntidadFederativa }} · {{ p.fechaRegistro }}</span>
         <button type="button" class="btn btn-sm btn-secondary"
-          [disabled]="ocupado() || (pendiente() && referencia() !== p.codigoReferencia)"
+          [disabled]="ocupado() || ((pendiente() || necesitaActualizar()) && referencia() !== p.codigoReferencia)"
           (click)="recuperar(p.codigoReferencia)">
           Revisar
         </button>
@@ -254,7 +240,7 @@
   }
 
   @if (resultado(); as r) {
-  <div class="siiid-card mb-3" id="resultado-actualizacion">
+  <div class="siiid-card mb-3" id="resultado-actualizacion" tabindex="-1">
     <div class="siiid-card-header">Resultado de validación y vista previa</div>
 
     <div class="p-3">
@@ -263,7 +249,7 @@
           actualización.</strong></div>
       @for (e of r.errores; track $index) {
       <p class="mensaje-detalle"><strong>Fila {{ e.numeroFila ?? '—' }} · {{ e.campo ?? 'General' }}:</strong> {{
-        e.mensaje }}</p>
+        e.mensaje }} <button type="button" class="btn btn-sm btn-outline-dark ms-2" [disabled]="ocupado() || necesitaActualizar()" (click)="regresarAEdicion(e)">Corregir información</button></p>
       }
       }
 
@@ -405,7 +391,7 @@
         </button>
       </div>
       } @else if (r.errores.length > 0) {
-      <button type="button" class="btn btn-secondary" (click)="resultado.set(null)">Corregir información</button>
+      <button type="button" class="btn btn-secondary" (click)="regresarAEdicion()" [disabled]="ocupado() || necesitaActualizar()">Corregir información</button>
       }
     </div>
   </div>

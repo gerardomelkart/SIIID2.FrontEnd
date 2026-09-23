@@ -197,3 +197,7 @@ dd {
         width: 100%;
     }
 }
+.busqueda-consulta {
+  flex: 1 1 320px;
+  min-width: 0;
+}

@@ -40,8 +40,8 @@ export class BanciCargaService {
     return this.http.post<BanciCargaValidacionResponse>(`${this.apiUrl}/formulario/validar`, datos);
   }
 
-  descargarPlantilla() {
-    return this.http.get(`${this.apiUrl}/plantilla`, { responseType: 'blob', observe: 'response' });
+  descargarPlantilla(tipo: 'libro' | 'carpetas' | 'delitos' | 'victimas' = 'libro') {
+    return this.http.get(`${this.apiUrl}/plantilla`, { params: { tipo }, responseType: 'blob', observe: 'response' });
   }
 
   validarLibro(archivo: File, idEntidadFederativa: number | null = null): Observable<BanciCargaValidacionResponse> {
