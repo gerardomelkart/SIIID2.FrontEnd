@@ -89,6 +89,7 @@ export class BanciActualizacion implements OnInit {
   readonly esSuperUsuario = computed(() => this.opciones()?.esSuperUsuario === true);
   readonly pendiente = computed(() => this.resultado()?.estado === 'PENDIENTE' && !!this.referencia());
   readonly ocupado = computed(() => this.cargandoBusqueda() || this.cargandoOperacion() || this.descargandoPlantilla());
+  readonly pendientesDisponibles = computed(() => this.pendientes().filter(p => p.codigoReferencia !== this.referencia()));
   readonly entidades = computed(() => this.opciones()?.catalogos.filter(c => c.campo === 'id_ent_hchos' && Number(c.clave) >= 1 && Number(c.clave) <= 32) ?? []);
 
   ngOnInit(): void {
@@ -98,7 +99,7 @@ export class BanciActualizacion implements OnInit {
 
     try {
       const referencia = localStorage.getItem(this.claveReferencia());
-      if (referencia) this.recuperar(referencia);
+      if (referencia) this.recuperar(referencia, true);
     } catch {
       /* La pantalla funciona sin almacenamiento local. */
     }
@@ -267,7 +268,7 @@ export class BanciActualizacion implements OnInit {
   salirArrastreArchivo(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    this.archivoArrastrado.set(false);
+    if (!(event.currentTarget as HTMLElement)?.contains(event.relatedTarget as Node | null)) this.archivoArrastrado.set(false);
   }
 
   soltarArchivo(event: DragEvent): void {
@@ -275,6 +276,7 @@ export class BanciActualizacion implements OnInit {
     event.stopPropagation();
     this.archivoArrastrado.set(false);
     if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+    if ((event.dataTransfer?.files.length ?? 0) !== 1) { this.mensaje.set('Seleccione un solo archivo de actualización.'); return; }
     this.asignarArchivo(event.dataTransfer?.files.item(0) ?? null);
   }
 
@@ -342,7 +344,7 @@ export class BanciActualizacion implements OnInit {
     }
   }
 
-  recuperar(referencia: string): void {
+  recuperar(referencia: string, automatica = false): void {
     if (!referencia || this.cargandoOperacion()) return;
     if (this.necesitaActualizar() && this.referencia() && referencia !== this.referencia()) return;
     this.referencia.set(referencia);
@@ -362,6 +364,15 @@ export class BanciActualizacion implements OnInit {
           this.mensaje.set('No se encontró la operación de actualización. Revise las operaciones pendientes.');
           this.olvidarReferencia();
           this.resultado.set(null);
+          return;
+        }
+
+        if (automatica && estado.estado !== 'PENDIENTE') {
+          this.cargandoOperacion.set(false);
+          this.resultado.set(null);
+          this.confirmacion.set(null);
+          this.olvidarReferencia();
+          this.cargarPendientes();
           return;
         }
 

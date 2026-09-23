@@ -64,7 +64,7 @@ export class BanciCarga implements OnInit {
     this.cargarOpciones();
     try {
       const referencia = localStorage.getItem(this.claveRecuperacion());
-      if (referencia) this.recuperarCarga(referencia);
+      if (referencia) this.recuperarCarga(referencia, true);
     } catch {
       /* La recuperación manual funciona aunque el almacenamiento no esté disponible. */
     }
@@ -136,7 +136,7 @@ export class BanciCarga implements OnInit {
       });
   }
 
-  recuperarCarga(referencia: string): void {
+  recuperarCarga(referencia: string, automatica = false): void {
     referencia = referencia.trim();
     this.aceptarAdvertencias = false;
     if (!referencia || referencia.length > 50 || this.cargando()) return;
@@ -148,8 +148,9 @@ export class BanciCarga implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (carga) => {
-          this.resultado.set(carga);
-          this.recordarReferencia(referencia);
+          const resuelta = ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS', 'RECHAZADO_VALIDACION'].includes(carga.estado);
+          this.resultado.set(automatica && resuelta ? null : carga);
+          if (resuelta) this.olvidarReferencia(); else this.recordarReferencia(referencia);
           this.necesitaActualizar.set(false);
           this.cargando.set(false);
           this.limpiarArchivosSeleccionados();
@@ -158,13 +159,7 @@ export class BanciCarga implements OnInit {
         error: (error) => {
           this.cargando.set(false);
           this.necesitaActualizar.set(error?.status !== 404);
-          if (error?.status === 404) {
-            try {
-              localStorage.removeItem(this.claveRecuperacion());
-            } catch {
-              /* Sin almacenamiento local. */
-            }
-          }
+          if (error?.status === 404) { this.olvidarReferencia(); this.resultado.set(null); }
           this.mensajeLocal.set(
             error?.error?.mensaje ||
               'No se pudo recuperar el estado. Intente recuperar el estado; no vuelva a subir los archivos.',
@@ -230,6 +225,7 @@ export class BanciCarga implements OnInit {
           errores: carga.errores,
           advertencias: carga.advertencias,
         });
+        if (['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS', 'RECHAZADO_VALIDACION'].includes(respuesta.estado)) this.olvidarReferencia();
         this.aceptarAdvertencias = false;
         this.cargando.set(false);
         this.enfocarResultado();
@@ -282,6 +278,11 @@ export class BanciCarga implements OnInit {
     } catch {
       /* Sólo se guarda la referencia. */
     }
+  }
+
+  private olvidarReferencia(): void {
+    this.referenciaEnCurso.set('');
+    try { localStorage.removeItem(this.claveRecuperacion()); } catch { /* Sin almacenamiento local. */ }
   }
 
   archivoLibro: File | null = null;
@@ -477,11 +478,7 @@ export class BanciCarga implements OnInit {
     this.limpiarArchivosSeleccionados();
     this.resultado.set(null);
     this.mensajeLocal.set('');
-    try {
-      localStorage.removeItem(this.claveRecuperacion());
-    } catch {
-      /* Sin almacenamiento local. */
-    }
+    this.olvidarReferencia();
 
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
@@ -607,21 +604,17 @@ export class BanciCarga implements OnInit {
     this.resultado.set(null);
   }
 
-  irADecision(): void {
-    const destino = document.getElementById('decision-banci');
-    destino?.focus({ preventScroll: true });
-    destino?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
   verAdvertencias(): void {
-    document
-      .getElementById('resultado-banci')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!this.advertencias().length) return;
+    const destino = document.getElementById('observaciones-carga-banci');
+    destino?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    destino?.focus({ preventScroll: true });
   }
 
   private enfocarResultado(): void {
     setTimeout(() => {
       document
-        .getElementById(this.pendiente() ? 'decision-banci' : 'resultado-banci')
+        .getElementById(this.pendiente() && !this.advertencias().length ? 'decision-banci' : 'resultado-banci')
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }

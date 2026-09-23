@@ -130,32 +130,6 @@
   box-shadow: inset 0 4px var(--siiid-guinda);
 }
 
-.zona-archivo-banci {
-  border: 2px dashed #a5a5a5;
-  padding: 25px;
-  text-align: center;
-  background: #fafafa;
-  transition: .12s;
-}
-
-.zona-archivo-banci.arrastrando {
-  border-color: var(--siiid-guinda);
-  background: #faf0ff;
-}
-
-.zona-archivo-banci label {
-  cursor: pointer;
-}
-
-.zona-archivo-banci label strong {
-  display: block;
-  margin: 10px 0;
-}
-
-.zona-archivo-banci i {
-  color: var(--siiid-guinda);
-}
-
 .resumen-modal-fondo {
   position: fixed;
   inset: 0;
@@ -249,4 +223,9 @@
   background: #603c06;
   color: #fff;
   border-color: #603c06;
+}
+.resultado-sin-observaciones {
+  background: #e8f5ec;
+  border-left: 5px solid #198754;
+  color: #146c43;
 }

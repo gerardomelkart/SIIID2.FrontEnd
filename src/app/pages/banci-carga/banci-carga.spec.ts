@@ -24,6 +24,7 @@ function carga(estado = 'VALIDADO_PENDIENTE', advertencias = 0): BanciCargaValid
 
 describe('BANCI: decisión explícita de la propia carga', () => {
   let servicio: {
+    obtenerFormularioOpciones: ReturnType<typeof vi.fn>;
     validarLibro: ReturnType<typeof vi.fn>;
     validarArchivos: ReturnType<typeof vi.fn>;
     obtenerPendientes: ReturnType<typeof vi.fn>;
@@ -36,6 +37,7 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: vi.fn() });
     servicio = {
+      obtenerFormularioOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })),
       validarLibro: vi.fn(() => of(carga())), validarArchivos: vi.fn(() => of(carga())),
       obtenerPendientes: vi.fn(() => of([])), obtenerCarga: vi.fn(() => of(carga())),
       confirmar: vi.fn(() => of(carga('PROCESADO'))),
@@ -51,16 +53,14 @@ describe('BANCI: decisión explícita de la propia carga', () => {
 
   afterEach(() => { TestBed.resetTestingModule(); vi.restoreAllMocks(); });
 
-  it('oculta la referencia y el botón lleva a la decisión', () => {
+  it('oculta la referencia y muestra la decisión sin un botón redundante para revisarla', () => {
     const fixture = TestBed.createComponent(BanciCarga); fixture.detectChanges();
     const c = fixture.componentInstance; c.resultado.set(carga()); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).not.toContain('BANCI_PRUEBA_7');
     const destino = fixture.nativeElement.querySelector('#decision-banci');
-    const buscar = vi.spyOn(document, 'getElementById').mockReturnValue(destino);
-    c.irADecision();
-    expect(buscar).toHaveBeenCalledWith('decision-banci');
-    expect(destino.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-    expect(fixture.nativeElement.textContent).toContain('Revisar y decidir');
+    expect(destino).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Aceptar e integrar carga');
+    expect(fixture.nativeElement.textContent).not.toContain('Revisar y decidir');
   });
 
   it('no acepta una actualización sin permiso y sí permite rechazarla', () => {
@@ -121,8 +121,9 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     const c = TestBed.createComponent(BanciCarga).componentInstance;
     c.resultado.set(carga('VALIDADO_PENDIENTE', 641));
     servicio.confirmar.mockReturnValue(of({ ...carga('PROCESADO_CON_ADVERTENCIAS'), totalSinCambio: 669 }));
+    c.aceptarAdvertencias = true;
     c.confirmar(true);
-    expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', true, 'A'.repeat(64));
+    expect(servicio.confirmar).toHaveBeenCalledWith('BANCI_PRUEBA_7', true, 'A'.repeat(64), true);
     expect(c.resultadoCorrecto()?.totalSinCambio).toBe(669);
     expect(c.advertencias()).toHaveLength(641);
     expect(c.pendiente()).toBe(false);
@@ -189,7 +190,7 @@ describe('BANCI: decisión explícita de la propia carga', () => {
     const c = TestBed.createComponent(BanciCarga).componentInstance;
     c.archivoLibro = new File([''], 'BANCI.xlsx');
     c.procesar();
-    expect(c.mensajeLocal()).toContain('ninguna carga se integra sin su confirmación');
+    expect(c.mensajeLocal().toLowerCase()).toContain('ninguna carga se integra sin su confirmación');
     expect(servicio.obtenerPendientes).not.toHaveBeenCalled();
     expect(servicio.validarLibro).toHaveBeenCalledTimes(1);
     expect(servicio.confirmar).not.toHaveBeenCalled();

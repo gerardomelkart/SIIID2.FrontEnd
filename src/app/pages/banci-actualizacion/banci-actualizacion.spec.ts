@@ -110,4 +110,46 @@ describe('Corrección y recuperación BANCI', () => {
     c.capturarTexto('curp', { target: input } as unknown as Event);
     expect(c.edicion['curp']).toBe('ABCD010101XXX');
   });
+
+  it('no vuelve a mostrar una actualización ya resuelta al entrar', () => {
+    localStorage.setItem('siiid_banci_actualizacion_1', 'referencia-prueba');
+    api['obtenerEstado'].mockReturnValue(of([{ estado: 'INTEGRADA', origen: 'EXCEL', idEntidadFederativa: 14 }]));
+    const f = TestBed.createComponent(BanciActualizacion);
+    f.detectChanges();
+    expect(f.componentInstance.confirmacion()).toBeNull();
+    expect(f.componentInstance.resultado()).toBeNull();
+    expect(localStorage.getItem('siiid_banci_actualizacion_1')).toBeNull();
+  });
+
+  it('no repite la operación actual en pendientes ni muestra revisar sin observaciones', () => {
+    const f = TestBed.createComponent(BanciActualizacion);
+    f.detectChanges();
+    const c = f.componentInstance;
+    c.resultado.set({ ...respuesta('PENDIENTE'), esValido: true, errores: [], huella: 'prueba' });
+    c.referencia.set('referencia-prueba');
+    c.pendientes.set([{ codigoReferencia: 'referencia-prueba', estado: 'PENDIENTE', origen: 'FORMULARIO', idEntidadFederativa: 14, fechaRegistro: '2026-09-23', fechaDecision: null, totalCambios: 0 }]);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('.pendiente-item')).toBeNull();
+    const botones = Array.from(f.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).map(b => b.textContent || '');
+    expect(botones.some(t => /Revisar|Regresar y revisar/.test(t))).toBe(false);
+    expect(f.nativeElement.textContent).toContain('Sin errores ni advertencias');
+  });
+
+  it('usa la tarjeta de arrastre de carga y el panel lateral de plantillas en masiva', () => {
+    const f = TestBed.createComponent(BanciActualizacion);
+    f.detectChanges();
+    f.componentInstance.modalidad.set('masiva');
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('.col-xl-8 .file-upload-card input.file-input')).not.toBeNull();
+    expect(f.nativeElement.querySelector('aside.col-xl-4 .plantilla-link')).not.toBeNull();
+    expect(f.nativeElement.querySelector('.zona-archivo-banci')).toBeNull();
+  });
+
+  it('rechaza arrastrar varios Excel en vez de seleccionar silenciosamente el primero', () => {
+    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+    const archivo = new File(['prueba'], 'actualizacion.xlsx');
+    c.soltarArchivo({ preventDefault: vi.fn(), stopPropagation: vi.fn(), dataTransfer: { files: { length: 2, item: () => archivo } } } as unknown as DragEvent);
+    expect(c.archivo).toBeNull();
+    expect(c.mensaje()).toContain('un solo archivo');
+  });
 });

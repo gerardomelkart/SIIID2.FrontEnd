@@ -69,7 +69,7 @@ export class BanciFormulario implements OnInit {
     } catch {
       /* Sólo se conserva la referencia, no los datos personales. */
     }
-    if (this.referencia()) this.actualizarEstado();
+    if (this.referencia()) this.actualizarEstado(true);
   }
 
   cargarOpciones(): void {
@@ -226,7 +226,7 @@ export class BanciFormulario implements OnInit {
     });
   }
 
-  actualizarEstado(): void {
+  actualizarEstado(automatica = false): void {
     if (!this.referencia() || this.cargando()) return;
     this.cargando.set(true);
     this.aceptarAdvertencias = false;
@@ -237,7 +237,12 @@ export class BanciFormulario implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (respuesta) => {
-          this.recibir(respuesta);
+          const resuelta = ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS', 'RECHAZADO_VALIDACION'].includes(respuesta.estado);
+          if (automatica && resuelta) {
+            this.resultado.set(null);
+            this.cargando.set(false);
+            this.olvidarReferencia();
+          } else this.recibir(respuesta);
           this.necesitaActualizar.set(false);
         },
         error: (e) => {
@@ -280,6 +285,7 @@ export class BanciFormulario implements OnInit {
   private recibir(respuesta: BanciCargaValidacionResponse): void {
     this.resultado.set(respuesta);
     this.cargando.set(false);
+    if (['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS', 'RECHAZADO_VALIDACION'].includes(respuesta.estado)) { this.olvidarReferencia(); return; }
     this.referencia.set(respuesta.codigoReferencia);
     try {
       localStorage.setItem(this.claveReferencia(), respuesta.codigoReferencia);

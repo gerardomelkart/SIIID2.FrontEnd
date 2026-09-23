@@ -179,59 +179,55 @@
 
   }
   @if (modalidad() === 'masiva') {
-  <div class="siiid-card mb-3">
-    <div class="siiid-card-header"><i class="fa-solid fa-file-excel"></i> Actualización mediante Excel</div>
-
-    <div class="p-3">
-      <p>Descargue la plantilla BANCI V2 y capture las víctimas que necesita actualizar.</p>
-
-      <div class="plantillas-grid mb-3">
-        <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || ocupado()"
-          (click)="descargarPlantilla()">
-
-          <img src="img/logo_XLSX.png" alt="" class="excel-icon">
-
-          <strong>
-            {{ descargandoPlantilla() ? 'Descargando...' : 'Actualización de víctimas BANCI V2' }}
-          </strong>
-
-          <span>Excel para modificar información de víctimas registradas</span>
-        </button>
-      </div>
-
-      <form (ngSubmit)="validarExcel()">
-        <div class="zona-archivo-banci" [class.arrastrando]="archivoArrastrado()" (dragenter)="arrastrarArchivo($event)"
-          (dragover)="arrastrarArchivo($event)" (dragleave)="salirArrastreArchivo($event)"
-          (drop)="soltarArchivo($event)">
-          <label for="archivo-actualizacion" class="d-block">
-            <i class="fa-solid fa-cloud-arrow-up fa-2x"></i>
-            <strong>Arrastre el Excel aquí o seleccione un archivo .xlsx</strong>
+  <div class="row g-4 mb-3">
+    <div class="col-xl-8">
+      <div class="siiid-card">
+        <div class="siiid-card-header"><i class="fa-solid fa-file-arrow-up"></i> Actualización mediante Excel</div>
+        <form class="p-4" (ngSubmit)="validarExcel()">
+          <p>Seleccione el archivo con las víctimas que necesita actualizar. Los campos vacíos conservan la información registrada.</p>
+          <label class="file-upload-card" [class.file-upload-ready]="archivo" [class.file-upload-dragging]="archivoArrastrado()" (dragenter)="arrastrarArchivo($event)" (dragover)="arrastrarArchivo($event)" (dragleave)="salirArrastreArchivo($event)" (drop)="soltarArchivo($event)">
+            <div class="file-upload-header">
+              <div class="file-type-icon"><i class="fa-solid fa-file-excel"></i></div>
+              <div><strong>Archivo de actualización BANCI</strong><span>{{ archivo?.name || 'Ningún archivo seleccionado' }}</span></div>
+            </div>
+            <span class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-folder-open"></i> {{ archivoArrastrado() ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}</span>
+            <input id="archivo-actualizacion" type="file" class="file-input" accept=".xlsx" (change)="seleccionarArchivo($event)" [disabled]="ocupado()" />
           </label>
-          <input id="archivo-actualizacion" class="form-control mt-2" type="file" accept=".xlsx"
-            (change)="seleccionarArchivo($event)" [disabled]="ocupado()" />
-          <p class="mt-2 mb-0">{{ archivo?.name || 'Ningún archivo seleccionado' }}</p>
-        </div>
-        <button type="submit" class="btn btn-siiid mt-3" [disabled]="ocupado() || !archivo">
-          Validar Excel
-        </button>
-      </form>
+          <div class="d-flex justify-content-between align-items-center gap-3 mt-3 flex-wrap">
+            <span class="text-muted"><i class="fa-solid fa-circle-info"></i> Un archivo XLSX, hasta 20 MB.</span>
+            <button type="submit" class="btn btn-siiid" [disabled]="ocupado() || !archivo"><i class="fa-solid fa-shield-halved"></i> Validar archivo</button>
+          </div>
+        </form>
+      </div>
     </div>
+    <aside class="col-xl-4" aria-label="Plantilla de actualización BANCI">
+      <div class="siiid-card">
+        <div class="siiid-card-header"><i class="fa-solid fa-file-excel"></i> Descargar Plantillas</div>
+        <div class="p-4 plantillas-body">
+          <div class="plantillas-note"><i class="fa-solid fa-download"></i> Descargue la plantilla oficial antes de preparar la actualización.</div>
+          <div class="plantillas-grid plantillas-libro">
+            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || ocupado()" (click)="descargarPlantilla()"><img src="img/logo_XLSX.png" alt="Plantilla de actualización" class="excel-icon"><strong>Actualización de víctimas</strong></button>
+          </div>
+          @if (descargandoPlantilla()) { <p role="status" class="mt-2">Descargando plantilla...</p> }
+        </div>
+      </div>
+    </aside>
   </div>
   }
   }
 
-  @if (pendientes().length > 0) {
+  @if (!resultado() && !confirmacion() && !necesitaActualizar() && pendientesDisponibles().length > 0) {
   <div class="siiid-card mb-3">
-    <div class="siiid-card-header">Mis actualizaciones pendientes</div>
+    <div class="siiid-card-header">Continuar una actualización</div>
 
     <div class="p-3">
-      @for (p of pendientes(); track p.codigoReferencia) {
+      @for (p of pendientesDisponibles(); track p.codigoReferencia) {
       <div class="pendiente-item">
         <span>{{ p.origen }} · Entidad {{ p.idEntidadFederativa }} · {{ p.fechaRegistro }}</span>
         <button type="button" class="btn btn-sm btn-secondary"
           [disabled]="ocupado() || ((pendiente() || necesitaActualizar()) && referencia() !== p.codigoReferencia)"
           (click)="recuperar(p.codigoReferencia)">
-          Revisar
+          Continuar
         </button>
       </div>
       }
@@ -241,7 +237,9 @@
 
   @if (resultado(); as r) {
   <div class="siiid-card mb-3" id="resultado-actualizacion" tabindex="-1">
-    <div class="siiid-card-header">Resultado de validación y vista previa</div>
+    <div class="siiid-card-header" [class.resultado-sin-observaciones]="!r.errores.length && !r.advertencias.length">
+      @if (!r.errores.length && !r.advertencias.length) { <i class="fa-solid fa-circle-check"></i> Validación correcta } @else { Resultado de validación y vista previa }
+    </div>
 
     <div class="p-3">
       @if (r.errores.length > 0) {
@@ -332,7 +330,7 @@
       }
 
       @if (pendiente()) {
-      <p>La actualización aún no se ha aplicado. Revise los cambios y decida si desea continuar.</p>
+      <p>{{ !r.errores.length && !r.advertencias.length ? (r.cambios.length ? 'Sin errores ni advertencias. Confirme los cambios mostrados para aplicarlos.' : 'Sin errores ni advertencias. No hay cambios que aplicar; puede cerrar esta revisión.') : 'La actualización no se ha aplicado. Atienda las observaciones antes de confirmar.' }}</p>
 
       <div class="table-responsive tabla-cambios">
         <table class="table table-sm table-bordered">
@@ -370,6 +368,7 @@
       }
 
       <div class="acciones mt-3">
+        @if (r.errores.length > 0 || r.advertencias.length > 0) {
         <button type="button" class="btn btn-secondary" [disabled]="ocupado() || necesitaActualizar()"
           (click)="regresarAEdicion()">
 
@@ -378,17 +377,20 @@
           Regresar y revisar información
 
         </button>
+        }
 
         <button type="button" class="btn btn-outline-danger" [disabled]="ocupado() || necesitaActualizar()"
           (click)="confirmar(false)">
-          Rechazar actualización
+          {{ !r.errores.length && !r.cambios.length ? 'Cerrar sin aplicar cambios' : 'Rechazar actualización' }}
         </button>
 
+        @if (r.cambios.length > 0) {
         <button type="button" class="btn btn-siiid"
           [disabled]="ocupado() || necesitaActualizar() || !r.huella || r.errores.length > 0 || r.cambios.length === 0 || (r.advertencias.length > 0 && !aceptarAdvertencias)"
           (click)="confirmar(true)">
           Aceptar y aplicar cambios
         </button>
+        }
       </div>
       } @else if (r.errores.length > 0) {
       <button type="button" class="btn btn-secondary" (click)="regresarAEdicion()" [disabled]="ocupado() || necesitaActualizar()">Corregir información</button>
