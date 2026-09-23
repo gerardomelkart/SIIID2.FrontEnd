@@ -33,14 +33,6 @@
       }
     </select>
   </div>
-  } @else {
-  <div class="siiid-card p-3 mb-3">
-    <label for="entidad-asignada-banci"><strong>Entidad asignada</strong></label>
-    <select id="entidad-asignada-banci" class="form-select mt-2" style="max-width: 450px" disabled
-      [ngModel]="o.idEntidadFederativa">
-      @for (e of entidades(); track e.clave) { <option [ngValue]="+e.clave">{{ e.descripcion }}</option> }
-    </select>
-  </div>
   }
 
   @if (!resultado() && !necesitaActualizar() && !confirmacion()) {

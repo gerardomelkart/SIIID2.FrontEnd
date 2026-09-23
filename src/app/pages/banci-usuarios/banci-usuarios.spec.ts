@@ -10,6 +10,17 @@ import { BanciUsuarioDetalle } from '../../core/models/banci-usuarios.models';
 const cuenta = (cambios: Partial<BanciUsuarioDetalle> = {}): BanciUsuarioDetalle => ({ idUsuario: 20, idEntidadFederativa: 14, entidadFederativa: 'Jalisco', usuario: 'prueba', nombre: 'Enlace', primerApellido: 'Prueba', segundoApellido: null, nombreCompleto: 'Enlace Prueba', correoElectronico: 'prueba@example.test', rfc: null, curp: null, telefonoContacto: null, idRol: 2, rol: 'ENLACE_ESTATAL', habilitaBanci: true, habilitaCarga: true, habilitaModificacion: false, activo: true, activoCuenta: true, tieneBanci: true, tieneOtrosModulos: false, fechaAlta: '', fechaModificacion: '', ...cambios });
 
 describe('Administración propia BANCI', () => {
+  it('habilitar carga no concede actualización a un usuario nuevo', () => {
+    const c = TestBed.createComponent(BanciUsuarios).componentInstance;
+    c.actualizarCampo('rol', 'ENLACE_ESTATAL');
+    expect(c.formulario().habilitaCarga).toBe(false);
+    expect(c.formulario().habilitaModificacion).toBe(false);
+    c.actualizarCampo('habilitaCarga', true);
+    expect(c.formulario().habilitaModificacion).toBe(false);
+    c.actualizarCampo('habilitaModificacion', true);
+    c.actualizarCampo('habilitaCarga', false);
+    expect(c.formulario().habilitaModificacion).toBe(true);
+  });
   let servicio: { obtenerUsuarios: ReturnType<typeof vi.fn>; obtenerDetalle: ReturnType<typeof vi.fn>; crearUsuario: ReturnType<typeof vi.fn>; editarUsuario: ReturnType<typeof vi.fn> };
   beforeEach(() => {
     servicio = { obtenerUsuarios: vi.fn(() => of({ usuarios: [] })), obtenerDetalle: vi.fn(() => of({ esValido: true, usuario: cuenta() })), crearUsuario: vi.fn(() => of({ esValido: true })), editarUsuario: vi.fn(() => of({ esValido: true })) };

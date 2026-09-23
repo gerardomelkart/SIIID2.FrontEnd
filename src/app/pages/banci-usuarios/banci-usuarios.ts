@@ -730,8 +730,8 @@ export class BanciUsuarios implements OnInit {
       password: '',
       rol: '',
       habilitaBanci: true,
-      habilitaCarga: true,
-      habilitaModificacion: true,
+      habilitaCarga: false,
+      habilitaModificacion: false,
       tieneOtrosModulos: false,
     };
   }

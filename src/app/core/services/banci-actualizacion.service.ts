@@ -1,5 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { defer, switchMap } from 'rxjs';
+import { leerArchivoBanci } from '../utils/banci-lectura-archivo.utils';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import {
   BanciActualizacionBusquedaResponse,
@@ -35,10 +37,12 @@ export class BanciActualizacionService {
   }
 
   validarArchivo(archivo: File, idEntidadFederativa: number | null = null) {
-    const formData = new FormData();
-    formData.append('Archivo', archivo);
-    if (idEntidadFederativa != null) formData.append('IdEntidadFederativa', idEntidadFederativa.toString());
-    return this.http.post<BanciActualizacionResultado>(`${this.apiUrl}/archivo/validar`, formData);
+    return defer(() => leerArchivoBanci(archivo)).pipe(switchMap(leido => {
+      const formData = new FormData();
+      formData.append('Archivo', leido);
+      if (idEntidadFederativa != null) formData.append('IdEntidadFederativa', idEntidadFederativa.toString());
+      return this.http.post<BanciActualizacionResultado>(`${this.apiUrl}/archivo/validar`, formData);
+    }));
   }
 
   obtenerPendientes() {

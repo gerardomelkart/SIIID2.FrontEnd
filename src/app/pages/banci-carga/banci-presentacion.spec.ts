@@ -24,6 +24,13 @@ for (const [componente, tipo] of [[BanciCarga, 'carga'], [BanciFormulario, 'form
       Element.prototype.scrollIntoView = vi.fn();
     });
 
+    it('no muestra selector de entidad de reporte al enlace', () => {
+      const f = crear();
+      f.detectChanges();
+      expect(f.nativeElement.querySelector('#entidad-banci-carga, #entidadReporteBanci')).toBeNull();
+      expect(f.componentInstance.entidad).toBe(14);
+    });
+
     it('no reabre una referencia antigua que ya fue integrada', () => {
       localStorage.setItem(clave, 'BANCI-prueba');
       api['obtenerCarga'].mockReturnValue(of(carga('PROCESADO')));

@@ -1,7 +1,8 @@
 import { BanciResumenRegistro } from '../models/banci-resumen.models';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { defer, Observable, switchMap } from 'rxjs';
+import { leerArchivoBanci } from '../utils/banci-lectura-archivo.utils';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { BanciCargaValidacionResponse } from '../models/banci-carga.models';
 import { BanciFormularioOpciones, BanciFormularioRequest } from '../models/banci-formulario.models';
@@ -45,18 +46,22 @@ export class BanciCargaService {
   }
 
   validarLibro(archivo: File, idEntidadFederativa: number | null = null): Observable<BanciCargaValidacionResponse> {
-    const formData = new FormData();
-    formData.append('ArchivoLibro', archivo);
-    if (idEntidadFederativa != null) formData.append('IdEntidadFederativa', idEntidadFederativa.toString());
-    return this.http.post<BanciCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+    return defer(() => leerArchivoBanci(archivo)).pipe(switchMap(leido => {
+      const formData = new FormData();
+      formData.append('ArchivoLibro', leido);
+      if (idEntidadFederativa != null) formData.append('IdEntidadFederativa', idEntidadFederativa.toString());
+      return this.http.post<BanciCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+    }));
   }
 
   validarArchivos(carpetas: File, delitos: File, victimas: File, idEntidadFederativa: number | null = null): Observable<BanciCargaValidacionResponse> {
-    const formData = new FormData();
-    formData.append('ArchivoCarpetas', carpetas);
-    formData.append('ArchivoDelitos', delitos);
-    formData.append('ArchivoVictimas', victimas);
-    if (idEntidadFederativa != null) formData.append('IdEntidadFederativa', idEntidadFederativa.toString());
-    return this.http.post<BanciCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+    return defer(() => Promise.all([carpetas, delitos, victimas].map(leerArchivoBanci))).pipe(switchMap(([ci, dto, vic]) => {
+      const formData = new FormData();
+      formData.append('ArchivoCarpetas', ci);
+      formData.append('ArchivoDelitos', dto);
+      formData.append('ArchivoVictimas', vic);
+      if (idEntidadFederativa != null) formData.append('IdEntidadFederativa', idEntidadFederativa.toString());
+      return this.http.post<BanciCargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
+    }));
   }
 }

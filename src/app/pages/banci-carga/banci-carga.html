@@ -32,29 +32,24 @@
 
 
       @if (opciones(); as o) {
+      @if (o.esSuperUsuario) {
       <div class="siiid-card p-3 mb-3">
         <label for="entidad-banci-carga" class="form-label">
           <strong>Entidad federativa que reporta *</strong>
         </label>
 
         <select id="entidad-banci-carga" class="form-select" style="max-width: 450px" [(ngModel)]="entidad"
-          [disabled]="!o.esSuperUsuario || bloqueado() || cargandoOpciones()" required>
+          [disabled]="bloqueado() || cargandoOpciones()" required>
 
-          @if (o.esSuperUsuario) {
           <option [ngValue]="null">Seleccione una entidad...</option>
-          }
 
           @for (e of entidades(); track e.clave) {
           <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
           }
         </select>
 
-        @if (!o.esSuperUsuario) {
-        <small class="text-muted d-block mt-2">
-          Entidad asignada a su cuenta. No puede modificarse.
-        </small>
-        }
       </div>
+      }
       } @else if (!cargandoOpciones()) {
       <div class="alert alert-warning">
         No fue posible cargar la información de la entidad.
