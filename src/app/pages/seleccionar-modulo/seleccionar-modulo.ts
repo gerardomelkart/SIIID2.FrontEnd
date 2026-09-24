@@ -1,5 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SistemaConfiguracionService } from '../../core/services/sistema-configuracion.service';
 
 import { ModuloUsuarioInfo } from '../../core/models/auth.models';
 import { AuthService } from '../../core/services/auth.service';
@@ -7,7 +9,7 @@ import { SessionService } from '../../core/services/session.service';
 
 @Component({
   selector: 'app-seleccionar-modulo',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './seleccionar-modulo.html',
   styleUrl: './seleccionar-modulo.css',
 })
@@ -15,6 +17,18 @@ export class SeleccionarModulo {
   private readonly sessionService = inject(SessionService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+
+  private readonly sistema = inject(SistemaConfiguracionService);
+  private readonly destroy = inject(DestroyRef);
+  administraSistema = this.sessionService.administraSistema;
+  error = signal('');
+  cargando = signal(false);
+  constructor() { this.actualizar(); }
+  actualizar(): void {
+    if (this.cargando()) return;
+    this.cargando.set(true); this.error.set('');
+    this.sistema.refrescarSesion().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => this.cargando.set(false), error: () => { this.cargando.set(false); this.error.set('No se pudieron actualizar sus accesos. Reintente.'); } });
+  }
 
   modulos = computed(() => {
     const orden = ['MENSUAL', 'FEDERAL', 'SEMANAL', 'BANCI'];

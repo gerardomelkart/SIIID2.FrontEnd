@@ -1,0 +1,159 @@
+:host {
+  display: block;
+  background: #f4f5f7;
+  min-height: 100vh;
+  color: #263446;
+}
+.sistema-page {
+  max-width: 1440px;
+  margin: auto;
+  padding: 28px;
+}
+.sistema-header, .sistema-intro, .modulo-config header, .bitacora header, .bitacora footer, .opcion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.sistema-header img {
+  width: min(560px, 65%);
+}
+.sistema-intro {
+  margin: 32px 0 22px;
+}
+h1 {
+  font-size: 30px;
+  margin: 10px 0;
+}
+h2 {
+  font-size: 20px;
+  margin: 0 0 10px;
+}
+.etiqueta {
+  color: #691c32;
+  font-weight: 700;
+}
+.aviso {
+  padding: 18px;
+  background: #eaf0f6;
+  border-left: 4px solid #2c5478;
+  margin-bottom: 22px;
+}
+.modulos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.modulo-config, .bitacora {
+  background: white;
+  border: 1px solid #dce0e5;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px #1522380c;
+  overflow: hidden;
+}
+.modulo-config header, .bitacora header {
+  padding: 20px;
+  border-bottom: 1px solid #dce0e5;
+}
+.estado {
+  color: #626c77;
+  font-size: 13px;
+}
+.estado.encendido {
+  color: #176a49;
+}
+.opcion {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eceef1;
+}
+small {
+  display: block;
+  color: #647080;
+  margin-top: 5px;
+}
+.interruptor {
+  flex: 0 0 48px;
+  height: 28px;
+  border: 0;
+  border-radius: 18px;
+  background: #7b8793;
+  padding: 3px;
+}
+.interruptor span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 150ms;
+}
+.interruptor.activado {
+  background: #226a53;
+}
+.interruptor.activado span {
+  transform: translateX(20px);
+}
+.interruptor:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.interruptor:focus-visible {
+  outline: 3px solid #ba985c;
+  outline-offset: 3px;
+}
+.nota {
+  padding: 16px 20px;
+  margin: 0;
+  font-size: 13px;
+  background: #faf8f3;
+}
+.bitacora {
+  margin-top: 28px;
+}
+.bitacora td, .bitacora th {
+  padding: 14px;
+  vertical-align: top;
+}
+.bitacora footer {
+  padding: 16px;
+  justify-content: center;
+}
+.dialogo-fondo {
+  position: fixed;
+  inset: 0;
+  background: #18212fb3;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.dialogo {
+  width: min(560px, 100%);
+  background: white;
+  border-radius: 8px;
+  padding: 28px;
+}
+.dialogo textarea {
+  display: block;
+  width: 100%;
+  margin: 10px 0 20px;
+  border: 1px solid #aeb8c3;
+  border-radius: 5px;
+  padding: 10px;
+}
+.dialogo-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+@media (max-width: 850px) {
+  .modulos-grid {
+    grid-template-columns: 1fr;
+  }
+  .sistema-header, .sistema-intro {
+    flex-wrap: wrap;
+  }
+  .sistema-page {
+    padding: 16px;
+  }
+}

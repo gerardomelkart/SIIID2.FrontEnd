@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { sistemaGuard } from './core/guards/sistema.guard';
 
 import { ROLES } from './core/constants/roles.constants';
 import { authGuard } from './core/guards/auth.guard';
@@ -8,6 +9,7 @@ import { permissionGuard } from './core/guards/permission.guard';
 import { moduloGuard } from './core/guards/modulo.guard';
 
 export const routes: Routes = [
+  { path: 'sistema/configuracion', loadComponent: () => import('./pages/sistema-configuracion/sistema-configuracion').then(m => m.SistemaConfiguracionPage), canActivate: [authGuard, cambioPasswordGuard, sistemaGuard] },
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
@@ -30,6 +32,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./layout/semanal-layout/semanal-layout').then((m) => m.SemanalLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    canActivateChild: [moduloGuard],
     data: {
       modulo: 'SEMANAL',
     },
@@ -152,6 +155,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./layout/federal-layout/federal-layout').then((m) => m.FederalLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    canActivateChild: [moduloGuard],
     data: {
       modulo: 'FEDERAL',
     },
@@ -257,6 +261,7 @@ export const routes: Routes = [
     path: 'banci',
     loadComponent: () => import('./layout/banci-layout/banci-layout').then((m) => m.BanciLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    canActivateChild: [moduloGuard],
     data: {
       modulo: 'BANCI',
     },
@@ -314,6 +319,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
     canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+    canActivateChild: [moduloGuard],
     data: {
       modulo: 'MENSUAL',
     },

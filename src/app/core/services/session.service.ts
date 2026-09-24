@@ -20,7 +20,8 @@ export class SessionService {
   token = computed(() => this.tokenSignal());
   modulos = computed(() => this.usuarioSignal()?.modulos ?? []);
   moduloActivo = computed(() => this.moduloActivoSignal());
-  tieneMultiplesModulos = computed(() => this.modulos().length > 1);
+  administraSistema = computed(() => this.usuarioSignal()?.administraSistema === true);
+  tieneMultiplesModulos = computed(() => this.modulos().length > 1 || this.administraSistema());
 
   estaAutenticado = computed(() => {
     const token = this.tokenSignal();
@@ -77,6 +78,18 @@ export class SessionService {
     if (usuario.modulos.length === 1) {
       this.seleccionarModulo(usuario.modulos[0].clave);
     }
+  }
+
+  actualizarAccesos(modulos: ModuloUsuarioInfo[], administraSistema: boolean): void {
+    const usuario = this.usuarioSignal();
+    if (!usuario) return;
+    const actualizado = { ...usuario, modulos, administraSistema };
+    localStorage.setItem(USER_KEY, JSON.stringify(actualizado));
+    this.usuarioSignal.set(actualizado);
+    const clave = this.moduloActivoSignal()?.clave;
+    const activo = modulos.find(m => m.clave === clave) ?? null;
+    this.moduloActivoSignal.set(activo);
+    if (!activo) localStorage.removeItem(MODULO_ACTIVO_KEY);
   }
 
   seleccionarModulo(clave: string): boolean {

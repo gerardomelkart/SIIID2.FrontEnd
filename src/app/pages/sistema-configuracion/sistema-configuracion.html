@@ -1,0 +1,35 @@
+<div class="sistema-page">
+  <header class="sistema-header"><img src="img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo"><a routerLink="/seleccionar-modulo" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left"></i> Regresar a módulos</a></header>
+  <section class="sistema-intro"><div><span class="etiqueta"><i class="fa-solid fa-user-shield"></i> Administración del sistema</span><h1>Configuración del sistema</h1><p>Administre la disponibilidad de los módulos y sus validaciones.</p></div><button type="button" class="btn btn-secondary" [disabled]="cargando() || guardando()" (click)="cargar()"><i class="fa-solid fa-rotate"></i> Actualizar</button></section>
+  @if (error()) { <div class="alert alert-danger" role="alert">{{ error() }}</div> }
+  @if (exito()) { <div class="alert alert-success" role="status">{{ exito() }}</div> }
+  @if (cargando()) { <p role="status">Consultando configuración...</p> }
+  @if (datos(); as d) {
+    <div class="aviso"><i class="fa-solid fa-circle-info"></i> Desactivar un módulo bloquea su acceso y conserva sus datos. Los permisos individuales siguen vigentes. Un cambio exige volver a validar las operaciones pendientes antes de aceptarlas.</div>
+    <div class="modulos-grid">
+      @for (modulo of d.modulos; track modulo.clave) {
+        <section class="modulo-config">
+          <header><div><h2>{{ nombre(modulo.clave) }}</h2><span class="estado" [class.encendido]="modulo.activo">{{ modulo.activo ? 'Activo' : 'Desactivado' }}</span></div><button type="button" class="btn" [class.btn-outline-danger]="modulo.activo" [class.btn-success]="!modulo.activo" [disabled]="cargando() || guardando()" (click)="preparar(modulo.clave, 'MODULO_ACTIVO', !modulo.activo, nombre(modulo.clave))">{{ modulo.activo ? 'Desactivar módulo' : 'Activar módulo' }}</button></header>
+          @for (opcion of d.opciones; track opcion.modulo + opcion.clave) {
+            @if (opcion.modulo === modulo.clave) {
+              <div class="opcion"><div><strong>{{ opcion.descripcion }}</strong><small>{{ !opcion.disponible ? 'Pendiente de implementación' : opcion.efectivo ? 'Se aplica' : opcion.habilitado ? 'Habilitada; sin efecto por su dependencia o módulo desactivado' : 'Desactivada' }}</small></div><button type="button" role="switch" class="interruptor" [class.activado]="opcion.habilitado" [attr.aria-checked]="opcion.habilitado" [attr.aria-label]="opcion.descripcion" [disabled]="!opcion.disponible || cargando() || guardando()" (click)="preparar(opcion.modulo, opcion.clave, !opcion.habilitado, opcion.descripcion)"><span></span></button></div>
+            }
+          }
+          @if (modulo.clave === 'SEMANAL') { <p class="nota">La validación de coordenadas contra municipio permanece activa para homicidio doloso.</p> }
+          @if (modulo.clave === 'MENSUAL') { <p class="nota">RENAPO se aplica cuando están activos los datos adicionales de feminicidio. Al desactivarlos, las actualizaciones conservan los valores ya registrados.</p> }
+        </section>
+      }
+    </div>
+  }
+  <section class="bitacora"><header><h2><i class="fa-solid fa-clock-rotate-left"></i> Historial de cambios</h2><button class="btn btn-outline-secondary" type="button" [disabled]="cargandoHistorial()" (click)="cargarHistorial()">Actualizar historial</button></header>
+    @if (errorHistorial()) { <p class="alert alert-danger" role="alert">{{ errorHistorial() }}</p> }
+    <div class="table-responsive"><table class="table"><thead><tr><th>Fecha</th><th>Usuario</th><th>Módulo / opción</th><th>Cambio</th><th>Motivo</th></tr></thead><tbody>
+      @for (fila of historial(); track fila.id) { <tr><td>{{ fechaUtc(fila.fechaUtc) | date:'dd/MM/yyyy HH:mm' }}</td><td>{{ fila.usuario || 'Instalación / BD' }}</td><td>{{ nombre(fila.modulo) }}<small>{{ fila.clave }}</small></td><td>{{ fila.valorAnterior === null ? 'Sin valor previo' : fila.valorAnterior ? 'Activo' : 'Inactivo' }} → {{ fila.valorNuevo ? 'Activo' : 'Inactivo' }}</td><td>{{ fila.motivo }}</td></tr> }
+      @empty { <tr><td colspan="5">{{ cargandoHistorial() ? 'Consultando...' : 'Sin cambios en esta página.' }}</td></tr> }
+    </tbody></table></div>
+    <footer><button class="btn btn-secondary" type="button" [disabled]="pagina() === 1 || cargandoHistorial()" (click)="moverPagina(-1)">Anterior</button><span>Página {{ pagina() }}</span><button class="btn btn-secondary" type="button" [disabled]="historial().length < 50 || cargandoHistorial()" (click)="moverPagina(1)">Siguiente</button></footer>
+  </section>
+  @if (cambio(); as c) {
+    <div class="dialogo-fondo"><section class="dialogo" role="dialog" aria-modal="true" aria-labelledby="titulo-cambio"><h2 id="titulo-cambio">{{ c.habilitado ? 'Activar' : 'Desactivar' }} {{ c.titulo }}</h2><p>El cambio se aplicará a {{ nombre(c.modulo) }} y quedará registrado con su usuario.</p><label for="motivo-config">Motivo del cambio</label><textarea id="motivo-config" [(ngModel)]="motivo" rows="3" maxlength="500" [disabled]="guardando()"></textarea><div class="dialogo-acciones"><button class="btn btn-secondary" type="button" [disabled]="guardando()" (click)="cancelar()">Cancelar</button><button class="btn btn-primary" type="button" [disabled]="guardando() || motivo.trim().length < 3" (click)="guardar()">{{ guardando() ? 'Guardando...' : 'Confirmar cambio' }}</button></div></section></div>
+  }
+</div>

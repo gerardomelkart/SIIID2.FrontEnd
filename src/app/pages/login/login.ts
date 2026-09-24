@@ -53,6 +53,8 @@ export class Login {
 
         const modulos = this.sessionService.modulos();
 
+        if (this.sessionService.administraSistema()) { void this.router.navigateByUrl('/seleccionar-modulo'); return; }
+
         if (modulos.length === 0) {
           this.authService.logout();
           this.mensajeError.set('El usuario no tiene módulos habilitados.');

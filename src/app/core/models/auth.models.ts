@@ -23,6 +23,7 @@ export interface ModuloUsuarioInfo {
 }
 
 export interface UsuarioLoginInfo {
+  administraSistema?: boolean;
   idUsuario: number;
   usuario: string;
   nombre: string;
