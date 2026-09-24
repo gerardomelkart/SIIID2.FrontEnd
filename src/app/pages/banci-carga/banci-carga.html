@@ -258,9 +258,9 @@
   </div>
   }
 
-  @if (pendiente() || resultadoCorrecto()) {
+  @if (resultadoCorrecto()) {
   <section id="acuse-banci" class="siiid-card mt-4">
-    <div class="siiid-card-header"><i class="fa-solid fa-file-pdf"></i> {{ pendiente() ? 'Informe previo de carga — sin integrar' : 'Acuse de integración BANCI' }}</div>
+    <div class="siiid-card-header"><i class="fa-solid fa-file-pdf"></i> Registros integrados BANCI</div>
     <div class="p-3">
       @if (cargandoAcuse()) { <p role="status">Preparando PDF...</p> }
       @if (errorAcuse()) { <div class="alert alert-warning" role="alert">{{ errorAcuse() }} <button type="button" class="btn btn-secondary" [disabled]="cargandoAcuse()" (click)="abrirAcuse(true)">Reintentar PDF</button></div> }
@@ -268,7 +268,6 @@
       <iframe [src]="url" title="Acuse PDF BANCI" class="acuse-pdf-banci"></iframe>
       <button type="button" class="btn btn-siiid mt-3" (click)="descargarAcusePdf()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
       }
-      @if (pendiente()) { <button type="button" class="btn btn-secondary mt-3 ms-2" (click)="verDecision()">Ir a la decisión de carga</button> }
     </div>
   </section>
   }

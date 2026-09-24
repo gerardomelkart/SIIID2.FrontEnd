@@ -625,7 +625,7 @@ export class BanciCarga implements OnInit {
 
   abrirAcuse(reintentar = false): void {
     const r = this.resultado();
-    if (!r || !['VALIDADO_PENDIENTE', 'PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(r.estado)) return;
+    if (!r || !['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(r.estado)) return;
     const clave = r.codigoReferencia + ':' + r.estado;
     if (!reintentar && clave === this.acuseClave) return;
     this.acuseClave = clave;
@@ -642,7 +642,7 @@ export class BanciCarga implements OnInit {
         this.acuseObjectUrl = URL.createObjectURL(response.body);
         this.acuseUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.acuseObjectUrl));
         const entidad = this.entidades().find(e => Number(e.clave) === this.entidad)?.descripcion || this.session.usuario()?.entidadFederativa || 'entidad';
-        this.acuseNombre = `BANCI_${r.estado === 'VALIDADO_PENDIENTE' ? 'previo' : 'acuse'}_${entidad.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        this.acuseNombre = `BANCI_acuse_${entidad.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
       },
       error: () => { if (clave === this.acuseClave) { this.cargandoAcuse.set(false); this.errorAcuse.set('No se pudo obtener el PDF. Reintente el acuse; no vuelva a subir la carga.'); } }
     });
@@ -660,10 +660,10 @@ export class BanciCarga implements OnInit {
 
   private enfocarResultado(): void {
     const resultado = this.resultado();
-    if (resultado && ['VALIDADO_PENDIENTE', 'PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado)) this.abrirAcuse();
+    if (resultado && ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado)) this.abrirAcuse();
     setTimeout(() => {
       document
-        .getElementById(resultado && ['VALIDADO_PENDIENTE', 'PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado) ? 'acuse-banci' : 'resultado-banci')
+        .getElementById(resultado && ['PROCESADO', 'PROCESADO_CON_ADVERTENCIAS'].includes(resultado.estado) ? 'acuse-banci' : 'resultado-banci')
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }

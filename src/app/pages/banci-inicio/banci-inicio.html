@@ -75,41 +75,15 @@
 
     <div class="quick-access-grid">
       @if (puedeCapturar()) {
-      <a class="quick-link" routerLink="/banci/carga-masiva">
-        <div class="quick-icon">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-        </div>
-
-        <div>
-          <strong>Carga masiva</strong>
-          <span>
-            Integra un libro Excel con tres hojas o los archivos Carpetas, Delitos y Víctimas.
-          </span>
-        </div>
-      </a>
-
+        <a class="quick-link" routerLink="/banci/carga-masiva"><div class="quick-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div><div><strong>Carga masiva</strong><span>Integre un libro Excel con tres hojas o los archivos Carpetas, Delitos y Víctimas.</span></div></a>
+        <a class="quick-link" routerLink="/banci/formulario"><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div><div><strong>Carga manual</strong><span>Registre una carpeta nueva con sus delitos y víctimas.</span></div></a>
       }
-      <a class="quick-link" routerLink="/banci/consulta">
-        <div class="quick-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-        <div>
-          <strong>Consulta de información</strong>
-          <span>Consulte carpetas por mes y año, con el detalle de delitos y víctimas.</span>
-        </div>
-      </a>
-
-      @if (puedeCapturar()) {
-        <a class="quick-link" routerLink="/banci/formulario">
-          <div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-          <div><strong>Formulario BANCI</strong><span>Registre una carpeta nueva con sus delitos y víctimas.</span></div>
-        </a>
-      }
-
-      @if (usuario()?.rol === 'SUPER_USUARIO') { <a class="quick-link" routerLink="/banci/usuarios"><div class="quick-icon"><i class="fa-solid fa-users"></i></div><div><strong>Usuarios</strong><span>Administre el acceso y los permisos de BANCI.</span></div></a> }
-
       @if (puedeActualizar()) {
-      <a class="quick-link" routerLink="/banci/actualizacion/manual"><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div><div><strong>Actualización manual</strong><span>Busque una víctima y actualice sus datos de localización o personales.</span></div></a>
-      <a class="quick-link" routerLink="/banci/actualizacion/masiva"><div class="quick-icon"><i class="fa-solid fa-file-excel"></i></div><div><strong>Actualización masiva</strong><span>Actualice víctimas registradas mediante la plantilla de actualización.</span></div></a>
+        <a class="quick-link" routerLink="/banci/actualizacion/manual"><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div><div><strong>Actualización manual</strong><span>Busque una víctima y actualice sus datos de localización o personales.</span></div></a>
+        <a class="quick-link" routerLink="/banci/actualizacion/masiva"><div class="quick-icon"><i class="fa-solid fa-file-excel"></i></div><div><strong>Actualización masiva</strong><span>Actualice víctimas registradas mediante la plantilla de actualización.</span></div></a>
       }
+      <a class="quick-link" routerLink="/banci/consulta"><div class="quick-icon"><i class="fa-solid fa-magnifying-glass"></i></div><div><strong>Consulta de información</strong><span>Consulte carpetas por mes y año, con el detalle de delitos y víctimas.</span></div></a>
+      @if (usuario()?.rol === 'SUPER_USUARIO') { <a class="quick-link" routerLink="/banci/usuarios"><div class="quick-icon"><i class="fa-solid fa-users"></i></div><div><strong>Usuarios</strong><span>Administre el acceso y los permisos de BANCI.</span></div></a> }
     </div>
   </section>
 </div>

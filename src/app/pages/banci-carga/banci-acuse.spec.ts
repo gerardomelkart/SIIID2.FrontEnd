@@ -16,13 +16,13 @@ describe('Acuses BANCI', () => {
     TestBed.configureTestingModule({ imports: [BanciCarga], providers: [{ provide: BanciCargaService, useValue: { descargarAcuse } }, { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1, entidadFederativa: 'México' }) } }] });
   });
   afterEach(() => { TestBed.resetTestingModule(); vi.unstubAllGlobals(); });
-  it('pide el previo y renueva el PDF al confirmar, sin duplicar peticiones', () => {
+  it('emite la tabla sólo después de integrar, sin duplicar peticiones', () => {
     const c = TestBed.createComponent(BanciCarga).componentInstance;
     c.resultado.set(estado('VALIDADO_PENDIENTE')); c.abrirAcuse(); c.abrirAcuse();
-    expect(descargarAcuse).toHaveBeenCalledTimes(1); expect(c.acuseUrl()).not.toBeNull();
+    expect(descargarAcuse).not.toHaveBeenCalled(); expect(c.acuseUrl()).toBeNull();
     c.resultado.set(estado('PROCESADO')); c.abrirAcuse();
-    expect(descargarAcuse).toHaveBeenCalledTimes(2);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:acuse');
+    c.abrirAcuse();
+    expect(descargarAcuse).toHaveBeenCalledTimes(1); expect(c.acuseUrl()).not.toBeNull();
   });
   it('no emite PDF para validaciones rechazadas', () => {
     const c = TestBed.createComponent(BanciCarga).componentInstance;
