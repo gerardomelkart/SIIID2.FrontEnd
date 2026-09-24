@@ -27,7 +27,7 @@ export class SeleccionarModulo {
   actualizar(): void {
     if (this.cargando()) return;
     this.cargando.set(true); this.error.set('');
-    this.sistema.refrescarSesion().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => this.cargando.set(false), error: () => { this.cargando.set(false); this.error.set('No se pudieron actualizar sus accesos. Reintente.'); } });
+    this.sistema.refrescarSesion().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => this.cargando.set(false), error: () => { this.cargando.set(false); this.error.set('No se pudieron consultar sus accesos. Recargue la página para reintentar.'); } });
   }
 
   modulos = computed(() => {

@@ -223,3 +223,12 @@
     margin-top: 24px;
   }
 }
+.modulo-card.modulo-card-sistema {
+  border-left: 1px solid #ddd;
+  text-decoration: none;
+}
+
+.modulo-card.modulo-card-sistema:hover {
+  border-color: #a7acb5;
+  text-decoration: none;
+}
