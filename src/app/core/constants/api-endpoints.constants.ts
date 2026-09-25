@@ -1,7 +1,14 @@
 const esLocal =
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-export const API_BASE_URL = esLocal ? 'api' : '/beta/api';
+const esQa =
+  window.location.pathname === '/siiid2-qa' ||
+  window.location.pathname.startsWith('/siiid2-qa/');
+
+export const API_BASE_URL =
+  esLocal ? 'api' :
+  esQa ? '/qa-api/api' :
+  '/beta/api';
 
 export const API_ENDPOINTS = {
   auth: `${API_BASE_URL}/auth`,
@@ -27,3 +34,4 @@ export const API_ENDPOINTS = {
   banciActualizaciones: `${API_BASE_URL}/banci/actualizaciones`,
   notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
 } as const;
+
