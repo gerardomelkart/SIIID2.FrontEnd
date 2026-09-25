@@ -15,11 +15,17 @@ describe('Configuración del sistema', () => {
     TestBed.configureTestingModule({ imports: [SistemaConfiguracionPage], providers: [provideRouter([]), { provide: SistemaConfiguracionService, useValue: servicio }] });
   });
   afterEach(() => TestBed.resetTestingModule());
-  it('muestra interruptores y deja municipio semanal fuera de configuración', () => {
+  it('muestra municipio para los cuatro módulos y dos opciones independientes en semanal', () => {
+    const opciones = ['MENSUAL', 'SEMANAL', 'FEDERAL', 'BANCI'].map(modulo => ({ modulo, clave: 'COORDENADAS_MUNICIPIO', descripcion: 'Todos los delitos', habilitado: false, disponible: true, efectivo: false }));
+    opciones.push({ modulo: 'SEMANAL', clave: 'COORDENADAS_MUNICIPIO_HOMICIDIO_DOLOSO', descripcion: 'Solo homicidio doloso', habilitado: true, disponible: true, efectivo: true });
+    servicio.obtener.mockReturnValue(of({ ...datos, modulos: [...datos.modulos, { clave: 'MENSUAL', nombre: 'Consolidado', activo: true }, { clave: 'FEDERAL', nombre: 'Federal', activo: true }], opciones: [...datos.opciones, ...opciones] }));
     const f = TestBed.createComponent(SistemaConfiguracionPage); f.detectChanges();
     const switches = f.nativeElement.querySelectorAll('.modulo-config [role="switch"]');
-    expect(switches.length).toBe(2); expect(switches[1].disabled).toBe(true);
-    expect(f.nativeElement.textContent).toContain('contra municipio permanece activa');
+    expect(switches.length).toBe(7); expect(switches[1].disabled).toBe(true);
+    expect(f.nativeElement.querySelectorAll('[data-modulo="SEMANAL"] [role="switch"]').length).toBe(2);
+    expect(f.nativeElement.textContent).toContain('cada registro se valida una sola vez');
+    f.componentInstance.preparar('SEMANAL', 'COORDENADAS_MUNICIPIO_HOMICIDIO_DOLOSO', false, 'Solo homicidio doloso'); f.componentInstance.guardar();
+    expect(servicio.cambiar).toHaveBeenCalledWith({ modulo: 'SEMANAL', clave: 'COORDENADAS_MUNICIPIO_HOMICIDIO_DOLOSO', habilitado: false, versionEsperada: 7, motivo: 'Sin motivo reportado' });
   });
   it('no permite retirar el acceso propio', () => {
     const c = TestBed.createComponent(SistemaConfiguracionPage).componentInstance;

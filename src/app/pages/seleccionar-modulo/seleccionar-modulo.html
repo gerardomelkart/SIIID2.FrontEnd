@@ -9,7 +9,6 @@
     @if (cargando()) { <p role="status">Consultando accesos...</p> }
     @if (!cargando() && !error() && !modulos().length && !administraSistema()) { <p>No tiene módulos disponibles en este momento.</p> }
     <div class="modulo-grid">
-      @if (administraSistema()) { <a class="modulo-card modulo-card-sistema" routerLink="/sistema/configuracion"><span class="modulo-icon"><i class="fa-solid fa-gears"></i></span><strong>Configuración del sistema</strong><span>Disponibilidad de módulos, validaciones e historial de cambios.</span></a> }
       @for (modulo of modulos(); track modulo.idModulo) {
       <button type="button" class="modulo-card" [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'"
         [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'"
@@ -53,6 +52,7 @@
         </span>
       </button>
       }
+      @if (administraSistema()) { <a class="modulo-card modulo-card-sistema" routerLink="/sistema/configuracion"><span class="modulo-icon"><i class="fa-solid fa-gears"></i></span><strong>Configuración del sistema</strong><span>Disponibilidad de módulos, validaciones e historial de cambios.</span></a> }
     </div>
 
     <button type="button" class="cerrar-sesion" (click)="cerrarSesion()">

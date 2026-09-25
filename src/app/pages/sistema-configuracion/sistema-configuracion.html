@@ -16,7 +16,8 @@
               <div class="opcion" [class.opcion-pendiente]="!opcion.disponible"><div><strong>{{ opcion.descripcion }}</strong><small>{{ !opcion.disponible ? 'Pendiente de implementación' : opcion.efectivo ? 'Se aplica' : opcion.habilitado ? 'Habilitada; sin efecto por su dependencia o módulo desactivado' : 'Desactivada' }}</small></div><button type="button" role="switch" class="interruptor" [class.activado]="opcion.habilitado" [attr.aria-checked]="opcion.habilitado" [attr.aria-label]="opcion.descripcion" [disabled]="!opcion.disponible || cargando() || guardando()" (click)="preparar(opcion.modulo, opcion.clave, !opcion.habilitado, opcion.descripcion)"><span></span></button></div>
             }
           }
-          @if (modulo.clave === 'SEMANAL') { <p class="nota">La validación de coordenadas contra municipio permanece activa para homicidio doloso.</p> }
+          @if (modulo.clave === 'SEMANAL') { <p class="nota">Municipio: «Todos los delitos» incluye homicidio doloso. Si ambas opciones están activas, cada registro se valida una sola vez; al apagar ambas se omite este cruce.</p> }
+          <p class="nota">El cruce municipal usa las coordenadas de los hechos. Una ubicación fuera del municipio impide validar; las coordenadas vacías o en cero generan una advertencia cuando la regla está activa.</p>
           @if (modulo.clave === 'MENSUAL' || modulo.clave === 'FEDERAL') { <p class="nota">RENAPO se aplica cuando están activos los datos adicionales de feminicidio. Al desactivarlos, las actualizaciones conservan los valores ya registrados.</p> }
         </section>
       }
