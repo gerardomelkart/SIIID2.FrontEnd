@@ -45,15 +45,18 @@ describe('Formulario BANCI', () => {
 
   it('asocia varias víctimas a su delito sin pedir llaves redundantes', () => {
     const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit();
-    c.carpeta = { id_ci: 'CI-1' };
-    c.delitos[0].datos = { id_delito: 'D-1' }; c.agregarVictima(c.delitos[0]); c.agregarDelito();
-    c.delitos[1].datos = { id_delito: 'D-2' };
+    c.carpeta = { ntra_ci: 'NUC-1' };
+    c.delitos[0].datos = { dto: 'Desaparición' }; c.agregarVictima(c.delitos[0]); c.agregarDelito();
     c.validar();
     const enviado = service.validarFormulario.mock.calls[0][0];
-    expect(enviado.delitos).toHaveLength(2); expect(enviado.delitos[0].victimas).toHaveLength(2);
+    expect(enviado.delitos).toHaveLength(1); expect(enviado.delitos[0].victimas).toHaveLength(2);
     expect(enviado.delitos[0].victimas[0]).not.toHaveProperty('id_ci');
     expect(enviado.delitos[0].victimas[0]).not.toHaveProperty('id_delito');
     expect(c.camposVictima.map(x => x.clave)).not.toContain('no_banci');
+    expect(c.camposCarpeta.map(x => x.clave)).not.toContain('id_ci');
+    expect(c.camposDelito.map(x => x.clave)).not.toContain('id_delito');
+    expect(c.camposVictima.map(x => x.clave)).not.toContain('id_vicf');
+    expect(c.camposVictima.map(x => x.clave)).toContain('fub');
   });
 
   it('validar nunca integra automáticamente y bloquea cambios hasta la decisión', () => {
@@ -92,10 +95,10 @@ describe('Formulario BANCI', () => {
     expect(c.carpeta).toEqual({});
   });
 
-  it('un duplicado detectado al confirmar permite rechazar la captura pendiente', () => {
-    service.confirmar.mockReturnValueOnce(throwError(() => ({ error: { codigo: 'BANCI_52424', mensaje: 'Ya existe' } })));
+  it.each(['BANCI_52424', 'BANCI_52610', 'BANCI_52611', 'BANCI_52612'])('la validación %s al confirmar permite rechazar la captura pendiente', (codigo) => {
+    service.confirmar.mockReturnValueOnce(throwError(() => ({ error: { codigo, mensaje: 'Revise la carga' } })));
     const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit(); c.validar(); c.confirmar(true);
-    expect(c.necesitaActualizar()).toBe(false); expect(c.mensaje()).toBe('Ya existe'); c.confirmar(false);
+    expect(c.necesitaActualizar()).toBe(false); expect(c.mensaje()).toBe('Revise la carga'); c.confirmar(false);
     expect(service.confirmar).toHaveBeenLastCalledWith('BANCI-prueba', false, undefined);
   });
 
@@ -131,8 +134,8 @@ describe('Formulario BANCI', () => {
   it('presenta agregar y quitar arriba y abajo, sin retirar el último registro', () => {
     const f = TestBed.createComponent(BanciFormulario); f.detectChanges();
     const botones = [...f.nativeElement.querySelectorAll('button')] as HTMLButtonElement[];
-    for (const texto of ['Agregar delito', 'Agregar víctima', 'Quitar víctima']) expect(botones.filter(b => b.textContent?.trim() === texto)).toHaveLength(2);
-    expect(botones.filter(b => b.textContent?.includes('Quitar delito'))).toHaveLength(2);
+    for (const texto of ['Agregar víctima', 'Quitar víctima']) expect(botones.filter(b => b.textContent?.trim() === texto)).toHaveLength(2);
+    expect(botones.filter(b => /Agregar delito|Quitar delito/.test(b.textContent || ''))).toHaveLength(0);
   });
 });
 

@@ -8,7 +8,7 @@ import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 
 const carpeta = { idBanciCarpetaInvestigacion: 7, idEntidadFederativa: 14, entidad: 'Jalisco',
-  idCi: 'CI-7', ntraCi: 'NUC-7', fechaInicio: '2026-08-01', totalDelitos: 1, totalVictimas: 1 };
+  noBanci: 'BANCI/14/2026/000007', idCi: 'CI-7', ntraCi: 'NUC-7', fechaInicio: '2026-08-01', totalDelitos: 1, totalVictimas: 1 };
 const resultado: BanciConsultaResultado = { totalCarpetas: 30, totalDelitos: 31, totalVictimas: 40,
   pagina: 1, tamanoPagina: 25, totalPaginas: 2, carpetas: [carpeta] };
 const detalle: BanciConsultaDetalle = { carpeta: [{ nombre: 'ID_CI', valor: 'CI-7' }], delitos: [
@@ -58,9 +58,11 @@ describe('Consulta BANCI', () => {
     expect(c.periodoConsultado()).toBe('Febrero 2026');
   });
 
-  it('no muestra búsqueda por carpeta ni entidad redundante a usuarios estatales', () => {
+  it('permite buscar por FUB y muestra NO_BANCI sin entidad redundante a usuarios estatales', () => {
     const f = TestBed.createComponent(BanciConsulta); f.detectChanges();
-    expect(f.nativeElement.querySelector('input[name="busqueda"]')).toBeNull();
+    expect(f.nativeElement.querySelector('input[name="busqueda"]').placeholder).toContain('FUB');
+    expect(f.nativeElement.textContent).toContain('NO_BANCI');
+    expect(f.nativeElement.textContent).toContain('BANCI/14/2026/000007');
     expect(f.nativeElement.querySelector('.entidad-fija')).toBeNull();
     expect([...f.nativeElement.querySelectorAll('th')].some((th: any) => th.textContent === 'Entidad')).toBe(false);
     expect(service.consultar).toHaveBeenLastCalledWith(expect.objectContaining({ busqueda: '', idEntidadFederativa: 14 }));

@@ -36,7 +36,7 @@ export class BanciActualizacion implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly campos: CampoActualizacion[] = [
-    { clave: 'folio_rnpdno', etiqueta: 'Folio RNPDNO', tipo: 'text', maximo: 250 },
+    { clave: 'fub', etiqueta: 'FUB', tipo: 'text', maximo: 250 },
     { clave: 'pro_apellido', etiqueta: 'Primer apellido', tipo: 'text', maximo: 250 },
     { clave: 'sdo_apellido', etiqueta: 'Segundo apellido', tipo: 'text', maximo: 250 },
     { clave: 'nomb', etiqueta: 'Nombre(s)', tipo: 'text', maximo: 500 },

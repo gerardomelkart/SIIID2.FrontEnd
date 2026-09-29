@@ -244,10 +244,11 @@ export class BanciCarga implements OnInit {
       },
       error: (error) => {
         this.cargando.set(false);
-        this.necesitaActualizar.set(true);
+        const requiereActualizar = !['BANCI_52424', 'BANCI_52610', 'BANCI_52611', 'BANCI_52612'].includes(error?.error?.codigo);
+        this.necesitaActualizar.set(requiereActualizar);
         this.mensajeLocal.set(
           (error?.error?.mensaje || 'No se recibió la confirmación de la operación.') +
-            ' Pulse «Actualizar revisión» para conocer el resultado antes de decidir nuevamente.',
+            (requiereActualizar ? ' Pulse «Actualizar revisión» para conocer el resultado antes de decidir nuevamente.' : ''),
         );
       },
     });
@@ -265,7 +266,7 @@ export class BanciCarga implements OnInit {
           if (!filas.length) throw new Error('La API no devolvió registros definitivos para esta carga.');
           const ok = await exportarFilasExcel(filas.map(f => ({
             Entidad: f.entidad, NO_BANCI: f.noBanci, ID_CI: f.idCi, NTRA_CI: f.ntraCi,
-            ID_DELITO: f.idDelito, ID_VICF: f.idVicf, FOLIO_RNPDNO: f.folioRnpdno ?? '',
+            ID_DELITO: f.idDelito, ID_VICF: f.idVicf, FUB: f.fub ?? '',
             Resultado: f.resultado, FechaIntegracion: f.fechaIntegracion ?? '',
             Referencia: r.codigoReferencia
           })), nombreExcelBanci('integracion', [...new Set(filas.map(f => f.entidad))].join('_'), undefined, filas[0]?.fechaIntegracion), 'Registros integrados');

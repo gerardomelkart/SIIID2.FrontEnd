@@ -113,7 +113,7 @@ export class BanciFormulario implements OnInit {
     }
   }
   agregarDelito(): void {
-    if (!this.bloqueado() && this.delitos.length < 100) {
+    if (!this.bloqueado() && this.delitos.length < 1) {
       const delito = { datos: {}, victimas: [{}] };
       this.preseleccionarEntidad(delito);
       this.delitos.push(delito);
@@ -220,7 +220,7 @@ export class BanciFormulario implements OnInit {
       },
       error: (e) => {
         this.cargando.set(false);
-        this.necesitaActualizar.set(e?.error?.codigo !== 'BANCI_52424');
+        this.necesitaActualizar.set(!['BANCI_52424', 'BANCI_52610', 'BANCI_52611', 'BANCI_52612'].includes(e?.error?.codigo));
         this.mensaje.set(
           e?.error?.mensaje ||
             'No se recibió la confirmación. Actualice el estado antes de volver a decidir.',

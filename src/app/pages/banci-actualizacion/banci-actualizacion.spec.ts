@@ -9,7 +9,7 @@ import { BanciActualizacionResultado, BanciActualizacionVictima } from '../../co
 
 const errorFecha = { archivo: 'actualizacion', hoja: null, valor: null, numeroFila: 5, campo: 'fecha_localizacion', codigo: 'BANCI_FECHA_LOCALIZACION', mensaje: 'Fecha posterior a hoy.' };
 const respuesta = (estado = 'NO_VALIDADA'): BanciActualizacionResultado => ({ esValido: false, codigoReferencia: estado === 'PENDIENTE' ? 'referencia-prueba' : null, estado, huella: null, cambios: [], datosPropuestos: [], errores: [errorFecha], advertencias: [] });
-const victima = { id_banci_victima: 1, no_banci: 'BANCI/14/2026/000001', id_delito: '1', id_vicf: '1', fha_de_ini: '2026-01-10', fha_de_hchos: '2026-01-01', folio_rnpdno: '123' } as BanciActualizacionVictima;
+const victima = { id_banci_victima: 1, no_banci: 'BANCI/14/2026/000001', id_delito: '1', id_vicf: '1', fha_de_ini: '2026-01-10', fha_de_hchos: '2026-01-01', fub: '123' } as BanciActualizacionVictima;
 
 describe('Corrección y recuperación BANCI', () => {
   let api: Record<string, ReturnType<typeof vi.fn>>;

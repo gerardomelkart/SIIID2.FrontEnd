@@ -2,33 +2,18 @@ import { BanciFormularioCampo } from '../../core/models/banci-formulario.models'
 
 export const CAMPOS_CARPETAS: BanciFormularioCampo[] = [
   {
-    clave: 'id_ci',
-    etiqueta: 'Identificador de carpeta (ID_CI)',
-    tipo: 'text',
-    obligatorio: true,
-    maximo: 250,
-    ayuda: 'Debe ser único dentro de la entidad.',
-  },
-  {
     clave: 'ntra_ci',
     etiqueta: 'Nomenclatura de la carpeta (NTRA_CI)',
     tipo: 'text',
     obligatorio: true,
     maximo: 250,
   },
-  { clave: 'fha_de_ini', etiqueta: 'Fecha de inicio', tipo: 'date', obligatorio: true },
+  { clave: 'fha_de_ini', etiqueta: 'Fecha de inicio', tipo: 'date', obligatorio: true, ayuda: 'Sólo el mes en curso o el anterior.' },
   { clave: 'hra_de_ini', etiqueta: 'Hora de inicio', tipo: 'time' },
   { clave: 'rmen_de_hchos', etiqueta: 'Resumen de hechos', tipo: 'textarea', maximo: 20000 },
 ];
 
 export const CAMPOS_DELITOS: BanciFormularioCampo[] = [
-  {
-    clave: 'id_delito',
-    etiqueta: 'Identificador de delito (ID_DELITO)',
-    tipo: 'text',
-    obligatorio: true,
-    maximo: 250,
-  },
   {
     clave: 'dto',
     etiqueta: 'Descripción del delito',
@@ -67,13 +52,6 @@ export const CAMPOS_DELITOS: BanciFormularioCampo[] = [
 ];
 
 export const CAMPOS_VICTIMAS: BanciFormularioCampo[] = [
-  {
-    clave: 'id_vicf',
-    etiqueta: 'Identificador de víctima (ID_VICF)',
-    tipo: 'text',
-    obligatorio: true,
-    maximo: 250,
-  },
   { clave: 'id_tv', etiqueta: 'Tipo de víctima', tipo: 'select', obligatorio: true },
   { clave: 'id_tpm', etiqueta: 'Tipo de persona moral', tipo: 'select' },
   { clave: 'sexo', etiqueta: 'Sexo', tipo: 'select' },
@@ -84,7 +62,7 @@ export const CAMPOS_VICTIMAS: BanciFormularioCampo[] = [
   { clave: 'edad', etiqueta: 'Edad', tipo: 'text', maximo: 3 },
   { clave: 'nacional', etiqueta: 'Nacionalidad', tipo: 'select' },
 
-  { clave: 'folio_rnpdno', etiqueta: 'Folio RNPDNO', tipo: 'text', obligatorio: true, maximo: 250 },
+  { clave: 'fub', etiqueta: 'FUB', tipo: 'text', obligatorio: true, maximo: 250 },
   { clave: 'pro_apellido', etiqueta: 'Primer apellido', tipo: 'text', maximo: 250 },
   { clave: 'sdo_apellido', etiqueta: 'Segundo apellido', tipo: 'text', maximo: 250 },
   { clave: 'nomb', etiqueta: 'Nombre(s)', tipo: 'text', maximo: 500 },

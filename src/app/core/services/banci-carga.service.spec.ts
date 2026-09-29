@@ -20,7 +20,7 @@ describe('Contrato HTTP de confirmación BANCI', () => {
     service.confirmar('REF_7', aceptar).subscribe();
     const req = http.expectOne(`${API_ENDPOINTS.banciCargas}/confirmar`);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ codigoReferencia: 'REF_7', aceptar });
+    expect(req.request.body).toEqual({ codigoReferencia: 'REF_7', aceptarAdvertencias: false, aceptar });
     req.flush({});
   });
 
@@ -34,10 +34,10 @@ describe('Contrato HTTP de confirmación BANCI', () => {
   it('incluye la huella al aceptar y la omite al rechazar', () => {
     service.confirmar('REF_7', true, 'A'.repeat(64)).subscribe();
     const aceptar = http.expectOne(`${API_ENDPOINTS.banciCargas}/confirmar`);
-    expect(aceptar.request.body).toEqual({ codigoReferencia: 'REF_7', aceptar: true, huellaVistaPrevia: 'A'.repeat(64) }); aceptar.flush({});
+    expect(aceptar.request.body).toEqual({ codigoReferencia: 'REF_7', aceptarAdvertencias: false, aceptar: true, huellaVistaPrevia: 'A'.repeat(64) }); aceptar.flush({});
     service.confirmar('REF_7', false, 'A'.repeat(64)).subscribe();
     const rechazar = http.expectOne(`${API_ENDPOINTS.banciCargas}/confirmar`);
-    expect(rechazar.request.body).toEqual({ codigoReferencia: 'REF_7', aceptar: false }); rechazar.flush({});
+    expect(rechazar.request.body).toEqual({ codigoReferencia: 'REF_7', aceptarAdvertencias: false, aceptar: false }); rechazar.flush({});
   });
 
   it('recuperar sólo consulta el estado; no confirma ni valida', () => {

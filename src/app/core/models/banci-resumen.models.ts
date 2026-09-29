@@ -5,7 +5,7 @@ export interface BanciResumenRegistro {
   ntraCi: string;
   idDelito: string;
   idVicf: string;
-  folioRnpdno: string | null;
+  fub: string | null;
   resultado: string;
   fechaIntegracion: string | null;
 }

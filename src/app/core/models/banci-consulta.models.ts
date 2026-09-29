@@ -19,6 +19,7 @@ export interface BanciConsultaCarpeta {
   entidad: string;
   idCi: string;
   ntraCi: string;
+  noBanci?: string | null;
   fechaInicio: string;
   totalDelitos: number;
   totalVictimas: number;
