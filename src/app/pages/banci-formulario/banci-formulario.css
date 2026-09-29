@@ -214,13 +214,57 @@ summary {
 }
 
 .acuse-banci-dialog {
-    width: min(1050px, 100%);
+    width: min(1440px, 100%);
+    min-width: 0;
+    box-sizing: border-box;
     max-height: 88vh;
     overflow: auto;
     padding: 1.5rem;
     background: #fff;
     border-top: 6px solid var(--siiid-guinda);
     box-shadow: 0 12px 40px #0005;
+}
+
+.acuse-banci-dialog .table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.acuse-banci-dialog .table th,
+.acuse-banci-dialog .table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+    padding: .5rem;
+}
+
+.acuse-banci-dialog .table th:first-child {
+    width: 8%;
+}
+
+.acuse-banci-dialog .table th:nth-child(2) {
+    width: 16%;
+}
+
+.acuse-banci-dialog .table th:nth-child(3),
+.acuse-banci-dialog .table th:nth-child(5),
+.acuse-banci-dialog .table th:nth-child(6) {
+    width: 18%;
+}
+
+.acuse-banci-dialog .table th:nth-child(4),
+.acuse-banci-dialog .table th:nth-child(7) {
+    width: 11%;
+}
+
+@media (max-width: 600px) {
+    .acuse-banci-dialog {
+        padding: .75rem;
+    }
+
+    .acuse-banci-dialog .table {
+        min-width: 680px;
+    }
 }
 
 .resultado-sin-observaciones {
