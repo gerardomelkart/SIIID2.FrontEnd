@@ -1,3 +1,4 @@
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { fechaBanci, nombreExcelBanci } from '../../core/utils/banci-archivos.utils';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -29,6 +30,9 @@ interface CampoActualizacion {
   styleUrls: ['./banci-actualizacion.css', '../banci-plantillas.css']
 })
 export class BanciActualizacion implements OnInit {
+  private readonly cruce = inject(BanciCruceService);
+  readonly victimasCruce = signal<BanciActualizacionVictima[]>([]);
+  referenciaCruce = '';
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(BanciActualizacionService);
@@ -94,6 +98,15 @@ export class BanciActualizacion implements OnInit {
 
   ngOnInit(): void {
     this.modalidad.set(this.route.snapshot.data['modalidad'] === 'masiva' ? 'masiva' : 'manual');
+    this.referenciaCruce = this.route.snapshot.queryParamMap.get('cruce') ?? '';
+    if (this.referenciaCruce) this.cruce.consultar(this.referenciaCruce).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: datos => {
+        this.victimasCruce.set(datos.victimas);
+        if (datos.victimas.length) this.entidad = datos.victimas[0].id_entidad_federativa;
+        else this.mensaje.set('No hay registros autorizados disponibles para esta carga.');
+      },
+      error: () => this.mensaje.set('No fue posible recuperar el listado del Consolidado. Reintente.')
+    });
     this.cargarOpciones();
     this.cargarPendientes();
 
@@ -574,7 +587,7 @@ export class BanciActualizacion implements OnInit {
 
     this.descargandoPlantilla.set(true);
 
-    this.service.descargarPlantilla().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    (this.referenciaCruce ? this.cruce.plantilla(this.referenciaCruce) : this.service.descargarPlantilla()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: respuesta => {
         if (!respuesta.body) {
           this.descargandoPlantilla.set(false);

@@ -1,3 +1,4 @@
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
@@ -17,7 +18,7 @@ describe('Corrección y recuperación BANCI', () => {
   beforeEach(() => {
     localStorage.clear();
     api = { obtenerOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })), obtenerPendientes: vi.fn(() => of([])), validarFormulario: vi.fn(() => throwError(() => ({ status: 400, error: respuesta() }))), confirmar: vi.fn(), obtenerEstado: vi.fn(), obtenerVistaPrevia: vi.fn() };
-    TestBed.configureTestingModule({ imports: [BanciActualizacion], providers: [provideRouter([]), { provide: ActivatedRoute, useValue: { snapshot: { data: { modalidad: 'manual' } } } }, { provide: BanciActualizacionService, useValue: api }, { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1 }) } }] });
+    TestBed.configureTestingModule({ imports: [BanciActualizacion], providers: [provideRouter([]), { provide: BanciCruceService, useValue: { consultar: vi.fn(() => of({ victimas: [] })) } }, { provide: ActivatedRoute, useValue: { snapshot: { data: { modalidad: 'manual' }, queryParamMap: { get: () => null } } } }, { provide: BanciActualizacionService, useValue: api }, { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1 }) } }] });
     Element.prototype.scrollIntoView = vi.fn();
   });
 

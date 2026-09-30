@@ -38,6 +38,8 @@ export class SistemaConfiguracionPage {
     const datos = this.datos();
     if (!datos || this.cargando() || this.guardando()) return;
     if (clave !== 'MODULO_ACTIVO' && !datos.opciones.some(o => o.modulo === modulo && o.clave === clave && o.disponible)) return;
+    if (habilitado && clave === 'CRUCE_BANCI' && !datos.modulos.some(m => m.clave === 'BANCI' && m.activo)) { this.error.set('Active BANCI antes de habilitar el cruce.'); return; }
+    if (habilitado && clave === 'RENAPO' && ['MENSUAL', 'FEDERAL'].includes(modulo) && !datos.opciones.some(o => o.modulo === modulo && o.clave === 'FEMINICIDIO_DATOS_ADICIONALES' && o.habilitado && o.disponible)) { this.error.set('Active las reglas de feminicidio antes de habilitar RENAPO.'); return; }
     this.motivo = ''; this.exito.set(''); this.error.set('');
     this.cambio.set({ modulo, clave, habilitado, titulo, versionEsperada: datos.version, motivo: '' });
   }

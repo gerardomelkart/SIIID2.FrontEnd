@@ -5,7 +5,8 @@
   @if (exito()) { <div class="alert alert-success" role="status">{{ exito() }}</div> }
   @if (cargando()) { <p role="status">Consultando configuración...</p> }
   @if (datos(); as d) {
-    <div class="aviso"><i class="fa-solid fa-circle-info"></i> Desactivar un módulo bloquea su acceso y conserva sus datos. Los permisos individuales siguen vigentes. Un cambio exige volver a validar las operaciones pendientes antes de aceptarlas.</div>
+    <p>Desactivar BANCI apaga también el cruce. Desactivar el cruce conserva BANCI activo. Al reactivar BANCI, el cruce permanece apagado hasta habilitarlo expresamente.</p>
+    <div class="aviso"><i class="fa-solid fa-circle-info"></i> Desactivar un módulo bloquea su acceso y conserva sus datos. Los permisos individuales siguen vigentes. El cruce con BANCI se verifica nuevamente al integrar el Consolidado.</div>
     <div class="resumen"><div><span class="resumen-icono"><i class="fa-solid fa-layer-group"></i></span><div><strong>{{ activos() }} <small>de {{ d.modulos.length }}</small></strong><span>Módulos activos</span></div></div><div><span class="resumen-icono"><i class="fa-solid fa-list-check"></i></span><div><strong>{{ reglasActivas() }}</strong><span>Reglas en aplicación</span></div></div><div><span class="resumen-icono"><i class="fa-solid fa-user-shield"></i></span><div><strong>Acceso restringido</strong><span>Administradores autorizados</span></div></div></div>
     <div class="modulos-grid">
       @for (modulo of d.modulos; track modulo.clave) {
@@ -18,7 +19,7 @@
           }
           @if (modulo.clave === 'SEMANAL') { <p class="nota">Municipio: «Todos los delitos» incluye homicidio doloso. Si ambas opciones están activas, cada registro se valida una sola vez; al apagar ambas se omite este cruce.</p> }
           <p class="nota">El cruce municipal usa las coordenadas de los hechos. Una ubicación fuera del municipio impide validar; las coordenadas vacías o en cero generan una advertencia cuando la regla está activa.</p>
-          @if (modulo.clave === 'MENSUAL' || modulo.clave === 'FEDERAL') { <p class="nota">RENAPO se aplica cuando están activos los datos adicionales de feminicidio. Al desactivarlos, las actualizaciones conservan los valores ya registrados.</p> }
+          @if (modulo.clave === 'MENSUAL' || modulo.clave === 'FEDERAL') { <p class="nota">Desactivar las reglas de feminicidio apaga también RENAPO. Reactivarlas no enciende RENAPO automáticamente; puede habilitarlo después. Desactivar RENAPO conserva las reglas de feminicidio.</p> }
         </section>
       }
     </div>

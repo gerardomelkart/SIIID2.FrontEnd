@@ -15,6 +15,20 @@ describe('Configuración del sistema', () => {
     TestBed.configureTestingModule({ imports: [SistemaConfiguracionPage], providers: [provideRouter([]), { provide: SistemaConfiguracionService, useValue: servicio }] });
   });
   afterEach(() => TestBed.resetTestingModule());
+  it('no habilita RENAPO mensual o federal sin feminicidio', () => {
+    const c = TestBed.createComponent(SistemaConfiguracionPage).componentInstance;
+    for (const modulo of ['MENSUAL', 'FEDERAL']) {
+      c.datos.set({ ...datos, opciones: [{ modulo, clave: 'RENAPO', descripcion: 'RENAPO', disponible: true, habilitado: false, efectivo: false }] });
+      c.preparar(modulo, 'RENAPO', true, 'RENAPO');
+      expect(c.cambio()).toBeNull(); expect(c.error()).toContain('feminicidio');
+    }
+  });
+  it('no habilita el cruce cuando BANCI está apagado', () => {
+    const c = TestBed.createComponent(SistemaConfiguracionPage).componentInstance;
+    c.datos.set({ ...datos, modulos: [{ clave: 'BANCI', nombre: 'BANCI', activo: false }], opciones: [{ modulo: 'MENSUAL', clave: 'CRUCE_BANCI', descripcion: 'Cruce', disponible: true, habilitado: false, efectivo: false }] });
+    c.preparar('MENSUAL', 'CRUCE_BANCI', true, 'Cruce');
+    expect(c.cambio()).toBeNull(); expect(c.error()).toContain('Active BANCI');
+  });
   it('muestra municipio para los cuatro módulos y dos opciones independientes en semanal', () => {
     const opciones = ['MENSUAL', 'SEMANAL', 'FEDERAL', 'BANCI'].map(modulo => ({ modulo, clave: 'COORDENADAS_MUNICIPIO', descripcion: 'Todos los delitos', habilitado: false, disponible: true, efectivo: false }));
     opciones.push({ modulo: 'SEMANAL', clave: 'COORDENADAS_MUNICIPIO_HOMICIDIO_DOLOSO', descripcion: 'Solo homicidio doloso', habilitado: true, disponible: true, efectivo: true });

@@ -1,4 +1,5 @@
-import { Component, computed, signal } from '@angular/core';
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
+import { Component, inject, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
@@ -50,6 +51,7 @@ type EstadoCarga =
   styleUrl: './carga-inicial.css',
 })
 export class CargaInicial {
+  private readonly cruce = inject(BanciCruceService);
   archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
 
   estado = signal<EstadoCarga>('INICIAL');
@@ -238,6 +240,7 @@ export class CargaInicial {
       .subscribe({
         next: async (response) => {
           this.respuesta.set(response);
+          void this.cruce.mostrarBloqueo(response.errores ?? []);
           this.mensaje.set(response.mensaje || '');
 
           if (!response.esValido) {
@@ -272,6 +275,7 @@ export class CargaInicial {
 
           if (response?.resumenValidacion || response?.errores) {
             this.respuesta.set(response);
+          void this.cruce.mostrarBloqueo(response.errores ?? []);
             this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
             this.estado.set('VALIDADO_ERROR');
             return;
@@ -370,9 +374,15 @@ export class CargaInicial {
             resultado.acuseDescargado
               ? undefined
               : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
-          );
+          ).then(() => this.cruce.ofrecer(codigoReferencia));
         },
         error: (error: unknown) => {
+          const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
+          if (bloqueo?.errores?.some(e => e.codigo.startsWith('BANCI_'))) {
+            this.estado.set('MOSTRANDO_ACUSE');
+            void this.cruce.mostrarBloqueo(bloqueo.errores);
+            return;
+          }
           this.estado.set('MOSTRANDO_ACUSE');
 
           mostrarError(

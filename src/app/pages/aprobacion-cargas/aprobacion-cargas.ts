@@ -1,3 +1,5 @@
+import { CargaValidacionResponse } from '../../core/models/carga.models';
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import {
   ChangeDetectorRef,
   Component,
@@ -23,6 +25,7 @@ import {
   mostrarExitoInstitucional,
 } from '../../core/utils/alert.utils';
 import {
+  obtenerErrorPayload,
   obtenerMensajeErrorHttp,
   obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
@@ -56,6 +59,7 @@ interface SeccionDiferenciasAdmin {
   styleUrl: './aprobacion-cargas.css',
 })
 export class AprobacionCargas implements OnInit, OnDestroy {
+  private readonly cruce = inject(BanciCruceService);
   private readonly administracionService = inject(AdministracionCargasService);
   private readonly actualizacionService = inject(ActualizacionService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -349,7 +353,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         mostrarExitoInstitucional(
           'Carga aprobada',
           response.mensaje || 'La información fue incorporada correctamente.',
-        );
+        ).then(() => this.cruce.ofrecer(carga.codigoReferencia));
 
         this.cargarPendientes();
       },
@@ -357,6 +361,12 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         this.procesando.set(null);
         Swal.close();
 
+        const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
+        if (bloqueo?.errores?.some(e => e.codigo.startsWith('BANCI_'))) {
+          void this.cruce.mostrarBloqueo(bloqueo.errores);
+          this.cargarPendientes();
+          return;
+        }
         mostrarError(
           'No fue posible aprobar la carga',
           obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),

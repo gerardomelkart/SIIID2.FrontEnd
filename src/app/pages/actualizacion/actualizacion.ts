@@ -1,3 +1,4 @@
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
@@ -67,6 +68,7 @@ type EstadoPeriodo =
   styleUrl: './actualizacion.css',
 })
 export class Actualizacion implements OnInit {
+  private readonly cruce = inject(BanciCruceService);
   private readonly actualizacionService = inject(ActualizacionService);
   private readonly sessionService = inject(SessionService);
   private readonly catalogosService = inject(CatalogosService);
@@ -454,6 +456,7 @@ export class Actualizacion implements OnInit {
       .subscribe({
         next: async (response: CargaValidacionResponse) => {
           this.respuestaValidacion.set(response);
+          void this.cruce.mostrarBloqueo(response.errores ?? []);
 
           if (!response.esValido) {
             this.estadoPeriodo.set('VALIDADO_ERROR');
@@ -486,6 +489,7 @@ export class Actualizacion implements OnInit {
 
           if (response?.resumenValidacion || response?.errores) {
             this.respuestaValidacion.set(response);
+          void this.cruce.mostrarBloqueo(response.errores ?? []);
             this.estadoPeriodo.set('VALIDADO_ERROR');
             return;
           }
@@ -598,9 +602,16 @@ export class Actualizacion implements OnInit {
             resultado.acuseDescargado
               ? undefined
               : 'La actualizacion fue confirmada, pero no fue posible cargar el acuse confirmado.',
-          );
+          ).then(() => this.cruce.ofrecer(codigoReferencia));
         },
         error: (error: unknown) => {
+          const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
+          if (bloqueo?.errores?.some(e => e.codigo.startsWith('BANCI_'))) {
+            this.procesandoConfirmacion.set(false);
+            this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+            void this.cruce.mostrarBloqueo(bloqueo.errores);
+            return;
+          }
           this.procesandoConfirmacion.set(false);
           this.mensajeConfirmacion.set('');
 
