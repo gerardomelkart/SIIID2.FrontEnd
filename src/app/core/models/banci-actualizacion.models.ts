@@ -76,8 +76,8 @@ export interface BanciActualizacionVictima {
   localizado_o_no_localizado: number | null;
   con_o_sin_vida: number | null;
   fecha_localizacion: string | null;
-  voluntaria_o_fue_delito: number | null;
-  delito: string | null;
+  constitutiva_delito: number | null;
+  motivo_desaparicion: string | null;
   acciones_busqueda: string | null;
   obs: string | null;
 }

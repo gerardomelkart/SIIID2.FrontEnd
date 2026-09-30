@@ -47,8 +47,8 @@ export class BanciActualizacion implements OnInit {
     { clave: 'localizado_o_no_localizado', etiqueta: 'Estado de localización', tipo: 'select' },
     { clave: 'con_o_sin_vida', etiqueta: 'Condición de vida', tipo: 'select' },
     { clave: 'fecha_localizacion', etiqueta: 'Fecha de localización', tipo: 'date' },
-    { clave: 'voluntaria_o_fue_delito', etiqueta: 'Motivo de localización', tipo: 'select' },
-    { clave: 'delito', etiqueta: 'Delito relacionado con la localización', tipo: 'select', ayuda: 'Opcional e independiente de los demás campos. Puede ser diferente del delito de la carpeta.' },
+    { clave: 'constitutiva_delito', etiqueta: 'Constitutiva de delito', tipo: 'select' },
+    { clave: 'motivo_desaparicion', etiqueta: 'Motivo de desaparición', tipo: 'select', ayuda: 'Seleccione primero Delito o No delito. Este motivo puede ser diferente del delito de la carpeta.' },
     { clave: 'acciones_busqueda', etiqueta: 'Acciones emprendidas para su búsqueda', tipo: 'textarea', maximo: 20000 },
     { clave: 'obs', etiqueta: 'Observaciones', tipo: 'textarea', maximo: 20000 }
   ];
@@ -82,8 +82,8 @@ export class BanciActualizacion implements OnInit {
   private referenciaConfirmada = '';
 
   readonly camposLocalizacion = this.campos.filter(c =>
-    ['localizado_o_no_localizado','con_o_sin_vida','fecha_localizacion','voluntaria_o_fue_delito',
-     'delito','acciones_busqueda','obs'].includes(c.clave));
+    ['localizado_o_no_localizado','con_o_sin_vida','fecha_localizacion','constitutiva_delito',
+     'motivo_desaparicion','acciones_busqueda','obs'].includes(c.clave));
   readonly camposPersonales = this.campos.filter(c => !this.camposLocalizacion.includes(c));
 
   readonly esSuperUsuario = computed(() => this.opciones()?.esSuperUsuario === true);
@@ -123,7 +123,17 @@ export class BanciActualizacion implements OnInit {
   }
 
   opcionesCampo(campo: string) {
+    if (campo === 'motivo_desaparicion') {
+      const tipo = this.edicion['constitutiva_delito'];
+      if (tipo !== '1' && tipo !== '2') return [];
+      campo = tipo === '1' ? 'motivo_delito' : 'motivo_no_delito';
+    }
     return this.opciones()?.catalogos.filter(o => o.campo === campo) ?? [];
+  }
+
+  cambiarSeleccion(campo: string, valor: string): void {
+    this.edicion[campo] = valor;
+    if (campo === 'constitutiva_delito') this.edicion['motivo_desaparicion'] = '';
   }
 
   nombre(victima: BanciActualizacionVictima): string {
@@ -195,11 +205,16 @@ export class BanciActualizacion implements OnInit {
     const valor = (victima as unknown as Record<string, unknown>)[campo];
     if (valor == null || valor === '') return '—';
 
-    if (['localizado_o_no_localizado', 'con_o_sin_vida', 'voluntaria_o_fue_delito'].includes(campo)) {
+    if (['localizado_o_no_localizado', 'con_o_sin_vida', 'constitutiva_delito'].includes(campo)) {
       const opcion = this.opcionesCampo(campo).find(o => o.clave === String(valor));
       if (opcion) return opcion.descripcion;
     }
 
+    if (campo === 'motivo_desaparicion') {
+      const catalogo = victima.constitutiva_delito === 1 ? 'motivo_delito' : 'motivo_no_delito';
+      const opcion = this.opciones()?.catalogos.find(o => o.campo === catalogo && o.clave === String(valor));
+      if (opcion) return opcion.descripcion;
+    }
     return String(valor);
   }
 
@@ -216,6 +231,15 @@ export class BanciActualizacion implements OnInit {
     if (!Object.keys(cambios).length) {
       this.mensaje.set('Indique al menos un campo que desee actualizar.');
       return;
+    }
+
+    const tipo = cambios['constitutiva_delito'];
+    const motivo = cambios['motivo_desaparicion'];
+    if (tipo || motivo) {
+      if (!['1', '2'].includes(tipo ?? '') || !motivo || !this.opcionesCampo('motivo_desaparicion').some(o => o.clave === motivo)) {
+        this.mensaje.set('Seleccione Constitutiva de delito y un Motivo de desaparición del catálogo correspondiente.');
+        return;
+      }
     }
 
     const datos: Record<string, string | null> = {
@@ -562,7 +586,7 @@ export class BanciActualizacion implements OnInit {
         const enlace = document.createElement('a');
 
         enlace.href = url;
-        enlace.download = 'BANCI_actualizacion_victimas_v2.xlsx';
+        enlace.download = 'BANCI_actualizacion_victimas.xlsx';
         document.body.appendChild(enlace);
         enlace.click();
         enlace.remove();

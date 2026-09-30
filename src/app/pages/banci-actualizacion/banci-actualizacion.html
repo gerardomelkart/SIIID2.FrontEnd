@@ -140,8 +140,9 @@
 
             @if (campo.tipo === 'select') {
             <select class="form-select" [id]="'actualizar-' + campo.clave" [name]="campo.clave"
-              [(ngModel)]="edicion[campo.clave]" [disabled]="ocupado()">
-              <option value="">No modificar</option>
+              [ngModel]="edicion[campo.clave] || ''" (ngModelChange)="cambiarSeleccion(campo.clave, $event)"
+              [disabled]="ocupado() || (campo.clave === 'motivo_desaparicion' && !edicion['constitutiva_delito'])">
+              <option value="">{{ campo.clave === 'motivo_desaparicion' && edicion['constitutiva_delito'] ? 'Seleccione un motivo' : 'No modificar' }}</option>
               @for (opcion of opcionesCampo(campo.clave); track opcion.clave) {
               <option [value]="opcion.clave">{{ opcion.descripcion }}</option>
               }

@@ -21,6 +21,61 @@ describe('Corrección y recuperación BANCI', () => {
     Element.prototype.scrollIntoView = vi.fn();
   });
 
+  function conCatalogos() {
+    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+    c.opciones.set({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [
+      { campo: 'constitutiva_delito', clave: '1', descripcion: 'Delito', idEntidadFederativa: null },
+      { campo: 'constitutiva_delito', clave: '2', descripcion: 'No delito', idEntidadFederativa: null },
+      { campo: 'motivo_delito', clave: '2.07.04', descripcion: 'Delito de prueba', idEntidadFederativa: null },
+      { campo: 'motivo_no_delito', clave: '1', descripcion: 'Desarrollo', idEntidadFederativa: null }
+    ] });
+    c.seleccionar(victima);
+    return c;
+  }
+
+  it('cambia el catálogo y limpia la clave incompatible al cambiar de tipo', () => {
+    const c = conCatalogos();
+    expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
+    c.cambiarSeleccion('constitutiva_delito', '1');
+    expect(c.opcionesCampo('motivo_desaparicion').map(o => o.clave)).toEqual(['2.07.04']);
+    c.cambiarSeleccion('motivo_desaparicion', '2.07.04');
+    c.cambiarSeleccion('constitutiva_delito', '2');
+    expect(c.edicion['motivo_desaparicion']).toBe('');
+    expect(c.opcionesCampo('motivo_desaparicion').map(o => o.descripcion)).toEqual(['Desarrollo']);
+    c.cambiarSeleccion('constitutiva_delito', '');
+    expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
+  });
+
+  it('bloquea pares incompletos y motivos del otro catálogo antes de enviar', () => {
+    const c = conCatalogos();
+    for (const edicion of [
+      { constitutiva_delito: '1', motivo_desaparicion: '' },
+      { constitutiva_delito: '', motivo_desaparicion: '1' },
+      { constitutiva_delito: '2', motivo_desaparicion: '2.07.04' }
+    ]) {
+      c.edicion = edicion;
+      c.validarFormulario();
+    }
+    expect(api['validarFormulario']).not.toHaveBeenCalled();
+  });
+
+  it('envía las dos claves de No delito', () => {
+    const c = conCatalogos();
+    c.edicion = { constitutiva_delito: '2', motivo_desaparicion: '1' };
+    c.validarFormulario();
+    expect(api['validarFormulario']).toHaveBeenCalledWith({ idEntidadFederativa: null, datos: {
+      no_banci: victima.no_banci, id_delito: victima.id_delito, id_vicf: victima.id_vicf,
+      constitutiva_delito: '2', motivo_desaparicion: '1'
+    } });
+  });
+
+  it('el valor actual conserva su descripción aunque se edite el otro catálogo', () => {
+    const c = conCatalogos();
+    c.seleccionar({ ...victima, constitutiva_delito: 1, motivo_desaparicion: '2.07.04' });
+    c.cambiarSeleccion('constitutiva_delito', '2');
+    expect(c.actual('motivo_desaparicion')).toBe('Delito de prueba');
+  });
+
   it('oculta el formulario después de errores y exige volver a corregir', () => {
     const fixture = TestBed.createComponent(BanciActualizacion);
     fixture.detectChanges();
