@@ -212,6 +212,12 @@ export class BanciActualizacion implements OnInit {
     this.confirmacion.set(null);
     this.aceptarAdvertencias = false;
     this.mensaje.set('');
+    setTimeout(() => {
+      if (this.destroyRef.destroyed) return;
+      const formulario = document.getElementById('edicion-victima-banci');
+      formulario?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      formulario?.focus({ preventScroll: true });
+    }, 60);
   }
 
   actual(campo: string): string {
