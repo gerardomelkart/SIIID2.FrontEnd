@@ -1,7 +1,7 @@
 import { BanciCruceService, ModuloCruce } from '../../core/services/banci-cruce.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { fechaBanci, nombreExcelBanci } from '../../core/utils/banci-archivos.utils';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, HostListener, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BanciActualizacionService } from '../../core/services/banci-actualizacion.service';
@@ -271,6 +271,15 @@ export class BanciActualizacion implements OnInit {
     }));
   }
 
+  @HostListener('window:message', ['$event'])
+  comprobarSalidaIntegrada(evento: MessageEvent): void {
+    if (window.parent === window || evento.source !== window.parent || evento.origin !== window.location.origin || evento.data?.tipo !== 'BANCI_COMPROBAR_SALIDA') return;
+    const permitido = !this.ocupado() && !this.pendiente() && !this.necesitaActualizar();
+    const mensaje = this.ocupado() ? 'Espere a que termine la operación BANCI.' : 'Confirme o rechace la vista previa BANCI. Si hubo un problema de conexión, recupere su estado antes de continuar.';
+    if (!permitido) this.mensaje.set(mensaje);
+    window.parent.postMessage({ tipo: 'BANCI_SALIDA', solicitud: evento.data.solicitud, permitido, mensaje: permitido ? undefined : mensaje }, window.location.origin);
+  }
+
   puedeSalir(): boolean {
     if (!this.cargandoOperacion()) return true;
     this.mensaje.set('Espere el resultado de la operación antes de cambiar de vista.');
@@ -421,7 +430,7 @@ export class BanciActualizacion implements OnInit {
           this.cargandoOperacion.set(false);
           this.necesitaActualizar.set(true);
           this.mensaje.set('Esta operación corresponde a la otra modalidad de actualización. Se abrirá su vista para revisarla.');
-          void this.router.navigateByUrl(`/banci/actualizacion/${modalidad}`);
+          void this.router.navigate(['/banci/actualizacion', modalidad], { queryParamsHandling: 'preserve' });
           return;
         }
         this.entidad = estado.idEntidadFederativa;

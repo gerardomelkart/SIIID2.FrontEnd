@@ -2,7 +2,7 @@ import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BanciActualizacion } from './banci-actualizacion';
 import { BanciActualizacionService } from '../../core/services/banci-actualizacion.service';
 import { SessionService } from '../../core/services/session.service';
@@ -20,6 +20,25 @@ describe('Corrección y recuperación BANCI', () => {
     api = { obtenerOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })), obtenerPendientes: vi.fn(() => of([])), validarFormulario: vi.fn(() => throwError(() => ({ status: 400, error: respuesta() }))), confirmar: vi.fn(), obtenerEstado: vi.fn(), obtenerVistaPrevia: vi.fn() };
     TestBed.configureTestingModule({ imports: [BanciActualizacion], providers: [provideRouter([]), { provide: BanciCruceService, useValue: { consultar: vi.fn(() => of({ victimas: [] })) } }, { provide: ActivatedRoute, useValue: { snapshot: { data: { modalidad: 'manual' }, queryParamMap: { get: () => null } } } }, { provide: BanciActualizacionService, useValue: api }, { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1 }) } }] });
     Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('no cierra el iframe mientras guarda o tiene una vista previa pendiente', () => {
+    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+    const padre = { postMessage: vi.fn() };
+    vi.spyOn(window, 'parent', 'get').mockReturnValue(padre as unknown as Window);
+    const evento = new MessageEvent('message', { origin: window.location.origin, source: padre as unknown as Window, data: { tipo: 'BANCI_COMPROBAR_SALIDA', solicitud: 'prueba' } });
+    c.cargandoOperacion.set(true);
+    c.comprobarSalidaIntegrada(evento);
+    expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: false }), window.location.origin);
+    c.cargandoOperacion.set(false);
+    c.resultado.set(respuesta('PENDIENTE')); c.referencia.set('ref');
+    c.comprobarSalidaIntegrada(evento);
+    expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: false }), window.location.origin);
+    c.resultado.set(null); c.referencia.set('');
+    c.comprobarSalidaIntegrada(evento);
+    expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: true }), window.location.origin);
   });
 
   function conCatalogos() {
@@ -149,10 +168,10 @@ describe('Corrección y recuperación BANCI', () => {
 
   it('redirige una recuperación de Excel a su vista masiva', () => {
     const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     api['obtenerEstado'].mockReturnValue(of([{ estado: 'PENDIENTE', origen: 'EXCEL', idEntidadFederativa: 14 }]));
     c.recuperar('referencia-prueba');
-    expect(navegar).toHaveBeenCalledWith('/banci/actualizacion/masiva');
+    expect(navegar).toHaveBeenCalledWith(['/banci/actualizacion', 'masiva'], { queryParamsHandling: 'preserve' });
     expect(api['obtenerVistaPrevia']).not.toHaveBeenCalled();
   });
 

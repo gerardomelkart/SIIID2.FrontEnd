@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionService } from '../../core/services/session.service';
 import { Topbar } from '../topbar/topbar';
@@ -14,6 +14,8 @@ export class BanciLayout {
   private readonly sessionService = inject(SessionService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+
+  readonly integrado = inject(ActivatedRoute).snapshot.queryParamMap.get('integrado') === '1' && window.self !== window.top;
 
   menuAbierto = signal(false);
   cargaAbierta = signal(false);

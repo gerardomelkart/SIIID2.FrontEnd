@@ -12,7 +12,7 @@ const omitir = { isConfirmed: false, isDenied: false, isDismissed: true };
 describe('Cruce previo a aceptar o rechazar', () => {
  let service: BanciCruceService, http: HttpTestingController;
  beforeEach(() => {
-  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: SessionService, useValue: { modulos: () => [] } }] });
+  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), { provide: SessionService, useValue: { modulos: () => [], seleccionarModulo: vi.fn() } }] });
   service=TestBed.inject(BanciCruceService); http=TestBed.inject(HttpTestingController);
  });
  afterEach(() => { http.verify(); vi.restoreAllMocks(); });
@@ -31,7 +31,7 @@ describe('Cruce previo a aceptar o rechazar', () => {
   const dialogo=vi.spyOn(Swal,'fire').mockResolvedValueOnce({isConfirmed:modalidad==='manual',isDenied:modalidad==='masiva',isDismissed:false}).mockResolvedValueOnce(aceptar);
   const navegar=vi.spyOn(TestBed.inject(Router),'navigate');const tarea=service.ofrecer('FED-1','federal');
   http.expectOne(`${API_BASE_URL}/banci/cruce/federal/FED-1/preparar`).flush({activo:true,puedeActualizar:true,victimas:[{id_vicf:'V1'}]});
-  expect(await tarea).toBe(true);expect(navegar).not.toHaveBeenCalled();expect(dialogo.mock.calls[1][0]).toEqual(expect.objectContaining({html:expect.stringContaining(`/banci/actualizacion/${modalidad}?cruce=FED-1&amp;moduloCruce=federal`)}));
+  expect(await tarea).toBe(true);expect(navegar).not.toHaveBeenCalled();expect(dialogo.mock.calls[1][0]).toEqual(expect.objectContaining({html:expect.stringContaining(`/banci/actualizacion/${modalidad}?cruce=FED-1&amp;moduloCruce=federal&amp;integrado=1`)}));
  });
  it('permiso faltante se informa y permite omitir expresamente',async () => {
   const dialogo=vi.spyOn(Swal,'fire').mockResolvedValue(aceptar);const tarea=service.ofrecer('P');
@@ -52,4 +52,20 @@ describe('Cruce previo a aceptar o rechazar', () => {
  it('plantilla federal recibe entidad seleccionada',() => {
   service.plantilla('FED-1','federal',9).subscribe();http.expectOne(`${API_BASE_URL}/banci/cruce/federal/FED-1/plantilla?entidad=9`).flush(new Blob());
  });
+ it('el iframe exige respuesta del origen y ventana correctos antes de continuar', async () => {
+  const contenedor=document.createElement('div');
+  contenedor.innerHTML='<iframe id="banci-cruce-integrado"></iframe>';
+  document.body.append(contenedor);
+  const destino=contenedor.querySelector('iframe')!.contentWindow!;
+  vi.spyOn(Swal,'getHtmlContainer').mockReturnValue(contenedor);
+  const enviar=vi.spyOn(destino,'postMessage').mockImplementation(() => {});
+  const tarea=service['comprobarSalida']();
+  const solicitud=enviar.mock.calls[0][0].solicitud;
+  let terminado=false; void tarea.then(() => terminado=true);
+  window.dispatchEvent(new MessageEvent('message',{origin:'https://otro.test',source:destino,data:{tipo:'BANCI_SALIDA',solicitud,permitido:true}}));
+  await Promise.resolve(); expect(terminado).toBe(false);
+  window.dispatchEvent(new MessageEvent('message',{origin:window.location.origin,source:destino,data:{tipo:'BANCI_SALIDA',solicitud,permitido:true}}));
+  expect(await tarea).toBe(true);contenedor.remove();
+ });
+
 });

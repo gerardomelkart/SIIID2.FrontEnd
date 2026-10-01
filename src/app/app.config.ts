@@ -6,8 +6,10 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { httpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 
-export const appConfig: ApplicationConfig = {
-  providers: [
+export const appConfig: ApplicationConfig = 
+{
+  providers: 
+  [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),

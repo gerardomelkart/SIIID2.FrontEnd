@@ -6,7 +6,7 @@
   @if (referenciaCruce && victimasCruce().length) {
   <div class="siiid-card p-3 mb-3">
     <h2>Carpetas relacionadas con la carga</h2>
-    <p>La carga sigue pendiente de aceptar o rechazar en la pestaña original. Esta actualización es opcional. Al terminar, regrese a esa pestaña. Para actualización masiva, seleccione una entidad y descargue su plantilla. La plantilla incluye los identificadores de estas víctimas; complete únicamente los datos que desea actualizar.</p>
+    <p>La carga sigue pendiente de aceptar o rechazar. Esta actualización es opcional. Al terminar de confirmar sus cambios, pulse «Continuar a aceptar/rechazar». Para actualización masiva, seleccione una entidad y descargue su plantilla. La plantilla incluye los identificadores de estas víctimas; complete únicamente los datos que desea actualizar.</p>
     <div class="table-responsive"><table class="table"><thead><tr><th>Entidad</th><th>Carpeta</th><th>NO_BANCI</th><th>Víctima</th><th></th></tr></thead><tbody>
       @for (v of victimasCruce(); track v.no_banci + v.id_vicf) {
       <tr><td>{{ v.id_entidad_federativa }}</td><td>{{ v.ntra_ci }}</td><td>{{ v.no_banci }}</td><td>{{ v.nomb }} {{ v.pro_apellido }} {{ v.sdo_apellido }}</td><td>

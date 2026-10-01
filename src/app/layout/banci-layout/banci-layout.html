@@ -1,3 +1,6 @@
+@if (integrado) {
+  <main style="padding:16px;text-align:left"><router-outlet></router-outlet></main>
+} @else {
 <div class="siiid-shell">
   <app-topbar nombreModulo="BANCI" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
 
@@ -110,3 +113,4 @@
     </main>
   </div>
 </div>
+}

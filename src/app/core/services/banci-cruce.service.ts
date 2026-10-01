@@ -31,9 +31,16 @@ export class BanciCruceService {
       while (true) {
         const decision = await Swal.fire({ title: 'Actualizar datos BANCI', text: `El cruce coincide. Puede actualizar datos personales o de localización de ${datos.victimas.length} víctimas antes de aceptar o rechazar la carga. La actualización es opcional.`, showDenyButton: true, showCancelButton: true, allowOutsideClick: false, allowEscapeKey: false, confirmButtonText: 'Actualización manual', denyButtonText: 'Actualización masiva', cancelButtonText: 'Omitir actualización y continuar' });
         if (decision.isDismissed) return true;
-        const ruta = this.router.serializeUrl(this.router.createUrlTree(['/banci/actualizacion',decision.isConfirmed ? 'manual' : 'masiva'],{ queryParams: { cruce: referencia, moduloCruce: modulo } }));
+        const ruta = this.router.serializeUrl(this.router.createUrlTree(['/banci/actualizacion',decision.isConfirmed ? 'manual' : 'masiva'],{ queryParams: { cruce: referencia, moduloCruce: modulo, integrado: 1 } }));
         const enlace = this.location.prepareExternalUrl(ruta);
-        const regreso = await Swal.fire({ title: 'Actualización opcional', html: `<p><a class="btn btn-primary" href="${textoHtml(enlace)}" target="_blank" rel="noopener">Abrir actualización BANCI</a></p><p>Actualice y confirme los datos en la nueva pestaña. Al terminar, regrese aquí para aceptar o rechazar la carga. También puede continuar sin actualizar.</p>`, allowOutsideClick: false, allowEscapeKey: false, showCancelButton: true, confirmButtonText: 'Continuar a aceptar/rechazar', cancelButtonText: 'Cambiar modalidad' });
+        const regreso = await Swal.fire({
+          title: 'Actualización BANCI opcional', width: '96vw',
+          html: `<p>Solo se guardan los cambios que confirme en BANCI. La carga continúa pendiente.</p><iframe id="banci-cruce-integrado" title="Actualizar víctimas BANCI" src="${textoHtml(enlace)}" style="width:100%;height:70vh;border:0;text-align:left"></iframe>`,
+          allowOutsideClick: false, allowEscapeKey: false,
+          showLoaderOnConfirm: true, showLoaderOnDeny: true, showDenyButton: true, confirmButtonText: 'Continuar a aceptar/rechazar', denyButtonText: 'Cambiar modalidad',
+          preConfirm: () => this.comprobarSalida(), preDeny: () => this.comprobarSalida(),
+        });
+        this.session.seleccionarModulo(modulo === 'federal' ? 'FEDERAL' : 'MENSUAL');
         if (regreso.isConfirmed) return true;
       }
     } catch (error: unknown) {
@@ -42,6 +49,27 @@ export class BanciCruceService {
       else await Swal.fire({ icon: 'error', title: 'No se pudo preparar el cruce BANCI', text: detalle.error?.mensaje || 'La carga sigue pendiente. Reintente antes de aceptar o rechazar.' });
       return false;
     }
+  }
+  private comprobarSalida(): Promise<boolean> {
+    const marco = Swal.getHtmlContainer()?.querySelector<HTMLIFrameElement>('#banci-cruce-integrado');
+    const destino = marco?.contentWindow;
+    if (!destino) return Promise.resolve(false);
+    return new Promise(resolve => {
+      const solicitud = crypto.randomUUID();
+      const finalizar = (permitido: boolean, mensaje?: string) => {
+        clearTimeout(temporizador);
+        window.removeEventListener('message', recibir);
+        if (!permitido) Swal.showValidationMessage(mensaje || 'Confirme o rechace la actualización BANCI pendiente antes de continuar.');
+        resolve(permitido);
+      };
+      const recibir = (evento: MessageEvent) => {
+        if (evento.origin !== window.location.origin || evento.source !== destino || evento.data?.tipo !== 'BANCI_SALIDA' || evento.data?.solicitud !== solicitud) return;
+        finalizar(evento.data.permitido === true, evento.data.mensaje);
+      };
+      const temporizador = setTimeout(() => finalizar(false, 'La pantalla BANCI no responde. La carga sigue pendiente; puede recuperarla al recargar la página.'), 5000);
+      window.addEventListener('message', recibir);
+      destino.postMessage({ tipo: 'BANCI_COMPROBAR_SALIDA', solicitud }, window.location.origin);
+    });
   }
   async mostrarBloqueo(errores: ErrorCruce[], modulo: ModuloCruce = 'mensual'): Promise<void> {
     const acceso = this.session.modulos().some(m => m.clave === 'BANCI');
