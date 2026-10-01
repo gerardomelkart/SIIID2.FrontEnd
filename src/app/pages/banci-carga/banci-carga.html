@@ -33,7 +33,7 @@
 
 
       @if (opciones(); as o) {
-      @if (o.esSuperUsuario) {
+      @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
       <div class="siiid-card p-3 mb-3">
         <label for="entidad-banci-carga" class="form-label">
           <strong>Entidad federativa que reporta *</strong>

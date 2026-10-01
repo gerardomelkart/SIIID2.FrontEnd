@@ -82,7 +82,7 @@ export class BanciFormulario implements OnInit {
       .subscribe({
         next: (opciones) => {
           this.opciones.set(opciones);
-          this.entidad = opciones.esSuperUsuario ? null : opciones.idEntidadFederativa;
+          this.entidad = (opciones.puedeElegirEntidad ?? opciones.esSuperUsuario) ? null : opciones.idEntidadFederativa;
           for (const delito of this.delitos) this.preseleccionarEntidad(delito);
           this.cargandoOpciones.set(false);
         },
@@ -99,7 +99,7 @@ export class BanciFormulario implements OnInit {
     const opciones = this.opciones();
     if (
       !opciones ||
-      opciones.esSuperUsuario ||
+      (opciones.puedeElegirEntidad ?? opciones.esSuperUsuario) ||
       !opciones.idEntidadFederativa ||
       delito.datos['id_ent_hchos']
     )
@@ -137,14 +137,14 @@ export class BanciFormulario implements OnInit {
     if (this.bloqueado() || this.resultado() || !this.opciones()) return;
     this.mensaje.set('');
     this.aceptarAdvertencias = false;
-    if (this.opciones()!.esSuperUsuario && !this.entidad) {
+    if ((this.opciones()!.puedeElegirEntidad ?? this.opciones()!.esSuperUsuario) && !this.entidad) {
       this.mensaje.set('Seleccione la entidad que reporta la carpeta.');
       return;
     }
     this.resultado.set(null);
     this.cargando.set(true);
     const request = {
-      idEntidadFederativa: this.opciones()!.esSuperUsuario ? this.entidad : null,
+      idEntidadFederativa: (this.opciones()!.puedeElegirEntidad ?? this.opciones()!.esSuperUsuario) ? this.entidad : null,
       carpeta: this.carpeta,
       delitos: this.delitos,
     };

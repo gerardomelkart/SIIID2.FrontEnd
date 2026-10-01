@@ -374,7 +374,7 @@ export class CargaInicial {
             resultado.acuseDescargado
               ? undefined
               : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
-          ).then(() => this.cruce.ofrecer(codigoReferencia));
+          );
         },
         error: (error: unknown) => {
           const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
@@ -505,12 +505,19 @@ export class CargaInicial {
     this.router.navigateByUrl('/actualizacion');
   }
 
-  private abrirAcusePrevio(codigoReferencia: string): void {
+  private async abrirAcusePrevio(codigoReferencia: string): Promise<void> {
     if (this.cargandoAcusePrevio()) {
       return;
     }
 
     this.cargandoAcusePrevio.set(true);
+    if (!(await this.cruce.ofrecer(codigoReferencia, 'mensual'))) {
+      this.cargandoAcusePrevio.set(false);
+      this.estado.set('VALIDADO_ADVERTENCIA');
+      this.errorGeneral.set('La carga sigue pendiente. Vuelva a continuar para revisar el cruce BANCI.');
+      return;
+    }
+
 
     this.cargaService.descargarAcusePrevio(codigoReferencia).subscribe({
       next: (blob) => {

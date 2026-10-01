@@ -602,7 +602,7 @@ export class Actualizacion implements OnInit {
             resultado.acuseDescargado
               ? undefined
               : 'La actualizacion fue confirmada, pero no fue posible cargar el acuse confirmado.',
-          ).then(() => this.cruce.ofrecer(codigoReferencia));
+          );
         },
         error: (error: unknown) => {
           const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
@@ -862,12 +862,19 @@ export class Actualizacion implements OnInit {
       });
   }
 
-  private abrirAcusePrevio(codigoReferencia: string): void {
+  private async abrirAcusePrevio(codigoReferencia: string): Promise<void> {
     if (this.generandoAcusePrevio()) {
       return;
     }
 
     this.generandoAcusePrevio.set(true);
+    if (!(await this.cruce.ofrecer(codigoReferencia, 'mensual'))) {
+      this.generandoAcusePrevio.set(false);
+      this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+      this.errorGeneral.set('La carga sigue pendiente. Vuelva a continuar para revisar el cruce BANCI.');
+      return;
+    }
+
     this.errorGeneral.set('');
 
     this.actualizacionService

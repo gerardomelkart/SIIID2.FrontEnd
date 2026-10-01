@@ -5,11 +5,11 @@
 
   @if (referenciaCruce && victimasCruce().length) {
   <div class="siiid-card p-3 mb-3">
-    <h2>Carpetas relacionadas con el Consolidado</h2>
-    <p>La carga mensual ya está integrada. Esta actualización es opcional. La plantilla incluye los identificadores de estas víctimas; complete únicamente los datos que desea actualizar.</p>
-    <div class="table-responsive"><table class="table"><thead><tr><th>Carpeta</th><th>NO_BANCI</th><th>Víctima</th><th></th></tr></thead><tbody>
-      @for (v of victimasCruce(); track v.id_vicf) {
-      <tr><td>{{ v.ntra_ci }}</td><td>{{ v.no_banci }}</td><td>{{ v.nomb }} {{ v.pro_apellido }} {{ v.sdo_apellido }}</td><td>
+    <h2>Carpetas relacionadas con la carga</h2>
+    <p>La carga sigue pendiente de aceptar o rechazar en la pestaña original. Esta actualización es opcional. Al terminar, regrese a esa pestaña. Para actualización masiva, seleccione una entidad y descargue su plantilla. La plantilla incluye los identificadores de estas víctimas; complete únicamente los datos que desea actualizar.</p>
+    <div class="table-responsive"><table class="table"><thead><tr><th>Entidad</th><th>Carpeta</th><th>NO_BANCI</th><th>Víctima</th><th></th></tr></thead><tbody>
+      @for (v of victimasCruce(); track v.no_banci + v.id_vicf) {
+      <tr><td>{{ v.id_entidad_federativa }}</td><td>{{ v.ntra_ci }}</td><td>{{ v.no_banci }}</td><td>{{ v.nomb }} {{ v.pro_apellido }} {{ v.sdo_apellido }}</td><td>
         @if (modalidad() === 'manual') { <button type="button" class="btn btn-outline-primary" [disabled]="ocupado() || pendiente() || necesitaActualizar()" (click)="seleccionar(v)">Seleccionar</button> }
       </td></tr>
       }
@@ -35,12 +35,12 @@
   }
 
   @if (opciones(); as o) {
-  @if (o.esSuperUsuario) {
+  @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
   <div class="siiid-card p-3 mb-3">
     <label for="entidad-actualizacion"><strong>Entidad federativa *</strong></label>
     <select id="entidad-actualizacion" class="form-select mt-2" style="max-width: 450px" [ngModel]="entidad"
       (ngModelChange)="cambiarEntidad($event)"
-      [disabled]="!!referenciaCruce || ocupado() || pendiente() || necesitaActualizar() || !!seleccionada()">
+      [disabled]="ocupado() || pendiente() || necesitaActualizar() || !!seleccionada()">
       <option [ngValue]="null">Seleccione una entidad...</option>
       @for (e of entidades(); track e.clave) {
       <option [ngValue]="+e.clave">{{ e.descripcion }}</option>

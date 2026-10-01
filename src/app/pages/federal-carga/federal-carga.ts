@@ -1,4 +1,6 @@
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { Component, computed, signal } from '@angular/core';
+import { inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
@@ -50,6 +52,7 @@ type EstadoCarga =
   styleUrl: './federal-carga.css',
 })
 export class FederalCarga {
+  private readonly cruce = inject(BanciCruceService);
   archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
 
   estado = signal<EstadoCarga>('INICIAL');
@@ -238,6 +241,7 @@ export class FederalCarga {
       .subscribe({
         next: async (response) => {
           this.respuesta.set(response);
+          void this.cruce.mostrarBloqueo(response.errores ?? [], 'federal');
           this.mensaje.set(response.mensaje || '');
 
           if (!response.esValido) {
@@ -272,6 +276,7 @@ export class FederalCarga {
 
           if (response?.resumenValidacion || response?.errores) {
             this.respuesta.set(response);
+          void this.cruce.mostrarBloqueo(response.errores ?? [], 'federal');
             this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
             this.estado.set('VALIDADO_ERROR');
             return;
@@ -373,6 +378,12 @@ export class FederalCarga {
           );
         },
         error: (error: unknown) => {
+          const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
+          if (bloqueo?.errores?.some(e => e.codigo.startsWith('BANCI_'))) {
+            this.estado.set('MOSTRANDO_ACUSE');
+            void this.cruce.mostrarBloqueo(bloqueo.errores, 'federal');
+            return;
+          }
           this.estado.set('MOSTRANDO_ACUSE');
 
           mostrarError(
@@ -495,12 +506,19 @@ export class FederalCarga {
     void this.router.navigateByUrl('/federal/actualizacion');
   }
 
-  private abrirAcusePrevio(codigoReferencia: string): void {
+  private async abrirAcusePrevio(codigoReferencia: string): Promise<void> {
     if (this.cargandoAcusePrevio()) {
       return;
     }
 
     this.cargandoAcusePrevio.set(true);
+    if (!(await this.cruce.ofrecer(codigoReferencia, 'federal'))) {
+      this.cargandoAcusePrevio.set(false);
+      this.estado.set('VALIDADO_ADVERTENCIA');
+      this.errorGeneral.set('La carga sigue pendiente. Vuelva a continuar para revisar el cruce BANCI.');
+      return;
+    }
+
 
     this.federalCargaService.descargarAcusePrevio(codigoReferencia).subscribe({
       next: (blob) => {

@@ -1,4 +1,4 @@
-import { BanciCruceService } from '../../core/services/banci-cruce.service';
+import { BanciCruceService, ModuloCruce } from '../../core/services/banci-cruce.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { fechaBanci, nombreExcelBanci } from '../../core/utils/banci-archivos.utils';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
@@ -33,6 +33,7 @@ export class BanciActualizacion implements OnInit {
   private readonly cruce = inject(BanciCruceService);
   readonly victimasCruce = signal<BanciActualizacionVictima[]>([]);
   referenciaCruce = '';
+  moduloCruce: ModuloCruce = 'mensual';
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(BanciActualizacionService);
@@ -90,7 +91,7 @@ export class BanciActualizacion implements OnInit {
      'motivo_desaparicion','acciones_busqueda','obs'].includes(c.clave));
   readonly camposPersonales = this.campos.filter(c => !this.camposLocalizacion.includes(c));
 
-  readonly esSuperUsuario = computed(() => this.opciones()?.esSuperUsuario === true);
+  readonly puedeElegirEntidad = computed(() => (this.opciones()?.puedeElegirEntidad ?? this.opciones()?.esSuperUsuario) === true);
   readonly pendiente = computed(() => this.resultado()?.estado === 'PENDIENTE' && !!this.referencia());
   readonly ocupado = computed(() => this.cargandoBusqueda() || this.cargandoOperacion() || this.descargandoPlantilla());
   readonly pendientesDisponibles = computed(() => this.pendientes().filter(p => p.codigoReferencia !== this.referencia()));
@@ -98,14 +99,15 @@ export class BanciActualizacion implements OnInit {
 
   ngOnInit(): void {
     this.modalidad.set(this.route.snapshot.data['modalidad'] === 'masiva' ? 'masiva' : 'manual');
+    this.moduloCruce = this.route.snapshot.queryParamMap.get('moduloCruce') === 'federal' ? 'federal' : 'mensual';
     this.referenciaCruce = this.route.snapshot.queryParamMap.get('cruce') ?? '';
-    if (this.referenciaCruce) this.cruce.consultar(this.referenciaCruce).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    if (this.referenciaCruce) this.cruce.consultar(this.referenciaCruce, this.moduloCruce).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: datos => {
         this.victimasCruce.set(datos.victimas);
         if (datos.victimas.length) this.entidad = datos.victimas[0].id_entidad_federativa;
         else this.mensaje.set('No hay registros autorizados disponibles para esta carga.');
       },
-      error: () => this.mensaje.set('No fue posible recuperar el listado del Consolidado. Reintente.')
+      error: () => this.mensaje.set('No fue posible recuperar el listado de la carga. Reintente.')
     });
     this.cargarOpciones();
     this.cargarPendientes();
@@ -125,7 +127,7 @@ export class BanciActualizacion implements OnInit {
     this.service.obtenerOpciones().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: opciones => {
         this.opciones.set(opciones);
-        if (!opciones.esSuperUsuario) this.entidad = opciones.idEntidadFederativa;
+        if (!(opciones.puedeElegirEntidad ?? opciones.esSuperUsuario)) this.entidad = opciones.idEntidadFederativa;
         this.cargandoOpciones.set(false);
       },
       error: e => {
@@ -173,7 +175,7 @@ export class BanciActualizacion implements OnInit {
       return;
     }
 
-    if (this.esSuperUsuario() && !this.entidad) {
+    if (this.puedeElegirEntidad() && !this.entidad) {
       this.mensaje.set('Seleccione la entidad federativa antes de buscar.');
       return;
     }
@@ -185,7 +187,7 @@ export class BanciActualizacion implements OnInit {
     this.pagina = pagina;
     this.cargandoBusqueda.set(true);
 
-    this.service.buscarVictimas(texto, this.esSuperUsuario() ? this.entidad : null, pagina, 20)
+    this.service.buscarVictimas(texto, this.puedeElegirEntidad() ? this.entidad : null, pagina, 20)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: respuesta => {
@@ -201,6 +203,7 @@ export class BanciActualizacion implements OnInit {
 
   seleccionar(victima: BanciActualizacionVictima): void {
     if (this.ocupado() || this.pendiente() || this.necesitaActualizar()) return;
+    this.entidad = victima.id_entidad_federativa;
     this.seleccionada.set(victima);
     this.edicion = {};
     this.pestanaManual.set('localizacion');
@@ -263,7 +266,7 @@ export class BanciActualizacion implements OnInit {
     };
 
     this.validar(this.service.validarFormulario({
-      idEntidadFederativa: this.esSuperUsuario() ? this.entidad : null,
+      idEntidadFederativa: this.puedeElegirEntidad() ? this.entidad : null,
       datos
     }));
   }
@@ -341,12 +344,12 @@ export class BanciActualizacion implements OnInit {
   validarExcel(): void {
     if (!this.archivo || this.ocupado() || this.resultado() || this.necesitaActualizar()) return;
 
-    if (this.esSuperUsuario() && !this.entidad) {
+    if (this.puedeElegirEntidad() && !this.entidad) {
       this.mensaje.set('Seleccione la entidad federativa del archivo.');
       return;
     }
 
-    this.validar(this.service.validarArchivo(this.archivo, this.esSuperUsuario() ? this.entidad : null));
+    this.validar(this.service.validarArchivo(this.archivo, this.puedeElegirEntidad() ? this.entidad : null));
   }
 
   private validar(peticion: ReturnType<BanciActualizacionService['validarFormulario']>): void {
@@ -587,7 +590,7 @@ export class BanciActualizacion implements OnInit {
 
     this.descargandoPlantilla.set(true);
 
-    (this.referenciaCruce ? this.cruce.plantilla(this.referenciaCruce) : this.service.descargarPlantilla()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    (this.referenciaCruce ? this.cruce.plantilla(this.referenciaCruce, this.moduloCruce, this.entidad) : this.service.descargarPlantilla()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: respuesta => {
         if (!respuesta.body) {
           this.descargandoPlantilla.set(false);

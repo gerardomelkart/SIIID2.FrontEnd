@@ -45,6 +45,7 @@ export class BanciCarga implements OnInit {
   private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
   readonly esSuperUsuario = computed(() => this.session.usuario()?.rol === 'SUPER_USUARIO');
+  readonly puedeElegirEntidad = computed(() => this.opciones()?.puedeElegirEntidad ?? this.esSuperUsuario());
 
   opciones = signal<BanciFormularioOpciones | null>(null);
   cargandoOpciones = signal(false);
@@ -90,7 +91,7 @@ export class BanciCarga implements OnInit {
         next: (opciones) => {
           this.opciones.set(opciones);
 
-          if (!opciones.esSuperUsuario) {
+          if (!(opciones.puedeElegirEntidad ?? opciones.esSuperUsuario)) {
             this.entidad = opciones.idEntidadFederativa;
           }
 
@@ -417,12 +418,12 @@ export class BanciCarga implements OnInit {
     this.mensajeLocal.set('');
     this.aceptarAdvertencias = false;
 
-    if (this.session.usuario()?.rol === 'SUPER_USUARIO' && !this.entidad) {
+    if (this.puedeElegirEntidad() && !this.entidad) {
       this.mensajeLocal.set('Seleccione la entidad federativa que reporta la información.');
       return;
     }
 
-    const idEntidad = this.session.usuario()?.rol === 'SUPER_USUARIO' ? this.entidad : null;
+    const idEntidad = this.puedeElegirEntidad() ? this.entidad : null;
 
     const peticion = this.archivoLibro
       ? idEntidad == null

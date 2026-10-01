@@ -1,3 +1,5 @@
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
+import { CargaValidacionResponse } from '../../core/models/carga.models';
 import {
   ChangeDetectorRef,
   Component,
@@ -23,6 +25,7 @@ import {
   mostrarExitoInstitucional,
 } from '../../core/utils/alert.utils';
 import {
+  obtenerErrorPayload,
   obtenerMensajeErrorHttp,
   obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
@@ -55,6 +58,7 @@ interface SeccionDiferenciasAdmin {
   styleUrl: '../aprobacion-cargas/aprobacion-cargas.css',
 })
 export class FederalAprobacionCargas implements OnInit, OnDestroy {
+  private readonly cruce = inject(BanciCruceService);
   private readonly administracionService = inject(FederalAdministracionCargasService);
   private readonly actualizacionService = inject(FederalActualizacionService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -351,6 +355,13 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy {
       error: (error: unknown) => {
         this.procesando.set(null);
         Swal.close();
+
+        const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
+        if (bloqueo?.errores?.some(e => e.codigo.startsWith('BANCI_'))) {
+          void this.cruce.mostrarBloqueo(bloqueo.errores, 'federal');
+          this.cargarPendientes();
+          return;
+        }
 
         mostrarError(
           `No fue posible aprobar la ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,

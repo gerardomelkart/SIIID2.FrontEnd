@@ -353,7 +353,7 @@ export class AprobacionCargas implements OnInit, OnDestroy {
         mostrarExitoInstitucional(
           'Carga aprobada',
           response.mensaje || 'La información fue incorporada correctamente.',
-        ).then(() => this.cruce.ofrecer(carga.codigoReferencia));
+        );
 
         this.cargarPendientes();
       },

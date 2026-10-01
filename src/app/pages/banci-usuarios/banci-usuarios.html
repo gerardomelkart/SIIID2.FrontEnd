@@ -381,7 +381,7 @@
         <div class="mb-3">
         <label class="form-label">Entidad federativa *</label>
         <select class="form-select form-select-sm" [disabled]="formulario().tieneOtrosModulos || formulario().rol === 'SUPER_USUARIO'" [ngModel]="formulario().idEntidadFederativa" (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
-          <option [ngValue]="null">{{ formulario().rol === 'ENLACE_ESTATAL' ? 'Seleccione entidad...' : 'Nacional' }}</option>
+          <option [ngValue]="null">{{ formulario().tieneOtrosModulos ? 'Nacional / cuenta compartida' : (formulario().rol === 'ENLACE_ESTATAL' ? 'Seleccione entidad...' : 'Nacional') }}</option>
           @for (entidad of entidades(); track entidad.idEntidadFederativa) { <option [ngValue]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option> }
         </select>
         <small>Los enlaces estatales operan únicamente su entidad. Consulta con alcance Nacional puede consultar todas.</small>

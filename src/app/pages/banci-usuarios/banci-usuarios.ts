@@ -159,7 +159,7 @@ export class BanciUsuarios implements OnInit {
 
   formularioValido = computed(() => {
     const form = this.formulario();
-    if (form.rol === ROLES.ENLACE_ESTATAL && !(form.idEntidadFederativa && form.idEntidadFederativa >= 1 && form.idEntidadFederativa <= 32)) return false;
+    if (!this.usuarios().some(u => u.idUsuario === form.idUsuario && u.esFederal) && form.rol === ROLES.ENLACE_ESTATAL && !(form.idEntidadFederativa && form.idEntidadFederativa >= 1 && form.idEntidadFederativa <= 32)) return false;
 
     if (
       form.nombre.trim() === '' ||

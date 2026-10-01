@@ -27,7 +27,7 @@
         <div><span>Delitos</span><strong>{{ delitos.length }}</strong></div>
         <div><span>Víctimas</span><strong>{{ totalVictimas() }}</strong></div>
       </div>
-      @if (o.esSuperUsuario) {
+      @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
       <div class="siiid-card p-3 mb-3">
         <label for="entidadReporteBanci" class="form-label">
           <strong>Entidad federativa que reporta *</strong>
@@ -61,7 +61,7 @@
 
         </div>
         <div class="p-3">
-          <app-banci-campos [idPrefijo]="'banci-delito-' + i" [campos]="camposDelito" [camposFijos]="o.esSuperUsuario ? [] : ['id_ent_hchos']" [datos]="d.datos" [catalogos]="o.catalogos"
+          <app-banci-campos [idPrefijo]="'banci-delito-' + i" [campos]="camposDelito" [camposFijos]="(o.puedeElegirEntidad ?? o.esSuperUsuario) ? [] : ['id_ent_hchos']" [datos]="d.datos" [catalogos]="o.catalogos"
             [bloqueado]="bloqueado()" />
           <div class="cabecera barra-seccion">
             <h2><i class="fa-solid fa-users"></i> Víctimas del delito {{ i + 1 }}</h2><button type="button"

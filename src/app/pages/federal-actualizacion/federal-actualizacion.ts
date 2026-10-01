@@ -1,3 +1,4 @@
+import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -63,6 +64,7 @@ type EstadoPeriodo =
   styleUrl: './federal-actualizacion.css',
 })
 export class FederalActualizacion implements OnInit {
+  private readonly cruce = inject(BanciCruceService);
   private readonly actualizacionService = inject(FederalActualizacionService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly router = inject(Router);
@@ -548,6 +550,12 @@ export class FederalActualizacion implements OnInit {
           );
         },
         error: (error: unknown) => {
+          const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
+          if (bloqueo?.errores?.some(e => e.codigo.startsWith('BANCI_'))) {
+            this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+            void this.cruce.mostrarBloqueo(bloqueo.errores, 'federal');
+            return;
+          }
           this.procesandoConfirmacion.set(false);
           this.mensajeConfirmacion.set('');
 
@@ -798,12 +806,19 @@ export class FederalActualizacion implements OnInit {
       });
   }
 
-  private abrirAcusePrevio(codigoReferencia: string): void {
+  private async abrirAcusePrevio(codigoReferencia: string): Promise<void> {
     if (this.generandoAcusePrevio()) {
       return;
     }
 
     this.generandoAcusePrevio.set(true);
+    if (!(await this.cruce.ofrecer(codigoReferencia, 'federal'))) {
+      this.generandoAcusePrevio.set(false);
+      this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+      this.errorGeneral.set('La carga sigue pendiente. Vuelva a continuar para revisar el cruce BANCI.');
+      return;
+    }
+
     this.errorGeneral.set('');
 
     this.actualizacionService
