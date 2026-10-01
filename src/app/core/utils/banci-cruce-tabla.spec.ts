@@ -24,4 +24,25 @@ describe('Tabla descargable del cruce',() => {
   const filas=vi.mocked(XLSX.utils.json_to_sheet).mock.calls[1][0];expect(filas).toHaveLength(123);expect(String(filas[0]['Detalle'])+String(filas[0]['Detalle 2'])).toBe('X'.repeat(45000));
   expect(popup!.querySelector('tbody script')).toBeNull();cerrar();
  });
+ it('separa y exporta las carpetas registradas en otro período', async () => {
+  let popup!: HTMLElement;
+  vi.spyOn(Swal,'fire').mockImplementation((async (opciones:any) => {
+    popup=document.createElement('div');popup.innerHTML=opciones.html;document.body.appendChild(popup);opciones.didOpen(popup);
+    return {isConfirmed:false,isDenied:false,isDismissed:true};
+  }) as any);
+  await mostrarTablaCruce([
+    {codigo:'BANCI_OTRO_PERIODO',ntraCi:'AGOSTO',mensaje:'Consolidado: 2026-09-11; BANCI: 2026-08-11'},
+    {codigo:'BANCI_OMITIDA',ntraCi:'SEPTIEMBRE',mensaje:'Falta'},
+    {codigo:'BANCI_NO_REPORTADA',ntraCi:'NUEVA',mensaje:'Registrar'}
+  ],true,'mensual');
+  expect(popup.textContent).toContain('Otro período: 1');
+  const select=popup.querySelector('#cruce-filtro') as HTMLSelectElement;
+  select.value='Registrada en otro período';select.dispatchEvent(new Event('change'));
+  expect(popup.querySelectorAll('tbody tr')).toHaveLength(1);
+  expect(popup.querySelector('tbody')!.textContent).toContain('2026-08-11');
+  (popup.querySelector('#cruce-excel') as HTMLButtonElement).click();
+  await vi.waitFor(() => expect(XLSX.utils.json_to_sheet).toHaveBeenCalledTimes(1));
+  expect(vi.mocked(XLSX.utils.json_to_sheet).mock.calls[0][0][0]['Tipo']).toBe('Registrada en otro período');
+ });
+
 });

@@ -5,17 +5,17 @@ export const textoHtml = (v: unknown): string => String(v ?? '').replace(/[&<>"'
 export async function mostrarTablaCruce(errores: ErrorCruce[], acceso: boolean, modulo: string): Promise<boolean> {
   const nombre = modulo === 'federal' ? 'Federal' : 'Consolidado';
   const filas = errores.filter(e => e.codigo.startsWith('BANCI_')).map(e => ({
-    Tipo: e.codigo === 'BANCI_OMITIDA' ? 'Falta en la carga' : e.codigo === 'BANCI_NO_REPORTADA' ? 'No reportada en BANCI' : 'Diferencia',
+    Tipo: e.codigo === 'BANCI_OMITIDA' ? 'Falta en la carga' : e.codigo === 'BANCI_NO_REPORTADA' ? 'No reportada en BANCI' : e.codigo === 'BANCI_OTRO_PERIODO' ? 'Registrada en otro período' : 'Diferencia',
     Entidad: e.entidadCruce ?? '', Carpeta: e.ntraCi ?? '', Archivo: e.archivo ?? '', Fila: e.fila ?? '', Campo: e.campo || e.columna || '', Detalle: e.mensaje, Codigo: e.codigo
   }));
   if (!filas.length) return false;
   let pagina = 0, filtro = '', descargando = false;
   const eventos = new AbortController();
   const resultado = await Swal.fire({ icon: 'error', title: `Cruce ${nombre}–BANCI`, width: 'min(1200px, 96vw)',
-    html: `<p>Faltantes: <b>${filas.filter(f => f.Tipo === 'Falta en la carga').length}</b> · No reportadas: <b>${filas.filter(f => f.Tipo === 'No reportada en BANCI').length}</b> · Diferencias: <b>${filas.filter(f => f.Tipo === 'Diferencia').length}</b></p>
-      <p>Incluya las carpetas faltantes. Las no reportadas deben registrarse primero en BANCI y después volver a cargar ${nombre}.</p>
+    html: `<p>Faltantes: <b>${filas.filter(f => f.Tipo === 'Falta en la carga').length}</b> · No reportadas: <b>${filas.filter(f => f.Tipo === 'No reportada en BANCI').length}</b> · Otro período: <b>${filas.filter(f => f.Tipo === 'Registrada en otro período').length}</b> · Diferencias: <b>${filas.filter(f => f.Tipo === 'Diferencia').length}</b></p>
+      <p>Incluya las carpetas faltantes del período reportado. Para las registradas en otro período, revise el número de carpeta y la fecha de inicio; no las registre nuevamente. Solo las no reportadas requieren registro previo en BANCI.</p>
       ${acceso ? '' : '<p>Solicite a un usuario autorizado registrar o corregir la información en BANCI.</p>'}
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px"><select id="cruce-filtro" aria-label="Filtrar incidencias" class="form-select" style="width:auto"><option value="">Todas las incidencias</option><option>Falta en la carga</option><option>No reportada en BANCI</option><option>Diferencia</option></select><button type="button" id="cruce-excel" class="btn btn-outline-primary">Descargar tabla completa</button></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px"><select id="cruce-filtro" aria-label="Filtrar incidencias" class="form-select" style="width:auto"><option value="">Todas las incidencias</option><option>Falta en la carga</option><option>No reportada en BANCI</option><option>Registrada en otro período</option><option>Diferencia</option></select><button type="button" id="cruce-excel" class="btn btn-outline-primary">Descargar tabla completa</button></div>
       <div style="max-height:45vh;overflow:auto;text-align:left" tabindex="0" aria-label="Diferencias del cruce"><table class="table table-sm table-striped"><thead style="position:sticky;top:0;background:white"><tr><th>Tipo</th><th>Entidad</th><th>Carpeta</th><th>Archivo/fila</th><th>Campo</th><th>Detalle</th></tr></thead><tbody id="cruce-filas"></tbody></table></div>
       <div style="display:flex;justify-content:center;gap:16px;align-items:center;margin-top:12px"><button type="button" id="cruce-anterior" class="btn btn-outline-secondary">Anterior</button><span id="cruce-pagina" aria-live="polite"></span><button type="button" id="cruce-siguiente" class="btn btn-outline-secondary">Siguiente</button></div><p id="cruce-descarga-estado" role="status"></p>`,
     showCancelButton: acceso, confirmButtonText: acceso ? 'Ir a BANCI' : 'Cerrar', cancelButtonText: 'Cerrar',
