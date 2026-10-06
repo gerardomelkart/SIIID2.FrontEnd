@@ -73,10 +73,26 @@
       <table class="table table-sm reporte-table">
         <thead>
           <tr>
-            <th>Fecha de envío</th>
-            <th>Corte</th>
-            <th>Usuario envío</th>
-            <th>Estatus</th>
+            <th class="sortable" [attr.aria-sort]="ariaOrdenEnvios('fechaEnvioTexto')">
+              <button type="button" class="btn p-0 border-0 text-white fw-bold" (click)="ordenarEnviosPor('fechaEnvioTexto')" title="Ordenar por fecha de envío">
+                Fecha de envío <i [class]="iconoOrdenEnvios('fechaEnvioTexto')" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th class="sortable" [attr.aria-sort]="ariaOrdenEnvios('corte')">
+              <button type="button" class="btn p-0 border-0 text-white fw-bold" (click)="ordenarEnviosPor('corte')" title="Ordenar por corte">
+                Corte <i [class]="iconoOrdenEnvios('corte')" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th class="sortable" [attr.aria-sort]="ariaOrdenEnvios('usuarioEnvio')">
+              <button type="button" class="btn p-0 border-0 text-white fw-bold" (click)="ordenarEnviosPor('usuarioEnvio')" title="Ordenar por usuario envío">
+                Usuario envío <i [class]="iconoOrdenEnvios('usuarioEnvio')" aria-hidden="true"></i>
+              </button>
+            </th>
+            <th class="sortable" [attr.aria-sort]="ariaOrdenEnvios('estadoTexto')">
+              <button type="button" class="btn p-0 border-0 text-white fw-bold" (click)="ordenarEnviosPor('estadoTexto')" title="Ordenar por estatus">
+                Estatus <i [class]="iconoOrdenEnvios('estadoTexto')" aria-hidden="true"></i>
+              </button>
+            </th>
             <th class="acciones-col">Acciones</th>
           </tr>
         </thead>

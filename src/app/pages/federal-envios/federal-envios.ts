@@ -13,6 +13,10 @@ import {
   obtenerMensajeErrorHttpAsync,
 } from '../../core/utils/http-error.utils';
 
+import { EstadoOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
+
+type CampoOrdenEnvios = 'fechaEnvioTexto' | 'corte' | 'usuarioEnvio' | 'estadoTexto';
+
 @Component({
   selector: 'app-federal-envios',
   imports: [FormsModule],
@@ -33,6 +37,7 @@ export class FederalEnvios implements OnInit, OnDestroy {
   envios = signal<InformeEnvioItem[]>([]);
   busqueda = signal('');
   pagina = signal(1);
+  ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
 
   cargando = signal(false);
   descargandoAcuse = signal<string | null>(null);
@@ -55,9 +60,9 @@ export class FederalEnvios implements OnInit, OnDestroy {
   enviosFiltrados = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
 
-    if (!texto) return this.envios();
+    if (!texto) return this.ordenarListaEnvios(this.envios());
 
-    return this.envios().filter(
+    return this.ordenarListaEnvios(this.envios().filter(
       (envio) =>
         envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
         envio.corte.toLowerCase().includes(texto) ||
@@ -66,7 +71,7 @@ export class FederalEnvios implements OnInit, OnDestroy {
         envio.tipoCarga.toLowerCase().includes(texto) ||
         envio.estadoTexto.toLowerCase().includes(texto) ||
         (envio.motivoRechazo ?? '').toLowerCase().includes(texto),
-    );
+    ));
   });
 
   enviosPaginados = computed(() => {
@@ -150,6 +155,28 @@ export class FederalEnvios implements OnInit, OnDestroy {
   buscar(valor: string): void {
     this.busqueda.set(valor);
     this.pagina.set(1);
+  }
+
+  ordenarEnviosPor(campo: CampoOrdenEnvios): void {
+    this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
+    this.pagina.set(1);
+  }
+
+  iconoOrdenEnvios(campo: CampoOrdenEnvios): string {
+    return obtenerIconoOrden(this.ordenEnvios(), campo);
+  }
+
+  ariaOrdenEnvios(campo: CampoOrdenEnvios): string {
+    const orden = this.ordenEnvios();
+    return orden?.campo === campo ? (orden.direccion === 'asc' ? 'ascending' : 'descending') : 'none';
+  }
+
+  private ordenarListaEnvios(lista: InformeEnvioItem[]): InformeEnvioItem[] {
+    return ordenarPorEstado(lista, this.ordenEnvios(), (envio, campo) => {
+      if (campo === 'fechaEnvioTexto') return envio.fechaEnvio;
+      if (campo === 'corte') return envio.anioCorte * 100 + envio.mesCorte;
+      return envio[campo] ?? '';
+    });
   }
 
   cambiarPagina(pagina: number): void {
