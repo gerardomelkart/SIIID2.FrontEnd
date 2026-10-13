@@ -61,7 +61,7 @@ type CampoOrdenUsuariosFederal =
   selector: 'app-federal-usuarios',
   imports: [FormsModule],
   templateUrl: './federal-usuarios.html',
-  styleUrl: './federal-usuarios.css',
+  styleUrl: '../../shared/styles/usuarios-modulo.css',
 })
 export class FederalUsuarios implements OnInit {
   private readonly usuariosService = inject(FederalUsuariosService);

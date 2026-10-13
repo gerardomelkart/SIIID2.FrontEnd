@@ -65,7 +65,7 @@ type CampoOrdenUsuariosSemanales =
   selector: 'app-semanal-usuarios',
   imports: [FormsModule],
   templateUrl: './semanal-usuarios.html',
-  styleUrl: './semanal-usuarios.css',
+  styleUrl: '../../shared/styles/usuarios-modulo.css',
 })
 export class SemanalUsuarios implements OnInit {
   private readonly usuariosService = inject(UsuariosService);

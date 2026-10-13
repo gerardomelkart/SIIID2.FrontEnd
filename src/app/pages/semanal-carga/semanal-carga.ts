@@ -75,7 +75,7 @@ interface VistaTramoSemanal {
   selector: 'app-semanal-carga',
   imports: [FormsModule],
   templateUrl: './semanal-carga.html',
-  styleUrls: ['../actualizacion/actualizacion.css', './semanal-carga.css'],
+  styleUrls: ['../../shared/styles/actualizacion-archivos.css', './semanal-carga.css'],
 })
 export class SemanalCarga implements OnInit {
   private readonly semanalCargaService = inject(SemanalCargaService);

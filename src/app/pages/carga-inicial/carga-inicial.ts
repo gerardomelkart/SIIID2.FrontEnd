@@ -48,7 +48,7 @@ type EstadoCarga =
   selector: 'app-carga-inicial',
   imports: [],
   templateUrl: './carga-inicial.html',
-  styleUrl: './carga-inicial.css',
+  styleUrl: '../../shared/styles/carga-archivos.css',
 })
 export class CargaInicial {
   private readonly cruce = inject(BanciCruceService);

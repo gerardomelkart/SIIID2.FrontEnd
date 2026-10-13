@@ -1,59 +1,48 @@
-# SIIID2FrontEnd
+# SIIID2.FrontEnd
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.12.
+Aplicación Angular de SIIID: Consolidado mensual, Semanal, Federal, BANCI y administración. Las versiones de dependencias están fijadas por `package-lock.json`.
 
-## Development server
-
-To start a local development server, run:
+## Desarrollo y compilación
 
 ```bash
-ng serve
+npm ci
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+`npm start` utiliza `proxy.conf.json`. Revisar su destino antes de realizar operaciones de prueba.
 
 ```bash
-ng generate component component-name
+npm run build:siiid2
+npm run build:siiid2:qa
+npm test -- --watch=false
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Los dos comandos de compilación generan respectivamente las bases `/siiid2/` y `/siiid2-qa/`. Compilar no publica el sitio. El destino de API está definido en `src/app/core/constants/api-endpoints.constants.ts`: `api` en localhost, `/qa-api/api` bajo `/siiid2-qa` y `/beta/api` en el resto de despliegues.
 
-```bash
-ng generate --help
-```
+## Organización
 
-## Building
+| Ubicación en `src/app/` | Responsabilidad |
+|---|---|
+| `pages/` | Pantallas y flujos de cada módulo. |
+| `core/services/` | Comunicación con API y servicios compartidos. |
+| `core/models/` | Contratos de datos. |
+| `core/guards/` | Control de navegación; la API mantiene la autorización efectiva. |
+| `core/constants/` y `core/utils/` | Constantes y utilidades compartidas. |
+| `layout/` | Estructura de navegación y presentación. |
+| `shared/styles/` | Estilos idénticos reutilizados por componentes. |
 
-To build the project run:
+Los módulos comparten presentación cuando es equivalente, pero conservan sus flujos y reglas particulares.
 
-```bash
-ng build
-```
+## Estilos compartidos
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+- `carga-archivos.css`: carga inicial del Consolidado y carga Federal.
+- `actualizacion-archivos.css`: actualización del Consolidado, actualización Federal y base de la carga Semanal.
+- `usuarios-modulo.css`: usuarios de Semanal y Federal.
 
-## Running unit tests
+Cada componente referencia estos archivos mediante `styleUrl` o `styleUrls`; no son estilos globales. En carga Semanal, conservar el orden: primero el estilo compartido y luego `semanal-carga.css`, que aporta sus ajustes específicos. Antes de modificar un estilo compartido, revisar todos sus consumidores.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Mantenimiento
 
-```bash
-ng test
-```
+Comentar decisiones del flujo, permisos y dependencias; evitar comentarios que solo repitan instrucciones. Buscar consumidores antes de retirar un servicio o modelo. Un endpoint sin consumidor en esta aplicación puede seguir atendiendo integraciones externas.
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Validar compilación y pruebas de los módulos afectados. Los tests unitarios no sustituyen las pruebas de carga, aprobación/rechazo y descarga conectadas a la API de QA.

@@ -49,7 +49,7 @@ type EstadoCarga =
   selector: 'app-federal-carga',
   imports: [],
   templateUrl: './federal-carga.html',
-  styleUrl: './federal-carga.css',
+  styleUrl: '../../shared/styles/carga-archivos.css',
 })
 export class FederalCarga {
   private readonly cruce = inject(BanciCruceService);

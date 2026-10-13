@@ -65,7 +65,7 @@ type EstadoPeriodo =
   selector: 'app-actualizacion',
   imports: [FormsModule],
   templateUrl: './actualizacion.html',
-  styleUrl: './actualizacion.css',
+  styleUrl: '../../shared/styles/actualizacion-archivos.css',
 })
 export class Actualizacion implements OnInit {
   private readonly cruce = inject(BanciCruceService);
