@@ -8,7 +8,7 @@ export const CAMPOS_CARPETAS: BanciFormularioCampo[] = [
     obligatorio: true,
     maximo: 250,
   },
-  { clave: 'fha_de_ini', etiqueta: 'Fecha de inicio', tipo: 'date', obligatorio: true, ayuda: 'Desde octubre de 2024 hasta el mes actual.' },
+  { clave: 'fha_de_ini', etiqueta: 'Fecha de inicio', tipo: 'date', obligatorio: true },
   { clave: 'hra_de_ini', etiqueta: 'Hora de inicio', tipo: 'time' },
   { clave: 'rmen_de_hchos', etiqueta: 'Resumen de hechos', tipo: 'textarea', maximo: 20000 },
 ];
