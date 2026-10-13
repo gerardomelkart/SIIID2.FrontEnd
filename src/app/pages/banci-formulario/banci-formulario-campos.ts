@@ -8,7 +8,7 @@ export const CAMPOS_CARPETAS: BanciFormularioCampo[] = [
     obligatorio: true,
     maximo: 250,
   },
-  { clave: 'fha_de_ini', etiqueta: 'Fecha de inicio', tipo: 'date', obligatorio: true, ayuda: 'Sólo el mes en curso o el anterior.' },
+  { clave: 'fha_de_ini', etiqueta: 'Fecha de inicio', tipo: 'date', obligatorio: true, ayuda: 'Desde octubre de 2024 hasta el mes actual.' },
   { clave: 'hra_de_ini', etiqueta: 'Hora de inicio', tipo: 'time' },
   { clave: 'rmen_de_hchos', etiqueta: 'Resumen de hechos', tipo: 'textarea', maximo: 20000 },
 ];
@@ -25,13 +25,12 @@ export const CAMPOS_DELITOS: BanciFormularioCampo[] = [
     clave: 'moda_dto',
     etiqueta: 'Modalidad del delito',
     tipo: 'text',
-    obligatorio: true,
     maximo: 2000,
   },
-  { clave: 'forma_acc', etiqueta: 'Forma de acción', tipo: 'select', obligatorio: true },
+  { clave: 'forma_acc', etiqueta: 'Forma de acción', tipo: 'select' },
   { clave: 'fha_de_hchos', etiqueta: 'Fecha de los hechos', tipo: 'date' },
   { clave: 'hra_de_hchos', etiqueta: 'Hora de los hechos', tipo: 'time' },
-  { clave: 'emto_com_dto', etiqueta: 'Instrumento de comisión', tipo: 'select', obligatorio: true },
+  { clave: 'emto_com_dto', etiqueta: 'Instrumento de comisión', tipo: 'select' },
   { clave: 'grdo_cons', etiqueta: 'Grado de consumación', tipo: 'select', obligatorio: true },
   {
     clave: 'clasf_de_dto',
@@ -52,8 +51,6 @@ export const CAMPOS_DELITOS: BanciFormularioCampo[] = [
 ];
 
 export const CAMPOS_VICTIMAS: BanciFormularioCampo[] = [
-  { clave: 'id_tv', etiqueta: 'Tipo de víctima', tipo: 'select', obligatorio: true },
-  { clave: 'id_tpm', etiqueta: 'Tipo de persona moral', tipo: 'select' },
   { clave: 'sexo', etiqueta: 'Sexo', tipo: 'select' },
   { clave: 'genero', etiqueta: 'Género', tipo: 'select' },
   { clave: 'pob', etiqueta: 'Pertenencia a población indígena', tipo: 'select' },
@@ -62,7 +59,7 @@ export const CAMPOS_VICTIMAS: BanciFormularioCampo[] = [
   { clave: 'edad', etiqueta: 'Edad', tipo: 'text', maximo: 3 },
   { clave: 'nacional', etiqueta: 'Nacionalidad', tipo: 'select' },
 
-  { clave: 'fub', etiqueta: 'FUB', tipo: 'text', obligatorio: true, maximo: 250 },
+  { clave: 'fub', etiqueta: 'FUB', tipo: 'text', maximo: 250 },
   { clave: 'pro_apellido', etiqueta: 'Primer apellido', tipo: 'text', maximo: 250 },
   { clave: 'sdo_apellido', etiqueta: 'Segundo apellido', tipo: 'text', maximo: 250 },
   { clave: 'nomb', etiqueta: 'Nombre(s)', tipo: 'text', maximo: 500 },

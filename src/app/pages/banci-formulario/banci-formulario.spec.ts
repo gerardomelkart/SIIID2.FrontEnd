@@ -59,6 +59,22 @@ describe('Formulario BANCI', () => {
     expect(c.camposVictima.map(x => x.clave)).toContain('fub');
   });
 
+  it('sólo pide campos vigentes de BANCI y admite el periodo histórico', () => {
+    const c = TestBed.createComponent(BanciFormulario).componentInstance;
+    const delitos = c.camposDelito;
+    const victimas = c.camposVictima;
+    const clavesVictima = victimas.map(x => x.clave);
+    expect(c.camposCarpeta.find(x => x.clave === 'fha_de_ini')?.ayuda).toContain('octubre de 2024');
+    for (const clave of ['moda_dto', 'forma_acc', 'emto_com_dto'])
+      expect(delitos.find(x => x.clave === clave)?.obligatorio).toBeFalsy();
+    for (const clave of ['fub', 'curp'])
+      expect(victimas.find(x => x.clave === clave)?.obligatorio).toBeFalsy();
+    expect(clavesVictima).not.toContain('id_tv');
+    expect(clavesVictima).not.toContain('id_tpm');
+    expect(clavesVictima).toContain('pob');
+    expect(clavesVictima).toContain('disc');
+  });
+
   it('validar nunca integra automáticamente y bloquea cambios hasta la decisión', () => {
     const c = TestBed.createComponent(BanciFormulario).componentInstance; c.ngOnInit(); c.validar();
     expect(service.confirmar).not.toHaveBeenCalled(); expect(c.pendiente()).toBe(true);
