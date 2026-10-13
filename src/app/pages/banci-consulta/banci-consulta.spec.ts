@@ -28,7 +28,7 @@ describe('Consulta BANCI', () => {
     };
     TestBed.configureTestingModule({ imports: [BanciConsulta], providers: [{ provide: BanciConsultaService, useValue: service }] });
   });
-  afterEach(() => { TestBed.resetTestingModule(); vi.useRealTimers(); vi.restoreAllMocks(); });
+  afterEach(() => { TestBed.resetTestingModule(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
   it('al cambiar el mes consulta automáticamente y no muestra botón Consultar', () => {
     const f = TestBed.createComponent(BanciConsulta); f.detectChanges();
@@ -69,14 +69,20 @@ describe('Consulta BANCI', () => {
   });
 
   it('descarga un solo Excel con los filtros aplicados y conserva el nombre del servidor', () => {
-    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:prueba') });
-    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    vi.useFakeTimers();
+    // Conservar el constructor y restaurar URL al terminar; no alterar sus descriptores globales.
+    vi.stubGlobal('URL', class extends URL {
+      static override createObjectURL = vi.fn(() => 'blob:prueba');
+      static override revokeObjectURL = vi.fn();
+    });
     let nombre = '';
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { nombre = this.download; });
     const c = TestBed.createComponent(BanciConsulta).componentInstance; c.ngOnInit();
     c.mes = 8; c.cambiarFiltros(); c.descargarExcel();
     expect(service.descargarExcel).toHaveBeenCalledWith(expect.objectContaining({ anio: 2026, mes: 8, idEntidadFederativa: 14 }));
     expect(nombre).toBe('BANCI_PRUEBA.xlsx');
+    vi.advanceTimersByTime(1000);
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:prueba');
     expect(c.exportando()).toBe(false);
   });
 
