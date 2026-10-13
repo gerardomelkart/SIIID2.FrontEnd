@@ -64,7 +64,7 @@ describe('Formulario BANCI', () => {
     const delitos = c.camposDelito;
     const victimas = c.camposVictima;
     const clavesVictima = victimas.map(x => x.clave);
-    expect(c.camposCarpeta.find(x => x.clave === 'fha_de_ini')?.ayuda).toContain('octubre de 2024');
+    expect(c.camposCarpeta.find(x => x.clave === 'fha_de_ini')?.obligatorio).toBe(true);
     for (const clave of ['moda_dto', 'forma_acc', 'emto_com_dto'])
       expect(delitos.find(x => x.clave === clave)?.obligatorio).toBeFalsy();
     for (const clave of ['fub', 'curp'])
