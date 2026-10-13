@@ -89,6 +89,26 @@ describe('Corrección y recuperación BANCI', () => {
     } });
   });
 
+  it('permite enviar una actualización histórica sin FUB y muestra la regla opcional', () => {
+    const f = TestBed.createComponent(BanciActualizacion);
+    f.detectChanges();
+    const c = f.componentInstance;
+    c.seleccionar({ ...victima, fub: '' });
+    f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('El FUB es opcional');
+    c.edicion = { obs: 'Corrección de prueba' };
+    c.validarFormulario();
+    expect(api['validarFormulario']).toHaveBeenCalledWith({
+      idEntidadFederativa: null,
+      datos: {
+        no_banci: victima.no_banci,
+        id_delito: victima.id_delito,
+        id_vicf: victima.id_vicf,
+        obs: 'Corrección de prueba'
+      }
+    });
+  });
+
   it('el valor actual conserva su descripción aunque se edite el otro catálogo', () => {
     const c = conCatalogos();
     c.seleccionar({ ...victima, constitutiva_delito: 1, motivo_desaparicion: '2.07.04' });
