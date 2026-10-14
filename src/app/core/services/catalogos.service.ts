@@ -5,17 +5,20 @@ import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 import { EntidadFederativaCatalogoItem, RolCatalogoItem } from '../models/catalogos.models';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
-export class CatalogosService {
-  private readonly http = inject(HttpClient);
-  private readonly apiUrl = API_ENDPOINTS.catalogos;
+export class CatalogosService
+{
+    private readonly http = inject(HttpClient);
+    private readonly apiUrl = API_ENDPOINTS.catalogos;
 
-  obtenerEntidadesFederativas() {
-    return this.http.get<EntidadFederativaCatalogoItem[]>(`${this.apiUrl}/entidades-federativas`);
-  }
+    obtenerEntidadesFederativas()
+    {
+        return this.http.get<EntidadFederativaCatalogoItem[]>(`${this.apiUrl}/entidades-federativas`);
+    }
 
-  obtenerRoles() {
-    return this.http.get<RolCatalogoItem[]>(`${this.apiUrl}/roles`);
-  }
+    obtenerRoles()
+    {
+        return this.http.get<RolCatalogoItem[]>(`${this.apiUrl}/roles`);
+    }
 }

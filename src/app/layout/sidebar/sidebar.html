@@ -1,139 +1,139 @@
 <aside class="sidebar">
-  <div class="user-card">
-    <div class="user-main">
-      <div class="avatar">
-        <img src="img/logoMujBandera.png" alt="Usuario">
-      </div>
+    <div class="user-card">
+        <div class="user-main">
+            <div class="avatar">
+                <img src="img/logoMujBandera.png" alt="Usuario" />
+            </div>
 
-      <div class="user-info">
-        <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
 
-        <button type="button" class="user-home-button" (click)="regresarInicio()">
-          <i class="fa-solid fa-house"></i>
-          Regresar al inicio
+                <button type="button" class="user-home-button" (click)="regresarInicio()">
+                    <i class="fa-solid fa-house"></i>
+                    Regresar al inicio
+                </button>
+            </div>
+        </div>
+
+        <div class="system-info">
+            <span>SIIID2 Consolidado</span>
+        </div>
+    </div>
+
+    <nav class="menu">
+        @if (puedeVerCargaInformacion()) {
+            <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
+                <span>
+                    <i class="fa-solid fa-upload"></i>
+                    Carga de Información
+                </span>
+            </button>
+
+            @if (cargaAbierta()) {
+                @if (habilitaCarga()) {
+                    <a class="menu-link level-2" routerLink="/carga-inicial" routerLinkActive="active">
+                        <i class="fa-solid fa-upload"></i>
+                        Integrar Información
+                    </a>
+                }
+
+                @if (habilitaModificacion()) {
+                    <a class="menu-link level-2" routerLink="/actualizacion" routerLinkActive="active">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        Actualizar Información
+                    </a>
+                }
+            }
+        }
+
+        @if (puedeVerReporteEnvios() || puedeVerReporteCargas() || puedeVerSabanas() || puedeVerArchivosOriginales()) {
+            <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+                <span>
+                    <i class="fa-solid fa-bars"></i>
+                    Informes
+                </span>
+            </button>
+
+            @if (informesAbierto()) {
+                @if (puedeVerReporteEnvios()) {
+                    <a class="menu-link level-2" routerLink="/informes/envios" routerLinkActive="active">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Consultar Envíos
+                    </a>
+                }
+
+                @if (puedeVerReporteCargas()) {
+                    <a class="menu-link level-2" routerLink="/informes/cargas" routerLinkActive="active">
+                        <i class="fa-solid fa-chart-simple"></i>
+                        Reporte de Cargas
+                    </a>
+                }
+
+                @if (puedeVerSabanas()) {
+                    <a class="menu-link level-2" routerLink="/informes/sabanas" routerLinkActive="active">
+                        <i class="fa-solid fa-table"></i>
+                        Planos estadísticos
+                    </a>
+                }
+
+                @if (puedeVerArchivosOriginales()) {
+                    <a class="menu-link level-2" routerLink="/informes/originales" routerLinkActive="active">
+                        <i class="fa-solid fa-box-archive"></i>
+                        Archivos originales
+                    </a>
+                }
+            }
+        }
+
+        @if (puedeVerAdministracion()) {
+            <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+                <span>
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    Administración
+                </span>
+            </button>
+
+            @if (administracionAbierta()) {
+                <a class="menu-link level-2" routerLink="/administracion/cargas-pendientes" routerLinkActive="active">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    Aprobación de cargas
+                </a>
+
+                <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
+                    <i class="fa-solid fa-users"></i>
+                    Usuarios
+                </a>
+
+                <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
+                    <i class="fa-solid fa-sliders"></i>
+                    Configuración de módulos
+                </a>
+            }
+        }
+
+        <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
+            <span>
+                <i class="fa-solid fa-user"></i>
+                Sesión
+            </span>
         </button>
-      </div>
-    </div>
 
-    <div class="system-info">
-      <span>SIIID2 Consolidado</span>
-    </div>
-  </div>
+        @if (sesionAbierta()) {
+            @if (puedeRegresarSeleccionModulo()) {
+                <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
+                    <span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Regresar a selección de módulo
+                    </span>
+                </button>
+            }
 
-  <nav class="menu">
-    @if (puedeVerCargaInformacion()) {
-    <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
-      <span>
-        <i class="fa-solid fa-upload"></i>
-        Carga de Información
-      </span>
-    </button>
-
-    @if (cargaAbierta()) {
-    @if (habilitaCarga()) {
-    <a class="menu-link level-2" routerLink="/carga-inicial" routerLinkActive="active">
-      <i class="fa-solid fa-upload"></i>
-      Integrar Información
-    </a>
-    }
-
-    @if (habilitaModificacion()) {
-    <a class="menu-link level-2" routerLink="/actualizacion" routerLinkActive="active">
-      <i class="fa-solid fa-arrows-rotate"></i>
-      Actualizar Información
-    </a>
-    }
-    }
-    }
-
-    @if (puedeVerReporteEnvios() || puedeVerReporteCargas() || puedeVerSabanas() || puedeVerArchivosOriginales()) {
-    <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
-      <span>
-        <i class="fa-solid fa-bars"></i>
-        Informes
-      </span>
-    </button>
-
-    @if (informesAbierto()) {
-    @if (puedeVerReporteEnvios()) {
-    <a class="menu-link level-2" routerLink="/informes/envios" routerLinkActive="active">
-      <i class="fa-solid fa-paper-plane"></i>
-      Consultar Envíos
-    </a>
-    }
-
-    @if (puedeVerReporteCargas()) {
-    <a class="menu-link level-2" routerLink="/informes/cargas" routerLinkActive="active">
-      <i class="fa-solid fa-chart-simple"></i>
-      Reporte de Cargas
-    </a>
-    }
-
-    @if (puedeVerSabanas()) {
-    <a class="menu-link level-2" routerLink="/informes/sabanas" routerLinkActive="active">
-      <i class="fa-solid fa-table"></i>
-      Planos estadísticos
-    </a>
-    }
-
-    @if (puedeVerArchivosOriginales()) {
-    <a class="menu-link level-2" routerLink="/informes/originales" routerLinkActive="active">
-      <i class="fa-solid fa-box-archive"></i>
-      Archivos originales
-    </a>
-    }
-    }
-    }
-
-    @if (puedeVerAdministracion()) {
-    <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
-      <span>
-        <i class="fa-solid fa-screwdriver-wrench"></i>
-        Administración
-      </span>
-    </button>
-
-    @if (administracionAbierta()) {
-    <a class="menu-link level-2" routerLink="/administracion/cargas-pendientes" routerLinkActive="active">
-      <i class="fa-solid fa-clipboard-check"></i>
-      Aprobación de cargas
-    </a>
-
-    <a class="menu-link level-2" routerLink="/administracion/usuarios" routerLinkActive="active">
-      <i class="fa-solid fa-users"></i>
-      Usuarios
-    </a>
-
-    <a class="menu-link level-2" routerLink="/administracion/configuracion" routerLinkActive="active">
-      <i class="fa-solid fa-sliders"></i>
-      Configuración de módulos
-    </a>
-    }
-    }
-
-    <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
-      <span>
-        <i class="fa-solid fa-user"></i>
-        Sesión
-      </span>
-    </button>
-
-    @if (sesionAbierta()) {
-    @if (puedeRegresarSeleccionModulo()) {
-    <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
-      <span>
-        <i class="fa-solid fa-arrow-left"></i>
-        Regresar a selección de módulo
-      </span>
-    </button>
-    }
-
-    <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
-      <span>
-        <i class="fa-solid fa-power-off"></i>
-        Cerrar sesión
-      </span>
-    </button>
-    }
-  </nav>
+            <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
+                <span>
+                    <i class="fa-solid fa-power-off"></i>
+                    Cerrar sesión
+                </span>
+            </button>
+        }
+    </nav>
 </aside>

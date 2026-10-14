@@ -1,5 +1,5 @@
 {
-  "printWidth": 100,
+  "printWidth": 140,
   "singleQuote": true,
   "overrides": [
     {
@@ -8,5 +8,7 @@
         "parser": "angular"
       }
     }
-  ]
+  ],
+  "tabWidth": 4,
+  "embeddedLanguageFormatting": "off"
 }

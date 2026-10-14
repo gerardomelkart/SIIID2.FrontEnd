@@ -1,582 +1,681 @@
 <section class="carga-banci">
-
-  @if (mensajeLocal()) { <div class="alert alert-warning" role="alert">{{ mensajeLocal() }}</div> }
-  @if (necesitaActualizar() && !resultado()) {
-  <button type="button" class="btn btn-secondary mb-3" [disabled]="bloqueado()"
-    (click)="recuperarCarga(referenciaEnCurso())">Reintentar recuperación de la carga</button>
-  }
-
-  @if (!resultado()) {
-  <div class="row g-4">
-  <div class="col-xl-8">
-  <div class="siiid-card">
-    <div class="siiid-card-header">
-      <i class="fa-solid fa-file-arrow-up"></i>
-      Carga masiva BANCI / DFPyCPP
-    </div>
-
-    <div class="p-4 carga-form">
-      <p>Use NTRA_CI en los tres archivos para relacionar cada carpeta con su único delito y sus víctimas. Los IDs se generan automáticamente. Deje NO_BANCI vacío en Carpetas; se asigna al confirmar. Localización inicial: Persona no localizada.</p>
-      <div class="module-intro">
-        <div class="intro-icon">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-        </div>
-
-        <div>
-          <strong>Integración de información BANCI</strong>
-          <p>
-            Selecciona una modalidad de carga. Puedes integrar un solo libro de Excel con tres hojas
-            o cargar Carpetas, Delitos y Víctimas por separado.
-          </p>
-        </div>
-      </div>
-
-
-      @if (opciones(); as o) {
-      @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
-      <div class="siiid-card p-3 mb-3">
-        <label for="entidad-banci-carga" class="form-label">
-          <strong>Entidad federativa que reporta *</strong>
-        </label>
-
-        <select id="entidad-banci-carga" class="form-select" style="max-width: 450px" [(ngModel)]="entidad"
-          [disabled]="bloqueado() || cargandoOpciones()" required>
-
-          <option [ngValue]="null">Seleccione una entidad...</option>
-
-          @for (e of entidades(); track e.clave) {
-          <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
-          }
-        </select>
-
-      </div>
-      }
-      } @else if (!cargandoOpciones()) {
-      <div class="alert alert-warning">
-        No fue posible cargar la información de la entidad.
-
-        <button type="button" class="btn btn-secondary ms-2" (click)="cargarOpciones()">
-          Reintentar
+    @if (mensajeLocal()) {
+        <div class="alert alert-warning" role="alert">{{ mensajeLocal() }}</div>
+    }
+    @if (necesitaActualizar() && !resultado()) {
+        <button type="button" class="btn btn-secondary mb-3" [disabled]="bloqueado()" (click)="recuperarCarga(referenciaEnCurso())">
+            Reintentar recuperación de la carga
         </button>
-      </div>
-      }
+    }
 
-      <div class="upload-steps">
-        <div class="upload-step active">
-          <span>1</span>
-          Seleccionar modalidad y archivos
-        </div>
+    @if (!resultado()) {
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <div class="siiid-card">
+                    <div class="siiid-card-header">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        Carga masiva BANCI / DFPyCPP
+                    </div>
 
-        <div class="upload-step">
-          <span>2</span>
-          Validar información
-        </div>
+                    <div class="p-4 carga-form">
+                        <p>
+                            Use NTRA_CI en los tres archivos para relacionar cada carpeta con su único delito y sus víctimas. Los IDs se
+                            generan automáticamente. Deje NO_BANCI vacío en Carpetas; se asigna al confirmar. Localización inicial: Persona
+                            no localizada.
+                        </p>
+                        <div class="module-intro">
+                            <div class="intro-icon">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
 
-        <div class="upload-step">
-          <span>3</span>
-          Integrar BANCI
-        </div>
-      </div>
+                            <div>
+                                <strong>Integración de información BANCI</strong>
+                                <p>
+                                    Selecciona una modalidad de carga. Puedes integrar un solo libro de Excel con tres hojas o cargar
+                                    Carpetas, Delitos y Víctimas por separado.
+                                </p>
+                            </div>
+                        </div>
 
-      <div class="modalidad-grid">
-        <section class="modalidad-card" [class.modalidad-activa]="archivoLibro">
-          <div class="modalidad-header">
-            <div class="modalidad-icon">
-              <i class="fa-solid fa-file-excel"></i>
-            </div>
+                        @if (opciones(); as o) {
+                            @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
+                                <div class="siiid-card p-3 mb-3">
+                                    <label for="entidad-banci-carga" class="form-label">
+                                        <strong>Entidad federativa que reporta *</strong>
+                                    </label>
 
-            <div>
-              <strong>Un solo archivo</strong>
-              <span>Libro Excel con las hojas CI, Delitos y Víctimas</span>
-            </div>
-          </div>
+                                    <select
+                                        id="entidad-banci-carga"
+                                        class="form-select"
+                                        style="max-width: 450px"
+                                        [(ngModel)]="entidad"
+                                        [disabled]="bloqueado() || cargandoOpciones()"
+                                        required
+                                    >
+                                        <option [ngValue]="null">Seleccione una entidad...</option>
 
-          <div class="modalidad-body">
-            <label class="file-upload-card" [class.file-upload-ready]="archivoLibro"
-              [class.file-upload-dragging]="archivoArrastrado() === 'libro'"
-              (dragenter)="arrastrarArchivo($event, 'libro')" (dragover)="arrastrarArchivo($event, 'libro')"
-              (dragleave)="salirArrastreArchivo($event, 'libro')" (drop)="soltarArchivo($event, 'libro')">
+                                        @for (e of entidades(); track e.clave) {
+                                            <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                        } @else if (!cargandoOpciones()) {
+                            <div class="alert alert-warning">
+                                No fue posible cargar la información de la entidad.
 
-              <div class="file-upload-header">
-                <div class="file-type-icon">
-                  <i class="fa-solid fa-file-excel"></i>
+                                <button type="button" class="btn btn-secondary ms-2" (click)="cargarOpciones()">Reintentar</button>
+                            </div>
+                        }
+
+                        <div class="upload-steps">
+                            <div class="upload-step active">
+                                <span>1</span>
+                                Seleccionar modalidad y archivos
+                            </div>
+
+                            <div class="upload-step">
+                                <span>2</span>
+                                Validar información
+                            </div>
+
+                            <div class="upload-step">
+                                <span>3</span>
+                                Integrar BANCI
+                            </div>
+                        </div>
+
+                        <div class="modalidad-grid">
+                            <section class="modalidad-card" [class.modalidad-activa]="archivoLibro">
+                                <div class="modalidad-header">
+                                    <div class="modalidad-icon">
+                                        <i class="fa-solid fa-file-excel"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>Un solo archivo</strong>
+                                        <span>Libro Excel con las hojas CI, Delitos y Víctimas</span>
+                                    </div>
+                                </div>
+
+                                <div class="modalidad-body">
+                                    <label
+                                        class="file-upload-card"
+                                        [class.file-upload-ready]="archivoLibro"
+                                        [class.file-upload-dragging]="archivoArrastrado() === 'libro'"
+                                        (dragenter)="arrastrarArchivo($event, 'libro')"
+                                        (dragover)="arrastrarArchivo($event, 'libro')"
+                                        (dragleave)="salirArrastreArchivo($event, 'libro')"
+                                        (drop)="soltarArchivo($event, 'libro')"
+                                    >
+                                        <div class="file-upload-header">
+                                            <div class="file-type-icon">
+                                                <i class="fa-solid fa-file-excel"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Archivo BANCI</strong>
+                                                <span>{{ archivoLibro?.name || 'Ningún archivo seleccionado' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <span class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-folder-open"></i>
+                                            {{ archivoArrastrado() === 'libro' ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}
+                                        </span>
+
+                                        <input type="file" class="file-input" accept=".xlsx" (change)="seleccionarLibro($event)" />
+                                    </label>
+
+                                    <div class="modalidad-note">
+                                        <i class="fa-solid fa-circle-info"></i>
+                                        El libro debe contener las hojas
+                                        <strong>CI</strong>, <strong>Delitos</strong> y <strong>Víctimas</strong>.
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="modalidad-card" [class.modalidad-activa]="archivoCarpetas || archivoDelitos || archivoVictimas">
+                                <div class="modalidad-header">
+                                    <div class="modalidad-icon">
+                                        <i class="fa-solid fa-layer-group"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>Tres archivos</strong>
+                                        <span>Carpetas, Delitos y Víctimas en archivos independientes</span>
+                                    </div>
+                                </div>
+
+                                <div class="modalidad-body file-upload-grid">
+                                    <label
+                                        class="file-upload-card"
+                                        [class.file-upload-ready]="archivoCarpetas"
+                                        [class.file-upload-dragging]="archivoArrastrado() === 'carpetas'"
+                                        (dragenter)="arrastrarArchivo($event, 'carpetas')"
+                                        (dragover)="arrastrarArchivo($event, 'carpetas')"
+                                        (dragleave)="salirArrastreArchivo($event, 'carpetas')"
+                                        (drop)="soltarArchivo($event, 'carpetas')"
+                                    >
+                                        <div class="file-upload-header">
+                                            <div class="file-type-icon">
+                                                <i class="fa-solid fa-folder-open"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Archivo Carpetas</strong>
+                                                <span>{{ archivoCarpetas?.name || 'Ningún archivo seleccionado' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <span class="btn btn-sm btn-outline-secondary">
+                                            {{ archivoArrastrado() === 'carpetas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
+                                        </span>
+
+                                        <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarCarpetas($event)" />
+                                    </label>
+
+                                    <label
+                                        class="file-upload-card"
+                                        [class.file-upload-ready]="archivoDelitos"
+                                        [class.file-upload-dragging]="archivoArrastrado() === 'delitos'"
+                                        (dragenter)="arrastrarArchivo($event, 'delitos')"
+                                        (dragover)="arrastrarArchivo($event, 'delitos')"
+                                        (dragleave)="salirArrastreArchivo($event, 'delitos')"
+                                        (drop)="soltarArchivo($event, 'delitos')"
+                                    >
+                                        <div class="file-upload-header">
+                                            <div class="file-type-icon">
+                                                <i class="fa-solid fa-scale-balanced"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Archivo Delitos</strong>
+                                                <span>{{ archivoDelitos?.name || 'Ningún archivo seleccionado' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <span class="btn btn-sm btn-outline-secondary">
+                                            {{ archivoArrastrado() === 'delitos' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
+                                        </span>
+
+                                        <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarDelitos($event)" />
+                                    </label>
+
+                                    <label
+                                        class="file-upload-card"
+                                        [class.file-upload-ready]="archivoVictimas"
+                                        [class.file-upload-dragging]="archivoArrastrado() === 'victimas'"
+                                        (dragenter)="arrastrarArchivo($event, 'victimas')"
+                                        (dragover)="arrastrarArchivo($event, 'victimas')"
+                                        (dragleave)="salirArrastreArchivo($event, 'victimas')"
+                                        (drop)="soltarArchivo($event, 'victimas')"
+                                    >
+                                        <div class="file-upload-header">
+                                            <div class="file-type-icon">
+                                                <i class="fa-solid fa-users"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Archivo Víctimas</strong>
+                                                <span>{{ archivoVictimas?.name || 'Ningún archivo seleccionado' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <span class="btn btn-sm btn-outline-secondary">
+                                            {{ archivoArrastrado() === 'victimas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
+                                        </span>
+
+                                        <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarVictimas($event)" />
+                                    </label>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="upload-footer">
+                            <div class="upload-note">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Usa solamente una modalidad por carga. Los archivos serán validados antes de integrarse a BANCI.
+                            </div>
+
+                            <button
+                                type="button"
+                                class="btn btn-siiid px-4"
+                                [disabled]="bloqueado() || necesitaActualizar()"
+                                (click)="procesar()"
+                            >
+                                <i class="fa-solid fa-shield-halved"></i>
+                                Validar archivos
+                            </button>
+                        </div>
+                    </div>
                 </div>
-
-                <div>
-                  <strong>Archivo BANCI</strong>
-                  <span>{{ archivoLibro?.name || 'Ningún archivo seleccionado' }}</span>
-                </div>
-              </div>
-
-              <span class="btn btn-sm btn-outline-secondary">
-                <i class="fa-solid fa-folder-open"></i>
-                {{ archivoArrastrado() === 'libro' ? 'Soltar archivo aquí' : 'Seleccionar o arrastrar' }}
-              </span>
-
-              <input type="file" class="file-input" accept=".xlsx" (change)="seleccionarLibro($event)">
-            </label>
-
-            <div class="modalidad-note">
-              <i class="fa-solid fa-circle-info"></i>
-              El libro debe contener las hojas
-              <strong>CI</strong>,
-              <strong>Delitos</strong> y
-              <strong>Víctimas</strong>.
             </div>
-          </div>
+            <aside class="col-xl-4" aria-label="Plantillas de carga BANCI">
+                <div class="siiid-card">
+                    <div class="siiid-card-header">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Descargar plantillas
+                    </div>
+
+                    <div class="p-4 plantillas-body">
+                        <div class="plantillas-note">
+                            <i class="fa-solid fa-download"></i> Descargue las plantillas oficiales antes de preparar la carga.
+                        </div>
+                        <div class="plantillas-grid plantillas-libro">
+                            <button
+                                type="button"
+                                class="plantilla-link"
+                                [disabled]="descargandoPlantilla() || bloqueado()"
+                                (click)="descargarPlantilla('libro')"
+                            >
+                                <img src="img/logo_XLSX.png" alt="" class="excel-icon" /><strong
+                                    >Libro completo (CI, Delitos y Victimas)</strong
+                                >
+                            </button>
+                        </div>
+                        <p class="mt-3 mb-2">Para cargar tres archivos separados:</p>
+                        <div class="plantillas-grid">
+                            <button
+                                type="button"
+                                class="plantilla-link"
+                                [disabled]="descargandoPlantilla() || bloqueado()"
+                                (click)="descargarPlantilla('carpetas')"
+                            >
+                                <img src="img/logo_XLSX.png" alt="" class="excel-icon" /><strong>Carpetas</strong>
+                            </button>
+                            <button
+                                type="button"
+                                class="plantilla-link"
+                                [disabled]="descargandoPlantilla() || bloqueado()"
+                                (click)="descargarPlantilla('delitos')"
+                            >
+                                <img src="img/logo_XLSX.png" alt="" class="excel-icon" /><strong>Delitos</strong>
+                            </button>
+                            <button
+                                type="button"
+                                class="plantilla-link"
+                                [disabled]="descargandoPlantilla() || bloqueado()"
+                                (click)="descargarPlantilla('victimas')"
+                            >
+                                <img src="img/logo_XLSX.png" alt="" class="excel-icon" /><strong>Víctimas</strong>
+                            </button>
+                        </div>
+                        @if (descargandoPlantilla()) {
+                            <p role="status" class="mt-2">Descargando plantilla...</p>
+                        }
+
+                        <p class="text-muted mt-3 mb-0">El NO_BANCI se asigna automáticamente cuando se integra una carpeta nueva.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    }
+
+    @if (resultadoCorrecto()) {
+        <section id="acuse-banci" class="siiid-card mt-4">
+            <div class="siiid-card-header"><i class="fa-solid fa-file-pdf"></i> Registros integrados BANCI</div>
+            <div class="p-3">
+                @if (cargandoAcuse()) {
+                    <p role="status">Preparando PDF...</p>
+                }
+                @if (errorAcuse()) {
+                    <div class="alert alert-warning" role="alert">
+                        {{ errorAcuse() }}
+                        <button type="button" class="btn btn-secondary" [disabled]="cargandoAcuse()" (click)="abrirAcuse(true)">
+                            Reintentar PDF
+                        </button>
+                    </div>
+                }
+                @if (acuseUrl(); as url) {
+                    <iframe [src]="url" title="Acuse PDF BANCI" class="acuse-pdf-banci"></iframe>
+                    <button type="button" class="btn btn-siiid mt-3" (click)="descargarAcusePdf()">
+                        <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+                    </button>
+                }
+            </div>
         </section>
+    }
 
-        <section class="modalidad-card" [class.modalidad-activa]="archivoCarpetas || archivoDelitos || archivoVictimas">
+    @if (cargando()) {
+        <div class="processing-overlay">
+            <div class="processing-content">
+                <div class="processing-spinner"></div>
+                <div class="processing-text">Procesando...</div>
+            </div>
+        </div>
+    }
 
-          <div class="modalidad-header">
-            <div class="modalidad-icon">
-              <i class="fa-solid fa-layer-group"></i>
+    @if (resultadoConErrores() || pendiente()) {
+        <div id="resultado-banci">
+            <div
+                class="validation-result-header"
+                [class.validacion-pendiente]="pendiente() && advertencias().length > 0"
+                [class.validacion-correcta]="pendiente() && !contieneExistentes() && !errores().length && !advertencias().length"
+            >
+                <div>
+                    <h2>
+                        <i
+                            class="fa-solid"
+                            [class.fa-circle-check]="pendiente() && !contieneExistentes() && !errores().length && !advertencias().length"
+                            [class.fa-triangle-exclamation]="errores().length > 0 || advertencias().length > 0"
+                        ></i>
+                        {{ contieneExistentes() ? 'Carpeta ya registrada' : pendiente() ? (advertencias().length ? 'Validación con advertencias' : 'Validación correcta') : 'Validación con inconsistencias' }}
+                    </h2>
+
+                    <p>
+                        {{ contieneExistentes() ? 'La carga inicial sólo admite carpetas nuevas. Rechace esta operación.' : pendiente() ? (advertencias().length ? 'Revise las advertencias antes de confirmar la carga.' : 'Sin errores ni advertencias. Confirme la integración con el resumen que se muestra abajo.') : 'Corrija los errores y vuelva a realizar la carga.' }}
+                    </p>
+                </div>
+
+                <div class="validation-actions">
+                    @if (!pendiente()) {
+                        <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Corregir archivos y volver a cargar
+                        </button>
+                    }
+                </div>
             </div>
 
-            <div>
-              <strong>Tres archivos</strong>
-              <span>Carpetas, Delitos y Víctimas en archivos independientes</span>
+            @if (errores().length > 0 || advertencias().length > 0) {
+                <div class="validacion-grid mt-4">
+                    <div class="validacion-panel">
+                        <div class="validacion-title">Validación. Archivo Carpetas</div>
+
+                        <table class="tabla-validacion">
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Total<br />Registros</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (item of resumenCarpetas(); track $index) {
+                                    <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
+                                        <td>{{ item.descripcion }}</td>
+                                        <td>{{ item.totalRegistros }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="validacion-panel">
+                        <div class="validacion-title">Validación. Archivo Delitos</div>
+
+                        <table class="tabla-validacion">
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Total<br />Registros</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (item of resumenDelitos(); track $index) {
+                                    <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
+                                        <td>{{ item.descripcion }}</td>
+                                        <td>{{ item.totalRegistros }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="validacion-panel">
+                        <div class="validacion-title">Validación. Archivo Víctimas</div>
+
+                        <table class="tabla-validacion">
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Total<br />Registros</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (item of resumenVictimas(); track $index) {
+                                    <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
+                                        <td>{{ item.descripcion }}</td>
+                                        <td>{{ item.totalRegistros }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="texto-ayuda-validacion">
+                    @if (pendiente()) {
+                        Hay {{ advertencias().length }} advertencias. Aceptar integrará la carga; rechazar conservará la validación sin
+                        modificar los datos definitivos.
+                    } @else {
+                        La información que se muestra permite identificar las inconsistencias detectadas. Es necesario atender los errores y
+                        volver a cargar el archivo.
+                    }
+                </div>
+            }
+            @if (detallesValidacion().length > 0) {
+                <div id="observaciones-carga-banci" tabindex="-1" class="siiid-card mt-3">
+                    <div class="siiid-card-header d-flex align-items-center">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Detalle de errores y advertencias</span>
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-secondary ms-auto"
+                            [disabled]="exportandoValidacion()"
+                            (click)="descargarValidacion()"
+                        >
+                            @if (exportandoValidacion()) {
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                Descargando...
+                            } @else {
+                                <i class="fa-solid fa-file-excel"></i>
+                                Descargar errores/advertencias
+                            }
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0 detalle-errores">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Archivo</th>
+                                    <th>Fila</th>
+                                    <th>Campo</th>
+                                    <th>Valor</th>
+                                    <th>Mensaje</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @for (error of errores(); track $index) {
+                                    <tr>
+                                        <td><span class="detalle-tipo-error">Error</span></td>
+                                        <td>{{ error.archivo }}</td>
+                                        <td>{{ error.numeroFila ?? '-' }}</td>
+                                        <td>{{ error.campo ?? '-' }}</td>
+                                        <td>{{ error.valor ?? '-' }}</td>
+                                        <td>{{ error.mensaje }}</td>
+                                    </tr>
+                                }
+
+                                @for (advertencia of advertencias(); track $index) {
+                                    <tr>
+                                        <td><span class="detalle-tipo-advertencia">Advertencia</span></td>
+                                        <td>{{ advertencia.archivo }}</td>
+                                        <td>{{ advertencia.numeroFila ?? '-' }}</td>
+                                        <td>{{ advertencia.campo ?? '-' }}</td>
+                                        <td>{{ advertencia.valor ?? '-' }}</td>
+                                        <td>{{ advertencia.mensaje }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            @if (pendiente()) {
+                <div
+                    id="decision-banci"
+                    tabindex="-1"
+                    class="decision-banci mt-3"
+                    [class.decision-correcta]="!errores().length && !advertencias().length"
+                >
+                    @if (advertencias().length > 0) {
+                        <p>
+                            <button type="button" class="btn btn-link" (click)="verAdvertencias()">
+                                Volver a las advertencias ({{ advertencias().length }})
+                            </button>
+                        </p>
+                    }
+                    @if (necesitaActualizar() || !resultado()?.vistaPrevia || resultado()?.vistaPrevia?.puedeAceptar === false) {
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            [disabled]="bloqueado()"
+                            (click)="recuperarCarga(resultado()!.codigoReferencia)"
+                        >
+                            Actualizar revisión
+                        </button>
+                    }
+                    <app-banci-vista-previa [previa]="resultado()?.vistaPrevia" />
+
+                    @if (advertencias().length > 0) {
+                        <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
+                            <p>
+                                <strong>La carga presenta {{ advertencias().length }} advertencia(s).</strong>
+                            </p>
+                            <p>Revise el detalle anterior. Algunas CURP podrían quedar sin validar si RENAPO no está disponible.</p>
+
+                            <label class="d-flex align-items-start gap-2">
+                                <input type="checkbox" [(ngModel)]="aceptarAdvertencias" [disabled]="bloqueado() || necesitaActualizar()" />
+                                <span>He revisado las advertencias y acepto continuar con la integración.</span>
+                            </label>
+                        </div>
+                    }
+                    <p>La información se registrará únicamente cuando confirme la integración.</p>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger"
+                        [disabled]="bloqueado() || necesitaActualizar()"
+                        (click)="confirmar(false)"
+                    >
+                        Rechazar carga
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-siiid"
+                        [disabled]="bloqueado() || necesitaActualizar() || contieneExistentes() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
+                        (click)="confirmar(true)"
+                    >
+                        Aceptar e integrar carga
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    @if (resultadoCorrecto(); as r) {
+        <div class="siiid-card p-3 mt-3">
+            <strong><i class="fa-solid fa-file-excel"></i> Resumen de integración BANCI</strong>
+            <p>Descargue los identificadores de las víctimas que quedaron registradas en esta operación.</p>
+            @if (errorResumen()) {
+                <div class="alert alert-warning">{{ errorResumen() }}</div>
+            }
+            <button type="button" class="btn btn-siiid" [disabled]="cargandoResumen()" (click)="descargarResumen()">
+                {{ cargandoResumen() ? 'Preparando Excel...' : 'Descargar Excel de integración' }}
+            </button>
+        </div>
+        <div id="resultado-banci" class="siiid-card resultado-card mt-4">
+            <div class="siiid-card-header resultado-header-correcto">
+                <i class="fa-solid fa-circle-check"></i>
+                Carga BANCI procesada
             </div>
-          </div>
 
-          <div class="modalidad-body file-upload-grid">
-            <label class="file-upload-card" [class.file-upload-ready]="archivoCarpetas"
-              [class.file-upload-dragging]="archivoArrastrado() === 'carpetas'"
-              (dragenter)="arrastrarArchivo($event, 'carpetas')" (dragover)="arrastrarArchivo($event, 'carpetas')"
-              (dragleave)="salirArrastreArchivo($event, 'carpetas')" (drop)="soltarArchivo($event, 'carpetas')">
+            <div class="p-4">
+                <div class="resultado-mensaje resultado-mensaje-correcto">
+                    <div class="resultado-icono">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
 
-              <div class="file-upload-header">
-                <div class="file-type-icon">
-                  <i class="fa-solid fa-folder-open"></i>
+                    <div>
+                        <strong>{{ r.mensaje }}</strong>
+                    </div>
                 </div>
 
-                <div>
-                  <strong>Archivo Carpetas</strong>
-                  <span>{{ archivoCarpetas?.name || 'Ningún archivo seleccionado' }}</span>
-                </div>
-              </div>
+                <div class="resumen-grid">
+                    <div class="resumen-card">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>Carpetas</span>
+                        <strong>{{ r.totalCarpetas }}</strong>
+                    </div>
 
-              <span class="btn btn-sm btn-outline-secondary">
-                {{ archivoArrastrado() === 'carpetas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
-              </span>
+                    <div class="resumen-card">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <span>Delitos</span>
+                        <strong>{{ r.totalDelitos }}</strong>
+                    </div>
 
-              <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarCarpetas($event)">
-            </label>
+                    <div class="resumen-card">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Víctimas</span>
+                        <strong>{{ r.totalVictimas }}</strong>
+                    </div>
 
-            <label class="file-upload-card" [class.file-upload-ready]="archivoDelitos"
-              [class.file-upload-dragging]="archivoArrastrado() === 'delitos'"
-              (dragenter)="arrastrarArchivo($event, 'delitos')" (dragover)="arrastrarArchivo($event, 'delitos')"
-              (dragleave)="salirArrastreArchivo($event, 'delitos')" (drop)="soltarArchivo($event, 'delitos')">
-
-              <div class="file-upload-header">
-                <div class="file-type-icon">
-                  <i class="fa-solid fa-scale-balanced"></i>
-                </div>
-
-                <div>
-                  <strong>Archivo Delitos</strong>
-                  <span>{{ archivoDelitos?.name || 'Ningún archivo seleccionado' }}</span>
-                </div>
-              </div>
-
-              <span class="btn btn-sm btn-outline-secondary">
-                {{ archivoArrastrado() === 'delitos' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
-              </span>
-
-              <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarDelitos($event)">
-            </label>
-
-            <label class="file-upload-card" [class.file-upload-ready]="archivoVictimas"
-              [class.file-upload-dragging]="archivoArrastrado() === 'victimas'"
-              (dragenter)="arrastrarArchivo($event, 'victimas')" (dragover)="arrastrarArchivo($event, 'victimas')"
-              (dragleave)="salirArrastreArchivo($event, 'victimas')" (drop)="soltarArchivo($event, 'victimas')">
-
-              <div class="file-upload-header">
-                <div class="file-type-icon">
-                  <i class="fa-solid fa-users"></i>
+                    <div class="resumen-card">
+                        <i class="fa-solid fa-file-import"></i>
+                        <span>Modalidad</span>
+                        <strong>{{ r.modalidadIngreso }}</strong>
+                    </div>
                 </div>
 
-                <div>
-                  <strong>Archivo Víctimas</strong>
-                  <span>{{ archivoVictimas?.name || 'Ningún archivo seleccionado' }}</span>
-                </div>
-              </div>
-
-              <span class="btn btn-sm btn-outline-secondary">
-                {{ archivoArrastrado() === 'victimas' ? 'Soltar aquí' : 'Seleccionar o arrastrar' }}
-              </span>
-
-              <input type="file" class="file-input" accept=".xlsx,.csv" (change)="seleccionarVictimas($event)">
-            </label>
-          </div>
-        </section>
-      </div>
-
-      <div class="upload-footer">
-        <div class="upload-note">
-          <i class="fa-solid fa-circle-info"></i>
-          Usa solamente una modalidad por carga. Los archivos serán validados antes de integrarse a BANCI.
+                <p class="mt-3">
+                    <strong>Resultado de integración:</strong> {{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones ·
+                    {{ r.totalSinCambio }} sin cambio.
+                </p>
+                <button type="button" class="btn btn-siiid me-2" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">
+                    Nueva carga
+                </button>
+                @if (advertencias().length > 0) {
+                    <button type="button" class="btn btn-secondary" [disabled]="exportandoValidacion()" (click)="descargarValidacion()">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Descargar advertencias
+                    </button>
+                }
+            </div>
         </div>
-
-        <button type="button" class="btn btn-siiid px-4" [disabled]="bloqueado() || necesitaActualizar()"
-          (click)="procesar()">
-
-          <i class="fa-solid fa-shield-halved"></i>
-          Validar archivos
-        </button>
-      </div>
-
-    </div>
-  </div>
-  </div>
-  <aside class="col-xl-4" aria-label="Plantillas de carga BANCI">
-      <div class="siiid-card">
-        <div class="siiid-card-header">
-          <i class="fa-solid fa-file-excel"></i>
-          Descargar plantillas
-        </div>
-
-        <div class="p-4 plantillas-body">
-          <div class="plantillas-note"><i class="fa-solid fa-download"></i> Descargue las plantillas oficiales antes de preparar la carga.</div>
-          <div class="plantillas-grid plantillas-libro">
-            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('libro')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Libro completo (CI, Delitos y Victimas)</strong></button>
-          </div>
-          <p class="mt-3 mb-2">Para cargar tres archivos separados:</p>
-          <div class="plantillas-grid">
-            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('carpetas')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Carpetas</strong></button>
-            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('delitos')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Delitos</strong></button>
-            <button type="button" class="plantilla-link" [disabled]="descargandoPlantilla() || bloqueado()" (click)="descargarPlantilla('victimas')"><img src="img/logo_XLSX.png" alt="" class="excel-icon"><strong>Víctimas</strong></button>
-          </div>
-          @if (descargandoPlantilla()) { <p role="status" class="mt-2">Descargando plantilla...</p> }
-
-          <p class="text-muted mt-3 mb-0">
-            El NO_BANCI se asigna automáticamente cuando se integra una carpeta nueva.
-          </p>
-        </div>
-      </div>
-
-  </aside>
-  </div>
-  }
-
-  @if (resultadoCorrecto()) {
-  <section id="acuse-banci" class="siiid-card mt-4">
-    <div class="siiid-card-header"><i class="fa-solid fa-file-pdf"></i> Registros integrados BANCI</div>
-    <div class="p-3">
-      @if (cargandoAcuse()) { <p role="status">Preparando PDF...</p> }
-      @if (errorAcuse()) { <div class="alert alert-warning" role="alert">{{ errorAcuse() }} <button type="button" class="btn btn-secondary" [disabled]="cargandoAcuse()" (click)="abrirAcuse(true)">Reintentar PDF</button></div> }
-      @if (acuseUrl(); as url) {
-      <iframe [src]="url" title="Acuse PDF BANCI" class="acuse-pdf-banci"></iframe>
-      <button type="button" class="btn btn-siiid mt-3" (click)="descargarAcusePdf()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
-      }
-    </div>
-  </section>
-  }
-
-  @if (cargando()) {
-  <div class="processing-overlay">
-    <div class="processing-content">
-      <div class="processing-spinner"></div>
-      <div class="processing-text">Procesando...</div>
-    </div>
-  </div>
-  }
-
-  @if (resultadoConErrores() || pendiente()) {
-  <div id="resultado-banci">
-    <div class="validation-result-header" [class.validacion-pendiente]="pendiente() && advertencias().length > 0" [class.validacion-correcta]="pendiente() && !contieneExistentes() && !errores().length && !advertencias().length">
-      <div>
-        <h2>
-          <i class="fa-solid" [class.fa-circle-check]="pendiente() && !contieneExistentes() && !errores().length && !advertencias().length" [class.fa-triangle-exclamation]="errores().length > 0 || advertencias().length > 0"></i>
-          {{ contieneExistentes() ? 'Carpeta ya registrada' : pendiente() ? (advertencias().length ? 'Validación con advertencias' : 'Validación correcta') : 'Validación con inconsistencias' }}
-        </h2>
-
-        <p>
-          {{ contieneExistentes() ? 'La carga inicial sólo admite carpetas nuevas. Rechace esta operación.' : pendiente() ? (advertencias().length ? 'Revise las advertencias antes de confirmar la carga.' : 'Sin errores ni advertencias. Confirme la integración con el resumen que se muestra abajo.') : 'Corrija los errores y vuelva a realizar la carga.' }}
-        </p>
-
-      </div>
-
-      <div class="validation-actions">
-        @if (!pendiente()) {
-        <button type="button" class="btn btn-siiid" (click)="prepararNuevaValidacion()">
-
-          <i class="fa-solid fa-rotate-left"></i>
-          Corregir archivos y volver a cargar
-        </button>
-        }
-      </div>
-    </div>
-
-    @if (errores().length > 0 || advertencias().length > 0) {
-    <div class="validacion-grid mt-4">
-      <div class="validacion-panel">
-        <div class="validacion-title">
-          Validación. Archivo Carpetas
-        </div>
-
-        <table class="tabla-validacion">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Total<br>Registros</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @for (item of resumenCarpetas(); track $index) {
-            <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
-
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="validacion-panel">
-        <div class="validacion-title">
-          Validación. Archivo Delitos
-        </div>
-
-        <table class="tabla-validacion">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Total<br>Registros</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @for (item of resumenDelitos(); track $index) {
-            <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
-
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="validacion-panel">
-        <div class="validacion-title">
-          Validación. Archivo Víctimas
-        </div>
-
-        <table class="tabla-validacion">
-          <thead>
-            <tr>
-              <th>Descripción</th>
-              <th>Total<br>Registros</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @for (item of resumenVictimas(); track $index) {
-            <tr [class.error-row]="item.esError" [class.warning-row]="item.esAdvertencia">
-
-              <td>{{ item.descripcion }}</td>
-              <td>{{ item.totalRegistros }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="texto-ayuda-validacion">
-      @if (pendiente()) {
-      Hay {{ advertencias().length }} advertencias. Aceptar integrará la carga; rechazar conservará la validación sin
-      modificar los datos definitivos.
-      } @else {
-      La información que se muestra permite identificar las inconsistencias detectadas.
-      Es necesario atender los errores y volver a cargar el archivo.
-      }
-    </div>
-
     }
-    @if (detallesValidacion().length > 0) {
-    <div id="observaciones-carga-banci" tabindex="-1" class="siiid-card mt-3">
-      <div class="siiid-card-header d-flex align-items-center">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>Detalle de errores y advertencias</span>
 
-        <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
-          (click)="descargarValidacion()">
-
-          @if (exportandoValidacion()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Descargando...
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          Descargar errores/advertencias
-          }
-        </button>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-sm table-bordered mb-0 detalle-errores">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Archivo</th>
-              <th>Fila</th>
-              <th>Campo</th>
-              <th>Valor</th>
-              <th>Mensaje</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            @for (error of errores(); track $index) {
-            <tr>
-              <td><span class="detalle-tipo-error">Error</span></td>
-              <td>{{ error.archivo }}</td>
-              <td>{{ error.numeroFila ?? '-' }}</td>
-              <td>{{ error.campo ?? '-' }}</td>
-              <td>{{ error.valor ?? '-' }}</td>
-              <td>{{ error.mensaje }}</td>
-            </tr>
+    @if (rechazado()) {
+        <div id="resultado-banci" class="siiid-card p-4 mt-4">
+            <h2>Carga rechazada</h2>
+            <p>{{ resultado()?.mensaje }}</p>
+            <p>Se conservan la validación y sus advertencias. No se modificaron datos definitivos.</p>
+            @if (advertencias().length > 0) {
+                <button type="button" class="btn btn-secondary me-2" [disabled]="exportandoValidacion()" (click)="descargarValidacion()">
+                    Descargar advertencias
+                </button>
             }
-
-            @for (advertencia of advertencias(); track $index) {
-            <tr>
-              <td><span class="detalle-tipo-advertencia">Advertencia</span></td>
-              <td>{{ advertencia.archivo }}</td>
-              <td>{{ advertencia.numeroFila ?? '-' }}</td>
-              <td>{{ advertencia.campo ?? '-' }}</td>
-              <td>{{ advertencia.valor ?? '-' }}</td>
-              <td>{{ advertencia.mensaje }}</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+            <button type="button" class="btn btn-siiid" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva carga</button>
+        </div>
     }
-    @if (pendiente()) {
-    <div id="decision-banci" tabindex="-1" class="decision-banci mt-3" [class.decision-correcta]="!errores().length && !advertencias().length">
-      @if (advertencias().length > 0) {
-      <p><button type="button" class="btn btn-link" (click)="verAdvertencias()">Volver a las advertencias ({{ advertencias().length }})</button></p>
-      }
-      @if (necesitaActualizar() || !resultado()?.vistaPrevia || resultado()?.vistaPrevia?.puedeAceptar === false) {
-      <button type="button" class="btn btn-secondary" [disabled]="bloqueado()"
-        (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar revisión</button> }
-      <app-banci-vista-previa [previa]="resultado()?.vistaPrevia" />
 
-      @if (advertencias().length > 0) {
-      <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
-        <p><strong>La carga presenta {{ advertencias().length }} advertencia(s).</strong></p>
-        <p>Revise el detalle anterior. Algunas CURP podrían quedar sin validar si RENAPO no está disponible.</p>
-
-        <label class="d-flex align-items-start gap-2">
-          <input type="checkbox" [(ngModel)]="aceptarAdvertencias" [disabled]="bloqueado() || necesitaActualizar()" />
-          <span>He revisado las advertencias y acepto continuar con la integración.</span>
-        </label>
-      </div>
-      }
-      <p>La información se registrará únicamente cuando confirme la integración.</p>
-      <button type="button" class="btn btn-outline-danger" [disabled]="bloqueado() || necesitaActualizar()"
-        (click)="confirmar(false)">Rechazar carga</button>
-      <button type="button" class="btn btn-siiid"
-        [disabled]="bloqueado() || necesitaActualizar() || contieneExistentes() || !resultado()?.vistaPrevia?.huella || resultado()?.vistaPrevia?.puedeAceptar === false || (advertencias().length > 0 && !aceptarAdvertencias)"
-        (click)="confirmar(true)">Aceptar e integrar carga</button>
-    </div>
+    @if (resultado() && !resultadoConErrores() && !pendiente() && !rechazado() && !resultadoCorrecto()) {
+        <div id="resultado-banci" class="alert alert-info">
+            Estado: {{ resultado()?.estado || 'Sin estado de confirmación' }}. Actualice para consultar el resultado; no repita la carga.
+            <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="bloqueado()"
+                (click)="recuperarCarga(resultado()!.codigoReferencia)"
+            >
+                Actualizar estado
+            </button>
+        </div>
     }
-  </div>
-  }
-
-  @if (resultadoCorrecto(); as r) {
-  <div class="siiid-card p-3 mt-3">
-    <strong><i class="fa-solid fa-file-excel"></i> Resumen de integración BANCI</strong>
-    <p>Descargue los identificadores de las víctimas que quedaron registradas en esta operación.</p>
-    @if (errorResumen()) { <div class="alert alert-warning">{{ errorResumen() }}</div> }
-    <button type="button" class="btn btn-siiid" [disabled]="cargandoResumen()" (click)="descargarResumen()">
-      {{ cargandoResumen() ? 'Preparando Excel...' : 'Descargar Excel de integración' }}
-    </button>
-  </div>
-  <div id="resultado-banci" class="siiid-card resultado-card mt-4">
-    <div class="siiid-card-header resultado-header-correcto">
-      <i class="fa-solid fa-circle-check"></i>
-      Carga BANCI procesada
-    </div>
-
-    <div class="p-4">
-      <div class="resultado-mensaje resultado-mensaje-correcto">
-        <div class="resultado-icono">
-          <i class="fa-solid fa-check"></i>
-        </div>
-
-        <div>
-          <strong>{{ r.mensaje }}</strong>
-        </div>
-      </div>
-
-      <div class="resumen-grid">
-        <div class="resumen-card">
-          <i class="fa-solid fa-folder-open"></i>
-          <span>Carpetas</span>
-          <strong>{{ r.totalCarpetas }}</strong>
-        </div>
-
-        <div class="resumen-card">
-          <i class="fa-solid fa-scale-balanced"></i>
-          <span>Delitos</span>
-          <strong>{{ r.totalDelitos }}</strong>
-        </div>
-
-        <div class="resumen-card">
-          <i class="fa-solid fa-users"></i>
-          <span>Víctimas</span>
-          <strong>{{ r.totalVictimas }}</strong>
-        </div>
-
-        <div class="resumen-card">
-          <i class="fa-solid fa-file-import"></i>
-          <span>Modalidad</span>
-          <strong>{{ r.modalidadIngreso }}</strong>
-        </div>
-      </div>
-
-      <p class="mt-3"><strong>Resultado de integración:</strong>
-        {{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.
-      </p>
-      <button type="button" class="btn btn-siiid me-2" [disabled]="bloqueado()"
-        (click)="prepararNuevaValidacion()">Nueva carga</button>
-      @if (advertencias().length > 0) {
-      <button type="button" class="btn btn-secondary" [disabled]="exportandoValidacion()"
-        (click)="descargarValidacion()">
-
-        <i class="fa-solid fa-file-excel"></i>
-        Descargar advertencias
-      </button>
-      }
-    </div>
-  </div>
-  }
-
-  @if (rechazado()) {
-  <div id="resultado-banci" class="siiid-card p-4 mt-4">
-    <h2>Carga rechazada</h2>
-    <p>{{ resultado()?.mensaje }}</p>
-    <p>Se conservan la validación y sus advertencias. No se modificaron datos definitivos.</p>
-    @if (advertencias().length > 0) {
-    <button type="button" class="btn btn-secondary me-2" [disabled]="exportandoValidacion()"
-      (click)="descargarValidacion()">Descargar advertencias</button>
-    }
-    <button type="button" class="btn btn-siiid" [disabled]="bloqueado()" (click)="prepararNuevaValidacion()">Nueva
-      carga</button>
-  </div>
-  }
-
-  @if (resultado() && !resultadoConErrores() && !pendiente() && !rechazado() && !resultadoCorrecto()) {
-  <div id="resultado-banci" class="alert alert-info">
-    Estado: {{ resultado()?.estado || 'Sin estado de confirmación' }}. Actualice para consultar el resultado; no repita
-    la carga.
-    <button type="button" class="btn btn-secondary" [disabled]="bloqueado()"
-      (click)="recuperarCarga(resultado()!.codigoReferencia)">Actualizar estado</button>
-  </div>
-  }
 </section>

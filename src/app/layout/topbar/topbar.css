@@ -1,104 +1,104 @@
 .topbar {
-  height: var(--siiid-topbar-height);
-  background: var(--siiid-guinda);
-  display: flex;
-  align-items: center;
-  padding-left: 86px;
-  overflow: hidden;
+    height: var(--siiid-topbar-height);
+    background: var(--siiid-guinda);
+    display: flex;
+    align-items: center;
+    padding-left: 86px;
+    overflow: hidden;
 }
 
 .topbar-menu {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, .7);
-  border-radius: 4px;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
 }
 
 .topbar-menu:hover,
 .topbar-menu:focus-visible {
-  background: rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, 0.14);
 }
 
 .topbar-logo {
-  height: 88px;
-  width: auto;
-  display: block;
+    height: 88px;
+    width: auto;
+    display: block;
 }
 
 .topbar-modulo {
-  margin-left: auto;
-  margin-right: clamp(24px, 4.5vw, 86px);
-  color: #fff;
-  font-size: clamp(22px, 1.6vw, 30px);
-  font-weight: 800;
-  letter-spacing: .4px;
-  white-space: nowrap;
+    margin-left: auto;
+    margin-right: clamp(24px, 4.5vw, 86px);
+    color: #fff;
+    font-size: clamp(22px, 1.6vw, 30px);
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
 }
 
 @media (max-width: 991.98px) {
-  .topbar {
-    gap: 14px;
-    padding: 0 16px;
-  }
+    .topbar {
+        gap: 14px;
+        padding: 0 16px;
+    }
 
-  .topbar-menu {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    display: flex;
-    font-size: 22px;
-  }
+    .topbar-menu {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        display: flex;
+        font-size: 22px;
+    }
 
-  .topbar-logo {
-    flex: 1 1 auto;
-    min-width: 0;
-    max-width: none;
-    object-fit: contain;
-    object-position: left center;
-  }
+    .topbar-logo {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: none;
+        object-fit: contain;
+        object-position: left center;
+    }
 
-  .topbar-modulo {
-    flex: 0 0 auto;
-    margin-left: 0;
-    margin-right: 0;
-    font-size: 20px;
-  }
+    .topbar-modulo {
+        flex: 0 0 auto;
+        margin-left: 0;
+        margin-right: 0;
+        font-size: 20px;
+    }
 }
 
 @media (max-width: 575.98px) {
-  .topbar {
-    gap: 10px;
-    padding: 0 10px;
-  }
+    .topbar {
+        gap: 10px;
+        padding: 0 10px;
+    }
 
-  .topbar-menu {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    font-size: 20px;
-  }
+    .topbar-menu {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        font-size: 20px;
+    }
 
-  .topbar-logo {
-    width: 0;
-    height: 64px;
-    flex: 1 1 0;
-    min-width: 0;
-    max-width: none;
-    object-fit: contain;
-    object-position: left center;
-  }
+    .topbar-logo {
+        width: 0;
+        height: 64px;
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: none;
+        object-fit: contain;
+        object-position: left center;
+    }
 
-  .topbar-modulo {
-    width: 92px;
-    flex: 0 0 92px;
-    font-size: 14px;
-    line-height: 1.15;
-    text-align: right;
-    white-space: normal;
-  }
+    .topbar-modulo {
+        width: 92px;
+        flex: 0 0 92px;
+        font-size: 14px;
+        line-height: 1.15;
+        text-align: right;
+        white-space: normal;
+    }
 }

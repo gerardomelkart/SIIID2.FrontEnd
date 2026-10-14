@@ -1,63 +1,78 @@
 <div class="modulo-page" style="background-image: url('img/ImgFondo2.png')">
-  <img class="modulo-logo" src="img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
+    <img class="modulo-logo" src="img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo" />
 
-  <section class="modulo-panel">
-    <h1>Seleccione un módulo</h1>
-    <p class="usuario">Bienvenido, {{ nombreUsuario() }}</p>
+    <section class="modulo-panel">
+        <h1>Seleccione un módulo</h1>
+        <p class="usuario">Bienvenido, {{ nombreUsuario() }}</p>
 
-    @if (error()) { <p role="alert">{{ error() }}</p> }
-    @if (cargando()) { <p role="status">Consultando accesos...</p> }
-    @if (!cargando() && !error() && !modulos().length && !administraSistema()) { <p>No tiene módulos disponibles en este momento.</p> }
-    <div class="modulo-grid">
-      @for (modulo of modulos(); track modulo.idModulo) {
-      <button type="button" class="modulo-card" [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'"
-        [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'"
-        [class.modulo-card-federal]="modulo.clave === 'FEDERAL'" [class.modulo-card-banci]="modulo.clave === 'BANCI'"
-        (click)="seleccionar(modulo)">
+        @if (error()) {
+            <p role="alert">{{ error() }}</p>
+        }
+        @if (cargando()) {
+            <p role="status">Consultando accesos...</p>
+        }
+        @if (!cargando() && !error() && !modulos().length && !administraSistema()) {
+            <p>No tiene módulos disponibles en este momento.</p>
+        }
+        <div class="modulo-grid">
+            @for (modulo of modulos(); track modulo.idModulo) {
+                <button
+                    type="button"
+                    class="modulo-card"
+                    [class.modulo-card-consolidado]="modulo.clave === 'MENSUAL'"
+                    [class.modulo-card-preliminar]="modulo.clave === 'SEMANAL'"
+                    [class.modulo-card-federal]="modulo.clave === 'FEDERAL'"
+                    [class.modulo-card-banci]="modulo.clave === 'BANCI'"
+                    (click)="seleccionar(modulo)"
+                >
+                    <span class="modulo-icon">
+                        @if (modulo.clave === 'MENSUAL') {
+                            <i class="fa-solid fa-calendar-days"></i>
+                        } @else if (modulo.clave === 'SEMANAL') {
+                            <i class="fa-solid fa-calendar-week"></i>
+                        } @else if (modulo.clave === 'FEDERAL') {
+                            <i class="fa-solid fa-landmark"></i>
+                        } @else {
+                            <i class="fa-solid fa-database"></i>
+                        }
+                    </span>
 
-        <span class="modulo-icon">
-          @if (modulo.clave === 'MENSUAL') {
-          <i class="fa-solid fa-calendar-days"></i>
-          } @else if (modulo.clave === 'SEMANAL') {
-          <i class="fa-solid fa-calendar-week"></i>
-          } @else if (modulo.clave === 'FEDERAL') {
-          <i class="fa-solid fa-landmark"></i>
-          } @else {
-          <i class="fa-solid fa-database"></i>
-          }
-        </span>
+                    <strong>
+                        @if (modulo.clave === 'MENSUAL') {
+                            Consolidado
+                        } @else if (modulo.clave === 'SEMANAL') {
+                            Preliminar
+                        } @else if (modulo.clave === 'FEDERAL') {
+                            Federal
+                        } @else {
+                            BANCI
+                        }
+                    </strong>
 
-        <strong>
-          @if (modulo.clave === 'MENSUAL') {
-          Consolidado
-          } @else if (modulo.clave === 'SEMANAL') {
-          Preliminar
-          } @else if (modulo.clave === 'FEDERAL') {
-          Federal
-          } @else {
-          BANCI
-          }
-        </strong>
+                    <span>
+                        @if (modulo.clave === 'MENSUAL') {
+                            Integración consolidada de incidencia delictiva.
+                        } @else if (modulo.clave === 'SEMANAL') {
+                            Integración y seguimiento preliminar de delitos configurados.
+                        } @else if (modulo.clave === 'FEDERAL') {
+                            Integración nacional de información de incidencia delictiva federal.
+                        } @else {
+                            Base Nacional de Carpetas de Investigación para DFPyCPP.
+                        }
+                    </span>
+                </button>
+            }
+            @if (administraSistema()) {
+                <a class="modulo-card modulo-card-sistema" routerLink="/sistema/configuracion"
+                    ><span class="modulo-icon"><i class="fa-solid fa-gears"></i></span><strong>Configuración del sistema</strong
+                    ><span>Disponibilidad de módulos, validaciones e historial de cambios.</span></a
+                >
+            }
+        </div>
 
-        <span>
-          @if (modulo.clave === 'MENSUAL') {
-          Integración consolidada de incidencia delictiva.
-          } @else if (modulo.clave === 'SEMANAL') {
-          Integración y seguimiento preliminar de delitos configurados.
-          } @else if (modulo.clave === 'FEDERAL') {
-          Integración nacional de información de incidencia delictiva federal.
-          } @else {
-          Base Nacional de Carpetas de Investigación para DFPyCPP.
-          }
-        </span>
-      </button>
-      }
-      @if (administraSistema()) { <a class="modulo-card modulo-card-sistema" routerLink="/sistema/configuracion"><span class="modulo-icon"><i class="fa-solid fa-gears"></i></span><strong>Configuración del sistema</strong><span>Disponibilidad de módulos, validaciones e historial de cambios.</span></a> }
-    </div>
-
-    <button type="button" class="cerrar-sesion" (click)="cerrarSesion()">
-      <i class="fa-solid fa-right-from-bracket"></i>
-      <span>Cerrar sesión</span>
-    </button>
-  </section>
+        <button type="button" class="cerrar-sesion" (click)="cerrarSesion()">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Cerrar sesión</span>
+        </button>
+    </section>
 </div>

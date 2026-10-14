@@ -1,90 +1,101 @@
-export interface FederalUsuariosListadoResponse {
-  esValido: boolean;
-  total: number;
-  usuarios: FederalUsuarioDetalle[];
+export interface FederalUsuariosListadoResponse
+{
+    esValido: boolean;
+    total: number;
+    usuarios: FederalUsuarioDetalle[];
 }
 
-export interface FederalUsuarioDetalleResponse {
-  esValido: boolean;
-  codigo: string;
-  mensaje: string;
-  usuario: FederalUsuarioDetalle | null;
+export interface FederalUsuarioDetalleResponse
+{
+    esValido: boolean;
+    codigo: string;
+    mensaje: string;
+    usuario: FederalUsuarioDetalle | null;
 }
 
-export interface FederalUsuarioDetalle {
-  idUsuario: number;
-  idEntidadFederativa: number | null;
-  entidadFederativa: string | null;
-  usuario: string;
-  nombre: string;
-  primerApellido: string;
-  segundoApellido: string | null;
-  nombreCompleto: string;
-  correoElectronico: string;
-  rfc: string | null;
-  curp: string | null;
-  telefonoContacto: string | null;
-  idRol: number;
-  rol: string;
-  habilitaFederal: boolean;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
-  activo: boolean;
-  activoCuenta: boolean;
-  tieneFederal: boolean;
-  tieneOtrosModulos: boolean;
-  fechaAlta: string;
-  fechaModificacion: string;
+export interface FederalUsuarioDetalle
+{
+    idUsuario: number;
+    idEntidadFederativa: number | null;
+    entidadFederativa: string | null;
+    usuario: string;
+    nombre: string;
+    primerApellido: string;
+    segundoApellido: string | null;
+    nombreCompleto: string;
+    correoElectronico: string;
+    rfc: string | null;
+    curp: string | null;
+    telefonoContacto: string | null;
+    idRol: number;
+    rol: string;
+    habilitaFederal: boolean;
+    habilitaCarga: boolean;
+    habilitaModificacion: boolean;
+    activo: boolean;
+    activoCuenta: boolean;
+    tieneFederal: boolean;
+    tieneOtrosModulos: boolean;
+    fechaAlta: string;
+    fechaModificacion: string;
 }
 
-export interface FederalUsuarioDatos {
-  usuario: string;
-  nombre: string;
-  primerApellido: string;
-  segundoApellido: string | null;
-  correoElectronico: string;
-  rfc: string | null;
-  curp: string | null;
-  telefonoContacto: string | null;
-  rol: string;
-  habilitaFederal: boolean;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
+export interface FederalUsuarioDatos
+{
+    usuario: string;
+    nombre: string;
+    primerApellido: string;
+    segundoApellido: string | null;
+    correoElectronico: string;
+    rfc: string | null;
+    curp: string | null;
+    telefonoContacto: string | null;
+    rol: string;
+    habilitaFederal: boolean;
+    habilitaCarga: boolean;
+    habilitaModificacion: boolean;
 }
 
-export interface CrearUsuarioFederalRequest extends FederalUsuarioDatos {
-  password: string;
+export interface CrearUsuarioFederalRequest extends FederalUsuarioDatos
+{
+    password: string;
 }
 
-export interface EditarUsuarioFederalRequest extends FederalUsuarioDatos {
-  nuevaPassword: string | null;
+export interface EditarUsuarioFederalRequest extends FederalUsuarioDatos
+{
+    nuevaPassword: string | null;
 }
 
-export interface ReactivarUsuarioFederalRequest {
-  habilitaFederal: boolean;
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
+export interface ReactivarUsuarioFederalRequest
+{
+    habilitaFederal: boolean;
+    habilitaCarga: boolean;
+    habilitaModificacion: boolean;
 }
 
-export interface FederalUsuarioOperacionResponse {
-  esValido: boolean;
-  codigo: string;
-  mensaje: string;
-  idUsuario?: number;
-  errores?: FederalUsuarioValidacionError[];
+export interface FederalUsuarioOperacionResponse
+{
+    esValido: boolean;
+    codigo: string;
+    mensaje: string;
+    idUsuario?: number;
+    errores?: FederalUsuarioValidacionError[];
 }
 
-export interface FederalUsuarioValidacionError {
-  campo: string;
-  codigo: string;
-  mensaje: string;
+export interface FederalUsuarioValidacionError
+{
+    campo: string;
+    codigo: string;
+    mensaje: string;
 }
 
-export interface PermisosGlobalesFederalRequest {
-  habilitaCarga: boolean;
-  habilitaModificacion: boolean;
+export interface PermisosGlobalesFederalRequest
+{
+    habilitaCarga: boolean;
+    habilitaModificacion: boolean;
 }
 
-export interface ActualizarPermisosFederalRequest extends PermisosGlobalesFederalRequest {
-  habilitaFederal: boolean;
+export interface ActualizarPermisosFederalRequest extends PermisosGlobalesFederalRequest
+{
+    habilitaFederal: boolean;
 }

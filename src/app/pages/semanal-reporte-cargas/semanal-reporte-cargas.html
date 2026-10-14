@@ -1,228 +1,243 @@
 <div class="informes-page">
-  <div class="informes-header">
-    <div>
-      <h1>Informes</h1>
-      <p>Monitoreo de intentos y cargas preliminares por entidad, usuario y periodo.</p>
-    </div>
-
-    <div class="rol-chip">
-      <i class="fa-solid fa-user-shield"></i>
-      {{ usuario()?.rol }}
-    </div>
-  </div>
-
-  <section class="siiid-card">
-    <div class="siiid-card-header reporte-card-header">
-      <span>
-        <i class="fa-solid fa-chart-simple"></i>
-        Reporte de cargas por entidad y usuario
-      </span>
-
-      <div class="reporte-actions">
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarReporte()">
-          @if (cargando()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-rotate"></i>
-          }
-          Actualizar
-        </button>
-
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando() || exportandoExcel()"
-          (click)="exportarExcel()">
-          @if (exportandoExcel()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          }
-          Excel
-        </button>
-
-        <div class="buscador">
-          <i class="fa-solid fa-magnifying-glass"></i>
-
-          <input type="text" placeholder="Buscar entidad, usuario, periodo o delito..." [ngModel]="busqueda()"
-            (ngModelChange)="buscar($event)">
+    <div class="informes-header">
+        <div>
+            <h1>Informes</h1>
+            <p>Monitoreo de intentos y cargas preliminares por entidad, usuario y periodo.</p>
         </div>
-      </div>
+
+        <div class="rol-chip">
+            <i class="fa-solid fa-user-shield"></i>
+            {{ usuario()?.rol }}
+        </div>
     </div>
 
-    <div class="corte-selector">
-      <div class="corte-selector-title">
-        <i class="fa-solid fa-calendar-days"></i>
-        Periodo consultado
-      </div>
+    <section class="siiid-card">
+        <div class="siiid-card-header reporte-card-header">
+            <span>
+                <i class="fa-solid fa-chart-simple"></i>
+                Reporte de cargas por entidad y usuario
+            </span>
 
-      <div class="corte-selector-controls">
-        <select class="form-select form-select-sm" [ngModel]="periodoSeleccionado()"
-          (ngModelChange)="cambiarPeriodo($event)">
-          @for (periodo of periodos(); track periodo.clave) {
-          <option [value]="periodo.clave">
-            {{ periodo.periodo }}
-          </option>
-          }
-        </select>
+            <div class="reporte-actions">
+                <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarReporte()">
+                    @if (cargando()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    } @else {
+                        <i class="fa-solid fa-rotate"></i>
+                    }
+                    Actualizar
+                </button>
 
-        <select class="form-select form-select-sm" [ngModel]="semanaSeleccionada()"
-          (ngModelChange)="semanaSeleccionada.set($event); cambiarFiltros()">
-          <option value="">Todas las semanas</option>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                    [disabled]="cargando() || exportandoExcel()"
+                    (click)="exportarExcel()"
+                >
+                    @if (exportandoExcel()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    } @else {
+                        <i class="fa-solid fa-file-excel"></i>
+                    }
+                    Excel
+                </button>
 
-          @for (semana of semanasReporte(); track semana.clave) {
-          <option [value]="semana.clave">
-            {{ semana.semana }}
-          </option>
-          }
-        </select>
+                <div class="buscador">
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-        <select class="form-select form-select-sm" [ngModel]="idUsuarioSeleccionado()"
-          (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
-          <option [ngValue]="null">Todos los usuarios</option>
+                    <input
+                        type="text"
+                        placeholder="Buscar entidad, usuario, periodo o delito..."
+                        [ngModel]="busqueda()"
+                        (ngModelChange)="buscar($event)"
+                    />
+                </div>
+            </div>
+        </div>
 
-          @for (usuarioReporte of usuariosReporte(); track usuarioReporte.idUsuarioCarga) {
-          <option [ngValue]="usuarioReporte.idUsuarioCarga">
-            {{ usuarioReporte.usuarioCarga }}
-          </option>
-          }
-        </select>
+        <div class="corte-selector">
+            <div class="corte-selector-title">
+                <i class="fa-solid fa-calendar-days"></i>
+                Periodo consultado
+            </div>
 
-        <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
-          (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
-          <option value="">Todos los delitos</option>
+            <div class="corte-selector-controls">
+                <select class="form-select form-select-sm" [ngModel]="periodoSeleccionado()" (ngModelChange)="cambiarPeriodo($event)">
+                    @for (periodo of periodos(); track periodo.clave) {
+                        <option [value]="periodo.clave">
+                            {{ periodo.periodo }}
+                        </option>
+                    }
+                </select>
 
-          @for (delito of delitosReporte(); track delito) {
-          <option [value]="delito">
-            {{ delito }}
-          </option>
-          }
-        </select>
-      </div>
-    </div>
+                <select
+                    class="form-select form-select-sm"
+                    [ngModel]="semanaSeleccionada()"
+                    (ngModelChange)="semanaSeleccionada.set($event); cambiarFiltros()"
+                >
+                    <option value="">Todas las semanas</option>
 
-    <div class="table-responsive">
-      <table class="table table-sm reporte-table semanal-envios-table">
-        <thead>
-          <tr>
+                    @for (semana of semanasReporte(); track semana.clave) {
+                        <option [value]="semana.clave">
+                            {{ semana.semana }}
+                        </option>
+                    }
+                </select>
 
-            <th class="sortable" (click)="ordenarPor('ordenCarga')">
-              Ranking
-              <i [class]="iconoOrden('ordenCarga')"></i>
-            </th>
+                <select
+                    class="form-select form-select-sm"
+                    [ngModel]="idUsuarioSeleccionado()"
+                    (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()"
+                >
+                    <option [ngValue]="null">Todos los usuarios</option>
 
-            <th class="sortable" (click)="ordenarPor('entidadFederativa')">
-              Entidad federativa
-              <i [class]="iconoOrden('entidadFederativa')"></i>
-            </th>
+                    @for (usuarioReporte of usuariosReporte(); track usuarioReporte.idUsuarioCarga) {
+                        <option [ngValue]="usuarioReporte.idUsuarioCarga">
+                            {{ usuarioReporte.usuarioCarga }}
+                        </option>
+                    }
+                </select>
 
-            <th class="sortable" (click)="ordenarPor('delitos')">
-              Delito(s)
-              <i [class]="iconoOrden('delitos')"></i>
-            </th>
+                <select
+                    class="form-select form-select-sm"
+                    [ngModel]="delitoSeleccionado()"
+                    (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()"
+                >
+                    <option value="">Todos los delitos</option>
 
-            <th class="sortable" (click)="ordenarPor('usuario')">
-              Usuario
-              <i [class]="iconoOrden('usuario')"></i>
-            </th>
+                    @for (delito of delitosReporte(); track delito) {
+                        <option [value]="delito">
+                            {{ delito }}
+                        </option>
+                    }
+                </select>
+            </div>
+        </div>
 
-            <th class="sortable" (click)="ordenarPor('periodo')">
-              Periodo
-              <i [class]="iconoOrden('periodo')"></i>
-            </th>
+        <div class="table-responsive">
+            <table class="table table-sm reporte-table semanal-envios-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" (click)="ordenarPor('ordenCarga')">
+                            Ranking
+                            <i [class]="iconoOrden('ordenCarga')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('intentos')">
-              Intentos
-              <i [class]="iconoOrden('intentos')"></i>
-            </th>
+                        <th class="sortable" (click)="ordenarPor('entidadFederativa')">
+                            Entidad federativa
+                            <i [class]="iconoOrden('entidadFederativa')"></i>
+                        </th>
 
+                        <th class="sortable" (click)="ordenarPor('delitos')">
+                            Delito(s)
+                            <i [class]="iconoOrden('delitos')"></i>
+                        </th>
 
+                        <th class="sortable" (click)="ordenarPor('usuario')">
+                            Usuario
+                            <i [class]="iconoOrden('usuario')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('estatusUltimoIntento')">
-              Estatus
-              <i [class]="iconoOrden('estatusUltimoIntento')"></i>
-            </th>
+                        <th class="sortable" (click)="ordenarPor('periodo')">
+                            Periodo
+                            <i [class]="iconoOrden('periodo')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('fechaCargaActualizacionTexto')">
-              Fecha de carga/actualización
-              <i [class]="iconoOrden('fechaCargaActualizacionTexto')"></i>
-            </th>
+                        <th class="sortable" (click)="ordenarPor('intentos')">
+                            Intentos
+                            <i [class]="iconoOrden('intentos')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('fechaAprobacionTexto')">
-              Fecha de aprobación
-              <i [class]="iconoOrden('fechaAprobacionTexto')"></i>
-            </th>
-          </tr>
-        </thead>
+                        <th class="sortable" (click)="ordenarPor('estatusUltimoIntento')">
+                            Estatus
+                            <i [class]="iconoOrden('estatusUltimoIntento')"></i>
+                        </th>
 
-        <tbody>
-          @for (
-          carga of cargasPaginadas();
-          track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.idDelito + '-' +
+                        <th class="sortable" (click)="ordenarPor('fechaCargaActualizacionTexto')">
+                            Fecha de carga/actualización
+                            <i [class]="iconoOrden('fechaCargaActualizacionTexto')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarPor('fechaAprobacionTexto')">
+                            Fecha de aprobación
+                            <i [class]="iconoOrden('fechaAprobacionTexto')"></i>
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (
+                        carga of cargasPaginadas();
+                        track carga.idEntidadFederativa + '-' + carga.idUsuarioCarga + '-' + carga.idDelito + '-' +
           carga.fechaInicioSemana + '-' + carga.anioCorte + '-' + carga.mesCorte
-          ) {
-          <tr>
-            <td>
-              <span class="folio-chip">{{ ordenCarga(carga) }}</span>
-            </td>
-            <td>{{ carga.entidadFederativa }}</td>
-            <td>{{ delitosTexto(carga) }}</td>
+                    ) {
+                        <tr>
+                            <td>
+                                <span class="folio-chip">{{ ordenCarga(carga) }}</span>
+                            </td>
+                            <td>{{ carga.entidadFederativa }}</td>
+                            <td>{{ delitosTexto(carga) }}</td>
 
-            <td>
-              <strong>{{ carga.usuarioCarga }}</strong>
-            </td>
+                            <td>
+                                <strong>{{ carga.usuarioCarga }}</strong>
+                            </td>
 
-            <td>
-              <strong>{{ periodoTexto(carga) }}</strong>
-              <small class="d-block text-muted">{{ rangoSemanaTexto(carga) }}</small>
-            </td>
+                            <td>
+                                <strong>{{ periodoTexto(carga) }}</strong>
+                                <small class="d-block text-muted">{{ rangoSemanaTexto(carga) }}</small>
+                            </td>
 
-            <td>
-              <span class="intentos-chip">{{ carga.intentos }}</span>
-            </td>
+                            <td>
+                                <span class="intentos-chip">{{ carga.intentos }}</span>
+                            </td>
 
+                            <td>
+                                <span
+                                    class="estatus-badge"
+                                    [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
+                                    [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
+                                    [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)"
+                                >
+                                    {{ etiquetaEstatus(carga) }}
+                                </span>
+                            </td>
 
+                            <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
+                            <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="9" class="text-center p-4">No se encontraron cargas preliminares.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-            <td>
-              <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
-                [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
-                [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
-                {{ etiquetaEstatus(carga) }}
-              </span>
-            </td>
+        <div class="pagination-row">
+            <span> Mostrando {{ cargasPaginadas().length }} de {{ cargasFiltradas().length }} registros </span>
 
-            <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
-            <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="9" class="text-center p-4">
-              No se encontraron cargas preliminares.
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+            <div class="pagination-actions">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    [disabled]="paginaActual() === 1"
+                    (click)="cambiarPagina(paginaActual() - 1)"
+                >
+                    Anterior
+                </button>
 
-    <div class="pagination-row">
-      <span>
-        Mostrando {{ cargasPaginadas().length }} de
-        {{ cargasFiltradas().length }} registros
-      </span>
+                <span class="page-indicator"> {{ paginaActual() }} / {{ totalPaginas() }} </span>
 
-      <div class="pagination-actions">
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaActual() === 1"
-          (click)="cambiarPagina(paginaActual() - 1)">
-          Anterior
-        </button>
-
-        <span class="page-indicator">
-          {{ paginaActual() }} / {{ totalPaginas() }}
-        </span>
-
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaActual() === totalPaginas()"
-          (click)="cambiarPagina(paginaActual() + 1)">
-          Siguiente
-        </button>
-      </div>
-    </div>
-  </section>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    [disabled]="paginaActual() === totalPaginas()"
+                    (click)="cambiarPagina(paginaActual() + 1)"
+                >
+                    Siguiente
+                </button>
+            </div>
+        </div>
+    </section>
 </div>

@@ -2,7 +2,7 @@
     padding: 6px;
 }
 
-.formulario-banci>p {
+.formulario-banci > p {
     color: #667085;
     font-size: 14px;
     margin: 4px 0 18px;
@@ -79,7 +79,7 @@ fieldset {
     background: #faf5fc;
 }
 
-.resumen-captura>div {
+.resumen-captura > div {
     padding: 12px 16px;
     background: white;
     border: 1px solid #e1dce5;
@@ -165,11 +165,11 @@ summary {
         gap: 6px;
     }
 
-    .resumen-captura>div {
+    .resumen-captura > div {
         padding: 10px;
     }
 
-    .acciones>button {
+    .acciones > button {
         width: 100%;
     }
 }
@@ -207,7 +207,7 @@ summary {
     position: fixed;
     inset: 0;
     z-index: 6000;
-    background: rgba(0, 0, 0, .65);
+    background: rgba(0, 0, 0, 0.65);
     display: grid;
     place-items: center;
     padding: 1rem;
@@ -235,7 +235,7 @@ summary {
     white-space: normal;
     overflow-wrap: anywhere;
     vertical-align: top;
-    padding: .5rem;
+    padding: 0.5rem;
 }
 
 .acuse-banci-dialog .table th:first-child {
@@ -259,7 +259,7 @@ summary {
 
 @media (max-width: 600px) {
     .acuse-banci-dialog {
-        padding: .75rem;
+        padding: 0.75rem;
     }
 
     .acuse-banci-dialog .table {

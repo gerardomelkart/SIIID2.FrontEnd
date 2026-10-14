@@ -10,56 +10,61 @@ import { Sidebar } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
 
 @Component({
-  selector: 'app-main-layout',
-  imports: [RouterOutlet, Sidebar, Topbar],
-  templateUrl: './main-layout.html',
-  styleUrl: './main-layout.css',
+    selector: 'app-main-layout',
+    imports: [RouterOutlet, Sidebar, Topbar],
+    templateUrl: './main-layout.html',
+    styleUrl: './main-layout.css',
 })
-export class MainLayout implements OnInit {
-  private readonly notificacionesService = inject(NotificacionesRechazosService);
-  private readonly sessionService = inject(SessionService);
-  private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
+export class MainLayout implements OnInit
+{
+    private readonly notificacionesService = inject(NotificacionesRechazosService);
+    private readonly sessionService = inject(SessionService);
+    private readonly router = inject(Router);
+    private readonly destroyRef = inject(DestroyRef);
 
-  private notificacionAbierta = false;
+    private notificacionAbierta = false;
 
-  menuAbierto = signal(false);
+    menuAbierto = signal(false);
 
-  ngOnInit(): void {
-    if (this.sessionService.usuario()?.rol !== ROLES.ENLACE_ESTATAL) return;
+    ngOnInit(): void
+    {
+        if(this.sessionService.usuario()?.rol !== ROLES.ENLACE_ESTATAL) return;
 
-    timer(0, 60000)
-      .pipe(
-        filter(() => !this.notificacionAbierta),
-        exhaustMap(() =>
-          this.notificacionesService
-            .consumirMensual()
-            .pipe(catchError(() => of({ hayNotificacion: false, cantidad: 0 }))),
-        ),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((response) => {
-        if (!response.hayNotificacion) return;
+        timer(0, 60000)
+            .pipe(
+                filter(() => !this.notificacionAbierta),
+                exhaustMap(() =>
+                    this.notificacionesService.consumirMensual().pipe(catchError(() => of({ hayNotificacion: false, cantidad: 0 }))),
+                ),
+                takeUntilDestroyed(this.destroyRef),
+            )
+            .subscribe((response) =>
+            {
+                if(!response.hayNotificacion) return;
 
-        this.notificacionAbierta = true;
+                this.notificacionAbierta = true;
 
-        void mostrarNotificacionRechazo(response.cantidad).then((resultado) => {
-          this.notificacionAbierta = false;
+                void mostrarNotificacionRechazo(response.cantidad).then((resultado) =>
+                {
+                    this.notificacionAbierta = false;
 
-          if (resultado.isConfirmed) void this.router.navigateByUrl('/informes/envios');
-        });
-      });
-  }
+                    if(resultado.isConfirmed) void this.router.navigateByUrl('/informes/envios');
+                });
+            });
+    }
 
-  toggleMenu(): void {
-    this.menuAbierto.update((valor) => !valor);
-  }
+    toggleMenu(): void
+    {
+        this.menuAbierto.update((valor) => !valor);
+    }
 
-  cerrarMenu(): void {
-    this.menuAbierto.set(false);
-  }
+    cerrarMenu(): void
+    {
+        this.menuAbierto.set(false);
+    }
 
-  cerrarMenuSiEsNavegacion(event: MouseEvent): void {
-    if ((event.target as HTMLElement).closest('a')) this.cerrarMenu();
-  }
+    cerrarMenuSiEsNavegacion(event: MouseEvent): void
+    {
+        if((event.target as HTMLElement).closest('a')) this.cerrarMenu();
+    }
 }

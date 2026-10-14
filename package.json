@@ -8,7 +8,8 @@
     "build:siiid2": "ng build --configuration production --base-href /siiid2/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "build:siiid2:qa": "ng build --configuration production --base-href /siiid2-qa/"
+    "build:siiid2:qa": "ng build --configuration production --base-href /siiid2-qa/",
+    "format:estilo": "node tools/formatear-estilo.mjs"
   },
   "private": true,
   "packageManager": "npm@11.13.0",

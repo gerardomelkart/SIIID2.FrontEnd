@@ -1,45 +1,44 @@
 <div class="login-page" style="background-image: url('img/ImgFondo2.png')">
-  <div class="login-logo">
-    <img src="img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo">
-  </div>
-
-  <div class="login-card">
-    <div class="login-title">
-      Inicio de Sesión
+    <div class="login-logo">
+        <img src="img/LogoSEGURIDAD.png" alt="Gobierno de México - Seguridad - Secretariado Ejecutivo" />
     </div>
 
-    <div class="login-body">
+    <div class="login-card">
+        <div class="login-title">Inicio de Sesión</div>
 
-      <form (ngSubmit)="entrar()">
-        <div class="field-group">
-          <label>Nombre de Usuario</label>
-          <input type="text" name="usuario" autocomplete="username" [ngModel]="usuario()"
-            (ngModelChange)="usuario.set($event)">
-        </div>
+        <div class="login-body">
+            <form (ngSubmit)="entrar()">
+                <div class="field-group">
+                    <label>Nombre de Usuario</label>
+                    <input type="text" name="usuario" autocomplete="username" [ngModel]="usuario()" (ngModelChange)="usuario.set($event)" />
+                </div>
 
-        <div class="field-group">
-          <label>Contraseña</label>
-          <input type="password" name="password" autocomplete="current-password" [ngModel]="password()"
-            (ngModelChange)="password.set($event)">
-        </div>
-        @if (mensajeError()) {
-        <div class="login-error">
-          {{ mensajeError() }}
-        </div>
-        }
+                <div class="field-group">
+                    <label>Contraseña</label>
+                    <input
+                        type="password"
+                        name="password"
+                        autocomplete="current-password"
+                        [ngModel]="password()"
+                        (ngModelChange)="password.set($event)"
+                    />
+                </div>
+                @if (mensajeError()) {
+                    <div class="login-error">
+                        {{ mensajeError() }}
+                    </div>
+                }
 
-        <button type="submit" class="btn-login" [disabled]="cargando()">
-          @if (cargando()) {
-          Entrando...
-          } @else {
-          Entrar
-          }
-        </button>
-      </form>
+                <button type="submit" class="btn-login" [disabled]="cargando()">
+                    @if (cargando()) {
+                        Entrando...
+                    } @else {
+                        Entrar
+                    }
+                </button>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <div class="login-version">
-    SIIID2 · Versión 2.4.1
-  </div>
+    <div class="login-version">SIIID2 · Versión 2.4.1</div>
 </div>

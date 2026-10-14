@@ -1,155 +1,154 @@
 <div class="siiid-shell">
-  <app-topbar nombreModulo="Preliminar" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
+    <app-topbar nombreModulo="Preliminar" [menuAbierto]="menuAbierto()" (menuToggle)="toggleMenu()"></app-topbar>
 
-  <div class="siiid-body">
-    @if (menuAbierto()) {
-    <button type="button" class="menu-backdrop" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
-    }
-
-    <aside id="siiid-navigation" class="sidebar" [class.mobile-open]="menuAbierto()"
-      (click)="cerrarMenuSiEsNavegacion($event)">
-      <div class="user-card">
-        <div class="user-main">
-          <div class="avatar">
-            <img src="img/logoMujBandera.png" alt="Usuario">
-          </div>
-
-          <div class="user-info">
-            <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
-
-            <button type="button" class="user-home-button" (click)="regresarInicio()">
-              <i class="fa-solid fa-house"></i>
-              Regresar al inicio
-            </button>
-          </div>
-        </div>
-
-        <div class="system-info">
-          <span>SIIID2 Preliminar</span>
-        </div>
-      </div>
-
-      <nav class="menu">
-        @if (puedeCargar()) {
-        <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
-          <span>
-            <i class="fa-solid fa-upload"></i>
-            Carga de Información
-          </span>
-        </button>
-
-        @if (cargaAbierta()) {
-        <a class="menu-link level-2" routerLink="/semanal/carga" routerLinkActive="active">
-          <i class="fa-solid fa-upload"></i>
-          Integrar información
-        </a>
-        }
+    <div class="siiid-body">
+        @if (menuAbierto()) {
+            <button type="button" class="menu-backdrop" aria-label="Cerrar menú" (click)="cerrarMenu()"></button>
         }
 
-        @if (puedeConsultarEnvios()) {
-        <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
-          <span>
-            <i class="fa-solid fa-bars"></i>
-            Informes
-          </span>
-        </button>
+        <aside id="siiid-navigation" class="sidebar" [class.mobile-open]="menuAbierto()" (click)="cerrarMenuSiEsNavegacion($event)">
+            <div class="user-card">
+                <div class="user-main">
+                    <div class="avatar">
+                        <img src="img/logoMujBandera.png" alt="Usuario" />
+                    </div>
 
-        @if (informesAbiertos()) {
-        <a class="menu-link level-2" routerLink="/semanal/informes/envios" routerLinkActive="active">
-          <i class="fa-solid fa-paper-plane"></i>
-          Consultar Envíos
-        </a>
+                    <div class="user-info">
+                        <div class="user-name">{{ usuario()?.nombre || usuario()?.usuario || 'usuario' }}</div>
 
-        @if (esSuperUsuario()) {
-        <a class="menu-link level-2" routerLink="/semanal/informes/cargas" routerLinkActive="active">
-          <i class="fa-solid fa-chart-simple"></i>
-          Reporte de Cargas
-        </a>
-        }
+                        <button type="button" class="user-home-button" (click)="regresarInicio()">
+                            <i class="fa-solid fa-house"></i>
+                            Regresar al inicio
+                        </button>
+                    </div>
+                </div>
 
-        <a class="menu-link level-2" routerLink="/semanal/informes/reporte-preliminar" routerLinkActive="active">
-          <i class="fa-solid fa-file-excel"></i>
-          Reporte preliminar
-        </a>
+                <div class="system-info">
+                    <span>SIIID2 Preliminar</span>
+                </div>
+            </div>
 
-        <a class="menu-link level-2" routerLink="/semanal/informes/planos-estadisticos" routerLinkActive="active">
-          <i class="fa-solid fa-table"></i>
-          Planos estadísticos
-        </a>
+            <nav class="menu">
+                @if (puedeCargar()) {
+                    <button type="button" class="menu-link menu-button" (click)="toggleCarga()">
+                        <span>
+                            <i class="fa-solid fa-upload"></i>
+                            Carga de Información
+                        </span>
+                    </button>
 
-        @if (esSuperUsuario()) {
-        <a class="menu-link level-2" routerLink="/semanal/informes/originales" routerLinkActive="active">
-          <i class="fa-solid fa-box-archive"></i>
-          Archivos originales
-        </a>
-        }
-        }
-        }
+                    @if (cargaAbierta()) {
+                        <a class="menu-link level-2" routerLink="/semanal/carga" routerLinkActive="active">
+                            <i class="fa-solid fa-upload"></i>
+                            Integrar información
+                        </a>
+                    }
+                }
 
-        @if (esSuperUsuario()) {
-        <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
-          <span>
-            <i class="fa-solid fa-screwdriver-wrench"></i>
-            Administración
-          </span>
-        </button>
+                @if (puedeConsultarEnvios()) {
+                    <button type="button" class="menu-link menu-button" (click)="toggleInformes()">
+                        <span>
+                            <i class="fa-solid fa-bars"></i>
+                            Informes
+                        </span>
+                    </button>
 
-        @if (administracionAbierta()) {
-        <a class="menu-link level-2" routerLink="/semanal/administracion/cargas-pendientes" routerLinkActive="active">
-          <i class="fa-solid fa-clipboard-check"></i>
-          Aprobación de cargas
-        </a>
+                    @if (informesAbiertos()) {
+                        <a class="menu-link level-2" routerLink="/semanal/informes/envios" routerLinkActive="active">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Consultar Envíos
+                        </a>
 
-        <a class="menu-link level-2" routerLink="/semanal/administracion/usuarios" routerLinkActive="active">
-          <i class="fa-solid fa-users"></i>
-          Usuarios preliminares
-        </a>
+                        @if (esSuperUsuario()) {
+                            <a class="menu-link level-2" routerLink="/semanal/informes/cargas" routerLinkActive="active">
+                                <i class="fa-solid fa-chart-simple"></i>
+                                Reporte de Cargas
+                            </a>
+                        }
 
-        <a class="menu-link level-2" routerLink="/semanal/administracion/configuracion" routerLinkActive="active">
-          <i class="fa-solid fa-sliders"></i>
-          Configuración de módulos
-        </a>
+                        <a class="menu-link level-2" routerLink="/semanal/informes/reporte-preliminar" routerLinkActive="active">
+                            <i class="fa-solid fa-file-excel"></i>
+                            Reporte preliminar
+                        </a>
 
-        @if (puedeAdministrarDelitos()) {
-        <a class="menu-link level-2" routerLink="/semanal/administracion/delitos" routerLinkActive="active">
-          <i class="fa-solid fa-list-check"></i>
-          Delitos preliminares
-        </a>
-        }
-        }
-        }
+                        <a class="menu-link level-2" routerLink="/semanal/informes/planos-estadisticos" routerLinkActive="active">
+                            <i class="fa-solid fa-table"></i>
+                            Planos estadísticos
+                        </a>
 
-        <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
-          <span>
-            <i class="fa-solid fa-user"></i>
-            Sesión
-          </span>
-        </button>
+                        @if (esSuperUsuario()) {
+                            <a class="menu-link level-2" routerLink="/semanal/informes/originales" routerLinkActive="active">
+                                <i class="fa-solid fa-box-archive"></i>
+                                Archivos originales
+                            </a>
+                        }
+                    }
+                }
 
-        @if (sesionAbierta()) {
-        @if (puedeRegresarSeleccionModulo()) {
-        <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
-          <span>
-            <i class="fa-solid fa-arrow-left"></i>
-            Regresar a selección de módulo
-          </span>
-        </button>
-        }
+                @if (esSuperUsuario()) {
+                    <button type="button" class="menu-link menu-button" (click)="toggleAdministracion()">
+                        <span>
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                            Administración
+                        </span>
+                    </button>
 
-        <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
-          <span>
-            <i class="fa-solid fa-power-off"></i>
-            Cerrar sesión
-          </span>
-        </button>
-        }
-      </nav>
-    </aside>
+                    @if (administracionAbierta()) {
+                        <a class="menu-link level-2" routerLink="/semanal/administracion/cargas-pendientes" routerLinkActive="active">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                            Aprobación de cargas
+                        </a>
 
-    <main class="siiid-main">
-      <section class="siiid-content">
-        <router-outlet></router-outlet>
-      </section>
-    </main>
-  </div>
+                        <a class="menu-link level-2" routerLink="/semanal/administracion/usuarios" routerLinkActive="active">
+                            <i class="fa-solid fa-users"></i>
+                            Usuarios preliminares
+                        </a>
+
+                        <a class="menu-link level-2" routerLink="/semanal/administracion/configuracion" routerLinkActive="active">
+                            <i class="fa-solid fa-sliders"></i>
+                            Configuración de módulos
+                        </a>
+
+                        @if (puedeAdministrarDelitos()) {
+                            <a class="menu-link level-2" routerLink="/semanal/administracion/delitos" routerLinkActive="active">
+                                <i class="fa-solid fa-list-check"></i>
+                                Delitos preliminares
+                            </a>
+                        }
+                    }
+                }
+
+                <button type="button" class="menu-link menu-button" (click)="toggleSesion()">
+                    <span>
+                        <i class="fa-solid fa-user"></i>
+                        Sesión
+                    </span>
+                </button>
+
+                @if (sesionAbierta()) {
+                    @if (puedeRegresarSeleccionModulo()) {
+                        <button type="button" class="menu-link menu-button level-2" (click)="regresarSeleccionModulo()">
+                            <span>
+                                <i class="fa-solid fa-arrow-left"></i>
+                                Regresar a selección de módulo
+                            </span>
+                        </button>
+                    }
+
+                    <button type="button" class="menu-link menu-button level-2" (click)="cerrarSesion()">
+                        <span>
+                            <i class="fa-solid fa-power-off"></i>
+                            Cerrar sesión
+                        </span>
+                    </button>
+                }
+            </nav>
+        </aside>
+
+        <main class="siiid-main">
+            <section class="siiid-content">
+                <router-outlet></router-outlet>
+            </section>
+        </main>
+    </div>
 </div>

@@ -1,3 +1,4 @@
+// Controla la inactividad de la sesión; liberar los escuchadores evita duplicarlos cuando cambia la navegación.
 import { Injectable, NgZone, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { mostrarInfo } from '../utils/alert.utils';
@@ -7,90 +8,100 @@ import { SessionService } from './session.service';
 const TIEMPO_INACTIVIDAD_MS = 10 * 60 * 1000;
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
-export class InactivityService {
-  private readonly sessionService = inject(SessionService);
-  private readonly router = inject(Router);
-  private readonly ngZone = inject(NgZone);
+export class InactivityService
+{
+    private readonly sessionService = inject(SessionService);
+    private readonly router = inject(Router);
+    private readonly ngZone = inject(NgZone);
 
-  private temporizador: ReturnType<typeof setTimeout> | null = null;
-  private iniciado = false;
+    private temporizador: ReturnType<typeof setTimeout> | null = null;
+    private iniciado = false;
 
-  private readonly eventosActividad = [
-    'click',
-    'mousemove',
-    'keydown',
-    'scroll',
-    'touchstart',
-    'wheel',
-  ];
+    private readonly eventosActividad = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart', 'wheel'];
 
-  private readonly manejarActividad = () => {
-    this.reiniciarTemporizador();
-  };
-
-  constructor() {
-    effect(() => {
-      const autenticado = this.sessionService.estaAutenticado();
-
-      if (autenticado) {
+    private readonly manejarActividad = () =>
+    {
         this.reiniciarTemporizador();
-        return;
-      }
+    };
 
-      this.limpiarTemporizador();
-    });
-  }
+    constructor()
+    {
+        effect(() =>
+        {
+            const autenticado = this.sessionService.estaAutenticado();
 
-  iniciar(): void {
-    if (this.iniciado) {
-      return;
-    }
+            if(autenticado)
+            {
+                this.reiniciarTemporizador();
+                return;
+            }
 
-    this.iniciado = true;
-
-    this.ngZone.runOutsideAngular(() => {
-      for (const evento of this.eventosActividad) {
-        window.addEventListener(evento, this.manejarActividad, {
-          passive: true,
+            this.limpiarTemporizador();
         });
-      }
-    });
-
-    this.reiniciarTemporizador();
-  }
-
-  private reiniciarTemporizador(): void {
-    this.limpiarTemporizador();
-
-    if (!this.sessionService.estaAutenticado()) {
-      return;
     }
 
-    this.temporizador = setTimeout(() => {
-      this.ngZone.run(() => this.cerrarSesionPorInactividad());
-    }, TIEMPO_INACTIVIDAD_MS);
-  }
+    iniciar(): void
+    {
+        if(this.iniciado)
+        {
+            return;
+        }
 
-  private limpiarTemporizador(): void {
-    if (!this.temporizador) {
-      return;
+        this.iniciado = true;
+
+        this.ngZone.runOutsideAngular(() =>
+        {
+            for(const evento of this.eventosActividad)
+            {
+                window.addEventListener(evento, this.manejarActividad, {
+                    passive: true,
+                });
+            }
+        });
+
+        this.reiniciarTemporizador();
     }
 
-    clearTimeout(this.temporizador);
-    this.temporizador = null;
-  }
+    private reiniciarTemporizador(): void
+    {
+        this.limpiarTemporizador();
 
-  private cerrarSesionPorInactividad(): void {
-    if (!this.sessionService.estaAutenticado()) {
-      return;
+        if(!this.sessionService.estaAutenticado())
+        {
+            return;
+        }
+
+        this.temporizador = setTimeout(() =>
+        {
+            this.ngZone.run(() => this.cerrarSesionPorInactividad());
+        }, TIEMPO_INACTIVIDAD_MS);
     }
 
-    this.sessionService.limpiarSesion();
+    private limpiarTemporizador(): void
+    {
+        if(!this.temporizador)
+        {
+            return;
+        }
 
-    this.router.navigateByUrl('/login').then(() => {
-      mostrarInfo('Sesión cerrada', 'La sesión se cerró por 10 minutos de inactividad.');
-    });
-  }
+        clearTimeout(this.temporizador);
+        this.temporizador = null;
+    }
+
+    private cerrarSesionPorInactividad(): void
+    {
+        if(!this.sessionService.estaAutenticado())
+        {
+            return;
+        }
+
+        this.sessionService.limpiarSesion();
+
+        this.router.navigateByUrl('/login').then(() =>
+        {
+            mostrarInfo('Sesión cerrada', 'La sesión se cerró por 10 minutos de inactividad.');
+        });
+    }
 }

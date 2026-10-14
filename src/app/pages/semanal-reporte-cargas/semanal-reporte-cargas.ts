@@ -6,562 +6,592 @@ import { SessionService } from '../../core/services/session.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
-import {
-  EstadoOrden,
-  ValorOrden,
-  alternarOrden,
-  obtenerIconoOrden,
-  ordenarPorEstado,
-} from '../../core/utils/sort.utils';
+import { EstadoOrden, ValorOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
 
-interface PeriodoReporte {
-  clave: string;
-  anioCorte: number;
-  mesCorte: number;
-  periodo: string;
+interface PeriodoReporte
+{
+    clave: string;
+    anioCorte: number;
+    mesCorte: number;
+    periodo: string;
 }
 
-interface SemanaReporte {
-  clave: string;
-  semana: string;
+interface SemanaReporte
+{
+    clave: string;
+    semana: string;
 }
 
-interface UsuarioReporte {
-  idUsuarioCarga: number;
-  usuarioCarga: string;
-  nombreUsuarioCarga: string;
+interface UsuarioReporte
+{
+    idUsuarioCarga: number;
+    usuarioCarga: string;
+    nombreUsuarioCarga: string;
 }
 
 type CampoOrden =
-  | 'entidadFederativa'
-  | 'delitos'
-  | 'usuario'
-  | 'periodo'
-  | 'intentos'
-  | 'ordenCarga'
-  | 'estatusUltimoIntento'
-  | 'fechaCargaActualizacionTexto'
-  | 'fechaAprobacionTexto';
+    | 'entidadFederativa'
+    | 'delitos'
+    | 'usuario'
+    | 'periodo'
+    | 'intentos'
+    | 'ordenCarga'
+    | 'estatusUltimoIntento'
+    | 'fechaCargaActualizacionTexto'
+    | 'fechaAprobacionTexto';
 
 @Component({
-  selector: 'app-semanal-reporte-cargas',
-  imports: [FormsModule],
-  templateUrl: './semanal-reporte-cargas.html',
-  styleUrls: ['../informes/informes.css', '../semanal-envios/semanal-envios.css'],
+    selector: 'app-semanal-reporte-cargas',
+    imports: [FormsModule],
+    templateUrl: './semanal-reporte-cargas.html',
+    styleUrls: ['../informes/informes.css', '../semanal-envios/semanal-envios.css'],
 })
-export class SemanalReporteCargas implements OnInit {
-  private readonly semanalEnviosService = inject(SemanalEnviosService);
-  private readonly sessionService = inject(SessionService);
+export class SemanalReporteCargas implements OnInit
+{
+    private readonly semanalEnviosService = inject(SemanalEnviosService);
+    private readonly sessionService = inject(SessionService);
 
-  usuario = this.sessionService.usuario;
+    usuario = this.sessionService.usuario;
 
-  cargas = signal<SemanalReporteCargaItem[]>([]);
-  cargando = signal(false);
-  exportandoExcel = signal(false);
-  busqueda = signal('');
+    cargas = signal<SemanalReporteCargaItem[]>([]);
+    cargando = signal(false);
+    exportandoExcel = signal(false);
+    busqueda = signal('');
 
-  periodos = signal<PeriodoReporte[]>([]);
-  periodoSeleccionado = signal('');
-  semanaSeleccionada = signal('');
-  idUsuarioSeleccionado = signal<number | null>(null);
-  delitoSeleccionado = signal('');
+    periodos = signal<PeriodoReporte[]>([]);
+    periodoSeleccionado = signal('');
+    semanaSeleccionada = signal('');
+    idUsuarioSeleccionado = signal<number | null>(null);
+    delitoSeleccionado = signal('');
 
-  paginaActual = signal(1);
-  tamanioPagina = 10;
-  orden = signal<EstadoOrden<CampoOrden> | null>({
-    campo: 'ordenCarga',
-    direccion: 'asc',
-  });
-
-  rankingPorUsuario = computed(() => {
-    const usuariosPorPeriodo = new Map<
-      string,
-      Map<
-        string,
-        {
-          claveUsuario: string;
-          fechaCargaExitosa: number;
-          entidadFederativa: string;
-          usuarioCarga: string;
-        }
-      >
-    >();
-
-    for (const carga of this.cargas()) {
-      if (carga.claveEntidad === '00' || !carga.fechaCargaExitosa) continue;
-
-      const fechaCargaExitosa = new Date(carga.fechaCargaExitosa).getTime();
-
-      if (!Number.isFinite(fechaCargaExitosa)) continue;
-
-      const clavePeriodo = `${carga.anioCorte}-${carga.mesCorte}`;
-      const claveUsuario = `${carga.idEntidadFederativa}-${carga.idUsuarioCarga}`;
-      const usuarios = usuariosPorPeriodo.get(clavePeriodo) ?? new Map();
-      const usuarioActual = usuarios.get(claveUsuario);
-
-      if (!usuarioActual || fechaCargaExitosa < usuarioActual.fechaCargaExitosa) {
-        usuarios.set(claveUsuario, {
-          claveUsuario,
-          fechaCargaExitosa,
-          entidadFederativa: carga.entidadFederativa,
-          usuarioCarga: carga.usuarioCarga,
-        });
-      }
-
-      usuariosPorPeriodo.set(clavePeriodo, usuarios);
-    }
-
-    const ranking = new Map<string, number>();
-
-    for (const [clavePeriodo, usuarios] of usuariosPorPeriodo) {
-      Array.from(usuarios.values())
-        .sort((a, b) => {
-          if (a.fechaCargaExitosa !== b.fechaCargaExitosa)
-            return a.fechaCargaExitosa - b.fechaCargaExitosa;
-
-          const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-            sensitivity: 'base',
-          });
-
-          if (entidad !== 0) return entidad;
-
-          return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
-            sensitivity: 'base',
-          });
-        })
-        .forEach((usuario, indice) => {
-          ranking.set(`${clavePeriodo}-${usuario.claveUsuario}`, indice + 1);
-        });
-    }
-
-    return ranking;
-  });
-
-  usuariosReporte = computed<UsuarioReporte[]>(() => {
-    const mapa = new Map<number, UsuarioReporte>();
-
-    for (const carga of this.cargas()) {
-      if (!mapa.has(carga.idUsuarioCarga)) {
-        mapa.set(carga.idUsuarioCarga, {
-          idUsuarioCarga: carga.idUsuarioCarga,
-          usuarioCarga: carga.usuarioCarga,
-          nombreUsuarioCarga: carga.nombreUsuarioCarga,
-        });
-      }
-    }
-
-    return Array.from(mapa.values()).sort((a, b) =>
-      a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', { sensitivity: 'base' }),
-    );
-  });
-
-  delitosReporte = computed(() => {
-    const delitos = this.cargas()
-      .flatMap((carga) => carga.delitos ?? [])
-      .map((delito) => delito.trim())
-      .filter((delito) => delito.length > 0);
-
-    return Array.from(new Set(delitos)).sort((a, b) =>
-      a.localeCompare(b, 'es', { sensitivity: 'base' }),
-    );
-  });
-
-  semanasReporte = computed<SemanaReporte[]>(() => {
-    const periodoSeleccionado = this.periodoSeleccionado();
-    const semanas = new Map<string, SemanaReporte>();
-
-    for (const carga of this.cargas()) {
-      if (periodoSeleccionado) {
-        const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
-
-        if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) continue;
-      }
-
-      const clave = this.claveSemana(carga);
-
-      if (!semanas.has(clave)) {
-        semanas.set(clave, {
-          clave,
-          semana: this.rangoSemanaTexto(carga),
-        });
-      }
-    }
-
-    return Array.from(semanas.values()).sort((a, b) => b.clave.localeCompare(a.clave));
-  });
-
-  cargasFiltradas = computed(() => {
-    const texto = this.busqueda().trim().toLowerCase();
-    const periodoSeleccionado = this.periodoSeleccionado();
-    const semanaSeleccionada = this.semanaSeleccionada();
-    const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
-    const delitoSeleccionado = this.delitoSeleccionado();
-
-    const registros = this.cargas().filter((carga) => {
-      if (carga.claveEntidad === '00') return false;
-      if (!carga.intentos || carga.intentos === 0) return false;
-
-      if (periodoSeleccionado) {
-        const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
-
-        if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) {
-          return false;
-        }
-      }
-
-      if (semanaSeleccionada && this.claveSemana(carga) !== semanaSeleccionada) return false;
-
-      if (idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado) {
-        return false;
-      }
-
-      if (
-        delitoSeleccionado &&
-        !(carga.delitos ?? []).some((delito) => delito === delitoSeleccionado)
-      ) {
-        return false;
-      }
-
-      if (!texto) return true;
-
-      return (
-        carga.entidadFederativa.toLowerCase().includes(texto) ||
-        (carga.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
-        carga.usuarioCarga.toLowerCase().includes(texto) ||
-        this.periodoTexto(carga).toLowerCase().includes(texto) ||
-        (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
-        (carga.ultimoIntento ?? '').toLowerCase().includes(texto)
-      );
+    paginaActual = signal(1);
+    tamanioPagina = 10;
+    orden = signal<EstadoOrden<CampoOrden> | null>({
+        campo: 'ordenCarga',
+        direccion: 'asc',
     });
 
-    return ordenarPorEstado(registros, this.orden(), (carga, campo) =>
-      this.obtenerValorOrden(carga, campo),
-    );
-  });
+    rankingPorUsuario = computed(() =>
+    {
+        const usuariosPorPeriodo = new Map<
+            string,
+            Map<
+                string,
+                {
+                    claveUsuario: string;
+                    fechaCargaExitosa: number;
+                    entidadFederativa: string;
+                    usuarioCarga: string;
+                }
+            >
+        >();
 
-  cargasPaginadas = computed(() => {
-    const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
-    return this.cargasFiltradas().slice(inicio, inicio + this.tamanioPagina);
-  });
+        for(const carga of this.cargas())
+        {
+            if(carga.claveEntidad === '00' || !carga.fechaCargaExitosa) continue;
 
-  totalPaginas = computed(() =>
-    Math.max(1, Math.ceil(this.cargasFiltradas().length / this.tamanioPagina)),
-  );
+            const fechaCargaExitosa = new Date(carga.fechaCargaExitosa).getTime();
 
-  ngOnInit(): void {
-    this.cargarReporte();
-  }
+            if(!Number.isFinite(fechaCargaExitosa)) continue;
 
-  cargarReporte(): void {
-    this.cargando.set(true);
+            const clavePeriodo = `${carga.anioCorte}-${carga.mesCorte}`;
+            const claveUsuario = `${carga.idEntidadFederativa}-${carga.idUsuarioCarga}`;
+            const usuarios = usuariosPorPeriodo.get(clavePeriodo) ?? new Map();
+            const usuarioActual = usuarios.get(claveUsuario);
 
-    this.semanalEnviosService.obtenerReporteCargas().subscribe({
-      next: (response) => {
-        const registros = response.registros ?? [];
+            if(!usuarioActual || fechaCargaExitosa < usuarioActual.fechaCargaExitosa)
+            {
+                usuarios.set(claveUsuario, {
+                    claveUsuario,
+                    fechaCargaExitosa,
+                    entidadFederativa: carga.entidadFederativa,
+                    usuarioCarga: carga.usuarioCarga,
+                });
+            }
 
-        this.cargas.set(registros);
-        this.sincronizarPeriodos(registros);
+            usuariosPorPeriodo.set(clavePeriodo, usuarios);
+        }
 
+        const ranking = new Map<string, number>();
+
+        for(const [clavePeriodo, usuarios] of usuariosPorPeriodo)
+        {
+            Array.from(usuarios.values())
+                .sort((a, b) =>
+                {
+                    if(a.fechaCargaExitosa !== b.fechaCargaExitosa) return a.fechaCargaExitosa - b.fechaCargaExitosa;
+
+                    const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+                        sensitivity: 'base',
+                    });
+
+                    if(entidad !== 0) return entidad;
+
+                    return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
+                        sensitivity: 'base',
+                    });
+                })
+                .forEach((usuario, indice) =>
+                {
+                    ranking.set(`${clavePeriodo}-${usuario.claveUsuario}`, indice + 1);
+                });
+        }
+
+        return ranking;
+    });
+
+    usuariosReporte = computed<UsuarioReporte[]>(() =>
+    {
+        const mapa = new Map<number, UsuarioReporte>();
+
+        for(const carga of this.cargas())
+        {
+            if(!mapa.has(carga.idUsuarioCarga))
+            {
+                mapa.set(carga.idUsuarioCarga, {
+                    idUsuarioCarga: carga.idUsuarioCarga,
+                    usuarioCarga: carga.usuarioCarga,
+                    nombreUsuarioCarga: carga.nombreUsuarioCarga,
+                });
+            }
+        }
+
+        return Array.from(mapa.values()).sort((a, b) => a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', { sensitivity: 'base' }));
+    });
+
+    delitosReporte = computed(() =>
+    {
+        const delitos = this.cargas()
+            .flatMap((carga) => carga.delitos ?? [])
+            .map((delito) => delito.trim())
+            .filter((delito) => delito.length > 0);
+
+        return Array.from(new Set(delitos)).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+    });
+
+    semanasReporte = computed<SemanaReporte[]>(() =>
+    {
+        const periodoSeleccionado = this.periodoSeleccionado();
+        const semanas = new Map<string, SemanaReporte>();
+
+        for(const carga of this.cargas())
+        {
+            if(periodoSeleccionado)
+            {
+                const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+
+                if(carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) continue;
+            }
+
+            const clave = this.claveSemana(carga);
+
+            if(!semanas.has(clave))
+            {
+                semanas.set(clave, {
+                    clave,
+                    semana: this.rangoSemanaTexto(carga),
+                });
+            }
+        }
+
+        return Array.from(semanas.values()).sort((a, b) => b.clave.localeCompare(a.clave));
+    });
+
+    cargasFiltradas = computed(() =>
+    {
+        const texto = this.busqueda().trim().toLowerCase();
+        const periodoSeleccionado = this.periodoSeleccionado();
         const semanaSeleccionada = this.semanaSeleccionada();
-
-        if (
-          semanaSeleccionada &&
-          !this.semanasReporte().some((semana) => semana.clave === semanaSeleccionada)
-        ) {
-          this.semanaSeleccionada.set('');
-        }
-
-        const usuarioSeleccionado = this.idUsuarioSeleccionado();
-
-        if (
-          usuarioSeleccionado &&
-          !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado)
-        ) {
-          this.idUsuarioSeleccionado.set(null);
-        }
-
+        const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
         const delitoSeleccionado = this.delitoSeleccionado();
 
-        if (
-          delitoSeleccionado &&
-          !registros.some((registro) => (registro.delitos ?? []).includes(delitoSeleccionado))
-        ) {
-          this.delitoSeleccionado.set('');
-        }
+        const registros = this.cargas().filter((carga) =>
+        {
+            if(carga.claveEntidad === '00') return false;
+            if(!carga.intentos || carga.intentos === 0) return false;
 
-        this.paginaActual.set(1);
-        this.cargando.set(false);
-      },
-      error: async (error: unknown) => {
-        this.cargando.set(false);
+            if(periodoSeleccionado)
+            {
+                const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
 
-        mostrarError(
-          'No fue posible consultar el reporte de cargas preliminares',
-          await obtenerMensajeErrorHttpAsync(error, 'Revise la conexión con la API.'),
-        );
-      },
+                if(carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto))
+                {
+                    return false;
+                }
+            }
+
+            if(semanaSeleccionada && this.claveSemana(carga) !== semanaSeleccionada) return false;
+
+            if(idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado)
+            {
+                return false;
+            }
+
+            if(delitoSeleccionado && !(carga.delitos ?? []).some((delito) => delito === delitoSeleccionado))
+            {
+                return false;
+            }
+
+            if(!texto) return true;
+
+            return (
+                carga.entidadFederativa.toLowerCase().includes(texto) ||
+                (carga.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
+                carga.usuarioCarga.toLowerCase().includes(texto) ||
+                this.periodoTexto(carga).toLowerCase().includes(texto) ||
+                (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+                (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
+                (carga.ultimoIntento ?? '').toLowerCase().includes(texto)
+            );
+        });
+
+        return ordenarPorEstado(registros, this.orden(), (carga, campo) => this.obtenerValorOrden(carga, campo));
     });
-  }
 
-  buscar(valor: string): void {
-    this.busqueda.set(valor);
-    this.paginaActual.set(1);
-  }
+    cargasPaginadas = computed(() =>
+    {
+        const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
+        return this.cargasFiltradas().slice(inicio, inicio + this.tamanioPagina);
+    });
 
-  cambiarFiltros(): void {
-    this.paginaActual.set(1);
-  }
+    totalPaginas = computed(() => Math.max(1, Math.ceil(this.cargasFiltradas().length / this.tamanioPagina)));
 
-  cambiarPeriodo(valor: string): void {
-    this.periodoSeleccionado.set(valor);
-    this.semanaSeleccionada.set('');
-    this.paginaActual.set(1);
-  }
-
-  ordenarPor(campo: CampoOrden): void {
-    this.orden.set(alternarOrden(this.orden(), campo));
-    this.paginaActual.set(1);
-  }
-
-  iconoOrden(campo: CampoOrden): string {
-    return obtenerIconoOrden(this.orden(), campo);
-  }
-
-  cambiarPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginas()) return;
-    this.paginaActual.set(pagina);
-  }
-
-  periodoTexto(carga: SemanalReporteCargaItem): string {
-    return carga.periodo || this.crearPeriodoTexto(carga.anioCorte, carga.mesCorte);
-  }
-
-  rangoSemanaTexto(carga: SemanalReporteCargaItem): string {
-    return `${this.formatearFechaCorta(carga.fechaInicioSemana)} al ${this.formatearFechaCorta(carga.fechaFinSemana)}`;
-  }
-
-  delitosTexto(carga: SemanalReporteCargaItem): string {
-    return carga.delitos?.length ? carga.delitos.join(', ') : '—';
-  }
-
-  etiquetaEstatus(carga: SemanalReporteCargaItem): string {
-    const estatus = this.normalizarTexto(carga.estatusUltimoIntento);
-    const tipoCarga = this.normalizarTexto(carga.tipoCargaUltimoIntento);
-    const sufijo = tipoCarga.includes('ACTUALIZACION') ? 'actualización' : 'carga';
-
-    if (!estatus) return 'Sin carga';
-    if (estatus.includes('CONFIRMADO')) return `Confirmado ${sufijo}`;
-    if (estatus === 'PENDIENTE_APROBACION') return 'Pendiente de aprobación';
-    if (estatus.includes('PENDIENTE')) return `Pendiente ${sufijo}`;
-    if (estatus.includes('RECHAZADO')) return `Rechazado ${sufijo}`;
-    if (estatus.includes('ERROR')) return `Con errores ${sufijo}`;
-    if (estatus.includes('EXPIRADO')) return `Expirado ${sufijo}`;
-
-    return estatus.replaceAll('_', ' ');
-  }
-
-  esEstatusConfirmado(estatus: string | null): boolean {
-    return this.normalizarTexto(estatus).includes('CONFIRMADO');
-  }
-
-  esEstatusPendiente(estatus: string | null): boolean {
-    return this.normalizarTexto(estatus).includes('PENDIENTE');
-  }
-
-  esEstatusError(estatus: string | null): boolean {
-    const valor = this.normalizarTexto(estatus);
-
-    return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
-  }
-
-  ordenCarga(carga: SemanalReporteCargaItem): string {
-    const orden = this.obtenerOrdenCarga(carga);
-    return orden ? `${orden}°` : '-';
-  }
-
-  async exportarExcel(): Promise<void> {
-    this.exportandoExcel.set(true);
-
-    try {
-      const filas = this.obtenerCargasExportacion().map((carga) => ({
-        Ranking: this.obtenerOrdenCarga(carga) ?? '',
-        Usuario: carga.usuarioCarga,
-        'Entidad federativa': carga.entidadFederativa,
-        'Delito(s)': this.delitosTexto(carga),
-        Periodo: `${this.periodoTexto(carga)} — ${this.rangoSemanaTexto(carga)}`,
-        Intentos: carga.intentos,
-        Estatus: this.etiquetaEstatus(carga),
-        'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
-        'Fecha de aprobación': carga.fechaAprobacionTexto || '',
-      }));
-
-      const exportado = await exportarFilasExcel(
-        filas,
-        'reporte_cargas_preliminares.xlsx',
-        'Cargas preliminares',
-      );
-
-      if (!exportado) {
-        mostrarAdvertencia(
-          'Sin registros para exportar',
-          'No existen cargas preliminares para exportar.',
-        );
-      }
-    } catch {
-      mostrarError('No fue posible exportar', 'Intente nuevamente.');
-    } finally {
-      this.exportandoExcel.set(false);
+    ngOnInit(): void
+    {
+        this.cargarReporte();
     }
-  }
 
-  private obtenerCargasExportacion(): SemanalReporteCargaItem[] {
-    const texto = this.busqueda().trim().toLowerCase();
-    const periodoSeleccionado = this.periodoSeleccionado();
-    const semanaSeleccionada = this.semanaSeleccionada();
-    const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
-    const delitoSeleccionado = this.delitoSeleccionado();
+    cargarReporte(): void
+    {
+        this.cargando.set(true);
 
-    return this.cargas()
-      .filter((carga) => {
-        if (carga.claveEntidad === '00') return false;
+        this.semanalEnviosService.obtenerReporteCargas().subscribe({
+            next: (response) =>
+            {
+                const registros = response.registros ?? [];
 
-        if (periodoSeleccionado) {
-          const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+                this.cargas.set(registros);
+                this.sincronizarPeriodos(registros);
 
-          if (carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto)) {
-            return false;
-          }
+                const semanaSeleccionada = this.semanaSeleccionada();
+
+                if(semanaSeleccionada && !this.semanasReporte().some((semana) => semana.clave === semanaSeleccionada))
+                {
+                    this.semanaSeleccionada.set('');
+                }
+
+                const usuarioSeleccionado = this.idUsuarioSeleccionado();
+
+                if(usuarioSeleccionado && !registros.some((registro) => registro.idUsuarioCarga === usuarioSeleccionado))
+                {
+                    this.idUsuarioSeleccionado.set(null);
+                }
+
+                const delitoSeleccionado = this.delitoSeleccionado();
+
+                if(delitoSeleccionado && !registros.some((registro) => (registro.delitos ?? []).includes(delitoSeleccionado)))
+                {
+                    this.delitoSeleccionado.set('');
+                }
+
+                this.paginaActual.set(1);
+                this.cargando.set(false);
+            },
+            error: async (error: unknown) =>
+            {
+                this.cargando.set(false);
+
+                mostrarError(
+                    'No fue posible consultar el reporte de cargas preliminares',
+                    await obtenerMensajeErrorHttpAsync(error, 'Revise la conexión con la API.'),
+                );
+            },
+        });
+    }
+
+    buscar(valor: string): void
+    {
+        this.busqueda.set(valor);
+        this.paginaActual.set(1);
+    }
+
+    cambiarFiltros(): void
+    {
+        this.paginaActual.set(1);
+    }
+
+    cambiarPeriodo(valor: string): void
+    {
+        this.periodoSeleccionado.set(valor);
+        this.semanaSeleccionada.set('');
+        this.paginaActual.set(1);
+    }
+
+    ordenarPor(campo: CampoOrden): void
+    {
+        this.orden.set(alternarOrden(this.orden(), campo));
+        this.paginaActual.set(1);
+    }
+
+    iconoOrden(campo: CampoOrden): string
+    {
+        return obtenerIconoOrden(this.orden(), campo);
+    }
+
+    cambiarPagina(pagina: number): void
+    {
+        if(pagina < 1 || pagina > this.totalPaginas()) return;
+        this.paginaActual.set(pagina);
+    }
+
+    periodoTexto(carga: SemanalReporteCargaItem): string
+    {
+        return carga.periodo || this.crearPeriodoTexto(carga.anioCorte, carga.mesCorte);
+    }
+
+    rangoSemanaTexto(carga: SemanalReporteCargaItem): string
+    {
+        return `${this.formatearFechaCorta(carga.fechaInicioSemana)} al ${this.formatearFechaCorta(carga.fechaFinSemana)}`;
+    }
+
+    delitosTexto(carga: SemanalReporteCargaItem): string
+    {
+        return carga.delitos?.length ? carga.delitos.join(', ') : '—';
+    }
+
+    etiquetaEstatus(carga: SemanalReporteCargaItem): string
+    {
+        const estatus = this.normalizarTexto(carga.estatusUltimoIntento);
+        const tipoCarga = this.normalizarTexto(carga.tipoCargaUltimoIntento);
+        const sufijo = tipoCarga.includes('ACTUALIZACION') ? 'actualización' : 'carga';
+
+        if(!estatus) return 'Sin carga';
+        if(estatus.includes('CONFIRMADO')) return `Confirmado ${sufijo}`;
+        if(estatus === 'PENDIENTE_APROBACION') return 'Pendiente de aprobación';
+        if(estatus.includes('PENDIENTE')) return `Pendiente ${sufijo}`;
+        if(estatus.includes('RECHAZADO')) return `Rechazado ${sufijo}`;
+        if(estatus.includes('ERROR')) return `Con errores ${sufijo}`;
+        if(estatus.includes('EXPIRADO')) return `Expirado ${sufijo}`;
+
+        return estatus.replaceAll('_', ' ');
+    }
+
+    esEstatusConfirmado(estatus: string | null): boolean
+    {
+        return this.normalizarTexto(estatus).includes('CONFIRMADO');
+    }
+
+    esEstatusPendiente(estatus: string | null): boolean
+    {
+        return this.normalizarTexto(estatus).includes('PENDIENTE');
+    }
+
+    esEstatusError(estatus: string | null): boolean
+    {
+        const valor = this.normalizarTexto(estatus);
+
+        return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
+    }
+
+    ordenCarga(carga: SemanalReporteCargaItem): string
+    {
+        const orden = this.obtenerOrdenCarga(carga);
+        return orden ? `${orden}°` : '-';
+    }
+
+    async exportarExcel(): Promise<void>
+    {
+        this.exportandoExcel.set(true);
+
+        try
+        {
+            const filas = this.obtenerCargasExportacion().map((carga) => ({
+                Ranking: this.obtenerOrdenCarga(carga) ?? '',
+                Usuario: carga.usuarioCarga,
+                'Entidad federativa': carga.entidadFederativa,
+                'Delito(s)': this.delitosTexto(carga),
+                Periodo: `${this.periodoTexto(carga)} — ${this.rangoSemanaTexto(carga)}`,
+                Intentos: carga.intentos,
+                Estatus: this.etiquetaEstatus(carga),
+                'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
+                'Fecha de aprobación': carga.fechaAprobacionTexto || '',
+            }));
+
+            const exportado = await exportarFilasExcel(filas, 'reporte_cargas_preliminares.xlsx', 'Cargas preliminares');
+
+            if(!exportado)
+            {
+                mostrarAdvertencia('Sin registros para exportar', 'No existen cargas preliminares para exportar.');
+            }
+        } catch
+        {
+            mostrarError('No fue posible exportar', 'Intente nuevamente.');
+        } finally
+        {
+            this.exportandoExcel.set(false);
+        }
+    }
+
+    private obtenerCargasExportacion(): SemanalReporteCargaItem[]
+    {
+        const texto = this.busqueda().trim().toLowerCase();
+        const periodoSeleccionado = this.periodoSeleccionado();
+        const semanaSeleccionada = this.semanaSeleccionada();
+        const idUsuarioSeleccionado = this.idUsuarioSeleccionado();
+        const delitoSeleccionado = this.delitoSeleccionado();
+
+        return this.cargas()
+            .filter((carga) =>
+            {
+                if(carga.claveEntidad === '00') return false;
+
+                if(periodoSeleccionado)
+                {
+                    const [anioTexto, mesTexto] = periodoSeleccionado.split('-');
+
+                    if(carga.anioCorte !== Number(anioTexto) || carga.mesCorte !== Number(mesTexto))
+                    {
+                        return false;
+                    }
+                }
+
+                if(semanaSeleccionada && this.claveSemana(carga) !== semanaSeleccionada) return false;
+
+                if(idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado)
+                {
+                    return false;
+                }
+
+                if(delitoSeleccionado && !(carga.delitos ?? []).some((delito) => delito === delitoSeleccionado))
+                {
+                    return false;
+                }
+
+                if(!texto) return true;
+
+                return (
+                    carga.entidadFederativa.toLowerCase().includes(texto) ||
+                    (carga.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
+                    carga.usuarioCarga.toLowerCase().includes(texto) ||
+                    this.periodoTexto(carga).toLowerCase().includes(texto) ||
+                    (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+                    (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
+                    (carga.ultimoIntento ?? '').toLowerCase().includes(texto)
+                );
+            })
+            .sort((a, b) =>
+            {
+                const rankingA = this.obtenerOrdenCarga(a) ?? Number.MAX_SAFE_INTEGER;
+                const rankingB = this.obtenerOrdenCarga(b) ?? Number.MAX_SAFE_INTEGER;
+
+                if(rankingA !== rankingB) return rankingA - rankingB;
+
+                const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+                    sensitivity: 'base',
+                });
+
+                if(entidad !== 0) return entidad;
+
+                return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
+                    sensitivity: 'base',
+                });
+            });
+    }
+
+    private obtenerOrdenCarga(carga: SemanalReporteCargaItem): number | null
+    {
+        const clave = `${carga.anioCorte}-${carga.mesCorte}-${carga.idEntidadFederativa}-${carga.idUsuarioCarga}`;
+
+        return this.rankingPorUsuario().get(clave) ?? null;
+    }
+
+    private claveSemana(carga: SemanalReporteCargaItem): string
+    {
+        return `${carga.fechaInicioSemana.slice(0, 10)}|${carga.fechaFinSemana.slice(0, 10)}`;
+    }
+
+    private obtenerValorOrden(carga: SemanalReporteCargaItem, campo: CampoOrden): ValorOrden
+    {
+        switch(campo) {
+            case 'entidadFederativa':
+                return carga.entidadFederativa;
+            case 'delitos':
+                return this.delitosTexto(carga);
+            case 'usuario':
+                return carga.usuarioCarga;
+            case 'periodo':
+                return carga.fechaInicioSemana;
+            case 'intentos':
+                return carga.intentos;
+            case 'ordenCarga':
+                return this.obtenerOrdenCarga(carga) ?? Number.MAX_SAFE_INTEGER;
+            case 'estatusUltimoIntento':
+                return this.etiquetaEstatus(carga);
+            case 'fechaCargaActualizacionTexto':
+                return carga.fechaCargaActualizacion;
+            case 'fechaAprobacionTexto':
+                return carga.fechaAprobacion;
+        }
+    }
+
+    private sincronizarPeriodos(registros: SemanalReporteCargaItem[]): void
+    {
+        const mapa = new Map<string, PeriodoReporte>();
+
+        for(const registro of registros)
+        {
+            const clave = `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
+
+            if(!mapa.has(clave))
+            {
+                mapa.set(clave, {
+                    clave,
+                    anioCorte: registro.anioCorte,
+                    mesCorte: registro.mesCorte,
+                    periodo: this.periodoTexto(registro),
+                });
+            }
         }
 
-        if (semanaSeleccionada && this.claveSemana(carga) !== semanaSeleccionada) return false;
+        const periodos = Array.from(mapa.values()).sort((a, b) => b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte));
 
-        if (idUsuarioSeleccionado && carga.idUsuarioCarga !== idUsuarioSeleccionado) {
-          return false;
+        this.periodos.set(periodos);
+
+        if(periodos.length === 0)
+        {
+            this.periodoSeleccionado.set('');
+            return;
         }
 
-        if (
-          delitoSeleccionado &&
-          !(carga.delitos ?? []).some((delito) => delito === delitoSeleccionado)
-        ) {
-          return false;
+        const seleccionada = this.periodoSeleccionado();
+
+        if(!periodos.some((periodo) => periodo.clave === seleccionada))
+        {
+            this.periodoSeleccionado.set(periodos[0].clave);
         }
-
-        if (!texto) return true;
-
-        return (
-          carga.entidadFederativa.toLowerCase().includes(texto) ||
-          (carga.delitos ?? []).some((delito) => delito.toLowerCase().includes(texto)) ||
-          carga.usuarioCarga.toLowerCase().includes(texto) ||
-          this.periodoTexto(carga).toLowerCase().includes(texto) ||
-          (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-          (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto) ||
-          (carga.ultimoIntento ?? '').toLowerCase().includes(texto)
-        );
-      })
-      .sort((a, b) => {
-        const rankingA = this.obtenerOrdenCarga(a) ?? Number.MAX_SAFE_INTEGER;
-        const rankingB = this.obtenerOrdenCarga(b) ?? Number.MAX_SAFE_INTEGER;
-
-        if (rankingA !== rankingB) return rankingA - rankingB;
-
-        const entidad = a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-          sensitivity: 'base',
-        });
-
-        if (entidad !== 0) return entidad;
-
-        return a.usuarioCarga.localeCompare(b.usuarioCarga, 'es', {
-          sensitivity: 'base',
-        });
-      });
-  }
-
-  private obtenerOrdenCarga(carga: SemanalReporteCargaItem): number | null {
-    const clave = `${carga.anioCorte}-${carga.mesCorte}-${carga.idEntidadFederativa}-${carga.idUsuarioCarga}`;
-
-    return this.rankingPorUsuario().get(clave) ?? null;
-  }
-
-  private claveSemana(carga: SemanalReporteCargaItem): string {
-    return `${carga.fechaInicioSemana.slice(0, 10)}|${carga.fechaFinSemana.slice(0, 10)}`;
-  }
-
-  private obtenerValorOrden(carga: SemanalReporteCargaItem, campo: CampoOrden): ValorOrden {
-    switch (campo) {
-      case 'entidadFederativa':
-        return carga.entidadFederativa;
-      case 'delitos':
-        return this.delitosTexto(carga);
-      case 'usuario':
-        return carga.usuarioCarga;
-      case 'periodo':
-        return carga.fechaInicioSemana;
-      case 'intentos':
-        return carga.intentos;
-      case 'ordenCarga':
-        return this.obtenerOrdenCarga(carga) ?? Number.MAX_SAFE_INTEGER;
-      case 'estatusUltimoIntento':
-        return this.etiquetaEstatus(carga);
-      case 'fechaCargaActualizacionTexto':
-        return carga.fechaCargaActualizacion;
-      case 'fechaAprobacionTexto':
-        return carga.fechaAprobacion;
-    }
-  }
-
-  private sincronizarPeriodos(registros: SemanalReporteCargaItem[]): void {
-    const mapa = new Map<string, PeriodoReporte>();
-
-    for (const registro of registros) {
-      const clave = `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
-
-      if (!mapa.has(clave)) {
-        mapa.set(clave, {
-          clave,
-          anioCorte: registro.anioCorte,
-          mesCorte: registro.mesCorte,
-          periodo: this.periodoTexto(registro),
-        });
-      }
     }
 
-    const periodos = Array.from(mapa.values()).sort(
-      (a, b) => b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte),
-    );
+    private crearPeriodoTexto(anioCorte: number, mesCorte: number): string
+    {
+        const fecha = new Date(anioCorte, mesCorte - 1, 1);
+        const periodo = new Intl.DateTimeFormat('es-MX', {
+            month: 'long',
+            year: 'numeric',
+        }).format(fecha);
 
-    this.periodos.set(periodos);
+        return periodo.charAt(0).toUpperCase() + periodo.slice(1);
+    }
+    private formatearFechaCorta(valor: string): string
+    {
+        const partes = valor?.slice(0, 10).split('-');
 
-    if (periodos.length === 0) {
-      this.periodoSeleccionado.set('');
-      return;
+        if(!partes || partes.length !== 3) return '';
+
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    const seleccionada = this.periodoSeleccionado();
-
-    if (!periodos.some((periodo) => periodo.clave === seleccionada)) {
-      this.periodoSeleccionado.set(periodos[0].clave);
+    private normalizarTexto(valor: string | null | undefined): string
+    {
+        return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
     }
-  }
-
-  private crearPeriodoTexto(anioCorte: number, mesCorte: number): string {
-    const fecha = new Date(anioCorte, mesCorte - 1, 1);
-    const periodo = new Intl.DateTimeFormat('es-MX', {
-      month: 'long',
-      year: 'numeric',
-    }).format(fecha);
-
-    return periodo.charAt(0).toUpperCase() + periodo.slice(1);
-  }
-  private formatearFechaCorta(valor: string): string {
-    const partes = valor?.slice(0, 10).split('-');
-
-    if (!partes || partes.length !== 3) return '';
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-  }
-
-  private normalizarTexto(valor: string | null | undefined): string {
-    return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
-  }
 }

@@ -1,10 +1,12 @@
-export interface EntidadFederativaCatalogoItem {
-  idEntidadFederativa: number;
-  clave: string;
-  nombre: string;
+export interface EntidadFederativaCatalogoItem
+{
+    idEntidadFederativa: number;
+    clave: string;
+    nombre: string;
 }
 
-export interface RolCatalogoItem {
-  idRol: number;
-  rol: string;
+export interface RolCatalogoItem
+{
+    idRol: number;
+    rol: string;
 }

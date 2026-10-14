@@ -1,203 +1,249 @@
 <div class="semanal-delitos">
-  <div class="semanal-admin-header delitos-header-row">
-    <div>
-      <span>Administración preliminar</span>
-      <h1>Modalidades del módulo preliminar</h1>
-      <p>Seleccione las modalidades permitidas en los archivos preliminares.</p>
-    </div>
-
-    <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()"
-      (click)="guardarConfiguracion()">
-      <i class="fa-solid" [class.fa-floppy-disk]="!guardando()" [class.fa-spinner]="guardando()"
-        [class.fa-spin]="guardando()"></i>
-      {{ guardando() ? 'Guardando...' : 'Guardar configuración' }}
-    </button>
-  </div>
-
-  <div class="semanal-resumen">
-    <div class="resumen-card resumen-disponibles">
-      <strong>{{ totalDisponibles() }}</strong>
-      <span>Modalidades disponibles</span>
-    </div>
-
-    <div class="resumen-card resumen-seleccionados">
-      <strong>{{ totalSeleccionados() }}</strong>
-      <span>Incluidas en el preliminar</span>
-    </div>
-
-    <div class="resumen-card resumen-opcionales">
-      <strong>{{ totalOpcionales() }}</strong>
-      <span>Opcionales incluidas</span>
-    </div>
-  </div>
-
-  <section class="siiid-card semanal-card">
-    <div class="siiid-card-header semanal-card-header">
-      <span>
-        <i class="fa-solid fa-list-check"></i>
-        Configuración jerárquica
-      </span>
-
-      <div class="jerarquia-herramientas">
-        <div class="controles-expansion" role="group" aria-label="Controles de expansión">
-          <button type="button" class="btn-expansion-global" [disabled]="hayBusqueda()"
-            title="Expandir todos los grupos" (click)="expandirTodo()">
-            <i class="fa-solid fa-angles-down"></i>
-            Expandir todo
-          </button>
-
-          <button type="button" class="btn-expansion-global" [disabled]="hayBusqueda()"
-            title="Contraer todos los grupos" (click)="contraerTodo()">
-            <i class="fa-solid fa-angles-up"></i>
-            Contraer todo
-          </button>
+    <div class="semanal-admin-header delitos-header-row">
+        <div>
+            <span>Administración preliminar</span>
+            <h1>Modalidades del módulo preliminar</h1>
+            <p>Seleccione las modalidades permitidas en los archivos preliminares.</p>
         </div>
 
-        <div class="semanal-buscador">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Buscar bien jurídico, delito, subtipo o modalidad..." [ngModel]="busqueda()"
-            (ngModelChange)="buscar($event)">
+        <button type="button" class="btn-guardar" [disabled]="cargando() || guardando() || !hayCambios()" (click)="guardarConfiguracion()">
+            <i class="fa-solid" [class.fa-floppy-disk]="!guardando()" [class.fa-spinner]="guardando()" [class.fa-spin]="guardando()"></i>
+            {{ guardando() ? 'Guardando...' : 'Guardar configuración' }}
+        </button>
+    </div>
+
+    <div class="semanal-resumen">
+        <div class="resumen-card resumen-disponibles">
+            <strong>{{ totalDisponibles() }}</strong>
+            <span>Modalidades disponibles</span>
         </div>
-      </div>
+
+        <div class="resumen-card resumen-seleccionados">
+            <strong>{{ totalSeleccionados() }}</strong>
+            <span>Incluidas en el preliminar</span>
+        </div>
+
+        <div class="resumen-card resumen-opcionales">
+            <strong>{{ totalOpcionales() }}</strong>
+            <span>Opcionales incluidas</span>
+        </div>
     </div>
 
-    @if (cargando()) {
-    <div class="semanal-mensaje">
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Cargando modalidades...
-    </div>
-    } @else if (jerarquiaFiltrada().length === 0) {
-    <div class="semanal-mensaje">No se encontraron modalidades.</div>
-    } @else {
-    <div class="jerarquia-lista">
-      @for (bien of jerarquiaFiltrada(); track bien.idBienJuridico) {
-      <section class="bien-juridico-grupo">
-        <header class="bien-juridico-header">
-          <div class="grupo-identidad">
-            <button type="button" class="btn-colapsar btn-colapsar-bien" [disabled]="hayBusqueda()"
-              [attr.aria-expanded]="!bienContraido(bien.idBienJuridico)"
-              [attr.aria-label]="bienContraido(bien.idBienJuridico) ? 'Expandir bien jurídico' : 'Contraer bien jurídico'"
-              [title]="hayBusqueda() ? 'Los resultados permanecen abiertos mientras busca' : bienContraido(bien.idBienJuridico) ? 'Expandir bien jurídico' : 'Contraer bien jurídico'"
-              (click)="alternarBien(bien.idBienJuridico)">
-              <i class="fa-solid" [class.fa-chevron-right]="bienContraido(bien.idBienJuridico)"
-                [class.fa-chevron-down]="!bienContraido(bien.idBienJuridico)"></i>
-            </button>
+    <section class="siiid-card semanal-card">
+        <div class="siiid-card-header semanal-card-header">
+            <span>
+                <i class="fa-solid fa-list-check"></i>
+                Configuración jerárquica
+            </span>
 
-            <span class="bien-clave">{{ bien.claveBienJuridico }}</span>
+            <div class="jerarquia-herramientas">
+                <div class="controles-expansion" role="group" aria-label="Controles de expansión">
+                    <button
+                        type="button"
+                        class="btn-expansion-global"
+                        [disabled]="hayBusqueda()"
+                        title="Expandir todos los grupos"
+                        (click)="expandirTodo()"
+                    >
+                        <i class="fa-solid fa-angles-down"></i>
+                        Expandir todo
+                    </button>
 
-            <div>
-              <span class="nivel-etiqueta">Bien jurídico</span>
-              <h2>{{ bien.bienJuridico }}</h2>
-              <p>{{ totalModalidadesBien(bien.idBienJuridico) }} modalidades</p>
+                    <button
+                        type="button"
+                        class="btn-expansion-global"
+                        [disabled]="hayBusqueda()"
+                        title="Contraer todos los grupos"
+                        (click)="contraerTodo()"
+                    >
+                        <i class="fa-solid fa-angles-up"></i>
+                        Contraer todo
+                    </button>
+                </div>
+
+                <div class="semanal-buscador">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="text"
+                        placeholder="Buscar bien jurídico, delito, subtipo o modalidad..."
+                        [ngModel]="busqueda()"
+                        (ngModelChange)="buscar($event)"
+                    />
+                </div>
             </div>
-          </div>
+        </div>
 
-          <label class="seleccion-control seleccion-masiva"
-            [class.seleccion-bloqueada]="guardando() || !bienTieneOpcionales(bien.idBienJuridico)">
-            <span class="seleccion-masiva-texto">Incluir todas</span>
-            <input type="checkbox" [disabled]="guardando() || !bienTieneOpcionales(bien.idBienJuridico)"
-              [ngModel]="bienSeleccionadoCompleto(bien.idBienJuridico)"
-              [indeterminate]="bienSeleccionParcial(bien.idBienJuridico)"
-              (ngModelChange)="cambiarSeleccionBienJuridico(bien.idBienJuridico, $event)">
-            <span class="toggle"></span>
-          </label>
-        </header>
-
-        @if (!bienContraido(bien.idBienJuridico)) {
-        @for (delito of bien.delitos; track delito.idDelito) {
-        <article class="delito-grupo">
-          <header class="delito-header">
-            <div class="delito-identidad">
-              <button type="button" class="btn-colapsar btn-colapsar-delito" [disabled]="hayBusqueda()"
-                [attr.aria-expanded]="!delitoContraido(delito.idDelito)"
-                [attr.aria-label]="delitoContraido(delito.idDelito) ? 'Expandir delito' : 'Contraer delito'"
-                [title]="hayBusqueda() ? 'Los resultados permanecen abiertos mientras busca' : delitoContraido(delito.idDelito) ? 'Expandir delito' : 'Contraer delito'"
-                (click)="alternarDelito(delito.idDelito)">
-                <i class="fa-solid" [class.fa-chevron-right]="delitoContraido(delito.idDelito)"
-                  [class.fa-chevron-down]="!delitoContraido(delito.idDelito)"></i>
-              </button>
-
-              <div>
-                <span class="nivel-etiqueta">Delito</span>
-                <h3>
-                  <span class="delito-clave-header">{{ delito.claveDelito }}</span>
-                  {{ delito.delito }}
-                </h3>
-                <p>{{ totalModalidadesDelito(delito.idDelito) }} modalidades</p>
-              </div>
+        @if (cargando()) {
+            <div class="semanal-mensaje">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Cargando modalidades...
             </div>
+        } @else if (jerarquiaFiltrada().length === 0) {
+            <div class="semanal-mensaje">No se encontraron modalidades.</div>
+        } @else {
+            <div class="jerarquia-lista">
+                @for (bien of jerarquiaFiltrada(); track bien.idBienJuridico) {
+                    <section class="bien-juridico-grupo">
+                        <header class="bien-juridico-header">
+                            <div class="grupo-identidad">
+                                <button
+                                    type="button"
+                                    class="btn-colapsar btn-colapsar-bien"
+                                    [disabled]="hayBusqueda()"
+                                    [attr.aria-expanded]="!bienContraido(bien.idBienJuridico)"
+                                    [attr.aria-label]="bienContraido(bien.idBienJuridico) ? 'Expandir bien jurídico' : 'Contraer bien jurídico'"
+                                    [title]="hayBusqueda() ? 'Los resultados permanecen abiertos mientras busca' : bienContraido(bien.idBienJuridico) ? 'Expandir bien jurídico' : 'Contraer bien jurídico'"
+                                    (click)="alternarBien(bien.idBienJuridico)"
+                                >
+                                    <i
+                                        class="fa-solid"
+                                        [class.fa-chevron-right]="bienContraido(bien.idBienJuridico)"
+                                        [class.fa-chevron-down]="!bienContraido(bien.idBienJuridico)"
+                                    ></i>
+                                </button>
 
-            <label class="seleccion-control seleccion-masiva"
-              [class.seleccion-bloqueada]="guardando() || !delitoTieneOpcionales(delito.idDelito)">
-              <span class="seleccion-masiva-texto">Incluir todas</span>
-              <input type="checkbox" [disabled]="guardando() || !delitoTieneOpcionales(delito.idDelito)"
-                [ngModel]="delitoSeleccionadoCompleto(delito.idDelito)"
-                [indeterminate]="delitoSeleccionParcial(delito.idDelito)"
-                (ngModelChange)="cambiarSeleccionDelito(delito.idDelito, $event)">
-              <span class="toggle"></span>
-            </label>
-          </header>
+                                <span class="bien-clave">{{ bien.claveBienJuridico }}</span>
 
-          @if (!delitoContraido(delito.idDelito)) {
-          <div class="table-responsive">
-            <table class="table table-sm semanal-table modalidades-table">
-              <thead>
-                <tr>
-                  <th>Clave de modalidad</th>
-                  <th>Subtipo</th>
-                  <th>Modalidad</th>
-                  <th>Estado</th>
-                  <th>Incluir</th>
-                </tr>
-              </thead>
+                                <div>
+                                    <span class="nivel-etiqueta">Bien jurídico</span>
+                                    <h2>{{ bien.bienJuridico }}</h2>
+                                    <p>{{ totalModalidadesBien(bien.idBienJuridico) }} modalidades</p>
+                                </div>
+                            </div>
 
-              <tbody>
-                @for (modalidad of delito.modalidades; track modalidad.idModalidadDelito) {
-                <tr [class.fila-seleccionada]="modalidad.seleccionado"
-                  [class.fila-obligatoria]="modalidad.esObligatorio">
-                  <td class="modalidad-clave">{{ modalidad.claveModalidad }}</td>
+                            <label
+                                class="seleccion-control seleccion-masiva"
+                                [class.seleccion-bloqueada]="guardando() || !bienTieneOpcionales(bien.idBienJuridico)"
+                            >
+                                <span class="seleccion-masiva-texto">Incluir todas</span>
+                                <input
+                                    type="checkbox"
+                                    [disabled]="guardando() || !bienTieneOpcionales(bien.idBienJuridico)"
+                                    [ngModel]="bienSeleccionadoCompleto(bien.idBienJuridico)"
+                                    [indeterminate]="bienSeleccionParcial(bien.idBienJuridico)"
+                                    (ngModelChange)="cambiarSeleccionBienJuridico(bien.idBienJuridico, $event)"
+                                />
+                                <span class="toggle"></span>
+                            </label>
+                        </header>
 
-                  <td class="modalidad-subtipo">
-                    <span>{{ modalidad.claveSubtipo }}</span>
-                    {{ modalidad.subtipo }}
-                  </td>
+                        @if (!bienContraido(bien.idBienJuridico)) {
+                            @for (delito of bien.delitos; track delito.idDelito) {
+                                <article class="delito-grupo">
+                                    <header class="delito-header">
+                                        <div class="delito-identidad">
+                                            <button
+                                                type="button"
+                                                class="btn-colapsar btn-colapsar-delito"
+                                                [disabled]="hayBusqueda()"
+                                                [attr.aria-expanded]="!delitoContraido(delito.idDelito)"
+                                                [attr.aria-label]="delitoContraido(delito.idDelito) ? 'Expandir delito' : 'Contraer delito'"
+                                                [title]="hayBusqueda() ? 'Los resultados permanecen abiertos mientras busca' : delitoContraido(delito.idDelito) ? 'Expandir delito' : 'Contraer delito'"
+                                                (click)="alternarDelito(delito.idDelito)"
+                                            >
+                                                <i
+                                                    class="fa-solid"
+                                                    [class.fa-chevron-right]="delitoContraido(delito.idDelito)"
+                                                    [class.fa-chevron-down]="!delitoContraido(delito.idDelito)"
+                                                ></i>
+                                            </button>
 
-                  <td class="modalidad-nombre">
-                    {{ modalidad.modalidad }}
+                                            <div>
+                                                <span class="nivel-etiqueta">Delito</span>
+                                                <h3>
+                                                    <span class="delito-clave-header">{{ delito.claveDelito }}</span>
+                                                    {{ delito.delito }}
+                                                </h3>
+                                                <p>{{ totalModalidadesDelito(delito.idDelito) }} modalidades</p>
+                                            </div>
+                                        </div>
 
-                    @if (modalidad.esObligatorio) {
-                    <span class="badge-obligatorio">OBLIGATORIA</span>
-                    }
-                  </td>
+                                        <label
+                                            class="seleccion-control seleccion-masiva"
+                                            [class.seleccion-bloqueada]="guardando() || !delitoTieneOpcionales(delito.idDelito)"
+                                        >
+                                            <span class="seleccion-masiva-texto">Incluir todas</span>
+                                            <input
+                                                type="checkbox"
+                                                [disabled]="guardando() || !delitoTieneOpcionales(delito.idDelito)"
+                                                [ngModel]="delitoSeleccionadoCompleto(delito.idDelito)"
+                                                [indeterminate]="delitoSeleccionParcial(delito.idDelito)"
+                                                (ngModelChange)="cambiarSeleccionDelito(delito.idDelito, $event)"
+                                            />
+                                            <span class="toggle"></span>
+                                        </label>
+                                    </header>
 
-                  <td>
-                    <span class="estado-badge" [class.estado-activo]="modalidad.seleccionado"
-                      [class.estado-inactivo]="!modalidad.seleccionado">
-                      {{ modalidad.seleccionado ? 'INCLUIDA' : 'NO INCLUIDA' }}
-                    </span>
-                  </td>
+                                    @if (!delitoContraido(delito.idDelito)) {
+                                        <div class="table-responsive">
+                                            <table class="table table-sm semanal-table modalidades-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Clave de modalidad</th>
+                                                        <th>Subtipo</th>
+                                                        <th>Modalidad</th>
+                                                        <th>Estado</th>
+                                                        <th>Incluir</th>
+                                                    </tr>
+                                                </thead>
 
-                  <td>
-                    <label class="seleccion-control"
-                      [class.seleccion-bloqueada]="modalidad.esObligatorio || guardando()">
-                      <input type="checkbox" [disabled]="modalidad.esObligatorio || guardando()"
-                        [ngModel]="modalidad.seleccionado"
-                        (ngModelChange)="cambiarSeleccionModalidad(modalidad.idModalidadDelito, $event)">
-                      <span class="toggle"></span>
-                    </label>
-                  </td>
-                </tr>
+                                                <tbody>
+                                                    @for (modalidad of delito.modalidades; track modalidad.idModalidadDelito) {
+                                                        <tr
+                                                            [class.fila-seleccionada]="modalidad.seleccionado"
+                                                            [class.fila-obligatoria]="modalidad.esObligatorio"
+                                                        >
+                                                            <td class="modalidad-clave">{{ modalidad.claveModalidad }}</td>
+
+                                                            <td class="modalidad-subtipo">
+                                                                <span>{{ modalidad.claveSubtipo }}</span>
+                                                                {{ modalidad.subtipo }}
+                                                            </td>
+
+                                                            <td class="modalidad-nombre">
+                                                                {{ modalidad.modalidad }}
+
+                                                                @if (modalidad.esObligatorio) {
+                                                                    <span class="badge-obligatorio">OBLIGATORIA</span>
+                                                                }
+                                                            </td>
+
+                                                            <td>
+                                                                <span
+                                                                    class="estado-badge"
+                                                                    [class.estado-activo]="modalidad.seleccionado"
+                                                                    [class.estado-inactivo]="!modalidad.seleccionado"
+                                                                >
+                                                                    {{ modalidad.seleccionado ? 'INCLUIDA' : 'NO INCLUIDA' }}
+                                                                </span>
+                                                            </td>
+
+                                                            <td>
+                                                                <label
+                                                                    class="seleccion-control"
+                                                                    [class.seleccion-bloqueada]="modalidad.esObligatorio || guardando()"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        [disabled]="modalidad.esObligatorio || guardando()"
+                                                                        [ngModel]="modalidad.seleccionado"
+                                                                        (ngModelChange)="cambiarSeleccionModalidad(modalidad.idModalidadDelito, $event)"
+                                                                    />
+                                                                    <span class="toggle"></span>
+                                                                </label>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                </article>
+                            }
+                        }
+                    </section>
                 }
-              </tbody>
-            </table>
-          </div>
-          }
-        </article>
+            </div>
         }
-        }
-      </section>
-      }
-    </div>
-    }
-  </section>
+    </section>
 </div>

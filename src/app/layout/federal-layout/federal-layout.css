@@ -1,18 +1,18 @@
 :host {
-  --siiid-guinda: #1F4E79;
-  --siiid-dorado: #BC955C;
-  --siiid-bg: #F3F6F9;
+    --siiid-guinda: #1f4e79;
+    --siiid-dorado: #bc955c;
+    --siiid-bg: #f3f6f9;
 }
 
 .sidebar {
-  border-top: 5px solid var(--siiid-dorado);
+    border-top: 5px solid var(--siiid-dorado);
 }
 
 .system-info span {
-  color: var(--siiid-guinda);
-  font-weight: 900;
+    color: var(--siiid-guinda);
+    font-weight: 900;
 }
 
 .menu-link:first-child {
-  margin-top: 4px;
+    margin-top: 4px;
 }

@@ -8,243 +8,337 @@ import { BanciActualizacionService } from '../../core/services/banci-actualizaci
 import { SessionService } from '../../core/services/session.service';
 import { BanciActualizacionResultado, BanciActualizacionVictima } from '../../core/models/banci-actualizacion.models';
 
-const errorFecha = { archivo: 'actualizacion', hoja: null, valor: null, numeroFila: 5, campo: 'fecha_localizacion', codigo: 'BANCI_FECHA_LOCALIZACION', mensaje: 'Fecha posterior a hoy.' };
-const respuesta = (estado = 'NO_VALIDADA'): BanciActualizacionResultado => ({ esValido: false, codigoReferencia: estado === 'PENDIENTE' ? 'referencia-prueba' : null, estado, huella: null, cambios: [], datosPropuestos: [], errores: [errorFecha], advertencias: [] });
-const victima = { id_banci_victima: 1, no_banci: 'BANCI/14/2026/000001', id_delito: '1', id_vicf: '1', fha_de_ini: '2026-01-10', fha_de_hchos: '2026-01-01', fub: '123' } as BanciActualizacionVictima;
+const errorFecha = {
+    archivo: 'actualizacion',
+    hoja: null,
+    valor: null,
+    numeroFila: 5,
+    campo: 'fecha_localizacion',
+    codigo: 'BANCI_FECHA_LOCALIZACION',
+    mensaje: 'Fecha posterior a hoy.',
+};
+const respuesta = (estado = 'NO_VALIDADA'): BanciActualizacionResultado => ({
+    esValido: false,
+    codigoReferencia: estado === 'PENDIENTE' ? 'referencia-prueba' : null,
+    estado,
+    huella: null,
+    cambios: [],
+    datosPropuestos: [],
+    errores: [errorFecha],
+    advertencias: [],
+});
+const victima = {
+    id_banci_victima: 1,
+    no_banci: 'BANCI/14/2026/000001',
+    id_delito: '1',
+    id_vicf: '1',
+    fha_de_ini: '2026-01-10',
+    fha_de_hchos: '2026-01-01',
+    fub: '123',
+} as BanciActualizacionVictima;
 
-describe('Corrección y recuperación BANCI', () => {
-  let api: Record<string, ReturnType<typeof vi.fn>>;
+describe('Corrección y recuperación BANCI', () =>
+{
+    let api: Record<string, ReturnType<typeof vi.fn>>;
 
-  beforeEach(() => {
-    localStorage.clear();
-    api = { obtenerOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })), obtenerPendientes: vi.fn(() => of([])), validarFormulario: vi.fn(() => throwError(() => ({ status: 400, error: respuesta() }))), confirmar: vi.fn(), obtenerEstado: vi.fn(), obtenerVistaPrevia: vi.fn() };
-    TestBed.configureTestingModule({ imports: [BanciActualizacion], providers: [provideRouter([]), { provide: BanciCruceService, useValue: { consultar: vi.fn(() => of({ victimas: [] })) } }, { provide: ActivatedRoute, useValue: { snapshot: { data: { modalidad: 'manual' }, queryParamMap: { get: () => null } } } }, { provide: BanciActualizacionService, useValue: api }, { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1 }) } }] });
-    Element.prototype.scrollIntoView = vi.fn();
-  });
-
-  afterEach(() => vi.restoreAllMocks());
-
-  it('no cierra el iframe mientras guarda o tiene una vista previa pendiente', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    const padre = { postMessage: vi.fn() };
-    vi.spyOn(window, 'parent', 'get').mockReturnValue(padre as unknown as Window);
-    const evento = new MessageEvent('message', { origin: window.location.origin, source: padre as unknown as Window, data: { tipo: 'BANCI_COMPROBAR_SALIDA', solicitud: 'prueba' } });
-    c.cargandoOperacion.set(true);
-    c.comprobarSalidaIntegrada(evento);
-    expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: false }), window.location.origin);
-    c.cargandoOperacion.set(false);
-    c.resultado.set(respuesta('PENDIENTE')); c.referencia.set('ref');
-    c.comprobarSalidaIntegrada(evento);
-    expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: false }), window.location.origin);
-    c.resultado.set(null); c.referencia.set('');
-    c.comprobarSalidaIntegrada(evento);
-    expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: true }), window.location.origin);
-  });
-
-  function conCatalogos() {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    c.opciones.set({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [
-      { campo: 'constitutiva_delito', clave: '1', descripcion: 'Delito', idEntidadFederativa: null },
-      { campo: 'constitutiva_delito', clave: '2', descripcion: 'No delito', idEntidadFederativa: null },
-      { campo: 'motivo_delito', clave: '2.07.04', descripcion: 'Delito de prueba', idEntidadFederativa: null },
-      { campo: 'motivo_no_delito', clave: '1', descripcion: 'Desarrollo', idEntidadFederativa: null }
-    ] });
-    c.seleccionar(victima);
-    return c;
-  }
-
-  it('cambia el catálogo y limpia la clave incompatible al cambiar de tipo', () => {
-    const c = conCatalogos();
-    expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
-    c.cambiarSeleccion('constitutiva_delito', '1');
-    expect(c.opcionesCampo('motivo_desaparicion').map(o => o.clave)).toEqual(['2.07.04']);
-    c.cambiarSeleccion('motivo_desaparicion', '2.07.04');
-    c.cambiarSeleccion('constitutiva_delito', '2');
-    expect(c.edicion['motivo_desaparicion']).toBe('');
-    expect(c.opcionesCampo('motivo_desaparicion').map(o => o.descripcion)).toEqual(['Desarrollo']);
-    c.cambiarSeleccion('constitutiva_delito', '');
-    expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
-  });
-
-  it('bloquea pares incompletos y motivos del otro catálogo antes de enviar', () => {
-    const c = conCatalogos();
-    for (const edicion of [
-      { constitutiva_delito: '1', motivo_desaparicion: '' },
-      { constitutiva_delito: '', motivo_desaparicion: '1' },
-      { constitutiva_delito: '2', motivo_desaparicion: '2.07.04' }
-    ]) {
-      c.edicion = edicion;
-      c.validarFormulario();
-    }
-    expect(api['validarFormulario']).not.toHaveBeenCalled();
-  });
-
-  it('envía las dos claves de No delito', () => {
-    const c = conCatalogos();
-    c.edicion = { constitutiva_delito: '2', motivo_desaparicion: '1' };
-    c.validarFormulario();
-    expect(api['validarFormulario']).toHaveBeenCalledWith({ idEntidadFederativa: null, datos: {
-      no_banci: victima.no_banci, id_delito: victima.id_delito, id_vicf: victima.id_vicf,
-      constitutiva_delito: '2', motivo_desaparicion: '1'
-    } });
-  });
-
-  it('permite enviar una actualización histórica sin FUB y muestra la regla opcional', () => {
-    const f = TestBed.createComponent(BanciActualizacion);
-    f.detectChanges();
-    const c = f.componentInstance;
-    c.seleccionar({ ...victima, fub: '' });
-    f.detectChanges();
-    expect(f.nativeElement.textContent).toContain('El FUB es opcional');
-    c.edicion = { obs: 'Corrección de prueba' };
-    c.validarFormulario();
-    expect(api['validarFormulario']).toHaveBeenCalledWith({
-      idEntidadFederativa: null,
-      datos: {
-        no_banci: victima.no_banci,
-        id_delito: victima.id_delito,
-        id_vicf: victima.id_vicf,
-        obs: 'Corrección de prueba'
-      }
+    beforeEach(() =>
+    {
+        localStorage.clear();
+        api = {
+            obtenerOpciones: vi.fn(() => of({ esSuperUsuario: false, idEntidadFederativa: 14, catalogos: [] })),
+            obtenerPendientes: vi.fn(() => of([])),
+            validarFormulario: vi.fn(() => throwError(() => ({ status: 400, error: respuesta() }))),
+            confirmar: vi.fn(),
+            obtenerEstado: vi.fn(),
+            obtenerVistaPrevia: vi.fn(),
+        };
+        TestBed.configureTestingModule({
+            imports: [BanciActualizacion],
+            providers: [
+                provideRouter([]),
+                { provide: BanciCruceService, useValue: { consultar: vi.fn(() => of({ victimas: [] })) } },
+                { provide: ActivatedRoute, useValue: { snapshot: { data: { modalidad: 'manual' }, queryParamMap: { get: () => null } } } },
+                { provide: BanciActualizacionService, useValue: api },
+                { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1 }) } },
+            ],
+        });
+        Element.prototype.scrollIntoView = vi.fn();
     });
-  });
 
-  it('el valor actual conserva su descripción aunque se edite el otro catálogo', () => {
-    const c = conCatalogos();
-    c.seleccionar({ ...victima, constitutiva_delito: 1, motivo_desaparicion: '2.07.04' });
-    c.cambiarSeleccion('constitutiva_delito', '2');
-    expect(c.actual('motivo_desaparicion')).toBe('Delito de prueba');
-  });
+    afterEach(() => vi.restoreAllMocks());
 
-  it('oculta el formulario después de errores y exige volver a corregir', () => {
-    const fixture = TestBed.createComponent(BanciActualizacion);
-    fixture.detectChanges();
-    const c = fixture.componentInstance;
-    c.seleccionar(victima);
-    c.edicion = { fecha_localizacion: '2099-01-01' };
-    c.validarFormulario();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('form')).toBeNull();
-    expect(fixture.nativeElement.querySelector('#resultado-actualizacion')).not.toBeNull();
-    c.validarFormulario();
-    expect(api['validarFormulario']).toHaveBeenCalledTimes(1);
-    c.regresarAEdicion(errorFecha);
-    fixture.detectChanges();
-    expect(c.edicion['fecha_localizacion']).toBe('2099-01-01');
-    expect(fixture.nativeElement.querySelector('#actualizar-fecha_localizacion')).not.toBeNull();
-  });
+    it('no cierra el iframe mientras guarda o tiene una vista previa pendiente', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        const padre = { postMessage: vi.fn() };
+        vi.spyOn(window, 'parent', 'get').mockReturnValue(padre as unknown as Window);
+        const evento = new MessageEvent('message', {
+            origin: window.location.origin,
+            source: padre as unknown as Window,
+            data: { tipo: 'BANCI_COMPROBAR_SALIDA', solicitud: 'prueba' },
+        });
+        c.cargandoOperacion.set(true);
+        c.comprobarSalidaIntegrada(evento);
+        expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: false }), window.location.origin);
+        c.cargandoOperacion.set(false);
+        c.resultado.set(respuesta('PENDIENTE'));
+        c.referencia.set('ref');
+        c.comprobarSalidaIntegrada(evento);
+        expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: false }), window.location.origin);
+        c.resultado.set(null);
+        c.referencia.set('');
+        c.comprobarSalidaIntegrada(evento);
+        expect(padre.postMessage).toHaveBeenLastCalledWith(expect.objectContaining({ permitido: true }), window.location.origin);
+    });
 
-  it('no libera la edición si falla el rechazo pendiente', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    c.resultado.set(respuesta('PENDIENTE'));
-    c.referencia.set('referencia-prueba');
-    c.edicion = { curp: 'DATOS' };
-    api['confirmar'].mockReturnValue(throwError(() => ({ status: 0 })));
-    c.regresarAEdicion();
-    expect(c.necesitaActualizar()).toBe(true);
-    expect(c.referencia()).toBe('referencia-prueba');
-    expect(c.pendiente()).toBe(true);
-    expect(c.edicion['curp']).toBe('DATOS');
-  });
+    function conCatalogos()
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        c.opciones.set({
+            esSuperUsuario: false,
+            idEntidadFederativa: 14,
+            catalogos: [
+                { campo: 'constitutiva_delito', clave: '1', descripcion: 'Delito', idEntidadFederativa: null },
+                { campo: 'constitutiva_delito', clave: '2', descripcion: 'No delito', idEntidadFederativa: null },
+                { campo: 'motivo_delito', clave: '2.07.04', descripcion: 'Delito de prueba', idEntidadFederativa: null },
+                { campo: 'motivo_no_delito', clave: '1', descripcion: 'Desarrollo', idEntidadFederativa: null },
+            ],
+        });
+        c.seleccionar(victima);
+        return c;
+    }
 
-  it('rechaza antes de habilitar la edición y conserva lo capturado', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    const rechazo = new Subject<{ estado: string }>();
-    c.seleccionar(victima);
-    c.edicion = { obs: 'Conservar' };
-    c.resultado.set(respuesta('PENDIENTE'));
-    c.referencia.set('referencia-prueba');
-    api['confirmar'].mockReturnValue(rechazo);
-    c.regresarAEdicion();
-    expect(c.puedeSalir()).toBe(false);
-    expect(c.resultado()).not.toBeNull();
-    rechazo.next({ estado: 'RECHAZADA' });
-    expect(c.resultado()).toBeNull();
-    expect(c.edicion['obs']).toBe('Conservar');
-    expect(c.puedeSalir()).toBe(true);
-  });
+    it('cambia el catálogo y limpia la clave incompatible al cambiar de tipo', () =>
+    {
+        const c = conCatalogos();
+        expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
+        c.cambiarSeleccion('constitutiva_delito', '1');
+        expect(c.opcionesCampo('motivo_desaparicion').map((o) => o.clave)).toEqual(['2.07.04']);
+        c.cambiarSeleccion('motivo_desaparicion', '2.07.04');
+        c.cambiarSeleccion('constitutiva_delito', '2');
+        expect(c.edicion['motivo_desaparicion']).toBe('');
+        expect(c.opcionesCampo('motivo_desaparicion').map((o) => o.descripcion)).toEqual(['Desarrollo']);
+        c.cambiarSeleccion('constitutiva_delito', '');
+        expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
+    });
 
-  it('conserva referencia recuperable cuando falla la consulta de estado', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    api['obtenerEstado'].mockReturnValue(throwError(() => ({ status: 0 })));
-    c.recuperar('referencia-prueba');
-    expect(c.referencia()).toBe('referencia-prueba');
-    expect(c.necesitaActualizar()).toBe(true);
-    expect(localStorage.getItem('siiid_banci_actualizacion_1')).toBe('referencia-prueba');
-  });
+    it('bloquea pares incompletos y motivos del otro catálogo antes de enviar', () =>
+    {
+        const c = conCatalogos();
+        for(const edicion of [
+            { constitutiva_delito: '1', motivo_desaparicion: '' },
+            { constitutiva_delito: '', motivo_desaparicion: '1' },
+            { constitutiva_delito: '2', motivo_desaparicion: '2.07.04' },
+        ])
+        {
+            c.edicion = edicion;
+            c.validarFormulario();
+        }
+        expect(api['validarFormulario']).not.toHaveBeenCalled();
+    });
 
-  it('permite rechazar una revisión pendiente que ya incumple las fechas', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    api['obtenerEstado'].mockReturnValue(of([{ estado: 'PENDIENTE', origen: 'FORMULARIO', idEntidadFederativa: 14 }]));
-    api['obtenerVistaPrevia'].mockReturnValue(throwError(() => ({ status: 400, error: { mensaje: 'Fecha incompatible' } })));
-    c.recuperar('referencia-prueba');
-    expect(c.pendiente()).toBe(true);
-    expect(c.resultado()?.huella).toBeNull();
-    expect(c.necesitaActualizar()).toBe(false);
-    api['confirmar'].mockReturnValue(of({ estado: 'RECHAZADA' }));
-    c.regresarAEdicion();
-    expect(c.resultado()).toBeNull();
-  });
+    it('envía las dos claves de No delito', () =>
+    {
+        const c = conCatalogos();
+        c.edicion = { constitutiva_delito: '2', motivo_desaparicion: '1' };
+        c.validarFormulario();
+        expect(api['validarFormulario']).toHaveBeenCalledWith({
+            idEntidadFederativa: null,
+            datos: {
+                no_banci: victima.no_banci,
+                id_delito: victima.id_delito,
+                id_vicf: victima.id_vicf,
+                constitutiva_delito: '2',
+                motivo_desaparicion: '1',
+            },
+        });
+    });
 
-  it('redirige una recuperación de Excel a su vista masiva', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    api['obtenerEstado'].mockReturnValue(of([{ estado: 'PENDIENTE', origen: 'EXCEL', idEntidadFederativa: 14 }]));
-    c.recuperar('referencia-prueba');
-    expect(navegar).toHaveBeenCalledWith(['/banci/actualizacion', 'masiva'], { queryParamsHandling: 'preserve' });
-    expect(api['obtenerVistaPrevia']).not.toHaveBeenCalled();
-  });
+    it('permite enviar una actualización histórica sin FUB y muestra la regla opcional', () =>
+    {
+        const f = TestBed.createComponent(BanciActualizacion);
+        f.detectChanges();
+        const c = f.componentInstance;
+        c.seleccionar({ ...victima, fub: '' });
+        f.detectChanges();
+        expect(f.nativeElement.textContent).toContain('El FUB es opcional');
+        c.edicion = { obs: 'Corrección de prueba' };
+        c.validarFormulario();
+        expect(api['validarFormulario']).toHaveBeenCalledWith({
+            idEntidadFederativa: null,
+            datos: {
+                no_banci: victima.no_banci,
+                id_delito: victima.id_delito,
+                id_vicf: victima.id_vicf,
+                obs: 'Corrección de prueba',
+            },
+        });
+    });
 
-  it('convierte CURP y RFC en el input y en los datos enviados', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    const input = document.createElement('input');
-    input.value = 'abcd010101xxx';
-    c.capturarTexto('rfc', { target: input } as unknown as Event);
-    expect(input.value).toBe('ABCD010101XXX');
-    expect(c.edicion['rfc']).toBe('ABCD010101XXX');
-    c.capturarTexto('curp', { target: input } as unknown as Event);
-    expect(c.edicion['curp']).toBe('ABCD010101XXX');
-  });
+    it('el valor actual conserva su descripción aunque se edite el otro catálogo', () =>
+    {
+        const c = conCatalogos();
+        c.seleccionar({ ...victima, constitutiva_delito: 1, motivo_desaparicion: '2.07.04' });
+        c.cambiarSeleccion('constitutiva_delito', '2');
+        expect(c.actual('motivo_desaparicion')).toBe('Delito de prueba');
+    });
 
-  it('no vuelve a mostrar una actualización ya resuelta al entrar', () => {
-    localStorage.setItem('siiid_banci_actualizacion_1', 'referencia-prueba');
-    api['obtenerEstado'].mockReturnValue(of([{ estado: 'INTEGRADA', origen: 'EXCEL', idEntidadFederativa: 14 }]));
-    const f = TestBed.createComponent(BanciActualizacion);
-    f.detectChanges();
-    expect(f.componentInstance.confirmacion()).toBeNull();
-    expect(f.componentInstance.resultado()).toBeNull();
-    expect(localStorage.getItem('siiid_banci_actualizacion_1')).toBeNull();
-  });
+    it('oculta el formulario después de errores y exige volver a corregir', () =>
+    {
+        const fixture = TestBed.createComponent(BanciActualizacion);
+        fixture.detectChanges();
+        const c = fixture.componentInstance;
+        c.seleccionar(victima);
+        c.edicion = { fecha_localizacion: '2099-01-01' };
+        c.validarFormulario();
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).toBeNull();
+        expect(fixture.nativeElement.querySelector('#resultado-actualizacion')).not.toBeNull();
+        c.validarFormulario();
+        expect(api['validarFormulario']).toHaveBeenCalledTimes(1);
+        c.regresarAEdicion(errorFecha);
+        fixture.detectChanges();
+        expect(c.edicion['fecha_localizacion']).toBe('2099-01-01');
+        expect(fixture.nativeElement.querySelector('#actualizar-fecha_localizacion')).not.toBeNull();
+    });
 
-  it('no repite la operación actual en pendientes ni muestra revisar sin observaciones', () => {
-    const f = TestBed.createComponent(BanciActualizacion);
-    f.detectChanges();
-    const c = f.componentInstance;
-    c.resultado.set({ ...respuesta('PENDIENTE'), esValido: true, errores: [], huella: 'prueba' });
-    c.referencia.set('referencia-prueba');
-    c.pendientes.set([{ codigoReferencia: 'referencia-prueba', estado: 'PENDIENTE', origen: 'FORMULARIO', idEntidadFederativa: 14, fechaRegistro: '2026-09-23', fechaDecision: null, totalCambios: 0 }]);
-    f.detectChanges();
-    expect(f.nativeElement.querySelector('.pendiente-item')).toBeNull();
-    const botones = Array.from(f.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).map(b => b.textContent || '');
-    expect(botones.some(t => /Revisar|Regresar y revisar/.test(t))).toBe(false);
-    expect(f.nativeElement.textContent).toContain('Sin errores ni advertencias');
-  });
+    it('no libera la edición si falla el rechazo pendiente', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        c.resultado.set(respuesta('PENDIENTE'));
+        c.referencia.set('referencia-prueba');
+        c.edicion = { curp: 'DATOS' };
+        api['confirmar'].mockReturnValue(throwError(() => ({ status: 0 })));
+        c.regresarAEdicion();
+        expect(c.necesitaActualizar()).toBe(true);
+        expect(c.referencia()).toBe('referencia-prueba');
+        expect(c.pendiente()).toBe(true);
+        expect(c.edicion['curp']).toBe('DATOS');
+    });
 
-  it('usa la tarjeta de arrastre de carga y el panel lateral de plantillas en masiva', () => {
-    const f = TestBed.createComponent(BanciActualizacion);
-    f.detectChanges();
-    f.componentInstance.modalidad.set('masiva');
-    f.detectChanges();
-    expect(f.nativeElement.querySelector('.col-xl-8 .file-upload-card input.file-input')).not.toBeNull();
-    expect(f.nativeElement.querySelector('aside.col-xl-4 .plantilla-link')).not.toBeNull();
-    expect(f.nativeElement.querySelector('.zona-archivo-banci')).toBeNull();
-  });
+    it('rechaza antes de habilitar la edición y conserva lo capturado', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        const rechazo = new Subject<{ estado: string }>();
+        c.seleccionar(victima);
+        c.edicion = { obs: 'Conservar' };
+        c.resultado.set(respuesta('PENDIENTE'));
+        c.referencia.set('referencia-prueba');
+        api['confirmar'].mockReturnValue(rechazo);
+        c.regresarAEdicion();
+        expect(c.puedeSalir()).toBe(false);
+        expect(c.resultado()).not.toBeNull();
+        rechazo.next({ estado: 'RECHAZADA' });
+        expect(c.resultado()).toBeNull();
+        expect(c.edicion['obs']).toBe('Conservar');
+        expect(c.puedeSalir()).toBe(true);
+    });
 
-  it('rechaza arrastrar varios Excel en vez de seleccionar silenciosamente el primero', () => {
-    const c = TestBed.createComponent(BanciActualizacion).componentInstance;
-    const archivo = new File(['prueba'], 'actualizacion.xlsx');
-    c.soltarArchivo({ preventDefault: vi.fn(), stopPropagation: vi.fn(), dataTransfer: { files: { length: 2, item: () => archivo } } } as unknown as DragEvent);
-    expect(c.archivo).toBeNull();
-    expect(c.mensaje()).toContain('un solo archivo');
-  });
+    it('conserva referencia recuperable cuando falla la consulta de estado', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        api['obtenerEstado'].mockReturnValue(throwError(() => ({ status: 0 })));
+        c.recuperar('referencia-prueba');
+        expect(c.referencia()).toBe('referencia-prueba');
+        expect(c.necesitaActualizar()).toBe(true);
+        expect(localStorage.getItem('siiid_banci_actualizacion_1')).toBe('referencia-prueba');
+    });
+
+    it('permite rechazar una revisión pendiente que ya incumple las fechas', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        api['obtenerEstado'].mockReturnValue(of([{ estado: 'PENDIENTE', origen: 'FORMULARIO', idEntidadFederativa: 14 }]));
+        api['obtenerVistaPrevia'].mockReturnValue(throwError(() => ({ status: 400, error: { mensaje: 'Fecha incompatible' } })));
+        c.recuperar('referencia-prueba');
+        expect(c.pendiente()).toBe(true);
+        expect(c.resultado()?.huella).toBeNull();
+        expect(c.necesitaActualizar()).toBe(false);
+        api['confirmar'].mockReturnValue(of({ estado: 'RECHAZADA' }));
+        c.regresarAEdicion();
+        expect(c.resultado()).toBeNull();
+    });
+
+    it('redirige una recuperación de Excel a su vista masiva', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+        api['obtenerEstado'].mockReturnValue(of([{ estado: 'PENDIENTE', origen: 'EXCEL', idEntidadFederativa: 14 }]));
+        c.recuperar('referencia-prueba');
+        expect(navegar).toHaveBeenCalledWith(['/banci/actualizacion', 'masiva'], { queryParamsHandling: 'preserve' });
+        expect(api['obtenerVistaPrevia']).not.toHaveBeenCalled();
+    });
+
+    it('convierte CURP y RFC en el input y en los datos enviados', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        const input = document.createElement('input');
+        input.value = 'abcd010101xxx';
+        c.capturarTexto('rfc', { target: input } as unknown as Event);
+        expect(input.value).toBe('ABCD010101XXX');
+        expect(c.edicion['rfc']).toBe('ABCD010101XXX');
+        c.capturarTexto('curp', { target: input } as unknown as Event);
+        expect(c.edicion['curp']).toBe('ABCD010101XXX');
+    });
+
+    it('no vuelve a mostrar una actualización ya resuelta al entrar', () =>
+    {
+        localStorage.setItem('siiid_banci_actualizacion_1', 'referencia-prueba');
+        api['obtenerEstado'].mockReturnValue(of([{ estado: 'INTEGRADA', origen: 'EXCEL', idEntidadFederativa: 14 }]));
+        const f = TestBed.createComponent(BanciActualizacion);
+        f.detectChanges();
+        expect(f.componentInstance.confirmacion()).toBeNull();
+        expect(f.componentInstance.resultado()).toBeNull();
+        expect(localStorage.getItem('siiid_banci_actualizacion_1')).toBeNull();
+    });
+
+    it('no repite la operación actual en pendientes ni muestra revisar sin observaciones', () =>
+    {
+        const f = TestBed.createComponent(BanciActualizacion);
+        f.detectChanges();
+        const c = f.componentInstance;
+        c.resultado.set({ ...respuesta('PENDIENTE'), esValido: true, errores: [], huella: 'prueba' });
+        c.referencia.set('referencia-prueba');
+        c.pendientes.set([
+            {
+                codigoReferencia: 'referencia-prueba',
+                estado: 'PENDIENTE',
+                origen: 'FORMULARIO',
+                idEntidadFederativa: 14,
+                fechaRegistro: '2026-09-23',
+                fechaDecision: null,
+                totalCambios: 0,
+            },
+        ]);
+        f.detectChanges();
+        expect(f.nativeElement.querySelector('.pendiente-item')).toBeNull();
+        const botones = Array.from(f.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).map(
+            (b) => b.textContent || '',
+        );
+        expect(botones.some((t) => /Revisar|Regresar y revisar/.test(t))).toBe(false);
+        expect(f.nativeElement.textContent).toContain('Sin errores ni advertencias');
+    });
+
+    it('usa la tarjeta de arrastre de carga y el panel lateral de plantillas en masiva', () =>
+    {
+        const f = TestBed.createComponent(BanciActualizacion);
+        f.detectChanges();
+        f.componentInstance.modalidad.set('masiva');
+        f.detectChanges();
+        expect(f.nativeElement.querySelector('.col-xl-8 .file-upload-card input.file-input')).not.toBeNull();
+        expect(f.nativeElement.querySelector('aside.col-xl-4 .plantilla-link')).not.toBeNull();
+        expect(f.nativeElement.querySelector('.zona-archivo-banci')).toBeNull();
+    });
+
+    it('rechaza arrastrar varios Excel en vez de seleccionar silenciosamente el primero', () =>
+    {
+        const c = TestBed.createComponent(BanciActualizacion).componentInstance;
+        const archivo = new File(['prueba'], 'actualizacion.xlsx');
+        c.soltarArchivo({
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+            dataTransfer: { files: { length: 2, item: () => archivo } },
+        } as unknown as DragEvent);
+        expect(c.archivo).toBeNull();
+        expect(c.mensaje()).toContain('un solo archivo');
+    });
 });

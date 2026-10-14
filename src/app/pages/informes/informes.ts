@@ -7,1054 +7,1132 @@ import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { tieneAlcanceNacionalConsulta } from '../../core/utils/alcance-consulta.utils';
 import { SessionService } from '../../core/services/session.service';
-import {
-  InformesService,
-  ModoPlanoDescarga,
-  TipoSabanaDescarga,
-} from '../../core/services/informes.service';
+import { InformesService, ModoPlanoDescarga, TipoSabanaDescarga } from '../../core/services/informes.service';
+
+import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 import {
-  obtenerMensajeErrorHttp,
-  obtenerMensajeErrorHttpAsync,
-} from '../../core/utils/http-error.utils';
-
-import {
-  CorteOperativo,
-  InformeEnvioItem,
-  InformeReporteCargaItem,
-  PeriodoCorteInforme,
-  TipoReporte,
+    CorteOperativo,
+    InformeEnvioItem,
+    InformeReporteCargaItem,
+    PeriodoCorteInforme,
+    TipoReporte,
 } from '../../core/models/informes.models';
 
-import {
-  EstadoOrden,
-  ValorOrden,
-  alternarOrden,
-  obtenerIconoOrden,
-  ordenarPorEstado,
-} from '../../core/utils/sort.utils';
+import { EstadoOrden, ValorOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
 
-type CampoOrdenEnvios =
-  | 'entidadFederativa'
-  | 'claveEntidad'
-  | 'fechaEnvioTexto'
-  | 'corte'
-  | 'usuarioEnvio'
-  | 'estadoTexto';
+type CampoOrdenEnvios = 'entidadFederativa' | 'claveEntidad' | 'fechaEnvioTexto' | 'corte' | 'usuarioEnvio' | 'estadoTexto';
 
 type CampoOrdenCargas =
-  | 'entidadFederativa'
-  | 'claveEntidad'
-  | 'corte'
-  | 'intentos'
-  | 'ordenCarga'
-  | 'estatusUltimoIntento'
-  | 'fechaCargaActualizacionTexto'
-  | 'fechaAprobacionTexto';
+    | 'entidadFederativa'
+    | 'claveEntidad'
+    | 'corte'
+    | 'intentos'
+    | 'ordenCarga'
+    | 'estatusUltimoIntento'
+    | 'fechaCargaActualizacionTexto'
+    | 'fechaAprobacionTexto';
 
 @Component({
-  selector: 'app-informes',
-  imports: [FormsModule],
-  templateUrl: './informes.html',
-  styleUrl: './informes.css',
+    selector: 'app-informes',
+    imports: [FormsModule],
+    templateUrl: './informes.html',
+    styleUrl: './informes.css',
 })
-export class Informes implements OnInit {
-  private readonly sessionService = inject(SessionService);
-  private readonly informesService = inject(InformesService);
-  private readonly route = inject(ActivatedRoute);
-  private readonly sanitizer = inject(DomSanitizer);
+export class Informes implements OnInit
+{
+    private readonly sessionService = inject(SessionService);
+    private readonly informesService = inject(InformesService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly sanitizer = inject(DomSanitizer);
 
-  usuario = this.sessionService.usuario;
+    usuario = this.sessionService.usuario;
 
-  reporteActivo = signal<TipoReporte>('ENVIOS');
-  busquedaEnvios = signal('');
-  busquedaCargas = signal('');
+    reporteActivo = signal<TipoReporte>('ENVIOS');
+    busquedaEnvios = signal('');
+    busquedaCargas = signal('');
 
-  paginaEnvios = signal(1);
-  paginaCargas = signal(1);
+    paginaEnvios = signal(1);
+    paginaCargas = signal(1);
 
-  periodosEnvio = signal<PeriodoCorteInforme[]>([]);
-  periodoEnvioSeleccionado = signal('');
-  descargandoAcuses = signal(false);
+    periodosEnvio = signal<PeriodoCorteInforme[]>([]);
+    periodoEnvioSeleccionado = signal('');
+    descargandoAcuses = signal(false);
 
-  tamanioPagina = 10;
+    tamanioPagina = 10;
 
-  cargandoEnvios = signal(false);
-  cargandoCargas = signal(false);
+    cargandoEnvios = signal(false);
+    cargandoCargas = signal(false);
 
-  descargandoAcuse = signal<string | null>(null);
-  descargandoArchivos = signal<string | null>(null);
-  exportandoExcel = signal<TipoReporte | null>(null);
+    descargandoAcuse = signal<string | null>(null);
+    descargandoArchivos = signal<string | null>(null);
+    exportandoExcel = signal<TipoReporte | null>(null);
 
-  descargandoSabanas = signal<TipoSabanaDescarga | null>(null);
-  anioSabana = signal<number>(new Date().getFullYear());
-  modoPlano = signal<ModoPlanoDescarga>('CONFIRMADO');
+    descargandoSabanas = signal<TipoSabanaDescarga | null>(null);
+    anioSabana = signal<number>(new Date().getFullYear());
+    modoPlano = signal<ModoPlanoDescarga>('CONFIRMADO');
 
-  ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
-  ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>({
-    campo: 'ordenCarga',
-    direccion: 'asc',
-  });
-
-  descargaEnProceso = computed(() => {
-    return (
-      this.descargandoAcuse() !== null ||
-      this.descargandoArchivos() !== null ||
-      this.exportandoExcel() !== null ||
-      this.descargandoSabanas() !== null ||
-      this.descargandoAcuses()
-    );
-  });
-
-  envios = signal<InformeEnvioItem[]>([]);
-  cargas = signal<InformeReporteCargaItem[]>([]);
-
-  acuseUrl = signal<string | null>(null);
-  acuseUrlSegura = signal<SafeResourceUrl | null>(null);
-  acuseTitulo = signal('Acuse de entrega de información');
-
-  corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
-
-  periodosCorte = signal<PeriodoCorteInforme[]>([]);
-  periodoCorteSeleccionado = signal<string>('');
-
-  ngOnInit(): void {
-    this.route.data.subscribe((data) => {
-      const reporte = data['reporte'] as TipoReporte | undefined;
-
-      if (reporte === 'CARGAS' && !this.puedeVerCargas()) {
-        this.reporteActivo.set('ENVIOS');
-        this.cargarEnvios();
-        return;
-      }
-
-      if (reporte === 'SABANAS' && !this.puedeVerSabanas()) {
-        this.reporteActivo.set('ENVIOS');
-        this.cargarEnvios();
-        return;
-      }
-
-      this.reporteActivo.set(reporte ?? 'ENVIOS');
-
-      if (this.reporteActivo() === 'CARGAS') {
-        this.cargarReporteCargas();
-        return;
-      }
-
-      if (this.reporteActivo() === 'SABANAS') {
-        return;
-      }
-
-      this.cargarEnvios();
-    });
-  }
-
-  tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
-  esSuperUsuario = computed(() => {
-    return this.usuario()?.rol === ROLES.SUPER_USUARIO;
-  });
-
-  esConsulta = computed(() => {
-    return this.usuario()?.rol === ROLES.CONSULTA;
-  });
-
-  esEnlaceEstatal = computed(() => {
-    return this.usuario()?.rol === ROLES.ENLACE_ESTATAL;
-  });
-
-  puedeVerCargas = computed(() => this.esSuperUsuario());
-
-  puedeVerSabanas = computed(() => {
-    return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
-  });
-
-  puedeVerEnvios = computed(() => {
-    return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
-  });
-
-  entidadUsuario = computed(() => {
-    return this.usuario()?.entidadFederativa ?? '';
-  });
-
-  enviosFiltrados = computed(() => {
-    const texto = this.busquedaEnvios().trim().toLowerCase();
-    const periodoSeleccionado = this.periodoEnvioSeleccionado();
-
-    const filtrados = this.envios().filter((envio) => {
-      const keyPeriodo = `${envio.anioCorte}-${envio.mesCorte.toString().padStart(2, '0')}`;
-
-      if (periodoSeleccionado && keyPeriodo !== periodoSeleccionado) {
-        return false;
-      }
-
-      if (!texto) {
-        return true;
-      }
-
-      return (
-        envio.entidadFederativa.toLowerCase().includes(texto) ||
-        envio.claveEntidad.toLowerCase().includes(texto) ||
-        envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
-        envio.corte.toLowerCase().includes(texto) ||
-        envio.usuarioEnvio.toLowerCase().includes(texto) ||
-        envio.codigoReferencia.toLowerCase().includes(texto) ||
-        envio.tipoCarga.toLowerCase().includes(texto) ||
-        envio.estado.toLowerCase().includes(texto) ||
-        envio.estadoTexto.toLowerCase().includes(texto)
-      );
+    ordenEnvios = signal<EstadoOrden<CampoOrdenEnvios> | null>(null);
+    ordenCargas = signal<EstadoOrden<CampoOrdenCargas> | null>({
+        campo: 'ordenCarga',
+        direccion: 'asc',
     });
 
-    return this.ordenarListaEnvios(filtrados);
-  });
-
-  cargasFiltradas = computed(() => {
-    const texto = this.busquedaCargas().trim().toLowerCase();
-    const corte = this.corteOperativo();
-
-    const filtradas = this.cargas().filter((carga) => {
-      if (carga.claveEntidad === '00') {
-        return false;
-      }
-
-      if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) {
-        return false;
-      }
-
-      if (!carga.intentos || carga.intentos === 0) {
-        return false;
-      }
-
-      if (!texto) {
-        return true;
-      }
-
-      return (
-        carga.entidadFederativa.toLowerCase().includes(texto) ||
-        carga.claveEntidad.toLowerCase().includes(texto) ||
-        carga.corte.toLowerCase().includes(texto) ||
-        (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-        (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
-      );
+    descargaEnProceso = computed(() =>
+    {
+        return (
+            this.descargandoAcuse() !== null ||
+            this.descargandoArchivos() !== null ||
+            this.exportandoExcel() !== null ||
+            this.descargandoSabanas() !== null ||
+            this.descargandoAcuses()
+        );
     });
 
-    return this.ordenarListaCargas(filtradas);
-  });
+    envios = signal<InformeEnvioItem[]>([]);
+    cargas = signal<InformeReporteCargaItem[]>([]);
 
-  enviosPaginados = computed(() => {
-    const inicio = (this.paginaEnvios() - 1) * this.tamanioPagina;
-    return this.enviosFiltrados().slice(inicio, inicio + this.tamanioPagina);
-  });
+    acuseUrl = signal<string | null>(null);
+    acuseUrlSegura = signal<SafeResourceUrl | null>(null);
+    acuseTitulo = signal('Acuse de entrega de información');
 
-  cargasPaginadas = computed(() => {
-    const inicio = (this.paginaCargas() - 1) * this.tamanioPagina;
-    return this.cargasFiltradas().slice(inicio, inicio + this.tamanioPagina);
-  });
+    corteOperativo = signal<CorteOperativo>(this.obtenerCorteOperativoActual());
 
-  totalPaginasEnvios = computed(() => {
-    return Math.max(1, Math.ceil(this.enviosFiltrados().length / this.tamanioPagina));
-  });
+    periodosCorte = signal<PeriodoCorteInforme[]>([]);
+    periodoCorteSeleccionado = signal<string>('');
 
-  totalPaginasCargas = computed(() => {
-    return Math.max(1, Math.ceil(this.cargasFiltradas().length / this.tamanioPagina));
-  });
+    ngOnInit(): void
+    {
+        this.route.data.subscribe((data) =>
+        {
+            const reporte = data['reporte'] as TipoReporte | undefined;
 
-  cargarEnvios(): void {
-    this.cargandoEnvios.set(true);
+            if(reporte === 'CARGAS' && !this.puedeVerCargas())
+            {
+                this.reporteActivo.set('ENVIOS');
+                this.cargarEnvios();
+                return;
+            }
 
-    this.informesService.obtenerPeriodosEnvios().subscribe({
-      next: (periodos) => {
+            if(reporte === 'SABANAS' && !this.puedeVerSabanas())
+            {
+                this.reporteActivo.set('ENVIOS');
+                this.cargarEnvios();
+                return;
+            }
+
+            this.reporteActivo.set(reporte ?? 'ENVIOS');
+
+            if(this.reporteActivo() === 'CARGAS')
+            {
+                this.cargarReporteCargas();
+                return;
+            }
+
+            if(this.reporteActivo() === 'SABANAS')
+            {
+                return;
+            }
+
+            this.cargarEnvios();
+        });
+    }
+
+    tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
+    esSuperUsuario = computed(() =>
+    {
+        return this.usuario()?.rol === ROLES.SUPER_USUARIO;
+    });
+
+    esConsulta = computed(() =>
+    {
+        return this.usuario()?.rol === ROLES.CONSULTA;
+    });
+
+    esEnlaceEstatal = computed(() =>
+    {
+        return this.usuario()?.rol === ROLES.ENLACE_ESTATAL;
+    });
+
+    puedeVerCargas = computed(() => this.esSuperUsuario());
+
+    puedeVerSabanas = computed(() =>
+    {
+        return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
+    });
+
+    puedeVerEnvios = computed(() =>
+    {
+        return this.esSuperUsuario() || this.esEnlaceEstatal() || this.esConsulta();
+    });
+
+    entidadUsuario = computed(() =>
+    {
+        return this.usuario()?.entidadFederativa ?? '';
+    });
+
+    enviosFiltrados = computed(() =>
+    {
+        const texto = this.busquedaEnvios().trim().toLowerCase();
+        const periodoSeleccionado = this.periodoEnvioSeleccionado();
+
+        const filtrados = this.envios().filter((envio) =>
+        {
+            const keyPeriodo = `${envio.anioCorte}-${envio.mesCorte.toString().padStart(2, '0')}`;
+
+            if(periodoSeleccionado && keyPeriodo !== periodoSeleccionado)
+            {
+                return false;
+            }
+
+            if(!texto)
+            {
+                return true;
+            }
+
+            return (
+                envio.entidadFederativa.toLowerCase().includes(texto) ||
+                envio.claveEntidad.toLowerCase().includes(texto) ||
+                envio.fechaEnvioTexto.toLowerCase().includes(texto) ||
+                envio.corte.toLowerCase().includes(texto) ||
+                envio.usuarioEnvio.toLowerCase().includes(texto) ||
+                envio.codigoReferencia.toLowerCase().includes(texto) ||
+                envio.tipoCarga.toLowerCase().includes(texto) ||
+                envio.estado.toLowerCase().includes(texto) ||
+                envio.estadoTexto.toLowerCase().includes(texto)
+            );
+        });
+
+        return this.ordenarListaEnvios(filtrados);
+    });
+
+    cargasFiltradas = computed(() =>
+    {
+        const texto = this.busquedaCargas().trim().toLowerCase();
+        const corte = this.corteOperativo();
+
+        const filtradas = this.cargas().filter((carga) =>
+        {
+            if(carga.claveEntidad === '00')
+            {
+                return false;
+            }
+
+            if(carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte)
+            {
+                return false;
+            }
+
+            if(!carga.intentos || carga.intentos === 0)
+            {
+                return false;
+            }
+
+            if(!texto)
+            {
+                return true;
+            }
+
+            return (
+                carga.entidadFederativa.toLowerCase().includes(texto) ||
+                carga.claveEntidad.toLowerCase().includes(texto) ||
+                carga.corte.toLowerCase().includes(texto) ||
+                (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+                (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
+            );
+        });
+
+        return this.ordenarListaCargas(filtradas);
+    });
+
+    enviosPaginados = computed(() =>
+    {
+        const inicio = (this.paginaEnvios() - 1) * this.tamanioPagina;
+        return this.enviosFiltrados().slice(inicio, inicio + this.tamanioPagina);
+    });
+
+    cargasPaginadas = computed(() =>
+    {
+        const inicio = (this.paginaCargas() - 1) * this.tamanioPagina;
+        return this.cargasFiltradas().slice(inicio, inicio + this.tamanioPagina);
+    });
+
+    totalPaginasEnvios = computed(() =>
+    {
+        return Math.max(1, Math.ceil(this.enviosFiltrados().length / this.tamanioPagina));
+    });
+
+    totalPaginasCargas = computed(() =>
+    {
+        return Math.max(1, Math.ceil(this.cargasFiltradas().length / this.tamanioPagina));
+    });
+
+    cargarEnvios(): void
+    {
+        this.cargandoEnvios.set(true);
+
+        this.informesService.obtenerPeriodosEnvios().subscribe({
+            next: (periodos) =>
+            {
+                this.periodosEnvio.set(periodos);
+
+                if(!periodos.length)
+                {
+                    this.periodoEnvioSeleccionado.set('');
+                    this.envios.set([]);
+                    this.paginaEnvios.set(1);
+                    this.cargandoEnvios.set(false);
+                    return;
+                }
+
+                const seleccionado = this.periodoEnvioSeleccionado();
+                const existe = periodos.some(
+                    (periodo) => `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado,
+                );
+
+                if(!existe)
+                {
+                    const periodo = periodos[0];
+                    this.periodoEnvioSeleccionado.set(`${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}`);
+                }
+
+                this.cargarEnviosPeriodo();
+            },
+            error: (error) =>
+            {
+                this.cargandoEnvios.set(false);
+                mostrarError(
+                    'No fue posible consultar los periodos de envíos',
+                    obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+                );
+            },
+        });
+    }
+
+    cargarReporteCargas(): void
+    {
+        if(!this.puedeVerCargas())
+        {
+            return;
+        }
+
+        this.cargandoCargas.set(true);
+
+        this.informesService.obtenerReporteCargas().subscribe({
+            next: (response) =>
+            {
+                const registros = response.registros ?? [];
+
+                this.cargas.set(registros);
+                this.sincronizarPeriodosCorte(registros);
+                this.paginaCargas.set(1);
+                this.cargandoCargas.set(false);
+            },
+            error: (error) =>
+            {
+                this.cargandoCargas.set(false);
+
+                mostrarError(
+                    'No fue posible consultar el reporte de cargas',
+                    obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+                );
+            },
+        });
+    }
+
+    cambiarCorteReporte(): void
+    {
+        this.sincronizarCorteSeleccionado();
+        this.paginaCargas.set(1);
+    }
+
+    buscarEnvios(valor: string): void
+    {
+        this.busquedaEnvios.set(valor);
+        this.paginaEnvios.set(1);
+    }
+
+    cambiarCorteEnvios(): void
+    {
+        this.paginaEnvios.set(1);
+        this.cargarEnviosPeriodo();
+    }
+
+    buscarCargas(valor: string): void
+    {
+        this.busquedaCargas.set(valor);
+        this.paginaCargas.set(1);
+    }
+
+    cambiarPaginaEnvios(pagina: number): void
+    {
+        if(pagina < 1 || pagina > this.totalPaginasEnvios())
+        {
+            return;
+        }
+
+        this.paginaEnvios.set(pagina);
+    }
+
+    cambiarPaginaCargas(pagina: number): void
+    {
+        if(pagina < 1 || pagina > this.totalPaginasCargas())
+        {
+            return;
+        }
+
+        this.paginaCargas.set(pagina);
+    }
+
+    etiquetaEstatusCarga(carga: InformeReporteCargaItem): string
+    {
+        const estatus = this.normalizarTexto(carga.estatusUltimoIntento);
+        const tipoCarga = this.normalizarTexto(carga.tipoCargaUltimoIntento);
+
+        const sufijo = tipoCarga.includes('ACTUALIZACION') ? 'actualización' : 'carga';
+
+        if(!estatus)
+        {
+            return 'Sin carga';
+        }
+
+        if(estatus.includes('CONFIRMADO'))
+        {
+            return `Confirmado ${sufijo}`;
+        }
+
+        if(estatus === 'PENDIENTE_APROBACION')
+        {
+            return 'Pendiente de aprobación';
+        }
+
+        if(estatus.includes('PENDIENTE'))
+        {
+            return `Pendiente ${sufijo}`;
+        }
+
+        if(estatus.includes('RECHAZADO'))
+        {
+            return `Rechazado ${sufijo}`;
+        }
+
+        if(estatus.includes('ERROR'))
+        {
+            return `Con errores ${sufijo}`;
+        }
+
+        if(estatus.includes('EXPIRADO'))
+        {
+            return `Expirado ${sufijo}`;
+        }
+
+        return estatus.replaceAll('_', ' ');
+    }
+
+    esEstatusConfirmado(estatus: string | null): boolean
+    {
+        return this.normalizarTexto(estatus).includes('CONFIRMADO');
+    }
+
+    esEstatusPendiente(estatus: string | null): boolean
+    {
+        return this.normalizarTexto(estatus).includes('PENDIENTE');
+    }
+
+    esEstatusError(estatus: string | null): boolean
+    {
+        const valor = this.normalizarTexto(estatus);
+
+        return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
+    }
+
+    ajustarPosicionMotivo(event: Event): void
+    {
+        const detalle = event.currentTarget as HTMLDetailsElement;
+
+        if(!detalle.open)
+        {
+            detalle.classList.remove('motivo-rechazo-arriba');
+            return;
+        }
+
+        const contenedor = detalle.closest('.envios-mensual-table-responsive');
+        const panel = detalle.querySelector<HTMLElement>('.motivo-rechazo-mensual');
+
+        if(!contenedor || !panel) return;
+
+        const espacioInferior = contenedor.getBoundingClientRect().bottom - detalle.getBoundingClientRect().bottom;
+
+        const abrirArriba = espacioInferior < panel.offsetHeight + 12;
+
+        detalle.classList.toggle('motivo-rechazo-arriba', abrirArriba);
+    }
+
+    private normalizarTexto(valor: string | null | undefined): string
+    {
+        return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
+    }
+
+    tipoCargaTexto(tipoCarga: string | null): string
+    {
+        if(!tipoCarga)
+        {
+            return '';
+        }
+
+        if(tipoCarga === 'CARGA_INICIAL')
+        {
+            return 'Carga inicial';
+        }
+
+        if(tipoCarga === 'ACTUALIZACION')
+        {
+            return 'Actualización';
+        }
+
+        return tipoCarga.replaceAll('_', ' ');
+    }
+
+    verAcuse(envio: InformeEnvioItem): void
+    {
+        if(!envio.endpointAcuse)
+        {
+            mostrarAdvertencia('Informe no disponible', 'Este envío aún no tiene informe previo disponible.');
+            return;
+        }
+
+        this.descargandoAcuse.set(envio.codigoReferencia);
+
+        this.descargarEndpoint(envio.endpointAcuse, `INFORME_${envio.codigoReferencia}.pdf`, true, () => this.descargandoAcuse.set(null));
+    }
+
+    descargarArchivos(envio: InformeEnvioItem): void
+    {
+        if(!envio.endpointExcel)
+        {
+            mostrarAdvertencia('Archivos no disponibles', 'Este envío aún no tiene archivos confirmados previos disponibles.');
+            return;
+        }
+
+        this.descargandoArchivos.set(envio.codigoReferencia);
+
+        this.descargarEndpoint(envio.endpointExcel, `ARCHIVOS_${envio.codigoReferencia}.zip`, false, () =>
+            this.descargandoArchivos.set(null),
+        );
+    }
+
+    async exportarExcel(tipo: TipoReporte): Promise<void>
+    {
+        if(tipo === 'SABANAS')
+        {
+            return;
+        }
+        this.exportandoExcel.set(tipo);
+
+        try
+        {
+            if(tipo === 'ENVIOS')
+            {
+                const filas = this.enviosFiltrados().map((envio) => ({
+                    'Entidad federativa': envio.entidadFederativa,
+                    'Cve. entidad': envio.claveEntidad,
+                    'Fecha de envío': envio.fechaEnvioTexto,
+                    Corte: envio.corte,
+                    'Usuario envío': envio.usuarioEnvio,
+                    Estatus: envio.estadoTexto,
+                }));
+
+                const exportado = await exportarFilasExcel(filas, 'consulta_envios.xlsx', 'Envios');
+
+                if(!exportado)
+                {
+                    this.mostrarSinRegistrosExportacion();
+                }
+
+                return;
+            }
+
+            const filas = this.obtenerCargasExportacion().map((carga) => ({
+                Ranking: this.obtenerOrdenCarga(carga) ?? '',
+                'Entidad federativa': carga.entidadFederativa,
+                'Cve. entidad': carga.claveEntidad,
+                Periodo: carga.corte,
+                Intentos: carga.intentos,
+                Estatus: this.etiquetaEstatusCarga(carga),
+                'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
+                'Fecha de aprobación': carga.fechaAprobacionTexto || '',
+            }));
+
+            const exportado = await exportarFilasExcel(filas, 'reporte_cargas.xlsx', 'Cargas');
+
+            if(!exportado)
+            {
+                this.mostrarSinRegistrosExportacion();
+            }
+        } catch
+        {
+            mostrarError('No fue posible exportar', 'Intente nuevamente.');
+        } finally
+        {
+            this.exportandoExcel.set(null);
+        }
+    }
+
+    descargarAcusesCorte(): void
+    {
+        const periodo = this.periodoEnvioSeleccionado();
+        const [anioTexto, mesTexto] = periodo.split('-');
+        const anioCorte = Number(anioTexto);
+        const mesCorte = Number(mesTexto);
+
+        if(!Number.isInteger(mesCorte) || mesCorte < 1 || mesCorte > 12 || !Number.isInteger(anioCorte))
+        {
+            mostrarAdvertencia('Corte inválido', 'Seleccione un corte válido.');
+            return;
+        }
+
+        this.descargandoAcuses.set(true);
+
+        this.informesService.crearTicketDescargaAcuses(mesCorte, anioCorte).subscribe({
+            next: (response) =>
+            {
+                if(!response.ticket)
+                {
+                    this.descargandoAcuses.set(false);
+                    mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+                    return;
+                }
+
+                const url = this.informesService.obtenerUrlDescargaAcuses(response.ticket);
+                const iframe = document.createElement('iframe');
+
+                iframe.src = url;
+                iframe.style.display = 'none';
+
+                document.body.appendChild(iframe);
+                this.descargandoAcuses.set(false);
+
+                setTimeout(() =>
+                {
+                    if(iframe.parentNode)
+                    {
+                        iframe.parentNode.removeChild(iframe);
+                    }
+                }, 60000);
+            },
+            error: async (error) =>
+            {
+                this.descargandoAcuses.set(false);
+
+                mostrarError('No fue posible descargar los acuses', await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'));
+            },
+        });
+    }
+
+    descargarSabanas(tipo: TipoSabanaDescarga): void
+    {
+        if(!this.puedeVerSabanas())
+        {
+            return;
+        }
+
+        const anio = Number(this.anioSabana());
+
+        if(!Number.isInteger(anio) || anio < 2000 || anio > 2100)
+        {
+            mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
+            return;
+        }
+
+        const modo: ModoPlanoDescarga = this.esSuperUsuario() ? this.modoPlano() : 'CONFIRMADO';
+
+        this.descargandoSabanas.set(tipo);
+
+        this.informesService.crearTicketDescargaSabanas(anio, tipo, modo).subscribe({
+            next: (response) =>
+            {
+                if(!response.ticket)
+                {
+                    this.descargandoSabanas.set(null);
+                    mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+                    return;
+                }
+
+                const url = this.informesService.obtenerUrlDescargaSabanas(response.ticket);
+                const iframe = document.createElement('iframe');
+
+                iframe.src = url;
+                iframe.style.display = 'none';
+
+                document.body.appendChild(iframe);
+
+                // Aquí ya terminó la generación. La descarga solo se está disparando.
+                this.descargandoSabanas.set(null);
+
+                setTimeout(() =>
+                {
+                    if(iframe.parentNode)
+                    {
+                        iframe.parentNode.removeChild(iframe);
+                    }
+                }, 60000);
+            },
+            error: async (error) =>
+            {
+                this.descargandoSabanas.set(null);
+
+                mostrarError('No fue posible descargar los planos', await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'));
+            },
+        });
+    }
+
+    private cargarEnviosPeriodo(): void
+    {
+        const periodo = this.periodoEnvioSeleccionado();
+        const [anioTexto, mesTexto] = periodo.split('-');
+        const anioCorte = Number(anioTexto);
+        const mesCorte = Number(mesTexto);
+
+        if(!Number.isInteger(anioCorte) || !Number.isInteger(mesCorte))
+        {
+            this.envios.set([]);
+            this.cargandoEnvios.set(false);
+            return;
+        }
+
+        this.cargandoEnvios.set(true);
+
+        this.informesService.obtenerEnvios({ anioCorte, mesCorte }).subscribe({
+            next: (envios) =>
+            {
+                this.envios.set(envios);
+                this.paginaEnvios.set(1);
+                this.cargandoEnvios.set(false);
+            },
+            error: (error) =>
+            {
+                this.cargandoEnvios.set(false);
+                mostrarError('No fue posible consultar los envíos', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+            },
+        });
+    }
+
+    private sincronizarPeriodosEnvio(registros: InformeEnvioItem[]): void
+    {
+        const mapa = new Map<string, PeriodoCorteInforme>();
+
+        for(const registro of registros)
+        {
+            if(!registro.mesCorte || !registro.anioCorte)
+            {
+                continue;
+            }
+
+            const key = `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
+
+            if(!mapa.has(key))
+            {
+                mapa.set(key, {
+                    mesCorte: registro.mesCorte,
+                    anioCorte: registro.anioCorte,
+                    corte: registro.corte,
+                });
+            }
+        }
+
+        const periodos = Array.from(mapa.values()).sort((a, b) =>
+        {
+            return b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte);
+        });
+
         this.periodosEnvio.set(periodos);
 
-        if (!periodos.length) {
-          this.periodoEnvioSeleccionado.set('');
-          this.envios.set([]);
-          this.paginaEnvios.set(1);
-          this.cargandoEnvios.set(false);
-          return;
+        if(periodos.length === 0)
+        {
+            this.periodoEnvioSeleccionado.set('');
+            return;
         }
 
         const seleccionado = this.periodoEnvioSeleccionado();
-        const existe = periodos.some(
-          (periodo) =>
-            `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado,
-        );
-
-        if (!existe) {
-          const periodo = periodos[0];
-          this.periodoEnvioSeleccionado.set(
-            `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}`,
-          );
-        }
-
-        this.cargarEnviosPeriodo();
-      },
-      error: (error) => {
-        this.cargandoEnvios.set(false);
-        mostrarError(
-          'No fue posible consultar los periodos de envíos',
-          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-        );
-      },
-    });
-  }
-
-  cargarReporteCargas(): void {
-    if (!this.puedeVerCargas()) {
-      return;
-    }
-
-    this.cargandoCargas.set(true);
-
-    this.informesService.obtenerReporteCargas().subscribe({
-      next: (response) => {
-        const registros = response.registros ?? [];
-
-        this.cargas.set(registros);
-        this.sincronizarPeriodosCorte(registros);
-        this.paginaCargas.set(1);
-        this.cargandoCargas.set(false);
-      },
-      error: (error) => {
-        this.cargandoCargas.set(false);
-
-        mostrarError(
-          'No fue posible consultar el reporte de cargas',
-          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-        );
-      },
-    });
-  }
-
-  cambiarCorteReporte(): void {
-    this.sincronizarCorteSeleccionado();
-    this.paginaCargas.set(1);
-  }
-
-  buscarEnvios(valor: string): void {
-    this.busquedaEnvios.set(valor);
-    this.paginaEnvios.set(1);
-  }
-
-  cambiarCorteEnvios(): void {
-    this.paginaEnvios.set(1);
-    this.cargarEnviosPeriodo();
-  }
-
-  buscarCargas(valor: string): void {
-    this.busquedaCargas.set(valor);
-    this.paginaCargas.set(1);
-  }
-
-  cambiarPaginaEnvios(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginasEnvios()) {
-      return;
-    }
-
-    this.paginaEnvios.set(pagina);
-  }
-
-  cambiarPaginaCargas(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginasCargas()) {
-      return;
-    }
-
-    this.paginaCargas.set(pagina);
-  }
-
-  etiquetaEstatusCarga(carga: InformeReporteCargaItem): string {
-    const estatus = this.normalizarTexto(carga.estatusUltimoIntento);
-    const tipoCarga = this.normalizarTexto(carga.tipoCargaUltimoIntento);
-
-    const sufijo = tipoCarga.includes('ACTUALIZACION') ? 'actualización' : 'carga';
-
-    if (!estatus) {
-      return 'Sin carga';
-    }
-
-    if (estatus.includes('CONFIRMADO')) {
-      return `Confirmado ${sufijo}`;
-    }
-
-    if (estatus === 'PENDIENTE_APROBACION') {
-      return 'Pendiente de aprobación';
-    }
-
-    if (estatus.includes('PENDIENTE')) {
-      return `Pendiente ${sufijo}`;
-    }
-
-    if (estatus.includes('RECHAZADO')) {
-      return `Rechazado ${sufijo}`;
-    }
-
-    if (estatus.includes('ERROR')) {
-      return `Con errores ${sufijo}`;
-    }
-
-    if (estatus.includes('EXPIRADO')) {
-      return `Expirado ${sufijo}`;
-    }
-
-    return estatus.replaceAll('_', ' ');
-  }
-
-  esEstatusConfirmado(estatus: string | null): boolean {
-    return this.normalizarTexto(estatus).includes('CONFIRMADO');
-  }
-
-  esEstatusPendiente(estatus: string | null): boolean {
-    return this.normalizarTexto(estatus).includes('PENDIENTE');
-  }
-
-  esEstatusError(estatus: string | null): boolean {
-    const valor = this.normalizarTexto(estatus);
-
-    return valor.includes('RECHAZADO') || valor.includes('ERROR') || valor.includes('EXPIRADO');
-  }
-
-  ajustarPosicionMotivo(event: Event): void {
-    const detalle = event.currentTarget as HTMLDetailsElement;
-
-    if (!detalle.open) {
-      detalle.classList.remove('motivo-rechazo-arriba');
-      return;
-    }
-
-    const contenedor = detalle.closest('.envios-mensual-table-responsive');
-    const panel = detalle.querySelector<HTMLElement>('.motivo-rechazo-mensual');
-
-    if (!contenedor || !panel) return;
-
-    const espacioInferior =
-      contenedor.getBoundingClientRect().bottom - detalle.getBoundingClientRect().bottom;
-
-    const abrirArriba = espacioInferior < panel.offsetHeight + 12;
-
-    detalle.classList.toggle('motivo-rechazo-arriba', abrirArriba);
-  }
-
-  private normalizarTexto(valor: string | null | undefined): string {
-    return (valor ?? '').toString().trim().toUpperCase().replaceAll('-', '_').replace(/\s+/g, '_');
-  }
-
-  tipoCargaTexto(tipoCarga: string | null): string {
-    if (!tipoCarga) {
-      return '';
-    }
-
-    if (tipoCarga === 'CARGA_INICIAL') {
-      return 'Carga inicial';
-    }
-
-    if (tipoCarga === 'ACTUALIZACION') {
-      return 'Actualización';
-    }
-
-    return tipoCarga.replaceAll('_', ' ');
-  }
-
-  verAcuse(envio: InformeEnvioItem): void {
-    if (!envio.endpointAcuse) {
-      mostrarAdvertencia(
-        'Informe no disponible',
-        'Este envío aún no tiene informe previo disponible.',
-      );
-      return;
-    }
-
-    this.descargandoAcuse.set(envio.codigoReferencia);
-
-    this.descargarEndpoint(envio.endpointAcuse, `INFORME_${envio.codigoReferencia}.pdf`, true, () =>
-      this.descargandoAcuse.set(null),
-    );
-  }
-
-  descargarArchivos(envio: InformeEnvioItem): void {
-    if (!envio.endpointExcel) {
-      mostrarAdvertencia(
-        'Archivos no disponibles',
-        'Este envío aún no tiene archivos confirmados previos disponibles.',
-      );
-      return;
-    }
-
-    this.descargandoArchivos.set(envio.codigoReferencia);
-
-    this.descargarEndpoint(
-      envio.endpointExcel,
-      `ARCHIVOS_${envio.codigoReferencia}.zip`,
-      false,
-      () => this.descargandoArchivos.set(null),
-    );
-  }
-
-  async exportarExcel(tipo: TipoReporte): Promise<void> {
-    if (tipo === 'SABANAS') {
-      return;
-    }
-    this.exportandoExcel.set(tipo);
-
-    try {
-      if (tipo === 'ENVIOS') {
-        const filas = this.enviosFiltrados().map((envio) => ({
-          'Entidad federativa': envio.entidadFederativa,
-          'Cve. entidad': envio.claveEntidad,
-          'Fecha de envío': envio.fechaEnvioTexto,
-          Corte: envio.corte,
-          'Usuario envío': envio.usuarioEnvio,
-          Estatus: envio.estadoTexto,
-        }));
-
-        const exportado = await exportarFilasExcel(filas, 'consulta_envios.xlsx', 'Envios');
-
-        if (!exportado) {
-          this.mostrarSinRegistrosExportacion();
-        }
-
-        return;
-      }
-
-      const filas = this.obtenerCargasExportacion().map((carga) => ({
-        Ranking: this.obtenerOrdenCarga(carga) ?? '',
-        'Entidad federativa': carga.entidadFederativa,
-        'Cve. entidad': carga.claveEntidad,
-        Periodo: carga.corte,
-        Intentos: carga.intentos,
-        Estatus: this.etiquetaEstatusCarga(carga),
-        'Fecha de carga/actualización': carga.fechaCargaActualizacionTexto || '',
-        'Fecha de aprobación': carga.fechaAprobacionTexto || '',
-      }));
-
-      const exportado = await exportarFilasExcel(filas, 'reporte_cargas.xlsx', 'Cargas');
-
-      if (!exportado) {
-        this.mostrarSinRegistrosExportacion();
-      }
-    } catch {
-      mostrarError('No fue posible exportar', 'Intente nuevamente.');
-    } finally {
-      this.exportandoExcel.set(null);
-    }
-  }
-
-  descargarAcusesCorte(): void {
-    const periodo = this.periodoEnvioSeleccionado();
-    const [anioTexto, mesTexto] = periodo.split('-');
-    const anioCorte = Number(anioTexto);
-    const mesCorte = Number(mesTexto);
-
-    if (
-      !Number.isInteger(mesCorte) ||
-      mesCorte < 1 ||
-      mesCorte > 12 ||
-      !Number.isInteger(anioCorte)
-    ) {
-      mostrarAdvertencia('Corte inválido', 'Seleccione un corte válido.');
-      return;
-    }
-
-    this.descargandoAcuses.set(true);
-
-    this.informesService.crearTicketDescargaAcuses(mesCorte, anioCorte).subscribe({
-      next: (response) => {
-        if (!response.ticket) {
-          this.descargandoAcuses.set(false);
-          mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
-          return;
-        }
-
-        const url = this.informesService.obtenerUrlDescargaAcuses(response.ticket);
-        const iframe = document.createElement('iframe');
-
-        iframe.src = url;
-        iframe.style.display = 'none';
-
-        document.body.appendChild(iframe);
-        this.descargandoAcuses.set(false);
-
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
-          }
-        }, 60000);
-      },
-      error: async (error) => {
-        this.descargandoAcuses.set(false);
-
-        mostrarError(
-          'No fue posible descargar los acuses',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-        );
-      },
-    });
-  }
-
-  descargarSabanas(tipo: TipoSabanaDescarga): void {
-    if (!this.puedeVerSabanas()) {
-      return;
-    }
-
-    const anio = Number(this.anioSabana());
-
-    if (!Number.isInteger(anio) || anio < 2000 || anio > 2100) {
-      mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
-      return;
-    }
-
-    const modo: ModoPlanoDescarga = this.esSuperUsuario() ? this.modoPlano() : 'CONFIRMADO';
-
-    this.descargandoSabanas.set(tipo);
-
-    this.informesService.crearTicketDescargaSabanas(anio, tipo, modo).subscribe({
-      next: (response) => {
-        if (!response.ticket) {
-          this.descargandoSabanas.set(null);
-          mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
-          return;
-        }
-
-        const url = this.informesService.obtenerUrlDescargaSabanas(response.ticket);
-        const iframe = document.createElement('iframe');
-
-        iframe.src = url;
-        iframe.style.display = 'none';
-
-        document.body.appendChild(iframe);
-
-        // Aquí ya terminó la generación. La descarga solo se está disparando.
-        this.descargandoSabanas.set(null);
-
-        setTimeout(() => {
-          if (iframe.parentNode) {
-            iframe.parentNode.removeChild(iframe);
-          }
-        }, 60000);
-      },
-      error: async (error) => {
-        this.descargandoSabanas.set(null);
-
-        mostrarError(
-          'No fue posible descargar los planos',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-        );
-      },
-    });
-  }
-
-  private cargarEnviosPeriodo(): void {
-    const periodo = this.periodoEnvioSeleccionado();
-    const [anioTexto, mesTexto] = periodo.split('-');
-    const anioCorte = Number(anioTexto);
-    const mesCorte = Number(mesTexto);
-
-    if (!Number.isInteger(anioCorte) || !Number.isInteger(mesCorte)) {
-      this.envios.set([]);
-      this.cargandoEnvios.set(false);
-      return;
-    }
-
-    this.cargandoEnvios.set(true);
-
-    this.informesService.obtenerEnvios({ anioCorte, mesCorte }).subscribe({
-      next: (envios) => {
-        this.envios.set(envios);
-        this.paginaEnvios.set(1);
-        this.cargandoEnvios.set(false);
-      },
-      error: (error) => {
-        this.cargandoEnvios.set(false);
-        mostrarError(
-          'No fue posible consultar los envíos',
-          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-        );
-      },
-    });
-  }
-
-  private sincronizarPeriodosEnvio(registros: InformeEnvioItem[]): void {
-    const mapa = new Map<string, PeriodoCorteInforme>();
-
-    for (const registro of registros) {
-      if (!registro.mesCorte || !registro.anioCorte) {
-        continue;
-      }
-
-      const key = `${registro.anioCorte}-${registro.mesCorte.toString().padStart(2, '0')}`;
-
-      if (!mapa.has(key)) {
-        mapa.set(key, {
-          mesCorte: registro.mesCorte,
-          anioCorte: registro.anioCorte,
-          corte: registro.corte,
+        const existeSeleccionado = periodos.some((periodo) =>
+        {
+            return `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado;
         });
-      }
+
+        if(!existeSeleccionado)
+        {
+            const primero = periodos[0];
+            this.periodoEnvioSeleccionado.set(`${primero.anioCorte}-${primero.mesCorte.toString().padStart(2, '0')}`);
+        }
     }
 
-    const periodos = Array.from(mapa.values()).sort((a, b) => {
-      return b.anioCorte * 100 + b.mesCorte - (a.anioCorte * 100 + a.mesCorte);
-    });
+    private descargarEndpoint(endpoint: string, nombreDefault: string, abrirEnNuevaPestana: boolean, finalizar?: () => void): void
+    {
+        if(!endpoint)
+        {
+            finalizar?.();
 
-    this.periodosEnvio.set(periodos);
+            mostrarAdvertencia('Archivo no disponible', 'La API no proporcionó una ruta de descarga.');
 
-    if (periodos.length === 0) {
-      this.periodoEnvioSeleccionado.set('');
-      return;
-    }
-
-    const seleccionado = this.periodoEnvioSeleccionado();
-    const existeSeleccionado = periodos.some((periodo) => {
-      return (
-        `${periodo.anioCorte}-${periodo.mesCorte.toString().padStart(2, '0')}` === seleccionado
-      );
-    });
-
-    if (!existeSeleccionado) {
-      const primero = periodos[0];
-      this.periodoEnvioSeleccionado.set(
-        `${primero.anioCorte}-${primero.mesCorte.toString().padStart(2, '0')}`,
-      );
-    }
-  }
-
-  private descargarEndpoint(
-    endpoint: string,
-    nombreDefault: string,
-    abrirEnNuevaPestana: boolean,
-    finalizar?: () => void,
-  ): void {
-    if (!endpoint) {
-      finalizar?.();
-
-      mostrarAdvertencia('Archivo no disponible', 'La API no proporcionó una ruta de descarga.');
-
-      return;
-    }
-
-    this.informesService.descargarDesdeEndpoint(endpoint).subscribe({
-      next: (response) => {
-        const blob = response.body;
-
-        if (!blob) {
-          finalizar?.();
-
-          mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
-
-          return;
+            return;
         }
 
-        const nombreArchivo =
-          this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
-        const url = URL.createObjectURL(blob);
+        this.informesService.descargarDesdeEndpoint(endpoint).subscribe({
+            next: (response) =>
+            {
+                const blob = response.body;
 
-        if (abrirEnNuevaPestana) {
-          this.mostrarAcuse(url);
-          finalizar?.();
-          return;
+                if(!blob)
+                {
+                    finalizar?.();
+
+                    mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
+
+                    return;
+                }
+
+                const nombreArchivo = this.obtenerNombreArchivo(response.headers.get('content-disposition')) || nombreDefault;
+                const url = URL.createObjectURL(blob);
+
+                if(abrirEnNuevaPestana)
+                {
+                    this.mostrarAcuse(url);
+                    finalizar?.();
+                    return;
+                }
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = nombreArchivo;
+                link.click();
+
+                URL.revokeObjectURL(url);
+                finalizar?.();
+            },
+            error: async (error) =>
+            {
+                finalizar?.();
+
+                mostrarError('No fue posible descargar el archivo', await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'));
+            },
+        });
+    }
+
+    ordenCarga(carga: InformeReporteCargaItem): string
+    {
+        const orden = this.obtenerOrdenCarga(carga);
+
+        return orden ? `${orden}°` : '-';
+    }
+
+    private obtenerCargasExportacion(): InformeReporteCargaItem[]
+    {
+        const texto = this.busquedaCargas().trim().toLowerCase();
+        const corte = this.corteOperativo();
+
+        return this.cargas()
+            .filter((carga) =>
+            {
+                if(carga.claveEntidad === '00') return false;
+                if(carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) return false;
+                if(!texto) return true;
+
+                return (
+                    carga.entidadFederativa.toLowerCase().includes(texto) ||
+                    carga.claveEntidad.toLowerCase().includes(texto) ||
+                    carga.corte.toLowerCase().includes(texto) ||
+                    (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
+                    (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
+                );
+            })
+            .sort((a, b) =>
+            {
+                const rankingA = this.obtenerOrdenCarga(a) ?? Number.MAX_SAFE_INTEGER;
+                const rankingB = this.obtenerOrdenCarga(b) ?? Number.MAX_SAFE_INTEGER;
+
+                if(rankingA !== rankingB) return rankingA - rankingB;
+
+                return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+                    sensitivity: 'base',
+                });
+            });
+    }
+
+    private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null
+    {
+        if(!carga.fechaCargaExitosa)
+        {
+            return null;
         }
 
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = nombreArchivo;
-        link.click();
+        const corte = this.corteOperativo();
 
-        URL.revokeObjectURL(url);
-        finalizar?.();
-      },
-      error: async (error) => {
-        finalizar?.();
+        const cargasOrdenadas = this.cargas()
+            .filter((item) => item.claveEntidad !== '00')
+            .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
+            .filter((item) => !!item.fechaCargaExitosa)
+            .sort((a, b) =>
+            {
+                const fechaA = new Date(a.fechaCargaExitosa!).getTime();
+                const fechaB = new Date(b.fechaCargaExitosa!).getTime();
 
-        mostrarError(
-          'No fue posible descargar el archivo',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+                if(fechaA !== fechaB)
+                {
+                    return fechaA - fechaB;
+                }
+
+                return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
+                    sensitivity: 'base',
+                });
+            });
+
+        const indice = cargasOrdenadas.findIndex(
+            (item) =>
+                item.idEntidadFederativa === carga.idEntidadFederativa &&
+                item.mesCorte === carga.mesCorte &&
+                item.anioCorte === carga.anioCorte,
         );
-      },
-    });
-  }
 
-  ordenCarga(carga: InformeReporteCargaItem): string {
-    const orden = this.obtenerOrdenCarga(carga);
-
-    return orden ? `${orden}°` : '-';
-  }
-
-  private obtenerCargasExportacion(): InformeReporteCargaItem[] {
-    const texto = this.busquedaCargas().trim().toLowerCase();
-    const corte = this.corteOperativo();
-
-    return this.cargas()
-      .filter((carga) => {
-        if (carga.claveEntidad === '00') return false;
-        if (carga.mesCorte !== corte.mesCorte || carga.anioCorte !== corte.anioCorte) return false;
-        if (!texto) return true;
-
-        return (
-          carga.entidadFederativa.toLowerCase().includes(texto) ||
-          carga.claveEntidad.toLowerCase().includes(texto) ||
-          carga.corte.toLowerCase().includes(texto) ||
-          (carga.tipoCargaUltimoIntento ?? '').toLowerCase().includes(texto) ||
-          (carga.estatusUltimoIntento ?? '').toLowerCase().includes(texto)
-        );
-      })
-      .sort((a, b) => {
-        const rankingA = this.obtenerOrdenCarga(a) ?? Number.MAX_SAFE_INTEGER;
-        const rankingB = this.obtenerOrdenCarga(b) ?? Number.MAX_SAFE_INTEGER;
-
-        if (rankingA !== rankingB) return rankingA - rankingB;
-
-        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-          sensitivity: 'base',
-        });
-      });
-  }
-
-  private obtenerOrdenCarga(carga: InformeReporteCargaItem): number | null {
-    if (!carga.fechaCargaExitosa) {
-      return null;
+        return indice >= 0 ? indice + 1 : null;
     }
 
-    const corte = this.corteOperativo();
+    ordenarEnviosPor(campo: CampoOrdenEnvios): void
+    {
+        this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
+    }
 
-    const cargasOrdenadas = this.cargas()
-      .filter((item) => item.claveEntidad !== '00')
-      .filter((item) => item.mesCorte === corte.mesCorte && item.anioCorte === corte.anioCorte)
-      .filter((item) => !!item.fechaCargaExitosa)
-      .sort((a, b) => {
-        const fechaA = new Date(a.fechaCargaExitosa!).getTime();
-        const fechaB = new Date(b.fechaCargaExitosa!).getTime();
+    ordenarCargasPor(campo: CampoOrdenCargas): void
+    {
+        this.ordenCargas.set(alternarOrden(this.ordenCargas(), campo));
+    }
 
-        if (fechaA !== fechaB) {
-          return fechaA - fechaB;
+    iconoOrdenEnvios(campo: CampoOrdenEnvios): string
+    {
+        return obtenerIconoOrden(this.ordenEnvios(), campo);
+    }
+
+    iconoOrdenCargas(campo: CampoOrdenCargas): string
+    {
+        return obtenerIconoOrden(this.ordenCargas(), campo);
+    }
+
+    private ordenarListaEnvios(lista: InformeEnvioItem[]): InformeEnvioItem[]
+    {
+        return ordenarPorEstado(lista, this.ordenEnvios(), (envio, campo) => this.obtenerValorOrdenEnvio(envio, campo));
+    }
+
+    private ordenarListaCargas(lista: InformeReporteCargaItem[]): InformeReporteCargaItem[]
+    {
+        return ordenarPorEstado(lista, this.ordenCargas(), (carga, campo) => this.obtenerValorOrdenCarga(carga, campo));
+    }
+
+    private obtenerValorOrdenEnvio(envio: InformeEnvioItem, campo: CampoOrdenEnvios): ValorOrden
+    {
+        if(campo === 'fechaEnvioTexto')
+        {
+            return envio.fechaEnvio;
         }
 
-        return a.entidadFederativa.localeCompare(b.entidadFederativa, 'es', {
-          sensitivity: 'base',
+        if(campo === 'corte')
+        {
+            return envio.anioCorte * 100 + envio.mesCorte;
+        }
+
+        return envio[campo] ?? '';
+    }
+
+    private obtenerValorOrdenCarga(carga: InformeReporteCargaItem, campo: CampoOrdenCargas): ValorOrden
+    {
+        if(campo === 'fechaCargaActualizacionTexto')
+        {
+            return carga.fechaCargaActualizacion;
+        }
+
+        if(campo === 'fechaAprobacionTexto')
+        {
+            return carga.fechaAprobacion;
+        }
+
+        if(campo === 'corte')
+        {
+            return carga.anioCorte * 100 + carga.mesCorte;
+        }
+
+        if(campo === 'ordenCarga')
+        {
+            return this.obtenerOrdenCarga(carga) ?? Number.MAX_SAFE_INTEGER;
+        }
+
+        return carga[campo] ?? '';
+    }
+
+    private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void
+    {
+        const periodos = this.obtenerPeriodosDesdeCargas(registros);
+        const corteActual = this.obtenerCorteOperativoActual();
+        const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
+
+        const existeCorteActual = periodos.some((periodo) => this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual);
+
+        if(!existeCorteActual)
+        {
+            periodos.unshift({
+                mesCorte: corteActual.mesCorte,
+                anioCorte: corteActual.anioCorte,
+                corte: corteActual.corte,
+            });
+        }
+
+        this.periodosCorte.set(periodos);
+
+        if(!this.periodoCorteSeleccionado())
+        {
+            this.periodoCorteSeleccionado.set(keyActual);
+            this.corteOperativo.set(corteActual);
+            return;
+        }
+
+        this.sincronizarCorteSeleccionado();
+    }
+
+    private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[]
+    {
+        const mapa = new Map<string, PeriodoCorteInforme>();
+
+        for(const registro of registros)
+        {
+            if(!registro.mesCorte || !registro.anioCorte)
+            {
+                continue;
+            }
+
+            const key = this.obtenerKeyPeriodo(registro.mesCorte, registro.anioCorte);
+
+            if(!mapa.has(key))
+            {
+                mapa.set(key, {
+                    mesCorte: registro.mesCorte,
+                    anioCorte: registro.anioCorte,
+                    corte: registro.corte,
+                });
+            }
+        }
+
+        return Array.from(mapa.values()).sort((a, b) =>
+        {
+            const valorA = a.anioCorte * 100 + a.mesCorte;
+            const valorB = b.anioCorte * 100 + b.mesCorte;
+
+            return valorB - valorA;
         });
-      });
-
-    const indice = cargasOrdenadas.findIndex(
-      (item) =>
-        item.idEntidadFederativa === carga.idEntidadFederativa &&
-        item.mesCorte === carga.mesCorte &&
-        item.anioCorte === carga.anioCorte,
-    );
-
-    return indice >= 0 ? indice + 1 : null;
-  }
-
-  ordenarEnviosPor(campo: CampoOrdenEnvios): void {
-    this.ordenEnvios.set(alternarOrden(this.ordenEnvios(), campo));
-  }
-
-  ordenarCargasPor(campo: CampoOrdenCargas): void {
-    this.ordenCargas.set(alternarOrden(this.ordenCargas(), campo));
-  }
-
-  iconoOrdenEnvios(campo: CampoOrdenEnvios): string {
-    return obtenerIconoOrden(this.ordenEnvios(), campo);
-  }
-
-  iconoOrdenCargas(campo: CampoOrdenCargas): string {
-    return obtenerIconoOrden(this.ordenCargas(), campo);
-  }
-
-  private ordenarListaEnvios(lista: InformeEnvioItem[]): InformeEnvioItem[] {
-    return ordenarPorEstado(lista, this.ordenEnvios(), (envio, campo) =>
-      this.obtenerValorOrdenEnvio(envio, campo),
-    );
-  }
-
-  private ordenarListaCargas(lista: InformeReporteCargaItem[]): InformeReporteCargaItem[] {
-    return ordenarPorEstado(lista, this.ordenCargas(), (carga, campo) =>
-      this.obtenerValorOrdenCarga(carga, campo),
-    );
-  }
-
-  private obtenerValorOrdenEnvio(envio: InformeEnvioItem, campo: CampoOrdenEnvios): ValorOrden {
-    if (campo === 'fechaEnvioTexto') {
-      return envio.fechaEnvio;
     }
 
-    if (campo === 'corte') {
-      return envio.anioCorte * 100 + envio.mesCorte;
+    private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string
+    {
+        return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
     }
 
-    return envio[campo] ?? '';
-  }
+    private sincronizarCorteSeleccionado(): void
+    {
+        const key = this.periodoCorteSeleccionado();
 
-  private obtenerValorOrdenCarga(
-    carga: InformeReporteCargaItem,
-    campo: CampoOrdenCargas,
-  ): ValorOrden {
-    if (campo === 'fechaCargaActualizacionTexto') {
-      return carga.fechaCargaActualizacion;
-    }
+        if(!key)
+        {
+            return;
+        }
 
-    if (campo === 'fechaAprobacionTexto') {
-      return carga.fechaAprobacion;
-    }
+        const periodo = this.periodosCorte().find((x) => this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key);
 
-    if (campo === 'corte') {
-      return carga.anioCorte * 100 + carga.mesCorte;
-    }
+        if(!periodo)
+        {
+            return;
+        }
 
-    if (campo === 'ordenCarga') {
-      return this.obtenerOrdenCarga(carga) ?? Number.MAX_SAFE_INTEGER;
-    }
-
-    return carga[campo] ?? '';
-  }
-
-  private sincronizarPeriodosCorte(registros: InformeReporteCargaItem[]): void {
-    const periodos = this.obtenerPeriodosDesdeCargas(registros);
-    const corteActual = this.obtenerCorteOperativoActual();
-    const keyActual = this.obtenerKeyPeriodo(corteActual.mesCorte, corteActual.anioCorte);
-
-    const existeCorteActual = periodos.some(
-      (periodo) => this.obtenerKeyPeriodo(periodo.mesCorte, periodo.anioCorte) === keyActual,
-    );
-
-    if (!existeCorteActual) {
-      periodos.unshift({
-        mesCorte: corteActual.mesCorte,
-        anioCorte: corteActual.anioCorte,
-        corte: corteActual.corte,
-      });
-    }
-
-    this.periodosCorte.set(periodos);
-
-    if (!this.periodoCorteSeleccionado()) {
-      this.periodoCorteSeleccionado.set(keyActual);
-      this.corteOperativo.set(corteActual);
-      return;
-    }
-
-    this.sincronizarCorteSeleccionado();
-  }
-
-  private obtenerPeriodosDesdeCargas(registros: InformeReporteCargaItem[]): PeriodoCorteInforme[] {
-    const mapa = new Map<string, PeriodoCorteInforme>();
-
-    for (const registro of registros) {
-      if (!registro.mesCorte || !registro.anioCorte) {
-        continue;
-      }
-
-      const key = this.obtenerKeyPeriodo(registro.mesCorte, registro.anioCorte);
-
-      if (!mapa.has(key)) {
-        mapa.set(key, {
-          mesCorte: registro.mesCorte,
-          anioCorte: registro.anioCorte,
-          corte: registro.corte,
+        this.corteOperativo.set({
+            mesCorte: periodo.mesCorte,
+            anioCorte: periodo.anioCorte,
+            corte: periodo.corte,
         });
-      }
     }
 
-    return Array.from(mapa.values()).sort((a, b) => {
-      const valorA = a.anioCorte * 100 + a.mesCorte;
-      const valorB = b.anioCorte * 100 + b.mesCorte;
-
-      return valorB - valorA;
-    });
-  }
-
-  private obtenerKeyPeriodo(mesCorte: number, anioCorte: number): string {
-    return `${anioCorte}-${mesCorte.toString().padStart(2, '0')}`;
-  }
-
-  private sincronizarCorteSeleccionado(): void {
-    const key = this.periodoCorteSeleccionado();
-
-    if (!key) {
-      return;
+    private mostrarSinRegistrosExportacion(): void
+    {
+        mostrarAdvertencia('Sin registros para exportar', 'La API no proporcionó registros para exportar.');
     }
 
-    const periodo = this.periodosCorte().find(
-      (x) => this.obtenerKeyPeriodo(x.mesCorte, x.anioCorte) === key,
-    );
+    private obtenerNombreArchivo(contentDisposition: string | null): string
+    {
+        if(!contentDisposition)
+        {
+            return '';
+        }
 
-    if (!periodo) {
-      return;
+        const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+        if(utf8Match?.[1])
+        {
+            return decodeURIComponent(utf8Match[1]);
+        }
+
+        const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
+        return normalMatch?.[1] ?? '';
     }
 
-    this.corteOperativo.set({
-      mesCorte: periodo.mesCorte,
-      anioCorte: periodo.anioCorte,
-      corte: periodo.corte,
-    });
-  }
+    private obtenerCorteOperativoActual(): CorteOperativo
+    {
+        const fecha = new Date();
+        let mesCorte = fecha.getMonth();
+        let anioCorte = fecha.getFullYear();
 
-  private mostrarSinRegistrosExportacion(): void {
-    mostrarAdvertencia(
-      'Sin registros para exportar',
-      'La API no proporcionó registros para exportar.',
-    );
-  }
+        if(mesCorte === 0)
+        {
+            mesCorte = 12;
+            anioCorte--;
+        }
 
-  private obtenerNombreArchivo(contentDisposition: string | null): string {
-    if (!contentDisposition) {
-      return '';
+        return {
+            mesCorte,
+            anioCorte,
+            corte: this.obtenerNombreCorte(mesCorte, anioCorte),
+        };
     }
 
-    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    private obtenerNombreCorte(mesCorte: number, anioCorte: number): string
+    {
+        const fecha = new Date(anioCorte, mesCorte - 1, 1);
+        const texto = new Intl.DateTimeFormat('es-MX', {
+            month: 'long',
+            year: 'numeric',
+        }).format(fecha);
 
-    if (utf8Match?.[1]) {
-      return decodeURIComponent(utf8Match[1]);
+        return texto.charAt(0).toUpperCase() + texto.slice(1);
     }
 
-    const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
-
-    return normalMatch?.[1] ?? '';
-  }
-
-  private obtenerCorteOperativoActual(): CorteOperativo {
-    const fecha = new Date();
-    let mesCorte = fecha.getMonth();
-    let anioCorte = fecha.getFullYear();
-
-    if (mesCorte === 0) {
-      mesCorte = 12;
-      anioCorte--;
+    cerrarAcuse(): void
+    {
+        this.limpiarAcuseUrl();
     }
 
-    return {
-      mesCorte,
-      anioCorte,
-      corte: this.obtenerNombreCorte(mesCorte, anioCorte),
-    };
-  }
+    private mostrarAcuse(url: string): void
+    {
+        this.limpiarAcuseUrl();
 
-  private obtenerNombreCorte(mesCorte: number, anioCorte: number): string {
-    const fecha = new Date(anioCorte, mesCorte - 1, 1);
-    const texto = new Intl.DateTimeFormat('es-MX', {
-      month: 'long',
-      year: 'numeric',
-    }).format(fecha);
-
-    return texto.charAt(0).toUpperCase() + texto.slice(1);
-  }
-
-  cerrarAcuse(): void {
-    this.limpiarAcuseUrl();
-  }
-
-  private mostrarAcuse(url: string): void {
-    this.limpiarAcuseUrl();
-
-    this.acuseUrl.set(url);
-    this.acuseUrlSegura.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-    this.acuseTitulo.set('Acuse de entrega de información');
-  }
-
-  private limpiarAcuseUrl(): void {
-    const urlActual = this.acuseUrl();
-
-    if (urlActual) {
-      URL.revokeObjectURL(urlActual);
+        this.acuseUrl.set(url);
+        this.acuseUrlSegura.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+        this.acuseTitulo.set('Acuse de entrega de información');
     }
 
-    this.acuseUrl.set(null);
-    this.acuseUrlSegura.set(null);
-  }
+    private limpiarAcuseUrl(): void
+    {
+        const urlActual = this.acuseUrl();
+
+        if(urlActual)
+        {
+            URL.revokeObjectURL(urlActual);
+        }
+
+        this.acuseUrl.set(null);
+        this.acuseUrlSegura.set(null);
+    }
 }

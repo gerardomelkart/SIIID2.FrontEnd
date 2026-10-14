@@ -1,1024 +1,1099 @@
 <div class="semanal-carga">
-  <div class="semanal-admin-header carga-header">
-    <div>
-      <span>Módulo preliminar</span>
-      <h1>Integración acumulativa de incidencia delictiva</h1>
-      <p>Cargue los tres archivos acumulados del mes en curso; el sistema identificará internamente la información nueva
-        y la que reemplaza versiones preliminares anteriores.</p>
+    <div class="semanal-admin-header carga-header">
+        <div>
+            <span>Módulo preliminar</span>
+            <h1>Integración acumulativa de incidencia delictiva</h1>
+            <p>
+                Cargue los tres archivos acumulados del mes en curso; el sistema identificará internamente la información nueva y la que
+                reemplaza versiones preliminares anteriores.
+            </p>
+        </div>
+
+        @if (mostrandoResultado()) {
+            <div class="referencia-carga">
+                <span>Referencia</span>
+                <strong>{{ codigoReferenciaOperacion() }}</strong>
+            </div>
+        }
     </div>
+
+    @if (!mostrandoResultado()) {
+        <section class="siiid-card carga-cero-card mt-4">
+            <div class="siiid-card-header carga-cero-header">
+                <i class="fa-solid fa-file-circle-minus"></i>
+                Reportar semana en cero
+            </div>
+
+            <div class="carga-cero-contenido">
+                <div class="carga-cero-descripcion">
+                    <i class="fa-solid fa-circle-info"></i>
+
+                    <div>
+                        <strong>Registro sin incidencia</strong>
+                        <span>Utilice esta opción cuando no existan registros para un delito durante la semana inmediata anterior.</span>
+                    </div>
+                </div>
+
+                <div class="carga-cero-grid">
+                    <div class="carga-cero-periodo">
+                        <span>Semana que se reportará</span>
+                        <strong
+                            >{{ formatearFecha(periodoCargaCero().fechaInicio) }} al
+                            {{ formatearFecha(periodoCargaCero().fechaFin)
+                            }}</strong
+                        >
+                    </div>
+
+                    <label class="campo-periodo">
+                        <span>Delito</span>
+
+                        <select
+                            class="form-select"
+                            [disabled]="cargandoDelitosHabilitados()"
+                            [ngModel]="idDelitoCargaCero()"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="onDelitoCargaCeroChange($event)"
+                        >
+                            <option value="">{{ cargandoDelitosHabilitados() ? 'Cargando delitos...' : 'Seleccione un delito' }}</option>
+
+                            @for (delito of delitosHabilitados(); track delito.idDelito) {
+                                <option [value]="delito.idDelito">{{ delito.delito }}</option>
+                            }
+                        </select>
+                    </label>
+
+                    @if (esSuperUsuario()) {
+                        <label class="campo-periodo">
+                            <span>Entidad federativa</span>
+
+                            <select
+                                class="form-select"
+                                [disabled]="cargandoEntidades()"
+                                [ngModel]="idEntidadFederativa()"
+                                [ngModelOptions]="{ standalone: true }"
+                                (ngModelChange)="onEntidadCargaCeroChange($event)"
+                            >
+                                <option value="">{{ cargandoEntidades() ? 'Cargando entidades...' : 'Seleccione una entidad' }}</option>
+
+                                @for (entidad of entidadesFederativas(); track entidad.idEntidadFederativa) {
+                                    <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
+                                }
+                            </select>
+                        </label>
+                    }
+
+                    <button
+                        type="button"
+                        class="btn btn-siiid btn-carga-cero"
+                        [disabled]="!puedeValidarCargaCero()"
+                        (click)="validarCargaCero()"
+                    >
+                        @if (validandoCargaCero()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            Preparando...
+                        } @else {
+                            <i class="fa-solid fa-file-circle-check"></i>
+                            Generar carga en cero
+                        }
+                    </button>
+                </div>
+
+                @if (errorCargaCero()) {
+                    <div class="alert alert-danger mb-0 mt-3">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        {{ errorCargaCero() }}
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div class="separador-operaciones">
+            <span>O realice una carga mediante archivos</span>
+        </div>
+    }
+
+    @if (!mostrandoResultado()) {
+        <div class="row g-4 mt-1">
+            <div class="col-xl-8">
+                <section class="siiid-card carga-card">
+                    <div class="siiid-card-header carga-card-header">
+                        <i class="fa-solid fa-calendar-week"></i>
+                        Archivos de la operación acumulativa
+                    </div>
+
+                    <div class="carga-contenido">
+                        <div class="pasos-carga">
+                            <div class="paso activo">
+                                <span>1</span>
+                                Seleccionar archivos
+                            </div>
+
+                            <div class="paso">
+                                <span>2</span>
+                                Validar información
+                            </div>
+
+                            <div class="paso">
+                                <span>3</span>
+                                Confirmar operación
+                            </div>
+                        </div>
+
+                        <div class="seccion-titulo">
+                            <div>
+                                <strong>Carga acumulativa</strong>
+                                <p>Los archivos deben contener la información acumulada del mes en curso hasta el día anterior.</p>
+                            </div>
+                        </div>
+
+                        <div class="seccion-titulo seccion-periodo">
+                            <div>
+                                <strong>Periodo calculado automáticamente</strong>
+                                <p>
+                                    No debe seleccionar una semana. La fecha de inicio de cada carpeta determina los bloques que integrará
+                                    la operación.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="periodo-grid">
+                            <label class="campo-periodo campo-semana">
+                                <span>Semana técnica de referencia</span>
+
+                                <input type="week" class="form-control" [disabled]="true" [ngModel]="formulario().semanaSeleccionada" />
+                            </label>
+
+                            <div class="periodo-automatico">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+                                <div>
+                                    <strong>Cálculo automático</strong>
+                                    <span
+                                        >La ventana permitida se calcula con la fecha actual; los bloques reales se obtienen de los
+                                        archivos.</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="seccion-titulo seccion-periodo">
+                            <div>
+                                <strong>Periodo calculado automáticamente</strong>
+                                <p>La operación corresponde al acumulado del mes en curso hasta el día anterior.</p>
+                            </div>
+                        </div>
+
+                        @if (tramoPrevisto(); as tramo) {
+                            <div class="tramo-preview" [class.tramo-cortado]="tramo.semanaCortada">
+                                <i class="fa-solid fa-calendar-check"></i>
+
+                                <div>
+                                    <span>Periodo preliminar</span>
+                                    <strong>{{ nombreMes(tramo.mesCorte) }} {{ tramo.anioCorte }}</strong>
+                                </div>
+
+                                <div>
+                                    <span>Información acumulada permitida</span>
+                                    <strong
+                                        >{{ formatearFecha(tramo.fechaInicioTramo) }} al {{ formatearFecha(tramo.fechaFinTramo) }}</strong
+                                    >
+                                </div>
+
+                                @if (tramo.semanaCortada) {
+                                    <em
+                                        >Durante el cruce de mes, la API asignará internamente cada registro al corte del mes que
+                                        corresponda.</em
+                                    >
+                                }
+                            </div>
+                        }
+                        @if (validandoSemana()) {
+                            <div class="alert alert-info mb-0 mt-3">
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                Comprobando la disponibilidad de la semana seleccionada...
+                            </div>
+                        }
+
+                        @if (errorSemana()) {
+                            <div class="alert alert-danger mb-0 mt-3">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                {{ errorSemana() }}
+                            </div>
+                        }
+
+                        @if (estadoSemana(); as disponibilidad) {
+                            @if (disponibilidad.esValido && !disponibilidad.disponible) {
+                                <div class="alert alert-warning mb-0 mt-3">
+                                    <div>
+                                        <strong>
+                                            @if (disponibilidad.puedeResolverPendiente) {
+                                                Operación pendiente por resolver
+                                            } @else if (disponibilidad.estadoPendiente === 'PENDIENTE_APROBACION') {
+                                                Operación en revisión administrativa
+                                            } @else if (disponibilidad.tieneCargaConfirmada) {
+                                                Semana confirmada previamente
+                                            } @else {
+                                                Semana no disponible
+                                            }
+                                        </strong>
+
+                                        <div>{{ disponibilidad.mensaje }}</div>
+
+                                        @if (disponibilidad.codigoReferenciaPendiente) {
+                                            <div class="mt-1">
+                                                Referencia:
+                                                <strong>{{ disponibilidad.codigoReferenciaPendiente }}</strong>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @if (disponibilidad.puedeResolverPendiente || disponibilidad.debeUsarActualizacion) {
+                                        <div class="mt-3 d-flex gap-2">
+                                            @if (disponibilidad.puedeResolverPendiente) {
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-siiid"
+                                                    [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
+                                                    (click)="resolverPendiente()"
+                                                >
+                                                    @if (cargandoAcusePrevio() || cargandoDiferencias()) {
+                                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                                        Abriendo...
+                                                    } @else {
+                                                        <i class="fa-solid fa-file-signature"></i>
+                                                        Resolver pendiente
+                                                    }
+                                                </button>
+                                            }
+
+                                            @if (disponibilidad.debeUsarActualizacion) {
+                                                <button type="button" class="btn btn-siiid" (click)="irAActualizacionSemanal()">
+                                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                                    Ir a actualización preliminar
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+
+                        @if (periodoListoParaArchivos()) {
+                            <div class="seccion-titulo seccion-archivos">
+                                <div>
+                                    <strong>Archivos requeridos</strong>
+                                    <p>
+                                        Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas del
+                                        módulo consolidado.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="archivos-grid">
+                                @for (archivo of tiposArchivo; track archivo.tipo) {
+                                    <label
+                                        class="archivo-card"
+                                        [class.archivo-listo]="archivos()[archivo.tipo]"
+                                        [class.archivo-arrastrando]="archivoArrastrado() === archivo.tipo"
+                                        (dragenter)="arrastrarArchivo($event, archivo.tipo)"
+                                        (dragover)="arrastrarArchivo($event, archivo.tipo)"
+                                        (dragleave)="salirArrastreArchivo($event, archivo.tipo)"
+                                        (drop)="soltarArchivo($event, archivo.tipo)"
+                                    >
+                                        <span class="archivo-icono">
+                                            <i class="fa-solid" [class]="archivo.icono"></i>
+                                        </span>
+
+                                        <span class="archivo-info">
+                                            <strong>{{ archivo.nombre }}</strong>
+                                            <small>{{ nombreArchivo(archivo.tipo) }}</small>
+
+                                            @if (tamanioArchivo(archivo.tipo)) {
+                                                <em>{{ tamanioArchivo(archivo.tipo) }}</em>
+                                            }
+                                        </span>
+
+                                        <span
+                                            class="archivo-accion"
+                                            >{{ archivoArrastrado() === archivo.tipo ? 'Soltar aquí' : 'Seleccionar o
+                arrastrar' }}</span
+                                        >
+
+                                        <input
+                                            type="file"
+                                            accept=".csv,.xlsx"
+                                            (change)="
+                      seleccionarArchivo($event, archivo.tipo)
+                    "
+                                        />
+                                    </label>
+                                }
+                            </div>
+
+                            @if (errorGeneral()) {
+                                <div class="alert alert-danger mb-0 mt-3">
+                                    {{ errorGeneral() }}
+                                </div>
+                            }
+
+                            <div class="carga-acciones">
+                                <div>
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Formatos permitidos: CSV y XLSX. Máximo 50 MB por archivo.
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-siiid btn-validar"
+                                    [disabled]="!puedeValidar()"
+                                    (click)="validarArchivos()"
+                                >
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    Validar carga acumulativa
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-xl-4">
+                <section class="siiid-card ayuda-card">
+                    <div class="siiid-card-header carga-card-header">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Plantillas oficiales
+                    </div>
+
+                    <div class="ayuda-contenido">
+                        <p>La carga acumulativa utiliza las mismas plantillas de carpetas, delitos y víctimas.</p>
+
+                        <div class="plantillas-lista">
+                            @for (archivo of tiposArchivo; track archivo.tipo) {
+                                <a [href]="archivo.plantilla" [attr.download]="archivo.tipo + '.xlsx'">
+                                    <img src="img/logo_XLSX.png" [alt]="'Plantilla de ' + archivo.nombre" />
+
+                                    <span>
+                                        <strong>{{ archivo.nombre }}</strong>
+                                        <small>Descargar XLSX</small>
+                                    </span>
+
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            }
+                        </div>
+
+                        <div class="regla-semanal">
+                            <i class="fa-solid fa-filter-circle-dollar"></i>
+
+                            <div>
+                                <strong>Procesamiento acumulativo</strong>
+                                <span
+                                    >La información anterior del mismo periodo se reemplazará de forma versionada y los registros nuevos se
+                                    integrarán al preliminar del mes.</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    }
 
     @if (mostrandoResultado()) {
-    <div class="referencia-carga">
-      <span>Referencia</span>
-      <strong>{{ codigoReferenciaOperacion() }}</strong>
-    </div>
-    }
-  </div>
+        <section
+            class="resultado-encabezado"
+            [class.resultado-correcto]="estado() === 'CONFIRMADO' || (respuestaValida() && advertencias().length === 0)"
+            [class.resultado-advertencia]="estado() !== 'CONFIRMADO' && respuestaValida() && advertencias().length > 0"
+            [class.resultado-error]="estado() !== 'CONFIRMADO' && !respuestaValida()"
+        >
+            <div class="resultado-icono">
+                <i
+                    class="fa-solid"
+                    [class.fa-circle-check]="estado() === 'CONFIRMADO' || (respuestaValida() && advertencias().length === 0)"
+                    [class.fa-triangle-exclamation]="estado() !== 'CONFIRMADO' && (!respuestaValida() || advertencias().length > 0)"
+                ></i>
+            </div>
 
-  @if (!mostrandoResultado()) {
-  <section class="siiid-card carga-cero-card mt-4">
-    <div class="siiid-card-header carga-cero-header">
-      <i class="fa-solid fa-file-circle-minus"></i>
-      Reportar semana en cero
-    </div>
+            <div>
+                <span>{{ estado() === 'CONFIRMADO' ? 'Resultado de operación' : 'Resultado de validación' }}</span>
 
-    <div class="carga-cero-contenido">
-      <div class="carga-cero-descripcion">
-        <i class="fa-solid fa-circle-info"></i>
+                <h2>
+                    @if (estado() === 'CONFIRMADO') {
+                        @if (resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION') {
+                            Enviada a revisión administrativa
+                        } @else if (esCargaCero()) {
+                            Carga en cero aceptada
+                        } @else if (esActualizacion) {
+                            Actualización acumulativa aceptada
+                        } @else {
+                            Carga acumulativa aceptada
+                        }
+                    } @else if (!respuestaValida()) {
+                        La {{ esActualizacion ? 'actualización' : 'carga' }} contiene inconsistencias
+                    } @else if (advertencias().length > 0) {
+                        {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
+                    } @else if (esCargaCero()) {
+                        Carga en cero validada
+                    } @else if (esActualizacion) {
+                        Actualización acumulativa validada
+                    } @else {
+                        Carga acumulativa validada
+                    }
+                </h2>
 
-        <div>
-          <strong>Registro sin incidencia</strong>
-          <span>Utilice esta opción cuando no existan registros para un delito durante la semana inmediata
-            anterior.</span>
-        </div>
-      </div>
+                <p>{{ estado() === 'CONFIRMADO' ? resultadoConfirmacion()?.mensaje : respuesta()?.mensaje }}</p>
+            </div>
 
-      <div class="carga-cero-grid">
-        <div class="carga-cero-periodo">
-          <span>Semana que se reportará</span>
-          <strong>{{ formatearFecha(periodoCargaCero().fechaInicio) }} al {{ formatearFecha(periodoCargaCero().fechaFin)
-            }}</strong>
-        </div>
+            <div class="resultado-totales">
+                <div>
+                    <strong>{{ errores().length }}</strong>
+                    <span>Errores</span>
+                </div>
 
-        <label class="campo-periodo">
-          <span>Delito</span>
+                <div>
+                    <strong>{{ respuesta()?.totalAdvertencias ?? advertencias().length }}</strong>
+                    <span>Advertencias</span>
+                </div>
+            </div>
+        </section>
 
-          <select class="form-select" [disabled]="cargandoDelitosHabilitados()" [ngModel]="idDelitoCargaCero()"
-            [ngModelOptions]="{ standalone: true }" (ngModelChange)="onDelitoCargaCeroChange($event)">
-            <option value="">{{ cargandoDelitosHabilitados() ? 'Cargando delitos...' : 'Seleccione un delito' }}
-            </option>
+        @if (respuesta()?.ventana; as ventana) {
+            <section class="periodo-confirmado">
+                <div>
+                    <span>Periodo reportado</span>
+                    <strong>{{ nombreMes(respuesta()?.periodo?.mesCorte) }} {{ respuesta()?.periodo?.anioCorte }}</strong>
+                </div>
 
-            @for (delito of delitosHabilitados(); track delito.idDelito) {
-            <option [value]="delito.idDelito">{{ delito.delito }}</option>
-            }
-          </select>
-        </label>
+                <div>
+                    <span>Operación detectada</span>
+                    <strong>
+                        @if (esCargaCero()) {
+                            Carga preliminar reportada en cero
+                        } @else if (esActualizacion) {
+                            Actualización preliminar acumulativa
+                        } @else {
+                            Carga preliminar acumulativa
+                        }
+                    </strong>
+                </div>
 
-        @if (esSuperUsuario()) {
-        <label class="campo-periodo">
-          <span>Entidad federativa</span>
-
-          <select class="form-select" [disabled]="cargandoEntidades()" [ngModel]="idEntidadFederativa()"
-            [ngModelOptions]="{ standalone: true }" (ngModelChange)="onEntidadCargaCeroChange($event)">
-            <option value="">{{ cargandoEntidades() ? 'Cargando entidades...' : 'Seleccione una entidad' }}</option>
-
-            @for (entidad of entidadesFederativas(); track entidad.idEntidadFederativa) {
-            <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
-            }
-          </select>
-        </label>
+                <div>
+                    <span>Ventana procesada</span>
+                    <strong
+                        >{{ formatearFecha(ventana.fechaMinimaPermitida) }} al
+                        {{ formatearFecha(ventana.fechaMaximaPermitida)
+                        }}</strong
+                    >
+                </div>
+            </section>
         }
 
-        <button type="button" class="btn btn-siiid btn-carga-cero" [disabled]="!puedeValidarCargaCero()"
-          (click)="validarCargaCero()">
-          @if (validandoCargaCero()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          Preparando...
-          } @else {
-          <i class="fa-solid fa-file-circle-check"></i>
-          Generar carga en cero
-          }
-        </button>
-      </div>
-
-      @if (errorCargaCero()) {
-      <div class="alert alert-danger mb-0 mt-3">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        {{ errorCargaCero() }}
-      </div>
-      }
-    </div>
-  </section>
-
-  <div class="separador-operaciones">
-    <span>O realice una carga mediante archivos</span>
-  </div>
-  }
-
-  @if (!mostrandoResultado()) {
-  <div class="row g-4 mt-1">
-    <div class="col-xl-8">
-      <section class="siiid-card carga-card">
-        <div class="siiid-card-header carga-card-header">
-          <i class="fa-solid fa-calendar-week"></i>
-          Archivos de la operación acumulativa
-        </div>
-
-        <div class="carga-contenido">
-          <div class="pasos-carga">
-            <div class="paso activo">
-              <span>1</span>
-              Seleccionar archivos
-            </div>
-
-            <div class="paso">
-              <span>2</span>
-              Validar información
-            </div>
-
-            <div class="paso">
-              <span>3</span>
-              Confirmar operación
-            </div>
-          </div>
-
-          <div class="seccion-titulo">
-            <div>
-              <strong>Carga acumulativa</strong>
-              <p>Los archivos deben contener la información acumulada del mes en curso hasta el día anterior.</p>
-            </div>
-          </div>
-
-          <div class="seccion-titulo seccion-periodo">
-            <div>
-              <strong>Periodo calculado automáticamente</strong>
-              <p>No debe seleccionar una semana. La fecha de inicio de cada carpeta determina los bloques que integrará
-                la operación.</p>
-            </div>
-          </div>
-
-          <div class="periodo-grid">
-            <label class="campo-periodo campo-semana">
-              <span>Semana técnica de referencia</span>
-
-              <input type="week" class="form-control" [disabled]="true" [ngModel]="formulario().semanaSeleccionada" />
-            </label>
-
-            <div class="periodo-automatico">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-
-              <div>
-                <strong>Cálculo automático</strong>
-                <span>La ventana permitida se calcula con la fecha actual; los bloques reales se obtienen de los
-                  archivos.</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="seccion-titulo seccion-periodo">
-            <div>
-              <strong>Periodo calculado automáticamente</strong>
-              <p>La operación corresponde al acumulado del mes en curso hasta el día anterior.</p>
-            </div>
-          </div>
-
-          @if (tramoPrevisto(); as tramo) {
-          <div class="tramo-preview" [class.tramo-cortado]="tramo.semanaCortada">
-            <i class="fa-solid fa-calendar-check"></i>
-
-            <div>
-              <span>Periodo preliminar</span>
-              <strong>{{ nombreMes(tramo.mesCorte) }} {{ tramo.anioCorte }}</strong>
-            </div>
-
-            <div>
-              <span>Información acumulada permitida</span>
-              <strong>{{ formatearFecha(tramo.fechaInicioTramo) }} al {{ formatearFecha(tramo.fechaFinTramo) }}</strong>
-            </div>
-
-            @if (tramo.semanaCortada) {
-            <em>Durante el cruce de mes, la API asignará internamente cada registro al corte del mes que
-              corresponda.</em>
-            }
-          </div>
-          }
-          @if (validandoSemana()) {
-          <div class="alert alert-info mb-0 mt-3">
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            Comprobando la disponibilidad de la semana seleccionada...
-          </div>
-          }
-
-          @if (errorSemana()) {
-          <div class="alert alert-danger mb-0 mt-3">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            {{ errorSemana() }}
-          </div>
-          }
-
-          @if (estadoSemana(); as disponibilidad) {
-          @if (disponibilidad.esValido && !disponibilidad.disponible) {
-          <div class="alert alert-warning mb-0 mt-3">
-            <div>
-              <strong>
-                @if (disponibilidad.puedeResolverPendiente) {
-                Operación pendiente por resolver
-                } @else if (disponibilidad.estadoPendiente === 'PENDIENTE_APROBACION') {
-                Operación en revisión administrativa
-                } @else if (disponibilidad.tieneCargaConfirmada) {
-                Semana confirmada previamente
-                } @else {
-                Semana no disponible
-                }
-              </strong>
-
-              <div>{{ disponibilidad.mensaje }}</div>
-
-              @if (disponibilidad.codigoReferenciaPendiente) {
-              <div class="mt-1">
-                Referencia:
-                <strong>{{ disponibilidad.codigoReferenciaPendiente }}</strong>
-              </div>
-              }
-            </div>
-
-            @if (disponibilidad.puedeResolverPendiente || disponibilidad.debeUsarActualizacion) {
-            <div class="mt-3 d-flex gap-2">
-              @if (disponibilidad.puedeResolverPendiente) {
-              <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
-                (click)="resolverPendiente()">
-                @if (cargandoAcusePrevio() || cargandoDiferencias()) {
-                <i class="fa-solid fa-spinner fa-spin"></i>
-                Abriendo...
-                } @else {
-                <i class="fa-solid fa-file-signature"></i>
-                Resolver pendiente
-                }
-              </button>
-              }
-
-              @if (disponibilidad.debeUsarActualizacion) {
-              <button type="button" class="btn btn-siiid" (click)="irAActualizacionSemanal()">
-                <i class="fa-solid fa-arrows-rotate"></i>
-                Ir a actualización preliminar
-              </button>
-              }
-            </div>
-            }
-          </div>
-          }
-          }
-
-          @if (periodoListoParaArchivos()) {
-          <div class="seccion-titulo seccion-archivos">
-            <div>
-              <strong>Archivos requeridos</strong>
-              <p>Arrastre cada archivo a su espacio o selecciónelo. Utilice la estructura de las plantillas del módulo
-                consolidado.
-              </p>
-            </div>
-          </div>
-
-          <div class="archivos-grid">
+        <div class="conteos-grid">
             @for (archivo of tiposArchivo; track archivo.tipo) {
-            <label class="archivo-card" [class.archivo-listo]="archivos()[archivo.tipo]"
-              [class.archivo-arrastrando]="archivoArrastrado() === archivo.tipo"
-              (dragenter)="arrastrarArchivo($event, archivo.tipo)" (dragover)="arrastrarArchivo($event, archivo.tipo)"
-              (dragleave)="salirArrastreArchivo($event, archivo.tipo)" (drop)="soltarArchivo($event, archivo.tipo)">
-              <span class="archivo-icono">
-                <i class="fa-solid" [class]="archivo.icono"></i>
-              </span>
+                <section class="conteo-card">
+                    <div class="conteo-cabecera">
+                        <i class="fa-solid" [class]="archivo.icono"></i>
+                        {{ archivo.nombre }}
+                    </div>
 
-              <span class="archivo-info">
-                <strong>{{ archivo.nombre }}</strong>
-                <small>{{ nombreArchivo(archivo.tipo) }}</small>
+                    <div>
+                        <span>{{ archivo.recibidos }}</span>
+                        <strong>{{ totalRecibido(archivo.tipo) }}</strong>
+                    </div>
 
-                @if (tamanioArchivo(archivo.tipo)) {
-                <em>{{ tamanioArchivo(archivo.tipo) }}</em>
-                }
-              </span>
+                    <div class="incluido">
+                        <span>{{ archivo.incluidos }}</span>
+                        <strong>{{ totalIncluido(archivo.tipo) }}</strong>
+                    </div>
 
-              <span class="archivo-accion">{{ archivoArrastrado() === archivo.tipo ? 'Soltar aquí' : 'Seleccionar o
-                arrastrar' }}</span>
-
-              <input type="file" accept=".csv,.xlsx" (change)="
-                      seleccionarArchivo($event, archivo.tipo)
-                    " />
-            </label>
+                    <div class="excluido">
+                        <span>{{ archivo.excluidos }}</span>
+                        <strong>{{ totalExcluido(archivo.tipo) }}</strong>
+                    </div>
+                </section>
             }
-          </div>
-
-          @if (errorGeneral()) {
-          <div class="alert alert-danger mb-0 mt-3">
-            {{ errorGeneral() }}
-          </div>
-          }
-
-          <div class="carga-acciones">
-            <div>
-              <i class="fa-solid fa-circle-info"></i>
-              Formatos permitidos: CSV y XLSX. Máximo 50 MB por
-              archivo.
-            </div>
-
-            <button type="button" class="btn btn-siiid btn-validar" [disabled]="!puedeValidar()"
-              (click)="validarArchivos()">
-              <i class="fa-solid fa-shield-halved"></i>
-              Validar carga acumulativa
-            </button>
-          </div>
-          }
-        </div>
-      </section>
-    </div>
-
-    <div class="col-xl-4">
-      <section class="siiid-card ayuda-card">
-        <div class="siiid-card-header carga-card-header">
-          <i class="fa-solid fa-file-excel"></i>
-          Plantillas oficiales
         </div>
 
-        <div class="ayuda-contenido">
-          <p>La carga acumulativa utiliza las mismas plantillas de carpetas, delitos y víctimas.</p>
-
-          <div class="plantillas-lista">
+        <div class="resumen-validacion-grid">
             @for (archivo of tiposArchivo; track archivo.tipo) {
-            <a [href]="archivo.plantilla" [attr.download]="archivo.tipo + '.xlsx'">
-              <img src="img/logo_XLSX.png" [alt]="'Plantilla de ' + archivo.nombre" />
+                <section class="resumen-validacion-card">
+                    <h3>Validación de {{ archivo.nombre.toLowerCase() }}</h3>
 
-              <span>
-                <strong>{{ archivo.nombre }}</strong>
-                <small>Descargar XLSX</small>
-              </span>
-
-              <i class="fa-solid fa-download"></i>
-            </a>
+                    <table>
+                        <tbody>
+                            @for (item of resumenPorArchivo(archivo.tipo); track item.codigo) {
+                                <tr [class.fila-error]="item.esError">
+                                    <td>{{ item.descripcion }}</td>
+                                    <td>{{ item.totalRegistros }}</td>
+                                </tr>
+                            } @empty {
+                                <tr>
+                                    <td colspan="2">Sin resultados de resumen.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </section>
             }
-          </div>
-
-          <div class="regla-semanal">
-            <i class="fa-solid fa-filter-circle-dollar"></i>
-
-            <div>
-              <strong>Procesamiento acumulativo</strong>
-              <span>La información anterior del mismo periodo se reemplazará de forma versionada y los registros nuevos
-                se integrarán al preliminar del mes.</span>
-            </div>
-          </div>
         </div>
-      </section>
-    </div>
-  </div>
-  }
 
-  @if (mostrandoResultado()) {
-  <section class="resultado-encabezado"
-    [class.resultado-correcto]="estado() === 'CONFIRMADO' || (respuestaValida() && advertencias().length === 0)"
-    [class.resultado-advertencia]="estado() !== 'CONFIRMADO' && respuestaValida() && advertencias().length > 0"
-    [class.resultado-error]="estado() !== 'CONFIRMADO' && !respuestaValida()">
-    <div class="resultado-icono">
-      <i class="fa-solid"
-        [class.fa-circle-check]="estado() === 'CONFIRMADO' || (respuestaValida() && advertencias().length === 0)"
-        [class.fa-triangle-exclamation]="estado() !== 'CONFIRMADO' && (!respuestaValida() || advertencias().length > 0)"></i>
-    </div>
+        @if (detallesValidacion().length > 0) {
+            <section class="siiid-card detalle-card">
+                <div class="siiid-card-header carga-card-header d-flex align-items-center">
+                    <i class="fa-solid fa-list-ul"></i>
+                    <span>Detalle de errores y advertencias</span>
 
-    <div>
-      <span>{{ estado() === 'CONFIRMADO' ? 'Resultado de operación' : 'Resultado de validación' }}</span>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-secondary ms-auto"
+                        [disabled]="exportandoValidacion()"
+                        (click)="descargarValidacion()"
+                    >
+                        @if (exportandoValidacion()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            Descargando...
+                        } @else {
+                            <i class="fa-solid fa-file-excel"></i>
+                            Descargar errores/advertencias
+                        }
+                    </button>
+                </div>
 
-      <h2>
-        @if (estado() === 'CONFIRMADO') {
-        @if (resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION') {
-        Enviada a revisión administrativa
-        } @else if (esCargaCero()) {
-        Carga en cero aceptada
-        } @else if (esActualizacion) {
-        Actualización acumulativa aceptada
-        } @else {
-        Carga acumulativa aceptada
-        }
-        } @else if (!respuestaValida()) {
-        La {{ esActualizacion ? 'actualización' : 'carga' }} contiene inconsistencias
-        } @else if (advertencias().length > 0) {
-        {{ esActualizacion ? 'Actualización' : 'Carga' }} válida con advertencias
-        } @else if (esCargaCero()) {
-        Carga en cero validada
-        } @else if (esActualizacion) {
-        Actualización acumulativa validada
-        } @else {
-        Carga acumulativa validada
-        }
-      </h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 detalle-tabla">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Archivo</th>
+                                <th>Fila</th>
+                                <th>Columna</th>
+                                <th>Valor</th>
+                                <th>Mensaje</th>
+                            </tr>
+                        </thead>
 
-      <p>{{ estado() === 'CONFIRMADO' ? resultadoConfirmacion()?.mensaje : respuesta()?.mensaje }}</p>
-    </div>
-
-    <div class="resultado-totales">
-      <div>
-        <strong>{{ errores().length }}</strong>
-        <span>Errores</span>
-      </div>
-
-      <div>
-        <strong>{{ respuesta()?.totalAdvertencias ?? advertencias().length }}</strong>
-        <span>Advertencias</span>
-      </div>
-    </div>
-  </section>
-
-  @if (respuesta()?.ventana; as ventana) {
-  <section class="periodo-confirmado">
-    <div>
-      <span>Periodo reportado</span>
-      <strong>{{ nombreMes(respuesta()?.periodo?.mesCorte) }} {{ respuesta()?.periodo?.anioCorte }}</strong>
-    </div>
-
-    <div>
-      <span>Operación detectada</span>
-      <strong>
-        @if (esCargaCero()) {
-        Carga preliminar reportada en cero
-        } @else if (esActualizacion) {
-        Actualización preliminar acumulativa
-        } @else {
-        Carga preliminar acumulativa
-        }
-      </strong>
-    </div>
-
-    <div>
-      <span>Ventana procesada</span>
-      <strong>{{ formatearFecha(ventana.fechaMinimaPermitida) }} al {{ formatearFecha(ventana.fechaMaximaPermitida)
-        }}</strong>
-    </div>
-  </section>
-  }
-
-  <div class="conteos-grid">
-    @for (archivo of tiposArchivo; track archivo.tipo) {
-    <section class="conteo-card">
-      <div class="conteo-cabecera">
-        <i class="fa-solid" [class]="archivo.icono"></i>
-        {{ archivo.nombre }}
-      </div>
-
-      <div>
-        <span>{{ archivo.recibidos }}</span>
-        <strong>{{ totalRecibido(archivo.tipo) }}</strong>
-      </div>
-
-      <div class="incluido">
-        <span>{{ archivo.incluidos }}</span>
-        <strong>{{ totalIncluido(archivo.tipo) }}</strong>
-      </div>
-
-      <div class="excluido">
-        <span>{{ archivo.excluidos }}</span>
-        <strong>{{ totalExcluido(archivo.tipo) }}</strong>
-      </div>
-    </section>
-    }
-  </div>
-
-  <div class="resumen-validacion-grid">
-    @for (archivo of tiposArchivo; track archivo.tipo) {
-    <section class="resumen-validacion-card">
-      <h3>
-        Validación de {{ archivo.nombre.toLowerCase() }}
-      </h3>
-
-      <table>
-        <tbody>
-          @for (
-          item of resumenPorArchivo(archivo.tipo);
-          track item.codigo
-          ) {
-          <tr [class.fila-error]="item.esError">
-            <td>{{ item.descripcion }}</td>
-            <td>{{ item.totalRegistros }}</td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="2">
-              Sin resultados de resumen.
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </section>
-    }
-  </div>
-
-  @if (detallesValidacion().length > 0) {
-  <section class="siiid-card detalle-card">
-    <div class="siiid-card-header carga-card-header d-flex align-items-center">
-      <i class="fa-solid fa-list-ul"></i>
-      <span>Detalle de errores y advertencias</span>
-
-      <button type="button" class="btn btn-sm btn-secondary ms-auto" [disabled]="exportandoValidacion()"
-        (click)="descargarValidacion()">
-        @if (exportandoValidacion()) {
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Descargando...
-        } @else {
-        <i class="fa-solid fa-file-excel"></i>
-        Descargar errores/advertencias
-        }
-      </button>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-sm mb-0 detalle-tabla">
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Archivo</th>
-            <th>Fila</th>
-            <th>Columna</th>
-            <th>Valor</th>
-            <th>Mensaje</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (
-          detalle of detallesValidacion();
-          track $index
-          ) {
-          <tr>
-            <td>
-              <span class="detalle-tipo" [class.tipo-error]="
+                        <tbody>
+                            @for (detalle of detallesValidacion(); track $index) {
+                                <tr>
+                                    <td>
+                                        <span
+                                            class="detalle-tipo"
+                                            [class.tipo-error]="
                         esErrorDetalle(detalle)
-                      " [class.tipo-advertencia]="
+                      "
+                                            [class.tipo-advertencia]="
                         !esErrorDetalle(detalle)
-                      ">
-                {{
+                      "
+                                        >
+                                            {{
                 esErrorDetalle(detalle)
                 ? 'ERROR'
                 : 'ADVERTENCIA'
-                }}
-              </span>
-            </td>
+                                            }}
+                                        </span>
+                                    </td>
 
-            <td>{{ detalle.archivo }}</td>
-            <td>{{ detalle.fila ?? '-' }}</td>
-            <td>{{ detalle.columna || '-' }}</td>
-            <td>{{ detalle.valor || '-' }}</td>
-            <td>{{ detalle.mensaje }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
-  }
+                                    <td>{{ detalle.archivo }}</td>
+                                    <td>{{ detalle.fila ?? '-' }}</td>
+                                    <td>{{ detalle.columna || '-' }}</td>
+                                    <td>{{ detalle.valor || '-' }}</td>
+                                    <td>{{ detalle.mensaje }}</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
 
-  <section class="resultado-acciones">
-    @if (estado() === 'CONFIRMADO') {
-    <div>
-      <strong>
-        {{ resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION'
+        <section class="resultado-acciones">
+            @if (estado() === 'CONFIRMADO') {
+                <div>
+                    <strong>
+                        {{ resultadoConfirmacion()?.estado === 'PENDIENTE_APROBACION'
         ? 'La operación fue enviada al flujo de aprobación administrativa.'
         : 'La información fue integrada correctamente.' }}
-      </strong>
+                    </strong>
 
-      <span>
-        La operación ya fue aceptada y no queda pendiente de confirmación por parte del usuario.
-      </span>
-    </div>
+                    <span> La operación ya fue aceptada y no queda pendiente de confirmación por parte del usuario. </span>
+                </div>
 
-    <button type="button" class="btn btn-siiid" (click)="cerrarProcesoConfirmado()">
-      <i class="fa-solid fa-check"></i>
-      Finalizar
-    </button>
-    } @else if (!respuestaValida()) {
-    <div>
-      <strong>Corrija las inconsistencias antes de continuar.</strong>
-      <span>La información no fue integrada en las tablas preliminares.</span>
-    </div>
+                <button type="button" class="btn btn-siiid" (click)="cerrarProcesoConfirmado()">
+                    <i class="fa-solid fa-check"></i>
+                    Finalizar
+                </button>
+            } @else if (!respuestaValida()) {
+                <div>
+                    <strong>Corrija las inconsistencias antes de continuar.</strong>
+                    <span>La información no fue integrada en las tablas preliminares.</span>
+                </div>
 
-    <button type="button" class="btn btn-siiid" (click)="volverACaptura()">
-      <i class="fa-solid fa-arrow-left"></i>
-      Volver a los archivos
-    </button>
-    } @else if (advertencias().length > 0) {
-    <div>
-      <strong>Revise las advertencias antes de continuar.</strong>
-      <span>Puede cancelar la operación para corregir la información o continuar aceptando las advertencias
-        mostradas.</span>
-    </div>
+                <button type="button" class="btn btn-siiid" (click)="volverACaptura()">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Volver a los archivos
+                </button>
+            } @else if (advertencias().length > 0) {
+                <div>
+                    <strong>Revise las advertencias antes de continuar.</strong>
+                    <span>Puede cancelar la operación para corregir la información o continuar aceptando las advertencias mostradas.</span>
+                </div>
 
-    <div class="botones-confirmacion">
-      <button type="button" class="btn btn-outline-secondary"
-        [disabled]="estado() === 'CONFIRMANDO' || cargandoAcusePrevio() || cargandoDiferencias()"
-        (click)="confirmarCarga(false)">
-        @if (estado() === 'CONFIRMANDO') {
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Cancelando...
-        } @else {
-        <i class="fa-solid fa-xmark"></i>
-        Cancelar operación
-        }
-      </button>
+                <div class="botones-confirmacion">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        [disabled]="estado() === 'CONFIRMANDO' || cargandoAcusePrevio() || cargandoDiferencias()"
+                        (click)="confirmarCarga(false)"
+                    >
+                        @if (estado() === 'CONFIRMANDO') {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            Cancelando...
+                        } @else {
+                            <i class="fa-solid fa-xmark"></i>
+                            Cancelar operación
+                        }
+                    </button>
 
-      <button type="button" class="btn btn-siiid"
-        [disabled]="estado() === 'CONFIRMANDO' || cargandoAcusePrevio() || cargandoDiferencias()"
-        (click)="continuarConAdvertencias()">
-        @if (cargandoAcusePrevio() || cargandoDiferencias()) {
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Abriendo...
-        } @else {
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        Aceptar con advertencias
-        }
-      </button>
-    </div>
-    } @else {
-    <div>
-      <strong>No fue posible abrir automáticamente la siguiente etapa.</strong>
-      <span>La operación permanece pendiente; vuelva a intentarlo para continuar.</span>
-    </div>
+                    <button
+                        type="button"
+                        class="btn btn-siiid"
+                        [disabled]="estado() === 'CONFIRMANDO' || cargandoAcusePrevio() || cargandoDiferencias()"
+                        (click)="continuarConAdvertencias()"
+                    >
+                        @if (cargandoAcusePrevio() || cargandoDiferencias()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            Abriendo...
+                        } @else {
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            Aceptar con advertencias
+                        }
+                    </button>
+                </div>
+            } @else {
+                <div>
+                    <strong>No fue posible abrir automáticamente la siguiente etapa.</strong>
+                    <span>La operación permanece pendiente; vuelva a intentarlo para continuar.</span>
+                </div>
 
-    <button type="button" class="btn btn-siiid" [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
-      (click)="reintentarRevision()">
-      @if (cargandoAcusePrevio() || cargandoDiferencias()) {
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Abriendo...
-      } @else {
-      <i class="fa-solid fa-rotate-right"></i>
-      Reintentar revisión
-      }
-    </button>
+                <button
+                    type="button"
+                    class="btn btn-siiid"
+                    [disabled]="cargandoAcusePrevio() || cargandoDiferencias()"
+                    (click)="reintentarRevision()"
+                >
+                    @if (cargandoAcusePrevio() || cargandoDiferencias()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        Abriendo...
+                    } @else {
+                        <i class="fa-solid fa-rotate-right"></i>
+                        Reintentar revisión
+                    }
+                </button>
+            }
+        </section>
     }
-  </section>
-  }
 </div>
 
 @if (estado() === 'VALIDANDO') {
-<div class="procesando-overlay">
-  <div class="procesando-caja">
-    <div class="procesando-spinner"></div>
-    <strong>{{ esCargaCero() ? 'Preparando carga semanal en cero...' : 'Validando ' + (esActualizacion ? 'actualización'
+    <div class="procesando-overlay">
+        <div class="procesando-caja">
+            <div class="procesando-spinner"></div>
+            <strong>{{ esCargaCero() ? 'Preparando carga semanal en cero...' : 'Validando ' + (esActualizacion ? 'actualización'
       : 'carga') + ' preliminar...' }}</strong>
-    <span>
-      Se están revisando estructura, catálogos, periodo y modalidades
-      configuradas.
-    </span>
-  </div>
-</div>
+            <span> Se están revisando estructura, catálogos, periodo y modalidades configuradas. </span>
+        </div>
+    </div>
 }
 
 @if (mostrarDiferencias()) {
-<div class="diferencias-modal">
-  <div class="diferencias-header">
-    <span>Revisión de diferencias de actualización</span>
-  </div>
-
-  <div class="diferencias-body">
-    <div class="diferencias-resumen">
-      <div class="diferencia-card">
-        <div class="diferencia-numero">{{ totalDiferenciasCarpetas() }}</div>
-        <div class="diferencia-label">Carpetas con cambios</div>
-      </div>
-
-      <div class="diferencia-card">
-        <div class="diferencia-numero">{{ totalDiferenciasDelitos() }}</div>
-        <div class="diferencia-label">Delitos con cambios</div>
-      </div>
-
-      <div class="diferencia-card">
-        <div class="diferencia-numero">{{ totalDiferenciasVictimas() }}</div>
-        <div class="diferencia-label">Víctimas con cambios</div>
-      </div>
-
-      <div class="diferencia-card diferencia-total">
-        <div class="diferencia-numero">{{ totalDiferencias() }}</div>
-        <div class="diferencia-label">Total de registros con cambios</div>
-      </div>
-    </div>
-
-    <div class="diferencias-mensaje">
-      Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
-      <strong>OK, continuar al informe previo</strong>.
-    </div>
-
-    <div class="diferencias-grid">
-      <div class="diferencias-section">
-        <div class="diferencias-title">Carpetas</div>
-
-        @for (item of diferencias()?.carpetas ?? []; track $index) {
-        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
-          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
-          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
-          <div class="diferencia-registro-head">
-            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
-
-            <div class="identificadores">
-              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
-              id) {
-              <span>{{ id }}</span>
-              }
-            </div>
-          </div>
-
-          @if (esMovimientoNuevo(item.tipoMovimiento)) {
-          <div class="movimiento-descripcion nuevo-texto">
-            <i class="fa-solid fa-circle-plus"></i>
-            Este registro será agregado a la información activa.
-          </div>
-
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo</th>
-                <th>Valor que se agregará</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
-          <div class="movimiento-descripcion eliminado-texto">
-            <i class="fa-solid fa-trash-can"></i>
-            Este registro será eliminado de la información activa.
-          </div>
-
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo</th>
-                <th>Valor que se eliminará</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          } @else {
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo modificado</th>
-                <th>Valor anterior</th>
-                <th>Valor nuevo</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          }
+    <div class="diferencias-modal">
+        <div class="diferencias-header">
+            <span>Revisión de diferencias de actualización</span>
         </div>
-        } @empty {
-        <div class="sin-diferencias">Sin diferencias en carpetas.</div>
-        }
-      </div>
 
-      <div class="diferencias-section">
-        <div class="diferencias-title">Delitos</div>
+        <div class="diferencias-body">
+            <div class="diferencias-resumen">
+                <div class="diferencia-card">
+                    <div class="diferencia-numero">{{ totalDiferenciasCarpetas() }}</div>
+                    <div class="diferencia-label">Carpetas con cambios</div>
+                </div>
 
-        @for (item of diferencias()?.delitos ?? []; track $index) {
-        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
-          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
-          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
-          <div class="diferencia-registro-head">
-            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+                <div class="diferencia-card">
+                    <div class="diferencia-numero">{{ totalDiferenciasDelitos() }}</div>
+                    <div class="diferencia-label">Delitos con cambios</div>
+                </div>
 
-            <div class="identificadores">
-              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
-              id) {
-              <span>{{ id }}</span>
-              }
+                <div class="diferencia-card">
+                    <div class="diferencia-numero">{{ totalDiferenciasVictimas() }}</div>
+                    <div class="diferencia-label">Víctimas con cambios</div>
+                </div>
+
+                <div class="diferencia-card diferencia-total">
+                    <div class="diferencia-numero">{{ totalDiferencias() }}</div>
+                    <div class="diferencia-label">Total de registros con cambios</div>
+                </div>
             </div>
-          </div>
 
-          @if (esMovimientoNuevo(item.tipoMovimiento)) {
-          <div class="movimiento-descripcion nuevo-texto">
-            <i class="fa-solid fa-circle-plus"></i>
-            Este registro será agregado a la información activa.
-          </div>
-
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo</th>
-                <th>Valor que se agregará</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
-          <div class="movimiento-descripcion eliminado-texto">
-            <i class="fa-solid fa-trash-can"></i>
-            Este registro será eliminado de la información activa.
-          </div>
-
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo</th>
-                <th>Valor que se eliminará</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          } @else {
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo modificado</th>
-                <th>Valor anterior</th>
-                <th>Valor nuevo</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          }
-        </div>
-        } @empty {
-        <div class="sin-diferencias">Sin diferencias en delitos.</div>
-        }
-      </div>
-
-      <div class="diferencias-section">
-        <div class="diferencias-title">Víctimas</div>
-
-        @for (item of diferencias()?.victimas ?? []; track $index) {
-        <div class="diferencia-registro" [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
-          [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
-          [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)">
-          <div class="diferencia-registro-head">
-            <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
-
-            <div class="identificadores">
-              @for (id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia); track
-              id) {
-              <span>{{ id }}</span>
-              }
+            <div class="diferencias-mensaje">
+                Revise los registros nuevos, modificados y eliminados. Después de revisar, presione
+                <strong>OK, continuar al informe previo</strong>.
             </div>
-          </div>
 
-          @if (esMovimientoNuevo(item.tipoMovimiento)) {
-          <div class="movimiento-descripcion nuevo-texto">
-            <i class="fa-solid fa-circle-plus"></i>
-            Este registro será agregado a la información activa.
-          </div>
+            <div class="diferencias-grid">
+                <div class="diferencias-section">
+                    <div class="diferencias-title">Carpetas</div>
 
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo</th>
-                <th>Valor que se agregará</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
-          <div class="movimiento-descripcion eliminado-texto">
-            <i class="fa-solid fa-trash-can"></i>
-            Este registro será eliminado de la información activa.
-          </div>
+                    @for (item of diferencias()?.carpetas ?? []; track $index) {
+                        <div
+                            class="diferencia-registro"
+                            [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+                            [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+                            [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
+                        >
+                            <div class="diferencia-registro-head">
+                                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
 
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo</th>
-                <th>Valor que se eliminará</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          } @else {
-          <table class="table table-sm table-bordered diferencias-campos-table">
-            <thead>
-              <tr>
-                <th>Campo modificado</th>
-                <th>Valor anterior</th>
-                <th>Valor nuevo</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (campo of item.camposModificados; track $index) {
-              <tr>
-                <td class="campo-nombre">{{ campo.campo }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
-                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
-              </tr>
-              }
-            </tbody>
-          </table>
-          }
+                                <div class="identificadores">
+                                    @for (
+                                        id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia);
+                                        track
+              id
+                                    ) {
+                                        <span>{{ id }}</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (esMovimientoNuevo(item.tipoMovimiento)) {
+                                <div class="movimiento-descripcion nuevo-texto">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                    Este registro será agregado a la información activa.
+                                </div>
+
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor que se agregará</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+                                <div class="movimiento-descripcion eliminado-texto">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    Este registro será eliminado de la información activa.
+                                </div>
+
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor que se eliminará</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else {
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo modificado</th>
+                                            <th>Valor anterior</th>
+                                            <th>Valor nuevo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </div>
+                    } @empty {
+                        <div class="sin-diferencias">Sin diferencias en carpetas.</div>
+                    }
+                </div>
+
+                <div class="diferencias-section">
+                    <div class="diferencias-title">Delitos</div>
+
+                    @for (item of diferencias()?.delitos ?? []; track $index) {
+                        <div
+                            class="diferencia-registro"
+                            [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+                            [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+                            [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
+                        >
+                            <div class="diferencia-registro-head">
+                                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+                                <div class="identificadores">
+                                    @for (
+                                        id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia);
+                                        track
+              id
+                                    ) {
+                                        <span>{{ id }}</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (esMovimientoNuevo(item.tipoMovimiento)) {
+                                <div class="movimiento-descripcion nuevo-texto">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                    Este registro será agregado a la información activa.
+                                </div>
+
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor que se agregará</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+                                <div class="movimiento-descripcion eliminado-texto">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    Este registro será eliminado de la información activa.
+                                </div>
+
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor que se eliminará</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else {
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo modificado</th>
+                                            <th>Valor anterior</th>
+                                            <th>Valor nuevo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </div>
+                    } @empty {
+                        <div class="sin-diferencias">Sin diferencias en delitos.</div>
+                    }
+                </div>
+
+                <div class="diferencias-section">
+                    <div class="diferencias-title">Víctimas</div>
+
+                    @for (item of diferencias()?.victimas ?? []; track $index) {
+                        <div
+                            class="diferencia-registro"
+                            [class.diferencia-nuevo]="esMovimientoNuevo(item.tipoMovimiento)"
+                            [class.diferencia-modificado]="esMovimientoModificado(item.tipoMovimiento)"
+                            [class.diferencia-eliminado]="esMovimientoEliminado(item.tipoMovimiento)"
+                        >
+                            <div class="diferencia-registro-head">
+                                <span class="movimiento-badge">{{ normalizarTipoMovimiento(item.tipoMovimiento) }}</span>
+
+                                <div class="identificadores">
+                                    @for (
+                                        id of obtenerIdentificadoresDesdeBackend(item.campoIdentificador, item.identificadorFiscalia);
+                                        track
+              id
+                                    ) {
+                                        <span>{{ id }}</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (esMovimientoNuevo(item.tipoMovimiento)) {
+                                <div class="movimiento-descripcion nuevo-texto">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                    Este registro será agregado a la información activa.
+                                </div>
+
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor que se agregará</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else if (esMovimientoEliminado(item.tipoMovimiento)) {
+                                <div class="movimiento-descripcion eliminado-texto">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    Este registro será eliminado de la información activa.
+                                </div>
+
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor que se eliminará</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            } @else {
+                                <table class="table table-sm table-bordered diferencias-campos-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Campo modificado</th>
+                                            <th>Valor anterior</th>
+                                            <th>Valor nuevo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (campo of item.camposModificados; track $index) {
+                                            <tr>
+                                                <td class="campo-nombre">{{ campo.campo }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorAnterior) }}</td>
+                                                <td>{{ normalizarValorDiferencia(campo.valorNuevo) }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </div>
+                    } @empty {
+                        <div class="sin-diferencias">Sin diferencias en víctimas.</div>
+                    }
+                </div>
+            </div>
         </div>
-        } @empty {
-        <div class="sin-diferencias">Sin diferencias en víctimas.</div>
-        }
-      </div>
+
+        <div class="diferencias-actions diferencias-actions-ok">
+            <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
+                OK, continuar al informe previo
+            </button>
+        </div>
     </div>
-  </div>
-
-  <div class="diferencias-actions diferencias-actions-ok">
-    <button type="button" class="btn-acuse-previo btn-continuar-acuse" (click)="continuarAAcusePrevio()">
-      OK, continuar al informe previo
-    </button>
-  </div>
-</div>
 }
 
 @if (estado() === 'MOSTRANDO_ACUSE' || estado() === 'CONFIRMANDO') {
-<div class="acuse-modal">
-  <div class="acuse-header">
-    <span>
-      @if (esCargaCero()) {
-      Informe previo de carga semanal en cero
-      } @else if (esActualizacion) {
-      Informe previo de actualización preliminar
-      } @else {
-      Informe previo de entrega preliminar
-      }
-    </span>
-  </div>
+    <div class="acuse-modal">
+        <div class="acuse-header">
+            <span>
+                @if (esCargaCero()) {
+                    Informe previo de carga semanal en cero
+                } @else if (esActualizacion) {
+                    Informe previo de actualización preliminar
+                } @else {
+                    Informe previo de entrega preliminar
+                }
+            </span>
+        </div>
 
-  <div class="acuse-body">
-    @if (acusePrevioUrl()) {
-    <iframe class="acuse-frame" [src]="acusePrevioUrl()"
-      [title]="esActualizacion ? 'Informe previo de actualización preliminar' : 'Informe previo preliminar'"></iframe>
-    }
-  </div>
+        <div class="acuse-body">
+            @if (acusePrevioUrl()) {
+                <iframe
+                    class="acuse-frame"
+                    [src]="acusePrevioUrl()"
+                    [title]="esActualizacion ? 'Informe previo de actualización preliminar' : 'Informe previo preliminar'"
+                ></iframe>
+            }
+        </div>
 
-  <div class="acuse-actions">
-    @if (estado() === 'MOSTRANDO_ACUSE') {
-    @if (soloConsultaPendiente()) {
-    <div class="d-flex align-items-center gap-3 text-start flex-grow-1">
-      <i class="fa-solid fa-circle-info text-warning fs-3"></i>
+        <div class="acuse-actions">
+            @if (estado() === 'MOSTRANDO_ACUSE') {
+                @if (soloConsultaPendiente()) {
+                    <div class="d-flex align-items-center gap-3 text-start flex-grow-1">
+                        <i class="fa-solid fa-circle-info text-warning fs-3"></i>
 
-      <span>
-        Esta carga continúa pendiente de confirmación.
-        Notifique a <strong>{{ usuarioPendiente() || 'el usuario que realizó la carga' }}</strong>
-        para que ingrese y acepte o rechace su carga.
-      </span>
+                        <span>
+                            Esta carga continúa pendiente de confirmación. Notifique a
+                            <strong>{{ usuarioPendiente() || 'el usuario que realizó la carga' }}</strong>
+                            para que ingrese y acepte o rechace su carga.
+                        </span>
+                    </div>
+
+                    <button type="button" class="btn-cerrar-final" (click)="salirConsultaPendiente()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        Salir
+                    </button>
+                } @else {
+                    <button type="button" class="btn-rechazar" (click)="confirmarCarga(false)">
+                        <i class="fa-solid fa-xmark"></i>
+                        Rechazar
+                    </button>
+
+                    <button type="button" class="btn-aceptar" (click)="confirmarCarga(true)">
+                        <i class="fa-solid fa-check"></i>
+                        {{ esCargaCero() ? 'Confirmar carga en cero' : 'Aceptar' }}
+                    </button>
+                }
+            }
+
+            @if (estado() === 'CONFIRMANDO') {
+                <button type="button" class="btn-rechazar btn-disabled" disabled>Rechazar</button>
+
+                <button type="button" class="btn-aceptar btn-disabled" disabled>
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Procesando...
+                </button>
+            }
+        </div>
     </div>
-
-    <button type="button" class="btn-cerrar-final" (click)="salirConsultaPendiente()">
-      <i class="fa-solid fa-arrow-right-from-bracket"></i>
-      Salir
-    </button>
-    } @else {
-    <button type="button" class="btn-rechazar" (click)="confirmarCarga(false)">
-      <i class="fa-solid fa-xmark"></i>
-      Rechazar
-    </button>
-
-    <button type="button" class="btn-aceptar" (click)="confirmarCarga(true)">
-      <i class="fa-solid fa-check"></i>
-      {{ esCargaCero() ? 'Confirmar carga en cero' : 'Aceptar' }}
-    </button>
-    }
-    }
-
-    @if (estado() === 'CONFIRMANDO') {
-    <button type="button" class="btn-rechazar btn-disabled" disabled>
-      Rechazar
-    </button>
-
-    <button type="button" class="btn-aceptar btn-disabled" disabled>
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Procesando...
-    </button>
-    }
-  </div>
-</div>
 }

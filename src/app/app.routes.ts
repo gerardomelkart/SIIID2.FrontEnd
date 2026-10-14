@@ -8,435 +8,394 @@ import { cambioPasswordPendienteGuard } from './core/guards/cambio-password-pend
 import { permissionGuard } from './core/guards/permission.guard';
 import { moduloGuard } from './core/guards/modulo.guard';
 
+// Los guards separan autenticación, módulo habilitado y permiso operativo antes de crear cada pantalla.
 export const routes: Routes = [
-  { path: 'sistema/configuracion', loadComponent: () => import('./pages/sistema-configuracion/sistema-configuracion').then(m => m.SistemaConfiguracionPage), canActivate: [authGuard, cambioPasswordGuard, sistemaGuard] },
-  {
-    path: 'login',
-    loadComponent: () => import('./pages/login/login').then((m) => m.Login),
-  },
-  {
-    path: 'cambiar-password',
-    loadComponent: () =>
-      import('./pages/cambiar-password/cambiar-password').then((m) => m.CambiarPassword),
-    canActivate: [authGuard, cambioPasswordPendienteGuard],
-  },
-  {
-    path: 'seleccionar-modulo',
-    loadComponent: () =>
-      import('./pages/seleccionar-modulo/seleccionar-modulo').then((m) => m.SeleccionarModulo),
-    canActivate: [authGuard, cambioPasswordGuard],
-  },
-
-  {
-    path: 'semanal',
-    loadComponent: () =>
-      import('./layout/semanal-layout/semanal-layout').then((m) => m.SemanalLayout),
-    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
-    canActivateChild: [moduloGuard],
-    data: {
-      modulo: 'SEMANAL',
+    {
+        path: 'sistema/configuracion',
+        loadComponent: () => import('./pages/sistema-configuracion/sistema-configuracion').then((m) => m.SistemaConfiguracionPage),
+        canActivate: [authGuard, cambioPasswordGuard, sistemaGuard],
     },
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
-      },
-      {
-        path: 'carga',
-        loadComponent: () =>
-          import('./pages/semanal-carga/semanal-carga').then((m) => m.SemanalCarga),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'OPERACION_SEMANAL',
-        },
-      },
-      {
-        path: 'actualizacion',
-        redirectTo: 'carga',
-        pathMatch: 'full',
-      },
-      {
-        path: 'informes/envios',
-        loadComponent: () =>
-          import('./pages/semanal-envios/semanal-envios').then((m) => m.SemanalEnvios),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-        },
-      },
-      {
-        path: 'informes/reporte-preliminar',
-        loadComponent: () =>
-          import('./pages/semanal-planos/semanal-planos').then((m) => m.SemanalPlanos),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-        },
-      },
-      {
-        path: 'informes/planos-estadisticos',
-        loadComponent: () =>
-          import('./pages/semanal-sabanas/semanal-sabanas').then((m) => m.SemanalSabanas),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-        },
-      },
-      {
-        path: 'informes/cargas',
-        loadComponent: () =>
-          import('./pages/semanal-reporte-cargas/semanal-reporte-cargas').then(
-            (m) => m.SemanalReporteCargas,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'informes/originales',
-        loadComponent: () =>
-          import('./pages/semanal-archivos-originales/semanal-archivos-originales').then(
-            (m) => m.SemanalArchivosOriginales,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/cargas-pendientes',
-        loadComponent: () =>
-          import('./pages/semanal-aprobacion-cargas/semanal-aprobacion-cargas').then(
-            (m) => m.SemanalAprobacionCargas,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/usuarios',
-        loadComponent: () =>
-          import('./pages/semanal-usuarios/semanal-usuarios').then((m) => m.SemanalUsuarios),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/configuracion',
-        loadComponent: () =>
-          import('./pages/semanal-configuracion/semanal-configuracion').then(
-            (m) => m.SemanalConfiguracion,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/delitos',
-        loadComponent: () =>
-          import('./pages/semanal-delitos/semanal-delitos').then((m) => m.SemanalDelitos),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-          permiso: 'ADMINISTRA_DELITOS',
-        },
-      },
-    ],
-  },
-
-  {
-    path: 'federal',
-    loadComponent: () =>
-      import('./layout/federal-layout/federal-layout').then((m) => m.FederalLayout),
-    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
-    canActivateChild: [moduloGuard],
-    data: {
-      modulo: 'FEDERAL',
+    {
+        path: 'login',
+        loadComponent: () => import('./pages/login/login').then((m) => m.Login),
     },
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./pages/federal-inicio/federal-inicio').then((m) => m.FederalInicio),
-      },
-      {
-        path: 'carga-inicial',
-        loadComponent: () =>
-          import('./pages/federal-carga/federal-carga').then((m) => m.FederalCarga),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'CARGA',
-        },
-      },
-      {
-        path: 'actualizacion',
-        loadComponent: () =>
-          import('./pages/federal-actualizacion/federal-actualizacion').then(
-            (m) => m.FederalActualizacion,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'MODIFICACION',
-        },
-      },
-      {
-        path: 'informes/envios',
-        loadComponent: () =>
-          import('./pages/federal-envios/federal-envios').then((m) => m.FederalEnvios),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-        },
-      },
-      {
-        path: 'informes/cargas',
-        loadComponent: () =>
-          import('./pages/federal-reporte-cargas/federal-reporte-cargas').then(
-            (m) => m.FederalReporteCargas,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'informes/sabanas',
-        loadComponent: () =>
-          import('./pages/federal-planos/federal-planos').then((m) => m.FederalPlanos),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-        },
-      },
-      {
-        path: 'informes/originales',
-        loadComponent: () =>
-          import('./pages/federal-originales/federal-originales').then((m) => m.FederalOriginales),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/cargas-pendientes',
-        loadComponent: () =>
-          import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then(
-            (m) => m.FederalAprobacionCargas,
-          ),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/usuarios',
-        loadComponent: () =>
-          import('./pages/federal-usuarios/federal-usuarios').then((m) => m.FederalUsuarios),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
-      {
-        path: 'administracion/configuracion',
-        loadComponent: () =>
-          import('./pages/federal-configuracion/federal-configuracion').then(
-            (m) => m.FederalConfiguracion,
-          ),
-        canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO] },
-      },
-    ],
-  },
-
-  {
-    path: 'banci',
-    loadComponent: () => import('./layout/banci-layout/banci-layout').then((m) => m.BanciLayout),
-    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
-    canActivateChild: [moduloGuard],
-    data: {
-      modulo: 'BANCI',
+    {
+        path: 'cambiar-password',
+        loadComponent: () => import('./pages/cambiar-password/cambiar-password').then((m) => m.CambiarPassword),
+        canActivate: [authGuard, cambioPasswordPendienteGuard],
     },
-    children: [
-      {
-        path: 'usuarios',
-        loadComponent: () =>
-          import('./pages/banci-usuarios/banci-usuarios').then((m) => m.BanciUsuarios),
-        canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO] },
-      },
-      {
-        path: '',
-        loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio),
-      },
-      {
-        path: 'carga-masiva',
-        loadComponent: () => import('./pages/banci-carga/banci-carga').then((m) => m.BanciCarga),
-        canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
-      },
-      {
-        path: 'formulario',
-        loadComponent: () =>
-          import('./pages/banci-formulario/banci-formulario').then((m) => m.BanciFormulario),
-        canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
-      },
-      { path: 'actualizacion', pathMatch: 'full', redirectTo: 'actualizacion/manual' },
-      {
-        path: 'actualizacion/manual',
-        loadComponent: () => import('./pages/banci-actualizacion/banci-actualizacion').then(m => m.BanciActualizacion),
-        canActivate: [permissionGuard],
-        canDeactivate: [(componente: { puedeSalir: () => boolean }) => componente.puedeSalir()],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', modalidad: 'manual' },
-      },
-      {
-        path: 'actualizacion/masiva',
-        loadComponent: () => import('./pages/banci-actualizacion/banci-actualizacion').then(m => m.BanciActualizacion),
-        canActivate: [permissionGuard],
-        canDeactivate: [(componente: { puedeSalir: () => boolean }) => componente.puedeSalir()],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', modalidad: 'masiva' },
-      },
-      {
-        path: 'consulta',
-        loadComponent: () =>
-          import('./pages/banci-consulta/banci-consulta').then((m) => m.BanciConsulta),
-        canActivate: [permissionGuard],
-        data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA] },
-      },
-    ],
-  },
-
-  {
-    path: '',
-    loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
-    canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
-    canActivateChild: [moduloGuard],
-    data: {
-      modulo: 'MENSUAL',
+    {
+        path: 'seleccionar-modulo',
+        loadComponent: () => import('./pages/seleccionar-modulo/seleccionar-modulo').then((m) => m.SeleccionarModulo),
+        canActivate: [authGuard, cambioPasswordGuard],
     },
-    children: [
-      {
+
+    {
+        path: 'semanal',
+        loadComponent: () => import('./layout/semanal-layout/semanal-layout').then((m) => m.SemanalLayout),
+        canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+        canActivateChild: [moduloGuard],
+        data: {
+            modulo: 'SEMANAL',
+        },
+        children: [
+            {
+                path: '',
+                loadComponent: () => import('./pages/semanal-inicio/semanal-inicio').then((m) => m.SemanalInicio),
+            },
+            {
+                path: 'carga',
+                loadComponent: () => import('./pages/semanal-carga/semanal-carga').then((m) => m.SemanalCarga),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+                    permiso: 'OPERACION_SEMANAL',
+                },
+            },
+            {
+                path: 'actualizacion',
+                redirectTo: 'carga',
+                pathMatch: 'full',
+            },
+            {
+                path: 'informes/envios',
+                loadComponent: () => import('./pages/semanal-envios/semanal-envios').then((m) => m.SemanalEnvios),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                },
+            },
+            {
+                path: 'informes/reporte-preliminar',
+                loadComponent: () => import('./pages/semanal-planos/semanal-planos').then((m) => m.SemanalPlanos),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                },
+            },
+            {
+                path: 'informes/planos-estadisticos',
+                loadComponent: () => import('./pages/semanal-sabanas/semanal-sabanas').then((m) => m.SemanalSabanas),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                },
+            },
+            {
+                path: 'informes/cargas',
+                loadComponent: () => import('./pages/semanal-reporte-cargas/semanal-reporte-cargas').then((m) => m.SemanalReporteCargas),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'informes/originales',
+                loadComponent: () =>
+                    import('./pages/semanal-archivos-originales/semanal-archivos-originales').then((m) => m.SemanalArchivosOriginales),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/cargas-pendientes',
+                loadComponent: () =>
+                    import('./pages/semanal-aprobacion-cargas/semanal-aprobacion-cargas').then((m) => m.SemanalAprobacionCargas),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/usuarios',
+                loadComponent: () => import('./pages/semanal-usuarios/semanal-usuarios').then((m) => m.SemanalUsuarios),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/configuracion',
+                loadComponent: () => import('./pages/semanal-configuracion/semanal-configuracion').then((m) => m.SemanalConfiguracion),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/delitos',
+                loadComponent: () => import('./pages/semanal-delitos/semanal-delitos').then((m) => m.SemanalDelitos),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                    permiso: 'ADMINISTRA_DELITOS',
+                },
+            },
+        ],
+    },
+
+    {
+        path: 'federal',
+        loadComponent: () => import('./layout/federal-layout/federal-layout').then((m) => m.FederalLayout),
+        canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+        canActivateChild: [moduloGuard],
+        data: {
+            modulo: 'FEDERAL',
+        },
+        children: [
+            {
+                path: '',
+                loadComponent: () => import('./pages/federal-inicio/federal-inicio').then((m) => m.FederalInicio),
+            },
+            {
+                path: 'carga-inicial',
+                loadComponent: () => import('./pages/federal-carga/federal-carga').then((m) => m.FederalCarga),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+                    permiso: 'CARGA',
+                },
+            },
+            {
+                path: 'actualizacion',
+                loadComponent: () => import('./pages/federal-actualizacion/federal-actualizacion').then((m) => m.FederalActualizacion),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+                    permiso: 'MODIFICACION',
+                },
+            },
+            {
+                path: 'informes/envios',
+                loadComponent: () => import('./pages/federal-envios/federal-envios').then((m) => m.FederalEnvios),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                },
+            },
+            {
+                path: 'informes/cargas',
+                loadComponent: () => import('./pages/federal-reporte-cargas/federal-reporte-cargas').then((m) => m.FederalReporteCargas),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'informes/sabanas',
+                loadComponent: () => import('./pages/federal-planos/federal-planos').then((m) => m.FederalPlanos),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                },
+            },
+            {
+                path: 'informes/originales',
+                loadComponent: () => import('./pages/federal-originales/federal-originales').then((m) => m.FederalOriginales),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/cargas-pendientes',
+                loadComponent: () =>
+                    import('./pages/federal-aprobacion-cargas/federal-aprobacion-cargas').then((m) => m.FederalAprobacionCargas),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/usuarios',
+                loadComponent: () => import('./pages/federal-usuarios/federal-usuarios').then((m) => m.FederalUsuarios),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+            {
+                path: 'administracion/configuracion',
+                loadComponent: () => import('./pages/federal-configuracion/federal-configuracion').then((m) => m.FederalConfiguracion),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO] },
+            },
+        ],
+    },
+
+    {
+        path: 'banci',
+        loadComponent: () => import('./layout/banci-layout/banci-layout').then((m) => m.BanciLayout),
+        canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+        canActivateChild: [moduloGuard],
+        data: {
+            modulo: 'BANCI',
+        },
+        children: [
+            {
+                path: 'usuarios',
+                loadComponent: () => import('./pages/banci-usuarios/banci-usuarios').then((m) => m.BanciUsuarios),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO] },
+            },
+            {
+                path: '',
+                loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio),
+            },
+            {
+                path: 'carga-masiva',
+                loadComponent: () => import('./pages/banci-carga/banci-carga').then((m) => m.BanciCarga),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
+            },
+            {
+                path: 'formulario',
+                loadComponent: () => import('./pages/banci-formulario/banci-formulario').then((m) => m.BanciFormulario),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA' },
+            },
+            { path: 'actualizacion', pathMatch: 'full', redirectTo: 'actualizacion/manual' },
+            {
+                path: 'actualizacion/manual',
+                loadComponent: () => import('./pages/banci-actualizacion/banci-actualizacion').then((m) => m.BanciActualizacion),
+                canActivate: [permissionGuard],
+                canDeactivate: [(componente: { puedeSalir: () => boolean }) => componente.puedeSalir()],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', modalidad: 'manual' },
+            },
+            {
+                path: 'actualizacion/masiva',
+                loadComponent: () => import('./pages/banci-actualizacion/banci-actualizacion').then((m) => m.BanciActualizacion),
+                canActivate: [permissionGuard],
+                canDeactivate: [(componente: { puedeSalir: () => boolean }) => componente.puedeSalir()],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', modalidad: 'masiva' },
+            },
+            {
+                path: 'consulta',
+                loadComponent: () => import('./pages/banci-consulta/banci-consulta').then((m) => m.BanciConsulta),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA] },
+            },
+        ],
+    },
+
+    {
         path: '',
-        loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
-      },
-
-      {
-        path: 'carga-inicial',
-        loadComponent: () =>
-          import('./pages/carga-inicial/carga-inicial').then((m) => m.CargaInicial),
-        canActivate: [permissionGuard],
+        loadComponent: () => import('./layout/main-layout/main-layout').then((m) => m.MainLayout),
+        canActivate: [authGuard, cambioPasswordGuard, moduloGuard],
+        canActivateChild: [moduloGuard],
         data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'CARGA',
+            modulo: 'MENSUAL',
         },
-      },
+        children: [
+            {
+                path: '',
+                loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+            },
 
-      {
-        path: 'actualizacion',
-        loadComponent: () =>
-          import('./pages/actualizacion/actualizacion').then((m) => m.Actualizacion),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
-          permiso: 'MODIFICACION',
-        },
-      },
+            {
+                path: 'carga-inicial',
+                loadComponent: () => import('./pages/carga-inicial/carga-inicial').then((m) => m.CargaInicial),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+                    permiso: 'CARGA',
+                },
+            },
 
-      {
-        path: 'informes',
-        redirectTo: 'informes/envios',
-      },
+            {
+                path: 'actualizacion',
+                loadComponent: () => import('./pages/actualizacion/actualizacion').then((m) => m.Actualizacion),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL],
+                    permiso: 'MODIFICACION',
+                },
+            },
 
-      {
-        path: 'informes/envios',
-        loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-          reporte: 'ENVIOS',
-        },
-      },
+            {
+                path: 'informes',
+                redirectTo: 'informes/envios',
+            },
 
-      {
-        path: 'informes/cargas',
-        loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-          reporte: 'CARGAS',
-        },
-      },
+            {
+                path: 'informes/envios',
+                loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                    reporte: 'ENVIOS',
+                },
+            },
 
-      {
-        path: 'informes/originales',
-        loadComponent: () => import('./pages/originales/originales').then((m) => m.Originales),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
+            {
+                path: 'informes/cargas',
+                loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                    reporte: 'CARGAS',
+                },
+            },
 
-      {
-        path: 'informes/sabanas',
-        loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
-          reporte: 'SABANAS',
-        },
-      },
+            {
+                path: 'informes/originales',
+                loadComponent: () => import('./pages/originales/originales').then((m) => m.Originales),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
 
-      {
-        path: 'administracion/usuarios',
-        loadComponent: () =>
-          import('./pages/crud-registros/crud-registros').then((m) => m.CrudRegistros),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
+            {
+                path: 'informes/sabanas',
+                loadComponent: () => import('./pages/informes/informes').then((m) => m.Informes),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA],
+                    reporte: 'SABANAS',
+                },
+            },
 
-      {
-        path: 'administracion/configuracion',
-        loadComponent: () =>
-          import('./pages/configuracion/configuracion').then((m) => m.Configuracion),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
+            {
+                path: 'administracion/usuarios',
+                loadComponent: () => import('./pages/crud-registros/crud-registros').then((m) => m.CrudRegistros),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
 
-      {
-        path: 'administracion/cargas-pendientes',
-        loadComponent: () =>
-          import('./pages/aprobacion-cargas/aprobacion-cargas').then((m) => m.AprobacionCargas),
-        canActivate: [permissionGuard],
-        data: {
-          roles: [ROLES.SUPER_USUARIO],
-        },
-      },
+            {
+                path: 'administracion/configuracion',
+                loadComponent: () => import('./pages/configuracion/configuracion').then((m) => m.Configuracion),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
 
-      {
-        path: 'crud-registros',
-        redirectTo: 'administracion/usuarios',
-      },
-      {
-        path: 'configuracion',
-        redirectTo: 'administracion/configuracion',
-      },
-    ],
-  },
-  {
-    path: '**',
-    redirectTo: '',
-  },
+            {
+                path: 'administracion/cargas-pendientes',
+                loadComponent: () => import('./pages/aprobacion-cargas/aprobacion-cargas').then((m) => m.AprobacionCargas),
+                canActivate: [permissionGuard],
+                data: {
+                    roles: [ROLES.SUPER_USUARIO],
+                },
+            },
+
+            {
+                path: 'crud-registros',
+                redirectTo: 'administracion/usuarios',
+            },
+            {
+                path: 'configuracion',
+                redirectTo: 'administracion/configuracion',
+            },
+        ],
+    },
+    {
+        path: '**',
+        redirectTo: '',
+    },
 ];

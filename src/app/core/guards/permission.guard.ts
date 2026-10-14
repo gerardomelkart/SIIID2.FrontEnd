@@ -4,65 +4,70 @@ import { mostrarAdvertencia } from '../utils/alert.utils';
 import { RolSistema } from '../constants/roles.constants';
 import { SessionService } from '../services/session.service';
 
-interface PermissionRouteData {
-  roles?: RolSistema[];
-  permiso?: 'CARGA' | 'MODIFICACION' | 'OPERACION_SEMANAL' | 'ADMINISTRA_DELITOS';
+interface PermissionRouteData
+{
+    roles?: RolSistema[];
+    permiso?: 'CARGA' | 'MODIFICACION' | 'OPERACION_SEMANAL' | 'ADMINISTRA_DELITOS';
 }
 
-export const permissionGuard: CanActivateFn = (route) => {
-  const sessionService = inject(SessionService);
-  const router = inject(Router);
+// Combina rol y permiso operativo de la ruta; tener alcance nacional no otorga permisos de modificación.
+export const permissionGuard: CanActivateFn = (route) =>
+{
+    const sessionService = inject(SessionService);
+    const router = inject(Router);
 
-  const usuario = sessionService.usuario();
+    const usuario = sessionService.usuario();
 
-  if (!usuario) {
-    router.navigateByUrl('/login');
-    return false;
-  }
+    if(!usuario)
+    {
+        router.navigateByUrl('/login');
+        return false;
+    }
 
-  const data = route.data as PermissionRouteData;
+    const data = route.data as PermissionRouteData;
 
-  if (data.roles?.length && !data.roles.includes(usuario.rol as RolSistema)) {
-    mostrarAccesoDenegado(router, 'No cuenta con el perfil necesario para acceder a este módulo.');
+    if(data.roles?.length && !data.roles.includes(usuario.rol as RolSistema))
+    {
+        mostrarAccesoDenegado(router, 'No cuenta con el perfil necesario para acceder a este módulo.');
 
-    return false;
-  }
+        return false;
+    }
 
-  if (data.permiso === 'CARGA' && !sessionService.habilitaCarga()) {
-    mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de carga inicial.');
+    if(data.permiso === 'CARGA' && !sessionService.habilitaCarga())
+    {
+        mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de carga inicial.');
 
-    return false;
-  }
+        return false;
+    }
 
-  if (data.permiso === 'MODIFICACION' && !sessionService.habilitaModificacion()) {
-    mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de actualización.');
+    if(data.permiso === 'MODIFICACION' && !sessionService.habilitaModificacion())
+    {
+        mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de actualización.');
 
-    return false;
-  }
+        return false;
+    }
 
-  if (data.permiso === 'OPERACION_SEMANAL' && !sessionService.habilitaCarga()) {
-    mostrarAccesoDenegado(
-      router,
-      'No tiene habilitado el permiso de carga preliminar.',
-    );
+    if(data.permiso === 'OPERACION_SEMANAL' && !sessionService.habilitaCarga())
+    {
+        mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de carga preliminar.');
 
-    return false;
-  }
+        return false;
+    }
 
-  if (data.permiso === 'ADMINISTRA_DELITOS' && !sessionService.administraDelitos()) {
-    mostrarAccesoDenegado(
-      router,
-      'No tiene habilitado el permiso de administración de delitos preliminares.',
-    );
+    if(data.permiso === 'ADMINISTRA_DELITOS' && !sessionService.administraDelitos())
+    {
+        mostrarAccesoDenegado(router, 'No tiene habilitado el permiso de administración de delitos preliminares.');
 
-    return false;
-  }
+        return false;
+    }
 
-  return true;
+    return true;
 };
 
-function mostrarAccesoDenegado(router: Router, mensaje: string): void {
-  router.navigateByUrl('/').then(() => {
-    mostrarAdvertencia('Acceso no permitido', mensaje);
-  });
+function mostrarAccesoDenegado(router: Router, mensaje: string): void
+{
+    router.navigateByUrl('/').then(() =>
+    {
+        mostrarAdvertencia('Acceso no permitido', mensaje);
+    });
 }

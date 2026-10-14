@@ -1,86 +1,86 @@
 .quick-placeholder {
-  min-height: 98px;
+    min-height: 98px;
 }
 
 .status-grid {
-  grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
-  align-items: start;
+    grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
+    align-items: start;
 }
 
 .status-card-delitos {
-  min-width: 0;
-  border-left-color: #198754;
-  padding: 14px 18px;
+    min-width: 0;
+    border-left-color: #198754;
+    padding: 14px 18px;
 }
 
 .status-delitos-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .status-delitos-header > i {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #198754;
-  background: #eaf7ee;
-  border: 1px solid #cae8d2;
-  font-size: 16px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #198754;
+    background: #eaf7ee;
+    border: 1px solid #cae8d2;
+    font-size: 16px;
 }
 
 .status-delitos-title {
-  color: #198754;
-  font-size: 18px;
-  line-height: 1.1;
-  font-weight: 900;
+    color: #198754;
+    font-size: 18px;
+    line-height: 1.1;
+    font-weight: 900;
 }
 
 .status-card-delitos .status-label {
-  margin-top: 3px;
-  color: #53605a;
-  font-size: 12px;
+    margin-top: 3px;
+    color: #53605a;
+    font-size: 12px;
 }
 
 .status-delitos-lista {
-  margin-top: 11px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+    margin-top: 11px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
 }
 
 .status-delito-chip {
-  display: inline-flex;
-  align-items: center;
-  color: #145c32;
-  background: #eaf7ee;
-  border: 1px solid #b9dec4;
-  border-radius: 18px;
-  padding: 5px 10px;
-  font-size: 12px;
-  line-height: 1.1;
-  font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    color: #145c32;
+    background: #eaf7ee;
+    border: 1px solid #b9dec4;
+    border-radius: 18px;
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.1;
+    font-weight: 900;
 }
 
 .status-delitos-mensaje {
-  margin-top: 11px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #667085;
-  font-size: 13px;
-  font-weight: 700;
+    margin-top: 11px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #667085;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 @media (max-width: 760px) {
-  .status-grid {
-    grid-template-columns: 1fr;
-  }
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
 
-  .quick-placeholder {
-    display: none;
-  }
+    .quick-placeholder {
+        display: none;
+    }
 }

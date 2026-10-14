@@ -7,93 +7,86 @@ import { mostrarExito } from '../../core/utils/alert.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 
 @Component({
-  selector: 'app-cambiar-password',
-  imports: [FormsModule],
-  templateUrl: './cambiar-password.html',
-  styleUrl: './cambiar-password.css',
+    selector: 'app-cambiar-password',
+    imports: [FormsModule],
+    templateUrl: './cambiar-password.html',
+    styleUrl: './cambiar-password.css',
 })
-export class CambiarPassword {
-  nuevaPassword = signal('');
-  confirmarPassword = signal('');
-  guardando = signal(false);
-  mensajeError = signal('');
+export class CambiarPassword
+{
+    nuevaPassword = signal('');
+    confirmarPassword = signal('');
+    guardando = signal(false);
+    mensajeError = signal('');
 
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-  ) {}
+    constructor(
+        private authService: AuthService,
+        private router: Router,
+    )
+    {}
 
-  cambiarPassword(): void {
-    this.mensajeError.set('');
+    cambiarPassword(): void
+    {
+        this.mensajeError.set('');
 
-    const nuevaPassword = this.nuevaPassword();
-    const confirmarPassword = this.confirmarPassword();
+        const nuevaPassword = this.nuevaPassword();
+        const confirmarPassword = this.confirmarPassword();
 
-    if (!nuevaPassword || !confirmarPassword) {
-      this.mensajeError.set(
-        'Debe capturar y confirmar la nueva contraseña.',
-      );
-      return;
-    }
-
-    if (nuevaPassword.length < 8) {
-      this.mensajeError.set(
-        'La nueva contraseña debe tener al menos 8 caracteres.',
-      );
-      return;
-    }
-
-    if (nuevaPassword !== confirmarPassword) {
-      this.mensajeError.set(
-        'La confirmación de la contraseña no coincide.',
-      );
-      return;
-    }
-
-    this.guardando.set(true);
-
-    this.authService
-      .cambiarPassword({
-        nuevaPassword,
-        confirmarPassword,
-      })
-      .subscribe({
-        next: async (response) => {
-          this.guardando.set(false);
-
-          if (!response.esValido) {
-            this.mensajeError.set(
-              response.mensaje ||
-                'No fue posible cambiar la contraseña.',
-            );
+        if(!nuevaPassword || !confirmarPassword)
+        {
+            this.mensajeError.set('Debe capturar y confirmar la nueva contraseña.');
             return;
-          }
+        }
 
-          await mostrarExito(
-            'Contraseña actualizada',
-            'Inicie sesión nuevamente con su nueva contraseña.',
-          );
+        if(nuevaPassword.length < 8)
+        {
+            this.mensajeError.set('La nueva contraseña debe tener al menos 8 caracteres.');
+            return;
+        }
 
-          this.authService.logout();
+        if(nuevaPassword !== confirmarPassword)
+        {
+            this.mensajeError.set('La confirmación de la contraseña no coincide.');
+            return;
+        }
 
-          void this.router.navigateByUrl('/login');
-        },
-        error: (error: unknown) => {
-          this.guardando.set(false);
+        this.guardando.set(true);
 
-          this.mensajeError.set(
-            obtenerMensajeErrorHttp(
-              error,
-              'No fue posible cambiar la contraseña.',
-            ),
-          );
-        },
-      });
-  }
+        this.authService
+            .cambiarPassword({
+                nuevaPassword,
+                confirmarPassword,
+            })
+            .subscribe({
+                next: async (response) =>
+                {
+                    this.guardando.set(false);
 
-  cerrarSesion(): void {
-    this.authService.logout();
+                    if(!response.esValido)
+                    {
+                        this.mensajeError.set(response.mensaje || 'No fue posible cambiar la contraseña.');
+                        return;
+                    }
 
-    void this.router.navigateByUrl('/login');
-  }
+                    await mostrarExito('Contraseña actualizada', 'Inicie sesión nuevamente con su nueva contraseña.');
+
+                    this.authService.logout();
+
+                    void this.router.navigateByUrl('/login');
+                },
+                error: (error: unknown) =>
+                {
+                    this.guardando.set(false);
+
+                    this.mensajeError.set(obtenerMensajeErrorHttp(error, 'No fue posible cambiar la contraseña.'));
+                },
+            });
+    }
+
+    cerrarSesion(): void
+    {
+        this.authService.logout();
+
+        void this.router.navigateByUrl('/login');
+    }
 }

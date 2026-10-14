@@ -3,95 +3,98 @@ import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 import {
-  ActualizacionAnioDisponibleItem,
-  ActualizacionDiferenciasResponse,
-  ActualizacionPeriodoResponse,
+    ActualizacionAnioDisponibleItem,
+    ActualizacionDiferenciasResponse,
+    ActualizacionPeriodoResponse,
 } from '../models/actualizacion.models';
 
-import {
-  CargaValidacionResponse,
-  ConfirmarCargaRequest,
-  ConfirmarCargaResponse,
-} from '../models/carga.models';
+import { CargaValidacionResponse, ConfirmarCargaRequest, ConfirmarCargaResponse } from '../models/carga.models';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
-export class ActualizacionService {
-  private readonly apiUrl = API_ENDPOINTS.actualizaciones;
+export class ActualizacionService
+{
+    private readonly apiUrl = API_ENDPOINTS.actualizaciones;
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient)
+    {}
 
-  consultarPeriodo(mesCorte: number, anioCorte: number, idEntidadFederativa?: number | null) {
-    let params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
+    consultarPeriodo(mesCorte: number, anioCorte: number, idEntidadFederativa?: number | null)
+    {
+        let params = new HttpParams().set('mesCorte', mesCorte).set('anioCorte', anioCorte);
 
-    if (idEntidadFederativa) {
-      params = params.set('idEntidadFederativa', idEntidadFederativa);
+        if(idEntidadFederativa)
+        {
+            params = params.set('idEntidadFederativa', idEntidadFederativa);
+        }
+
+        return this.http.get<ActualizacionPeriodoResponse>(`${this.apiUrl}/periodo`, { params });
     }
 
-    return this.http.get<ActualizacionPeriodoResponse>(`${this.apiUrl}/periodo`, { params });
-  }
+    obtenerPeriodosDisponibles(idEntidadFederativa?: number | null)
+    {
+        let params = new HttpParams();
 
-  obtenerPeriodosDisponibles(idEntidadFederativa?: number | null) {
-    let params = new HttpParams();
+        if(idEntidadFederativa)
+        {
+            params = params.set('idEntidadFederativa', idEntidadFederativa);
+        }
 
-    if (idEntidadFederativa) {
-      params = params.set('idEntidadFederativa', idEntidadFederativa);
+        return this.http.get<ActualizacionAnioDisponibleItem[]>(`${this.apiUrl}/periodos-disponibles`, {
+            params,
+        });
     }
 
-    return this.http.get<ActualizacionAnioDisponibleItem[]>(`${this.apiUrl}/periodos-disponibles`, {
-      params,
-    });
-  }
+    validarActualizacion(
+        mesCorte: number,
+        anioCorte: number,
+        carpetas: File,
+        delitos: File,
+        victimas: File,
+        idEntidadFederativa?: number | null,
+    )
+    {
+        const formData = new FormData();
 
-  validarActualizacion(
-    mesCorte: number,
-    anioCorte: number,
-    carpetas: File,
-    delitos: File,
-    victimas: File,
-    idEntidadFederativa?: number | null,
-  ) {
-    const formData = new FormData();
+        formData.append('mesCorte', mesCorte.toString());
+        formData.append('anioCorte', anioCorte.toString());
 
-    formData.append('mesCorte', mesCorte.toString());
-    formData.append('anioCorte', anioCorte.toString());
+        if(idEntidadFederativa)
+        {
+            formData.append('idEntidadFederativa', idEntidadFederativa.toString());
+        }
 
-    if (idEntidadFederativa) {
-      formData.append('idEntidadFederativa', idEntidadFederativa.toString());
+        formData.append('carpetas', carpetas);
+        formData.append('delitos', delitos);
+        formData.append('victimas', victimas);
+
+        return this.http.post<CargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
     }
 
-    formData.append('carpetas', carpetas);
-    formData.append('delitos', delitos);
-    formData.append('victimas', victimas);
+    obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 50, incluirResumen = true)
+    {
+        const params = new HttpParams().set('limitePorSeccion', limitePorSeccion).set('incluirResumen', incluirResumen);
 
-    return this.http.post<CargaValidacionResponse>(`${this.apiUrl}/validar`, formData);
-  }
+        return this.http.get<ActualizacionDiferenciasResponse>(`${this.apiUrl}/diferencias/${codigoReferencia}`, { params });
+    }
 
-  obtenerDiferencias(codigoReferencia: string, limitePorSeccion = 50, incluirResumen = true) {
-    const params = new HttpParams()
-      .set('limitePorSeccion', limitePorSeccion)
-      .set('incluirResumen', incluirResumen);
+    confirmarActualizacion(request: ConfirmarCargaRequest)
+    {
+        return this.http.post<ConfirmarCargaResponse>(`${this.apiUrl}/confirmar`, request);
+    }
 
-    return this.http.get<ActualizacionDiferenciasResponse>(
-      `${this.apiUrl}/diferencias/${codigoReferencia}`,
-      { params },
-    );
-  }
+    descargarAcusePrevio(codigoReferencia: string)
+    {
+        return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse`, {
+            responseType: 'blob',
+        });
+    }
 
-  confirmarActualizacion(request: ConfirmarCargaRequest) {
-    return this.http.post<ConfirmarCargaResponse>(`${this.apiUrl}/confirmar`, request);
-  }
-
-  descargarAcusePrevio(codigoReferencia: string) {
-    return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse`, {
-      responseType: 'blob',
-    });
-  }
-
-  descargarAcuseConfirmado(codigoReferencia: string) {
-    return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse-confirmado`, {
-      responseType: 'blob',
-    });
-  }
+    descargarAcuseConfirmado(codigoReferencia: string)
+    {
+        return this.http.get(`${this.apiUrl}/${codigoReferencia}/acuse-confirmado`, {
+            responseType: 'blob',
+        });
+    }
 }

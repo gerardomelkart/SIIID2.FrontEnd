@@ -1,223 +1,374 @@
 <section class="formulario-banci">
-  <h1>Carga manual</h1>
-  <p>Registre una carpeta nueva con un delito y sus víctimas. Los campos con * son obligatorios; las validaciones pueden
-    requerir información adicional según el tipo de víctima.</p>
-  <div class="module-intro"><span class="intro-icon"><i class="fa-solid fa-file-pen"></i></span>
-    <div><strong>Captura individual</strong>
-      <p>Complete la carpeta, capture un delito y sus víctimas, y revise la validación antes de aceptar. La entidad que
-        reporta se verifica con su cuenta.</p>
+    <h1>Carga manual</h1>
+    <p>
+        Registre una carpeta nueva con un delito y sus víctimas. Los campos con * son obligatorios; las validaciones pueden requerir
+        información adicional según el tipo de víctima.
+    </p>
+    <div class="module-intro">
+        <span class="intro-icon"><i class="fa-solid fa-file-pen"></i></span>
+        <div>
+            <strong>Captura individual</strong>
+            <p>
+                Complete la carpeta, capture un delito y sus víctimas, y revise la validación antes de aceptar. La entidad que reporta se
+                verifica con su cuenta.
+            </p>
+        </div>
     </div>
-  </div>
-  <div class="pasos" aria-label="Etapa de la captura"><span [class.activo]="!pendiente() && !terminado()">1 ·
-      Capturar</span><span [class.activo]="pendiente()">2 · Revisar y decidir</span><span [class.activo]="terminado()">3
-      · Registrada</span></div>
-  @if (errorOpciones()) { <div class="alert alert-danger" role="alert">{{ errorOpciones() }} <button type="button"
-      class="btn btn-secondary" (click)="cargarOpciones()">Reintentar</button></div> }
-  @if (cargandoOpciones()) { <p role="status">Cargando catálogos...</p> }
-  @if (mensaje()) { <div class="alert alert-warning" role="alert">{{ mensaje() }}</div> }
-  @if (necesitaActualizar()) { <button type="button" class="btn btn-secondary mb-3" [disabled]="cargando()"
-    (click)="actualizarEstado()">Actualizar estado de la captura</button> }
-
-  @if (opciones(); as o) {
-  @if (!resultado() && !necesitaActualizar()) {
-  <form id="inicio-formulario-banci" #capturaFormulario (ngSubmit)="capturaFormulario.reportValidity() && validar()">
-    <fieldset [disabled]="bloqueado()">
-      <div class="resumen-captura" aria-label="Resumen de captura">
-        <div><span>Carpetas</span><strong>1</strong></div>
-        <div><span>Delitos</span><strong>{{ delitos.length }}</strong></div>
-        <div><span>Víctimas</span><strong>{{ totalVictimas() }}</strong></div>
-      </div>
-      @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
-      <div class="siiid-card p-3 mb-3">
-        <label for="entidadReporteBanci" class="form-label">
-          <strong>Entidad federativa que reporta *</strong>
-        </label>
-
-        <select id="entidadReporteBanci" class="form-select" name="entidadReporte" [(ngModel)]="entidad"
-          [disabled]="bloqueado()" required>
-          <option [ngValue]="null">Seleccione una entidad...</option>
-
-          @for (e of entidades(); track e.clave) {
-          <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
-          }
-        </select>
-      </div>
-      }
-      <div class="siiid-card mb-3">
-        <div class="siiid-card-header"><i class="fa-solid fa-folder-open"></i> Datos de la carpeta</div>
-        <div class="alert alert-info m-3 mb-0">
-          Los IDs de carpeta, delito y víctima los genera el sistema. NO_BANCI se asigna al confirmar. Se admite un solo delito por carpeta. Las víctimas se registran como Persona no localizada.
+    <div class="pasos" aria-label="Etapa de la captura">
+        <span [class.activo]="!pendiente() && !terminado()">1 · Capturar</span
+        ><span [class.activo]="pendiente()">2 · Revisar y decidir</span><span [class.activo]="terminado()">3 · Registrada</span>
+    </div>
+    @if (errorOpciones()) {
+        <div class="alert alert-danger" role="alert">
+            {{ errorOpciones() }} <button type="button" class="btn btn-secondary" (click)="cargarOpciones()">Reintentar</button>
         </div>
-        <div class="p-3"><app-banci-campos idPrefijo="banci-carpeta" [campos]="camposCarpeta" [datos]="carpeta" [catalogos]="o.catalogos"
-            [bloqueado]="bloqueado()" /></div>
-      </div>
-      <div class="cabecera barra-seccion">
-        <h2><i class="fa-solid fa-list"></i> Delitos y víctimas</h2>
-      </div>
-      @for (d of delitos; track d; let i = $index) {
-      <section class="siiid-card mb-3">
-        <div class="siiid-card-header cabecera">
-          <span>Delito {{ i + 1 }} · {{ d.datos['id_delito'] || 'Nuevo delito' }}</span>
-
-        </div>
-        <div class="p-3">
-          <app-banci-campos [idPrefijo]="'banci-delito-' + i" [campos]="camposDelito" [camposFijos]="(o.puedeElegirEntidad ?? o.esSuperUsuario) ? [] : ['id_ent_hchos']" [datos]="d.datos" [catalogos]="o.catalogos"
-            [bloqueado]="bloqueado()" />
-          <div class="cabecera barra-seccion">
-            <h2><i class="fa-solid fa-users"></i> Víctimas del delito {{ i + 1 }}</h2><button type="button"
-              class="btn btn-secondary" [disabled]="d.victimas.length >= 500 || totalVictimas() >= 1000"
-              (click)="agregarVictima(d)"><i class="fa-solid fa-user-plus"></i> Agregar víctima</button>
-          </div>
-          @for (v of d.victimas; track v; let j = $index) {
-          <details class="victima" [open]="j === 0">
-            <summary>Víctima {{ j + 1 }} · {{ v['id_vicf'] || 'Nueva víctima' }} {{ v['nomb'] || '' }}</summary>
-            <div class="acciones"><button type="button" class="btn btn-sm btn-outline-danger"
-                [disabled]="d.victimas.length === 1" (click)="quitarVictima(d, j)">Quitar víctima</button></div>
-            <div class="py-3"><app-banci-campos [idPrefijo]="'banci-victima-' + i + '-' + j" [campos]="camposVictima" [datos]="v" [catalogos]="o.catalogos"
-                [bloqueado]="bloqueado()" /></div>
-            <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="d.victimas.length === 1"
-              (click)="quitarVictima(d, j)">Quitar víctima</button>
-          </details>
-          }
-          <button type="button" class="btn btn-secondary mt-3"
-            [disabled]="d.victimas.length >= 500 || totalVictimas() >= 1000" (click)="agregarVictima(d)"><i
-              class="fa-solid fa-user-plus"></i> Agregar víctima</button>
-
-        </div>
-      </section>
-      }
-      <div class="acciones">
-
-        <span>1 carpeta · {{ delitos.length }} delitos · {{ totalVictimas() }} víctimas</span>
-        <button type="submit" class="btn btn-siiid"><i class="fa-solid fa-check"></i> Validar captura</button>
-      </div>
-    </fieldset>
-  </form>
-  }
-  }
-
-  @if (cargando()) { <p class="mt-3" role="status"><i class="fa-solid fa-spinner fa-spin"></i> Procesando...</p> }
-  @if (resultado(); as r) {
-  <section id="resultado-formulario-banci" class="siiid-card mt-4">
-    <div class="siiid-card-header" [class.resultado-sin-observaciones]="pendiente() && !r.errores.length && !r.advertencias.length">{{ terminado() ? 'Carpeta registrada' : pendiente() ? (r.advertencias.length ? 'Captura con advertencias' : 'Validación correcta') : 'Resultado de la captura' }}</div>
-    <div class="p-3">
-      <p>{{ pendiente() && !r.errores.length && !r.advertencias.length ? 'Sin errores ni advertencias. Confirme el registro con el resumen que se muestra abajo.' : r.mensaje }}</p>
-      <p>{{ r.totalCarpetas }} carpetas · {{ r.totalDelitos }} delitos · {{ r.totalVictimas }} víctimas</p>
-      @if (r.errores.length || r.advertencias.length) {
-      <div class="table-responsive observaciones observaciones-banci">
-        <table class="table table-sm table-bordered tabla-observaciones-banci">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Sección</th>
-              <th>Registro</th>
-              <th>Campo</th>
-              <th>Mensaje</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (e of r.errores; track $index) { <tr class="fila-error-banci">
-              <td>Error</td>
-              <td>{{ e.archivo }}</td>
-              <td>{{ e.numeroFila ?? '—' }}</td>
-              <td>{{ e.campo }}</td>
-              <td>{{ e.mensaje }} <button type="button" class="btn btn-sm btn-outline-dark ms-2" [disabled]="cargando() || necesitaActualizar()" (click)="volverAFormulario(e)">Corregir campo</button></td>
-            </tr> }
-            @for (e of r.advertencias; track $index) { <tr class="fila-advertencia-banci">
-              <td>Advertencia</td>
-              <td>{{ e.archivo }}</td>
-              <td>{{ e.numeroFila ?? '—' }}</td>
-              <td>{{ e.campo }}</td>
-              <td>{{ e.mensaje }}
-                @if (pendiente() && e.campo) {
-                  <button type="button" class="btn btn-sm btn-outline-dark ms-2" [disabled]="cargando()"
-                    (click)="volverAFormulario(e)">Revisar campo</button>
-                }
-              </td>
-            </tr> }
-          </tbody>
-        </table>
-      </div>
-      }
-      @if (pendiente()) {
-      <div id="decision-formulario-banci" tabindex="-1">
-        <app-banci-vista-previa [previa]="r.vistaPrevia" />
-      </div>
-
-      <p>Los datos aún no están integrados. Revise la vista previa y decida si desea registrar la carpeta.</p>
-
-      @if (r.advertencias.length > 0) {
-      <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
-        <p><strong>Esta captura presenta {{ r.advertencias.length }} advertencia(s).</strong></p>
-        <p>Revise sus mensajes antes de decidir. Si RENAPO no está disponible, algunas CURP podrían quedar sin validar.
-        </p>
-
-        <label class="d-flex align-items-start gap-2">
-          <input type="checkbox" name="aceptarAdvertenciasFormulario" [(ngModel)]="aceptarAdvertencias"
-            [disabled]="cargando() || necesitaActualizar()" />
-          <span>He revisado las advertencias y acepto continuar con esta captura.</span>
-        </label>
-      </div>
-      }
-
-      <div class="acciones">
-        @if (r.errores.length > 0 || r.advertencias.length > 0) {
-        <button type="button" class="btn btn-secondary" [disabled]="cargando() || necesitaActualizar()"
-          (click)="volverAFormulario()">
-          <i class="fa-solid fa-arrow-left"></i> Regresar y revisar formulario
+    }
+    @if (cargandoOpciones()) {
+        <p role="status">Cargando catálogos...</p>
+    }
+    @if (mensaje()) {
+        <div class="alert alert-warning" role="alert">{{ mensaje() }}</div>
+    }
+    @if (necesitaActualizar()) {
+        <button type="button" class="btn btn-secondary mb-3" [disabled]="cargando()" (click)="actualizarEstado()">
+            Actualizar estado de la captura
         </button>
+    }
+
+    @if (opciones(); as o) {
+        @if (!resultado() && !necesitaActualizar()) {
+            <form id="inicio-formulario-banci" #capturaFormulario (ngSubmit)="capturaFormulario.reportValidity() && validar()">
+                <fieldset [disabled]="bloqueado()">
+                    <div class="resumen-captura" aria-label="Resumen de captura">
+                        <div><span>Carpetas</span><strong>1</strong></div>
+                        <div>
+                            <span>Delitos</span><strong>{{ delitos.length }}</strong>
+                        </div>
+                        <div>
+                            <span>Víctimas</span><strong>{{ totalVictimas() }}</strong>
+                        </div>
+                    </div>
+                    @if ((o.puedeElegirEntidad ?? o.esSuperUsuario)) {
+                        <div class="siiid-card p-3 mb-3">
+                            <label for="entidadReporteBanci" class="form-label">
+                                <strong>Entidad federativa que reporta *</strong>
+                            </label>
+
+                            <select
+                                id="entidadReporteBanci"
+                                class="form-select"
+                                name="entidadReporte"
+                                [(ngModel)]="entidad"
+                                [disabled]="bloqueado()"
+                                required
+                            >
+                                <option [ngValue]="null">Seleccione una entidad...</option>
+
+                                @for (e of entidades(); track e.clave) {
+                                    <option [ngValue]="+e.clave">{{ e.descripcion }}</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    <div class="siiid-card mb-3">
+                        <div class="siiid-card-header"><i class="fa-solid fa-folder-open"></i> Datos de la carpeta</div>
+                        <div class="alert alert-info m-3 mb-0">
+                            Los IDs de carpeta, delito y víctima los genera el sistema. NO_BANCI se asigna al confirmar. Se admite un solo
+                            delito por carpeta. Las víctimas se registran como Persona no localizada.
+                        </div>
+                        <div class="p-3">
+                            <app-banci-campos
+                                idPrefijo="banci-carpeta"
+                                [campos]="camposCarpeta"
+                                [datos]="carpeta"
+                                [catalogos]="o.catalogos"
+                                [bloqueado]="bloqueado()"
+                            />
+                        </div>
+                    </div>
+                    <div class="cabecera barra-seccion">
+                        <h2><i class="fa-solid fa-list"></i> Delitos y víctimas</h2>
+                    </div>
+                    @for (d of delitos; track d; let i = $index) {
+                        <section class="siiid-card mb-3">
+                            <div class="siiid-card-header cabecera">
+                                <span>Delito {{ i + 1 }} · {{ d.datos['id_delito'] || 'Nuevo delito' }}</span>
+                            </div>
+                            <div class="p-3">
+                                <app-banci-campos
+                                    [idPrefijo]="'banci-delito-' + i"
+                                    [campos]="camposDelito"
+                                    [camposFijos]="(o.puedeElegirEntidad ?? o.esSuperUsuario) ? [] : ['id_ent_hchos']"
+                                    [datos]="d.datos"
+                                    [catalogos]="o.catalogos"
+                                    [bloqueado]="bloqueado()"
+                                />
+                                <div class="cabecera barra-seccion">
+                                    <h2><i class="fa-solid fa-users"></i> Víctimas del delito {{ i + 1 }}</h2>
+                                    <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        [disabled]="d.victimas.length >= 500 || totalVictimas() >= 1000"
+                                        (click)="agregarVictima(d)"
+                                    >
+                                        <i class="fa-solid fa-user-plus"></i> Agregar víctima
+                                    </button>
+                                </div>
+                                @for (v of d.victimas; track v; let j = $index) {
+                                    <details class="victima" [open]="j === 0">
+                                        <summary>Víctima {{ j + 1 }} · {{ v['id_vicf'] || 'Nueva víctima' }} {{ v['nomb'] || '' }}</summary>
+                                        <div class="acciones">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                [disabled]="d.victimas.length === 1"
+                                                (click)="quitarVictima(d, j)"
+                                            >
+                                                Quitar víctima
+                                            </button>
+                                        </div>
+                                        <div class="py-3">
+                                            <app-banci-campos
+                                                [idPrefijo]="'banci-victima-' + i + '-' + j"
+                                                [campos]="camposVictima"
+                                                [datos]="v"
+                                                [catalogos]="o.catalogos"
+                                                [bloqueado]="bloqueado()"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            [disabled]="d.victimas.length === 1"
+                                            (click)="quitarVictima(d, j)"
+                                        >
+                                            Quitar víctima
+                                        </button>
+                                    </details>
+                                }
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary mt-3"
+                                    [disabled]="d.victimas.length >= 500 || totalVictimas() >= 1000"
+                                    (click)="agregarVictima(d)"
+                                >
+                                    <i class="fa-solid fa-user-plus"></i> Agregar víctima
+                                </button>
+                            </div>
+                        </section>
+                    }
+                    <div class="acciones">
+                        <span>1 carpeta · {{ delitos.length }} delitos · {{ totalVictimas() }} víctimas</span>
+                        <button type="submit" class="btn btn-siiid"><i class="fa-solid fa-check"></i> Validar captura</button>
+                    </div>
+                </fieldset>
+            </form>
         }
+    }
 
-        <button type="button" class="btn btn-outline-danger" [disabled]="cargando() || necesitaActualizar()"
-          (click)="confirmar(false)">
-          Rechazar captura
-        </button>
+    @if (cargando()) {
+        <p class="mt-3" role="status"><i class="fa-solid fa-spinner fa-spin"></i> Procesando...</p>
+    }
+    @if (resultado(); as r) {
+        <section id="resultado-formulario-banci" class="siiid-card mt-4">
+            <div class="siiid-card-header" [class.resultado-sin-observaciones]="pendiente() && !r.errores.length && !r.advertencias.length">
+                {{ terminado() ? 'Carpeta registrada' : pendiente() ? (r.advertencias.length ? 'Captura con advertencias' : 'Validación correcta') : 'Resultado de la captura' }}
+            </div>
+            <div class="p-3">
+                <p>
+                    {{ pendiente() && !r.errores.length && !r.advertencias.length ? 'Sin errores ni advertencias. Confirme el registro con el resumen que se muestra abajo.' : r.mensaje }}
+                </p>
+                <p>{{ r.totalCarpetas }} carpetas · {{ r.totalDelitos }} delitos · {{ r.totalVictimas }} víctimas</p>
+                @if (r.errores.length || r.advertencias.length) {
+                    <div class="table-responsive observaciones observaciones-banci">
+                        <table class="table table-sm table-bordered tabla-observaciones-banci">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Sección</th>
+                                    <th>Registro</th>
+                                    <th>Campo</th>
+                                    <th>Mensaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (e of r.errores; track $index) {
+                                    <tr class="fila-error-banci">
+                                        <td>Error</td>
+                                        <td>{{ e.archivo }}</td>
+                                        <td>{{ e.numeroFila ?? '—' }}</td>
+                                        <td>{{ e.campo }}</td>
+                                        <td>
+                                            {{ e.mensaje }}
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-dark ms-2"
+                                                [disabled]="cargando() || necesitaActualizar()"
+                                                (click)="volverAFormulario(e)"
+                                            >
+                                                Corregir campo
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                                @for (e of r.advertencias; track $index) {
+                                    <tr class="fila-advertencia-banci">
+                                        <td>Advertencia</td>
+                                        <td>{{ e.archivo }}</td>
+                                        <td>{{ e.numeroFila ?? '—' }}</td>
+                                        <td>{{ e.campo }}</td>
+                                        <td>
+                                            {{ e.mensaje }}
+                                            @if (pendiente() && e.campo) {
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-dark ms-2"
+                                                    [disabled]="cargando()"
+                                                    (click)="volverAFormulario(e)"
+                                                >
+                                                    Revisar campo
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @if (pendiente()) {
+                    <div id="decision-formulario-banci" tabindex="-1">
+                        <app-banci-vista-previa [previa]="r.vistaPrevia" />
+                    </div>
 
-        <button type="button" class="btn btn-siiid"
-          [disabled]="cargando() || necesitaActualizar() || contieneExistentes() || !r.vistaPrevia?.huella || r.vistaPrevia?.puedeAceptar === false || (r.advertencias.length > 0 && !aceptarAdvertencias)"
-          (click)="confirmar(true)">
-          Aceptar y registrar carpeta
-        </button>
-      </div>
-      } @else if (terminado()) {
-      <p>{{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.
-      </p>
-      @if (errorAcuse()) { <div class="alert alert-warning">{{ errorAcuse() }}</div> }
-      <div class="acciones">
-        <button type="button" class="btn btn-siiid" [disabled]="cargandoResumen()" (click)="abrirAcuse()">
-          {{ cargandoResumen() ? 'Consultando...' : 'Ver resumen de la captura' }}
-        </button>
-        <button type="button" class="btn btn-secondary" [disabled]="cargando()"
-          (click)="nuevaCaptura()">Capturar otra carpeta</button><a class="btn btn-secondary"
-          routerLink="/banci/consulta">Consultar información</a></div>
-      } @else if (r.errores.length > 0) {
-      <button type="button" class="btn btn-secondary" [disabled]="cargando() || necesitaActualizar()" (click)="volverAFormulario()">Regresar y corregir formulario</button>
-      } @else if (r.estado === 'RECHAZADO_VALIDACION') {
-      <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="corregirCaptura()">Volver al
-        formulario</button>
-      }
-    </div>
-  </section>
-  }
-@if (mostrarAcuse()) {
-  <div class="acuse-banci-overlay" role="presentation" (click)="mostrarAcuse.set(false)">
-    <section class="acuse-banci-dialog" role="dialog" aria-modal="true" aria-labelledby="titulo-acuse-banci"
-      (click)="$event.stopPropagation()">
-      <h2 id="titulo-acuse-banci">Resumen de la captura registrada</h2>
-      <p>Identificadores recuperados del sistema después de confirmar la integración.</p>
-      <div class="table-responsive">
-        <table class="table table-striped table-sm">
-          <thead><tr><th>Entidad</th><th>NO_BANCI</th><th>ID_CI</th><th>NTRA_CI</th><th>ID_DELITO</th><th>ID_VICF</th><th>FUB</th></tr></thead>
-          <tbody>
-            @for (f of resumenConfirmado(); track $index) {
-              <tr><td>{{ f.entidad }}</td><td>{{ f.noBanci }}</td><td>{{ f.idCi }}</td><td>{{ f.ntraCi }}</td>
-                <td>{{ f.idDelito }}</td><td>{{ f.idVicf }}</td><td>{{ f.fub || '—' }}</td></tr>
-            } @empty { <tr><td colspan="7">No se encontraron registros definitivos para este acuse.</td></tr> }
-          </tbody>
-        </table>
-      </div>
-      <button type="button" class="btn btn-siiid" (click)="mostrarAcuse.set(false)">Cerrar</button>
-    </section>
-  </div>
-}
+                    <p>Los datos aún no están integrados. Revise la vista previa y decida si desea registrar la carpeta.</p>
+
+                    @if (r.advertencias.length > 0) {
+                        <div class="alert alert-warning" role="group" aria-label="Aceptación de advertencias">
+                            <p>
+                                <strong>Esta captura presenta {{ r.advertencias.length }} advertencia(s).</strong>
+                            </p>
+                            <p>
+                                Revise sus mensajes antes de decidir. Si RENAPO no está disponible, algunas CURP podrían quedar sin validar.
+                            </p>
+
+                            <label class="d-flex align-items-start gap-2">
+                                <input
+                                    type="checkbox"
+                                    name="aceptarAdvertenciasFormulario"
+                                    [(ngModel)]="aceptarAdvertencias"
+                                    [disabled]="cargando() || necesitaActualizar()"
+                                />
+                                <span>He revisado las advertencias y acepto continuar con esta captura.</span>
+                            </label>
+                        </div>
+                    }
+
+                    <div class="acciones">
+                        @if (r.errores.length > 0 || r.advertencias.length > 0) {
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                [disabled]="cargando() || necesitaActualizar()"
+                                (click)="volverAFormulario()"
+                            >
+                                <i class="fa-solid fa-arrow-left"></i> Regresar y revisar formulario
+                            </button>
+                        }
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-danger"
+                            [disabled]="cargando() || necesitaActualizar()"
+                            (click)="confirmar(false)"
+                        >
+                            Rechazar captura
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-siiid"
+                            [disabled]="cargando() || necesitaActualizar() || contieneExistentes() || !r.vistaPrevia?.huella || r.vistaPrevia?.puedeAceptar === false || (r.advertencias.length > 0 && !aceptarAdvertencias)"
+                            (click)="confirmar(true)"
+                        >
+                            Aceptar y registrar carpeta
+                        </button>
+                    </div>
+                } @else if (terminado()) {
+                    <p>{{ r.totalAltas }} altas · {{ r.totalActualizaciones }} actualizaciones · {{ r.totalSinCambio }} sin cambio.</p>
+                    @if (errorAcuse()) {
+                        <div class="alert alert-warning">{{ errorAcuse() }}</div>
+                    }
+                    <div class="acciones">
+                        <button type="button" class="btn btn-siiid" [disabled]="cargandoResumen()" (click)="abrirAcuse()">
+                            {{ cargandoResumen() ? 'Consultando...' : 'Ver resumen de la captura' }}
+                        </button>
+                        <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="nuevaCaptura()">
+                            Capturar otra carpeta</button
+                        ><a class="btn btn-secondary" routerLink="/banci/consulta">Consultar información</a>
+                    </div>
+                } @else if (r.errores.length > 0) {
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        [disabled]="cargando() || necesitaActualizar()"
+                        (click)="volverAFormulario()"
+                    >
+                        Regresar y corregir formulario
+                    </button>
+                } @else if (r.estado === 'RECHAZADO_VALIDACION') {
+                    <button type="button" class="btn btn-secondary" [disabled]="cargando()" (click)="corregirCaptura()">
+                        Volver al formulario
+                    </button>
+                }
+            </div>
+        </section>
+    }
+    @if (mostrarAcuse()) {
+        <div class="acuse-banci-overlay" role="presentation" (click)="mostrarAcuse.set(false)">
+            <section
+                class="acuse-banci-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="titulo-acuse-banci"
+                (click)="$event.stopPropagation()"
+            >
+                <h2 id="titulo-acuse-banci">Resumen de la captura registrada</h2>
+                <p>Identificadores recuperados del sistema después de confirmar la integración.</p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Entidad</th>
+                                <th>NO_BANCI</th>
+                                <th>ID_CI</th>
+                                <th>NTRA_CI</th>
+                                <th>ID_DELITO</th>
+                                <th>ID_VICF</th>
+                                <th>FUB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (f of resumenConfirmado(); track $index) {
+                                <tr>
+                                    <td>{{ f.entidad }}</td>
+                                    <td>{{ f.noBanci }}</td>
+                                    <td>{{ f.idCi }}</td>
+                                    <td>{{ f.ntraCi }}</td>
+                                    <td>{{ f.idDelito }}</td>
+                                    <td>{{ f.idVicf }}</td>
+                                    <td>{{ f.fub || '—' }}</td>
+                                </tr>
+                            } @empty {
+                                <tr>
+                                    <td colspan="7">No se encontraron registros definitivos para este acuse.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-siiid" (click)="mostrarAcuse.set(false)">Cerrar</button>
+            </section>
+        </div>
+    }
 </section>

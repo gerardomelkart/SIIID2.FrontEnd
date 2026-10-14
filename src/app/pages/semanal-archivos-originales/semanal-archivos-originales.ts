@@ -7,365 +7,392 @@ import { SemanalArchivosOriginalesResumen } from '../../core/models/semanal-arch
 import { SemanalArchivosOriginalesService } from '../../core/services/semanal-archivos-originales.service';
 import { UsuariosService } from '../../core/services/usuarios.service';
 import { mostrarAdvertencia, mostrarError } from '../../core/utils/alert.utils';
-import {
-  obtenerMensajeErrorHttp,
-  obtenerMensajeErrorHttpAsync,
-} from '../../core/utils/http-error.utils';
-import {
-  EstadoOrden,
-  ValorOrden,
-  alternarOrden,
-  obtenerIconoOrden,
-  ordenarPorEstado,
-} from '../../core/utils/sort.utils';
+import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { EstadoOrden, ValorOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
 
-type CampoOrden =
-  | 'entidad'
-  | 'usuario'
-  | 'movimiento'
-  | 'semana'
-  | 'codigoReferencia'
-  | 'fechaGuardado'
-  | 'archivos';
+type CampoOrden = 'entidad' | 'usuario' | 'movimiento' | 'semana' | 'codigoReferencia' | 'fechaGuardado' | 'archivos';
 
 @Component({
-  selector: 'app-semanal-archivos-originales',
-  imports: [FormsModule],
-  templateUrl: './semanal-archivos-originales.html',
-  styleUrls: ['../originales/originales.css', './semanal-archivos-originales.css'],
+    selector: 'app-semanal-archivos-originales',
+    imports: [FormsModule],
+    templateUrl: './semanal-archivos-originales.html',
+    styleUrls: ['../originales/originales.css', './semanal-archivos-originales.css'],
 })
-export class SemanalArchivosOriginales implements OnInit {
-  private readonly archivosService = inject(SemanalArchivosOriginalesService);
+export class SemanalArchivosOriginales implements OnInit
+{
+    private readonly archivosService = inject(SemanalArchivosOriginalesService);
 
-  private readonly catalogosService = inject(CatalogosService);
+    private readonly catalogosService = inject(CatalogosService);
 
-  private readonly usuariosService = inject(UsuariosService);
+    private readonly usuariosService = inject(UsuariosService);
 
-  archivos = signal<SemanalArchivosOriginalesResumen[]>([]);
-  entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
-  usuarios = signal<UsuarioListadoItem[]>([]);
+    archivos = signal<SemanalArchivosOriginalesResumen[]>([]);
+    entidadesFederativas = signal<EntidadFederativaCatalogoItem[]>([]);
+    usuarios = signal<UsuarioListadoItem[]>([]);
 
-  busqueda = signal('');
-  cargando = signal(false);
-  descargandoOperacion = signal<string | null>(null);
+    busqueda = signal('');
+    cargando = signal(false);
+    descargandoOperacion = signal<string | null>(null);
 
-  paginaActual = signal(1);
-  orden = signal<EstadoOrden<CampoOrden> | null>(null);
+    paginaActual = signal(1);
+    orden = signal<EstadoOrden<CampoOrden> | null>(null);
 
-  readonly tamanioPagina = 5;
+    readonly tamanioPagina = 5;
 
-  entidadPorId = computed(() => {
-    return new Map(
-      this.entidadesFederativas().map((entidad) => [entidad.idEntidadFederativa, entidad]),
-    );
-  });
-
-  usuarioPorId = computed(() => {
-    return new Map(this.usuarios().map((usuario) => [usuario.idUsuario, usuario]));
-  });
-
-  archivosFiltrados = computed(() => {
-    const texto = this.busqueda().trim().toLowerCase();
-
-    if (!texto) {
-      return this.archivos();
-    }
-
-    return this.archivos().filter((item) => {
-      return (
-        this.entidadTexto(item).toLowerCase().includes(texto) ||
-        this.usuarioTexto(item).toLowerCase().includes(texto) ||
-        item.codigoReferencia.toLowerCase().includes(texto) ||
-        this.tipoMovimientoTexto(item.tipoMovimiento).toLowerCase().includes(texto) ||
-        this.semanaTexto(item).toLowerCase().includes(texto) ||
-        item.archivos.some((archivo) => archivo.nombreOriginal.toLowerCase().includes(texto))
-      );
+    entidadPorId = computed(() =>
+    {
+        return new Map(this.entidadesFederativas().map((entidad) => [entidad.idEntidadFederativa, entidad]));
     });
-  });
 
-  archivosOrdenados = computed(() =>
-    ordenarPorEstado(this.archivosFiltrados(), this.orden(), (item, campo) =>
-      this.obtenerValorOrden(item, campo),
-    ),
-  );
+    usuarioPorId = computed(() =>
+    {
+        return new Map(this.usuarios().map((usuario) => [usuario.idUsuario, usuario]));
+    });
 
-  totalPaginas = computed(() =>
-    Math.max(1, Math.ceil(this.archivosFiltrados().length / this.tamanioPagina)),
-  );
+    archivosFiltrados = computed(() =>
+    {
+        const texto = this.busqueda().trim().toLowerCase();
 
-  paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, indice) => indice + 1));
+        if(!texto)
+        {
+            return this.archivos();
+        }
 
-  archivosPaginados = computed(() => {
-    const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
+        return this.archivos().filter((item) =>
+        {
+            return (
+                this.entidadTexto(item).toLowerCase().includes(texto) ||
+                this.usuarioTexto(item).toLowerCase().includes(texto) ||
+                item.codigoReferencia.toLowerCase().includes(texto) ||
+                this.tipoMovimientoTexto(item.tipoMovimiento).toLowerCase().includes(texto) ||
+                this.semanaTexto(item).toLowerCase().includes(texto) ||
+                item.archivos.some((archivo) => archivo.nombreOriginal.toLowerCase().includes(texto))
+            );
+        });
+    });
 
-    return this.archivosOrdenados().slice(inicio, inicio + this.tamanioPagina);
-  });
+    archivosOrdenados = computed(() =>
+        ordenarPorEstado(this.archivosFiltrados(), this.orden(), (item, campo) => this.obtenerValorOrden(item, campo)),
+    );
 
-  primerRegistroVisible = computed(() => {
-    if (this.archivosFiltrados().length === 0) {
-      return 0;
+    totalPaginas = computed(() => Math.max(1, Math.ceil(this.archivosFiltrados().length / this.tamanioPagina)));
+
+    paginas = computed(() => Array.from({ length: this.totalPaginas() }, (_, indice) => indice + 1));
+
+    archivosPaginados = computed(() =>
+    {
+        const inicio = (this.paginaActual() - 1) * this.tamanioPagina;
+
+        return this.archivosOrdenados().slice(inicio, inicio + this.tamanioPagina);
+    });
+
+    primerRegistroVisible = computed(() =>
+    {
+        if(this.archivosFiltrados().length === 0)
+        {
+            return 0;
+        }
+
+        return (this.paginaActual() - 1) * this.tamanioPagina + 1;
+    });
+
+    ultimoRegistroVisible = computed(() => Math.min(this.paginaActual() * this.tamanioPagina, this.archivosFiltrados().length));
+
+    ngOnInit(): void
+    {
+        this.cargarEntidadesFederativas();
+        this.cargarUsuarios();
+        this.cargarArchivos();
     }
 
-    return (this.paginaActual() - 1) * this.tamanioPagina + 1;
-  });
+    cargarArchivos(): void
+    {
+        this.cargando.set(true);
 
-  ultimoRegistroVisible = computed(() =>
-    Math.min(this.paginaActual() * this.tamanioPagina, this.archivosFiltrados().length),
-  );
+        this.archivosService.obtenerArchivosOriginales().subscribe({
+            next: (response) =>
+            {
+                this.archivos.set((response.registros ?? []).filter((item) => item.idUsuarioCarga > 0));
 
-  ngOnInit(): void {
-    this.cargarEntidadesFederativas();
-    this.cargarUsuarios();
-    this.cargarArchivos();
-  }
+                this.paginaActual.set(1);
+                this.cargando.set(false);
+            },
+            error: (error) =>
+            {
+                this.cargando.set(false);
 
-  cargarArchivos(): void {
-    this.cargando.set(true);
+                mostrarError(
+                    'No fue posible consultar los archivos originales preliminares',
+                    obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+                );
+            },
+        });
+    }
 
-    this.archivosService.obtenerArchivosOriginales().subscribe({
-      next: (response) => {
-        this.archivos.set((response.registros ?? []).filter((item) => item.idUsuarioCarga > 0));
+    cargarEntidadesFederativas(): void
+    {
+        this.catalogosService.obtenerEntidadesFederativas().subscribe({
+            next: (entidades) =>
+            {
+                this.entidadesFederativas.set(entidades ?? []);
+            },
+            error: () =>
+            {
+                this.entidadesFederativas.set([]);
+            },
+        });
+    }
+
+    cargarUsuarios(): void
+    {
+        this.usuariosService.obtenerUsuarios(true).subscribe({
+            next: (response) =>
+            {
+                this.usuarios.set(response.usuarios ?? []);
+            },
+            error: () =>
+            {
+                this.usuarios.set([]);
+            },
+        });
+    }
+
+    cambiarBusqueda(valor: string): void
+    {
+        this.busqueda.set(valor);
+        this.paginaActual.set(1);
+    }
+
+    ordenarPor(campo: CampoOrden): void
+    {
+        this.orden.set(alternarOrden(this.orden(), campo));
 
         this.paginaActual.set(1);
-        this.cargando.set(false);
-      },
-      error: (error) => {
-        this.cargando.set(false);
-
-        mostrarError(
-          'No fue posible consultar los archivos originales preliminares',
-          obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-        );
-      },
-    });
-  }
-
-  cargarEntidadesFederativas(): void {
-    this.catalogosService.obtenerEntidadesFederativas().subscribe({
-      next: (entidades) => {
-        this.entidadesFederativas.set(entidades ?? []);
-      },
-      error: () => {
-        this.entidadesFederativas.set([]);
-      },
-    });
-  }
-
-  cargarUsuarios(): void {
-    this.usuariosService.obtenerUsuarios(true).subscribe({
-      next: (response) => {
-        this.usuarios.set(response.usuarios ?? []);
-      },
-      error: () => {
-        this.usuarios.set([]);
-      },
-    });
-  }
-
-  cambiarBusqueda(valor: string): void {
-    this.busqueda.set(valor);
-    this.paginaActual.set(1);
-  }
-
-  ordenarPor(campo: CampoOrden): void {
-    this.orden.set(alternarOrden(this.orden(), campo));
-
-    this.paginaActual.set(1);
-  }
-
-  iconoOrden(campo: CampoOrden): string {
-    return obtenerIconoOrden(this.orden(), campo);
-  }
-
-  irPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPaginas()) {
-      return;
     }
 
-    this.paginaActual.set(pagina);
-  }
+    iconoOrden(campo: CampoOrden): string
+    {
+        return obtenerIconoOrden(this.orden(), campo);
+    }
 
-  descargar(item: SemanalArchivosOriginalesResumen): void {
-    const claveOperacion = `${item.idEntidadFederativa}-${item.idUsuarioCarga}`;
-
-    this.descargandoOperacion.set(claveOperacion);
-
-    this.archivosService
-      .descargarArchivosOriginales(item.idEntidadFederativa, item.idUsuarioCarga)
-      .subscribe({
-        next: (response) => {
-          const blob = response.body;
-
-          if (!blob) {
-            this.descargandoOperacion.set(null);
-
-            mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
-
+    irPagina(pagina: number): void
+    {
+        if(pagina < 1 || pagina > this.totalPaginas())
+        {
             return;
-          }
+        }
 
-          const nombreArchivo =
-            this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
-            `ARCHIVOS_ORIGINALES_PRELIMINARES_ENTIDAD_${item.idEntidadFederativa.toString().padStart(2, '0')}_USUARIO_${item.idUsuarioCarga}_${item.anioCorte}_${item.mesCorte.toString().padStart(2, '0')}.zip`;
-
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-
-          link.href = url;
-          link.download = nombreArchivo;
-          link.click();
-
-          URL.revokeObjectURL(url);
-          this.descargandoOperacion.set(null);
-        },
-        error: async (error) => {
-          this.descargandoOperacion.set(null);
-
-          mostrarError(
-            'No fue posible descargar los archivos originales preliminares',
-            await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-          );
-        },
-      });
-  }
-
-  entidadTexto(item: SemanalArchivosOriginalesResumen): string {
-    const entidad = this.entidadPorId().get(item.idEntidadFederativa);
-
-    if (entidad) {
-      return `${entidad.clave} - ${entidad.nombre}`;
+        this.paginaActual.set(pagina);
     }
 
-    return `Entidad ${item.idEntidadFederativa.toString().padStart(2, '0')}`;
-  }
+    descargar(item: SemanalArchivosOriginalesResumen): void
+    {
+        const claveOperacion = `${item.idEntidadFederativa}-${item.idUsuarioCarga}`;
 
-  usuarioTexto(item: SemanalArchivosOriginalesResumen): string {
-    const usuario = this.usuarioPorId().get(item.idUsuarioCarga);
+        this.descargandoOperacion.set(claveOperacion);
 
-    return usuario?.usuario || `Usuario ${item.idUsuarioCarga}`;
-  }
+        this.archivosService.descargarArchivosOriginales(item.idEntidadFederativa, item.idUsuarioCarga).subscribe({
+            next: (response) =>
+            {
+                const blob = response.body;
 
-  tipoMovimientoTexto(tipoMovimiento: string | null): string {
-    if (!tipoMovimiento) {
-      return '-';
+                if(!blob)
+                {
+                    this.descargandoOperacion.set(null);
+
+                    mostrarAdvertencia('Archivo vacío', 'La descarga no devolvió contenido.');
+
+                    return;
+                }
+
+                const nombreArchivo =
+                    this.obtenerNombreArchivo(response.headers.get('content-disposition')) ||
+                    `ARCHIVOS_ORIGINALES_PRELIMINARES_ENTIDAD_${item.idEntidadFederativa.toString().padStart(2, '0')}_USUARIO_${item.idUsuarioCarga}_${item.anioCorte}_${item.mesCorte.toString().padStart(2, '0')}.zip`;
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+
+                link.href = url;
+                link.download = nombreArchivo;
+                link.click();
+
+                URL.revokeObjectURL(url);
+                this.descargandoOperacion.set(null);
+            },
+            error: async (error) =>
+            {
+                this.descargandoOperacion.set(null);
+
+                mostrarError(
+                    'No fue posible descargar los archivos originales preliminares',
+                    await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+                );
+            },
+        });
     }
 
-    if (tipoMovimiento === 'CARGA_INICIAL') {
-      return 'Carga inicial';
+    entidadTexto(item: SemanalArchivosOriginalesResumen): string
+    {
+        const entidad = this.entidadPorId().get(item.idEntidadFederativa);
+
+        if(entidad)
+        {
+            return `${entidad.clave} - ${entidad.nombre}`;
+        }
+
+        return `Entidad ${item.idEntidadFederativa.toString().padStart(2, '0')}`;
     }
 
-    if (tipoMovimiento === 'ACTUALIZACION') {
-      return 'Actualización';
+    usuarioTexto(item: SemanalArchivosOriginalesResumen): string
+    {
+        const usuario = this.usuarioPorId().get(item.idUsuarioCarga);
+
+        return usuario?.usuario || `Usuario ${item.idUsuarioCarga}`;
     }
 
-    return tipoMovimiento.replaceAll('_', ' ');
-  }
+    tipoMovimientoTexto(tipoMovimiento: string | null): string
+    {
+        if(!tipoMovimiento)
+        {
+            return '-';
+        }
 
-  semanaTexto(item: SemanalArchivosOriginalesResumen): string {
-    return `Semana ${item.numeroSemana}/${item.anioSemana}`;
-  }
+        if(tipoMovimiento === 'CARGA_INICIAL')
+        {
+            return 'Carga inicial';
+        }
 
-  rangoSemanaTexto(item: SemanalArchivosOriginalesResumen): string {
-    return `${this.fechaCorta(item.fechaInicioSemana)} al ${this.fechaCorta(item.fechaFinSemana)}`;
-  }
+        if(tipoMovimiento === 'ACTUALIZACION')
+        {
+            return 'Actualización';
+        }
 
-  fechaTexto(fecha: string): string {
-    if (!fecha) {
-      return '-';
+        return tipoMovimiento.replaceAll('_', ' ');
     }
 
-    const valor = new Date(fecha);
-
-    if (Number.isNaN(valor.getTime())) {
-      return '-';
+    semanaTexto(item: SemanalArchivosOriginalesResumen): string
+    {
+        return `Semana ${item.numeroSemana}/${item.anioSemana}`;
     }
 
-    return new Intl.DateTimeFormat('es-MX', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(valor);
-  }
-
-  fechaCorta(fecha: string): string {
-    if (!fecha) {
-      return '-';
+    rangoSemanaTexto(item: SemanalArchivosOriginalesResumen): string
+    {
+        return `${this.fechaCorta(item.fechaInicioSemana)} al ${this.fechaCorta(item.fechaFinSemana)}`;
     }
 
-    const valor = new Date(fecha);
+    fechaTexto(fecha: string): string
+    {
+        if(!fecha)
+        {
+            return '-';
+        }
 
-    if (Number.isNaN(valor.getTime())) {
-      return '-';
+        const valor = new Date(fecha);
+
+        if(Number.isNaN(valor.getTime()))
+        {
+            return '-';
+        }
+
+        return new Intl.DateTimeFormat('es-MX', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        }).format(valor);
     }
 
-    return new Intl.DateTimeFormat('es-MX', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(valor);
-  }
+    fechaCorta(fecha: string): string
+    {
+        if(!fecha)
+        {
+            return '-';
+        }
 
-  tamanioTexto(bytes: number): string {
-    if (!bytes) {
-      return '0 B';
+        const valor = new Date(fecha);
+
+        if(Number.isNaN(valor.getTime()))
+        {
+            return '-';
+        }
+
+        return new Intl.DateTimeFormat('es-MX', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        }).format(valor);
     }
 
-    const unidades = ['B', 'KB', 'MB', 'GB'];
+    tamanioTexto(bytes: number): string
+    {
+        if(!bytes)
+        {
+            return '0 B';
+        }
 
-    let valor = bytes;
-    let indice = 0;
+        const unidades = ['B', 'KB', 'MB', 'GB'];
 
-    while (valor >= 1024 && indice < unidades.length - 1) {
-      valor = valor / 1024;
-      indice++;
+        let valor = bytes;
+        let indice = 0;
+
+        while(valor >= 1024 && indice < unidades.length - 1)
+        {
+            valor = valor / 1024;
+            indice++;
+        }
+
+        return `${valor.toFixed(indice === 0 ? 0 : 2)} ${unidades[indice]}`;
     }
 
-    return `${valor.toFixed(indice === 0 ? 0 : 2)} ${unidades[indice]}`;
-  }
+    shaCorto(sha256: string): string
+    {
+        if(!sha256)
+        {
+            return '-';
+        }
 
-  shaCorto(sha256: string): string {
-    if (!sha256) {
-      return '-';
+        return `${sha256.substring(0, 12)}...`;
     }
 
-    return `${sha256.substring(0, 12)}...`;
-  }
+    private obtenerValorOrden(item: SemanalArchivosOriginalesResumen, campo: CampoOrden): ValorOrden
+    {
+        if(campo === 'entidad') return this.entidadTexto(item);
 
-  private obtenerValorOrden(item: SemanalArchivosOriginalesResumen, campo: CampoOrden): ValorOrden {
-    if (campo === 'entidad') return this.entidadTexto(item);
+        if(campo === 'usuario') return this.usuarioTexto(item);
 
-    if (campo === 'usuario') return this.usuarioTexto(item);
+        if(campo === 'movimiento') return this.tipoMovimientoTexto(item.tipoMovimiento);
 
-    if (campo === 'movimiento') return this.tipoMovimientoTexto(item.tipoMovimiento);
+        if(campo === 'semana') return item.anioSemana * 100 + item.numeroSemana;
 
-    if (campo === 'semana') return item.anioSemana * 100 + item.numeroSemana;
+        if(campo === 'codigoReferencia') return item.codigoReferencia;
 
-    if (campo === 'codigoReferencia') return item.codigoReferencia;
+        if(campo === 'archivos')
+        {
+            return item.archivos
+                .map((archivo) => archivo.nombreOriginal)
+                .sort()
+                .join(' ');
+        }
 
-    if (campo === 'archivos') {
-      return item.archivos
-        .map((archivo) => archivo.nombreOriginal)
-        .sort()
-        .join(' ');
+        const fecha = Date.parse(item.fechaGuardado);
+
+        return Number.isNaN(fecha) ? null : fecha;
     }
 
-    const fecha = Date.parse(item.fechaGuardado);
+    private obtenerNombreArchivo(contentDisposition: string | null): string
+    {
+        if(!contentDisposition)
+        {
+            return '';
+        }
 
-    return Number.isNaN(fecha) ? null : fecha;
-  }
+        const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
 
-  private obtenerNombreArchivo(contentDisposition: string | null): string {
-    if (!contentDisposition) {
-      return '';
+        if(utf8Match?.[1])
+        {
+            return decodeURIComponent(utf8Match[1]);
+        }
+
+        const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+
+        return normalMatch?.[1] ?? '';
     }
-
-    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
-
-    if (utf8Match?.[1]) {
-      return decodeURIComponent(utf8Match[1]);
-    }
-
-    const normalMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
-
-    return normalMatch?.[1] ?? '';
-  }
 }

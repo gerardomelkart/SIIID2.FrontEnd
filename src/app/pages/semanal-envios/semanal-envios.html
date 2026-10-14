@@ -1,312 +1,339 @@
 <div class="informes-page">
-  <div class="informes-header">
-    <div>
-      <h1>Informes</h1>
-      <p>Consulta de envíos preliminares acumulativos por periodo y usuario.</p>
-    </div>
-
-    <div class="rol-chip">
-      <i class="fa-solid fa-user-shield"></i>
-      {{ usuario()?.rol }}
-    </div>
-  </div>
-
-  <section class="siiid-card">
-    <div class="siiid-card-header reporte-card-header">
-      <span>
-        <i class="fa-solid fa-magnifying-glass"></i>
-        Consulta de envíos preliminares
-      </span>
-
-      <div class="reporte-actions">
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarEnvios()">
-          @if (cargando()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-rotate"></i>
-          }
-          Actualizar
-        </button>
-
-        <button type="button" class="btn btn-sm btn-secondary"
-          [disabled]="operacionEnCurso() || !periodoEnvioSeleccionado()" (click)="descargarAcusesPeriodo()">
-          @if (descargandoAcuses()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-zipper"></i>
-          }
-          Descargar acuses
-        </button>
-
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="operacionEnCurso()"
-          (click)="exportarExcel()">
-          @if (exportandoExcel()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          }
-          Excel
-        </button>
-
-        <div class="buscador">
-          <i class="fa-solid fa-magnifying-glass"></i>
-
-          <input type="text" placeholder="Buscar entidad, usuario, periodo, delito o envío..." [ngModel]="busqueda()"
-            (ngModelChange)="buscarEnvios($event)">
+    <div class="informes-header">
+        <div>
+            <h1>Informes</h1>
+            <p>Consulta de envíos preliminares acumulativos por periodo y usuario.</p>
         </div>
-      </div>
+
+        <div class="rol-chip">
+            <i class="fa-solid fa-user-shield"></i>
+            {{ usuario()?.rol }}
+        </div>
     </div>
 
-    <div class="corte-selector">
-      <div class="corte-selector-title">
-        <i class="fa-solid fa-calendar-days"></i>
-        Periodo consultado
-      </div>
+    <section class="siiid-card">
+        <div class="siiid-card-header reporte-card-header">
+            <span>
+                <i class="fa-solid fa-magnifying-glass"></i>
+                Consulta de envíos preliminares
+            </span>
 
-      <div class="corte-selector-controls">
-        <select class="form-select form-select-sm" [ngModel]="periodoEnvioSeleccionado()"
-          (ngModelChange)="cambiarPeriodo($event)">
-          @for (periodo of periodosEnvio(); track periodo.clave) {
-          <option [value]="periodo.clave">
-            {{ periodo.periodo }}
-          </option>
-          }
-        </select>
+            <div class="reporte-actions">
+                <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargando()" (click)="cargarEnvios()">
+                    @if (cargando()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    } @else {
+                        <i class="fa-solid fa-rotate"></i>
+                    }
+                    Actualizar
+                </button>
 
-        <select class="form-select form-select-sm" [ngModel]="semanaSeleccionada()"
-          (ngModelChange)="cambiarSemana($event)">
-          <option value="">Todas las semanas</option>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                    [disabled]="operacionEnCurso() || !periodoEnvioSeleccionado()"
+                    (click)="descargarAcusesPeriodo()"
+                >
+                    @if (descargandoAcuses()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    } @else {
+                        <i class="fa-solid fa-file-zipper"></i>
+                    }
+                    Descargar acuses
+                </button>
 
-          @for (semana of semanasEnvio(); track semana.clave) {
-          <option [value]="semana.clave">
-            {{ semana.semana }}
-          </option>
-          }
-        </select>
+                <button type="button" class="btn btn-sm btn-secondary" [disabled]="operacionEnCurso()" (click)="exportarExcel()">
+                    @if (exportandoExcel()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    } @else {
+                        <i class="fa-solid fa-file-excel"></i>
+                    }
+                    Excel
+                </button>
 
-        @if (esSuperUsuario() || usuario()?.rol === 'CONSULTA') {
-        <select class="form-select form-select-sm" [ngModel]="idUsuarioSeleccionado()"
-          (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()">
-          <option [ngValue]="null">Todos los usuarios</option>
+                <div class="buscador">
+                    <i class="fa-solid fa-magnifying-glass"></i>
 
-          @for (usuarioEnvio of usuariosEnvio(); track usuarioEnvio.idUsuarioCarga) {
-          <option [ngValue]="usuarioEnvio.idUsuarioCarga">
-            {{ usuarioEnvio.usuarioCarga }}
-          </option>
-          }
-        </select>
+                    <input
+                        type="text"
+                        placeholder="Buscar entidad, usuario, periodo, delito o envío..."
+                        [ngModel]="busqueda()"
+                        (ngModelChange)="buscarEnvios($event)"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div class="corte-selector">
+            <div class="corte-selector-title">
+                <i class="fa-solid fa-calendar-days"></i>
+                Periodo consultado
+            </div>
+
+            <div class="corte-selector-controls">
+                <select class="form-select form-select-sm" [ngModel]="periodoEnvioSeleccionado()" (ngModelChange)="cambiarPeriodo($event)">
+                    @for (periodo of periodosEnvio(); track periodo.clave) {
+                        <option [value]="periodo.clave">
+                            {{ periodo.periodo }}
+                        </option>
+                    }
+                </select>
+
+                <select class="form-select form-select-sm" [ngModel]="semanaSeleccionada()" (ngModelChange)="cambiarSemana($event)">
+                    <option value="">Todas las semanas</option>
+
+                    @for (semana of semanasEnvio(); track semana.clave) {
+                        <option [value]="semana.clave">
+                            {{ semana.semana }}
+                        </option>
+                    }
+                </select>
+
+                @if (esSuperUsuario() || usuario()?.rol === 'CONSULTA') {
+                    <select
+                        class="form-select form-select-sm"
+                        [ngModel]="idUsuarioSeleccionado()"
+                        (ngModelChange)="idUsuarioSeleccionado.set($event); cambiarFiltros()"
+                    >
+                        <option [ngValue]="null">Todos los usuarios</option>
+
+                        @for (usuarioEnvio of usuariosEnvio(); track usuarioEnvio.idUsuarioCarga) {
+                            <option [ngValue]="usuarioEnvio.idUsuarioCarga">
+                                {{ usuarioEnvio.usuarioCarga }}
+                            </option>
+                        }
+                    </select>
+                }
+
+                <select
+                    class="form-select form-select-sm"
+                    [ngModel]="delitoSeleccionado()"
+                    (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()"
+                >
+                    <option value="">Todos los delitos</option>
+
+                    @for (delito of delitosEnvio(); track delito) {
+                        <option [value]="delito">
+                            {{ delito }}
+                        </option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (!esSuperUsuario()) {
+            <div class="filtro-entidad-info">
+                <i class="fa-solid fa-user"></i>
+                @if (tieneAlcanceNacionalConsulta()) {
+                    Consulta nacional: operaciones de todas las entidades.
+                } @else {
+                    {{ usuario()?.rol === 'CONSULTA' ? 'Mostrando operaciones de:' : 'Mostrando únicamente operaciones registradas por su usuario en:' }}
+                    <strong>{{ usuario()?.entidadFederativa }}</strong>
+                }
+            </div>
         }
 
-        <select class="form-select form-select-sm" [ngModel]="delitoSeleccionado()"
-          (ngModelChange)="delitoSeleccionado.set($event); cambiarFiltros()">
-          <option value="">Todos los delitos</option>
+        <div class="table-responsive envios-table-responsive">
+            <table class="table table-sm reporte-table semanal-envios-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" (click)="ordenarPor('entidad')">
+                            Entidad federativa
+                            <i [class]="iconoOrden('entidad')"></i>
+                        </th>
 
-          @for (delito of delitosEnvio(); track delito) {
-          <option [value]="delito">
-            {{ delito }}
-          </option>
-          }
-        </select>
-      </div>
-    </div>
+                        <th class="sortable" (click)="ordenarPor('delitos')">
+                            Delito(s)
+                            <i [class]="iconoOrden('delitos')"></i>
+                        </th>
 
-    @if (!esSuperUsuario()) {
-    <div class="filtro-entidad-info">
-      <i class="fa-solid fa-user"></i>
-      @if (tieneAlcanceNacionalConsulta()) {
-      Consulta nacional: operaciones de todas las entidades.
-      } @else {
-      {{ usuario()?.rol === 'CONSULTA' ? 'Mostrando operaciones de:' : 'Mostrando únicamente operaciones registradas por su usuario en:' }}
-      <strong>{{ usuario()?.entidadFederativa }}</strong>
-      }
-    </div>
-    }
+                        <th class="sortable" (click)="ordenarPor('fecha')">
+                            Fecha de envío
+                            <i [class]="iconoOrden('fecha')"></i>
+                        </th>
 
-    <div class="table-responsive envios-table-responsive">
-      <table class="table table-sm reporte-table semanal-envios-table">
-        <thead>
-          <tr>
-            <th class="sortable" (click)="ordenarPor('entidad')">
-              Entidad federativa
-              <i [class]="iconoOrden('entidad')"></i>
-            </th>
+                        <th class="sortable" (click)="ordenarPor('periodo')">
+                            Periodo
+                            <i [class]="iconoOrden('periodo')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('delitos')">
-              Delito(s)
-              <i [class]="iconoOrden('delitos')"></i>
-            </th>
+                        <th class="sortable" (click)="ordenarPor('usuario')">
+                            Usuario envío
+                            <i [class]="iconoOrden('usuario')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('fecha')">
-              Fecha de envío
-              <i [class]="iconoOrden('fecha')"></i>
-            </th>
+                        <th class="sortable" (click)="ordenarPor('estado')">
+                            Estatus
+                            <i [class]="iconoOrden('estado')"></i>
+                        </th>
 
-            <th class="sortable" (click)="ordenarPor('periodo')">
-              Periodo
-              <i [class]="iconoOrden('periodo')"></i>
-            </th>
+                        <th class="acciones-col">Acciones</th>
+                    </tr>
+                </thead>
 
-            <th class="sortable" (click)="ordenarPor('usuario')">
-              Usuario envío
-              <i [class]="iconoOrden('usuario')"></i>
-            </th>
+                <tbody>
+                    @for (envio of enviosPaginados(); track envio.idSemanalCarga) {
+                        <tr>
+                            <td>{{ envio.entidadFederativa }}</td>
+                            <td>{{ delitosTexto(envio) }}</td>
+                            <td>{{ envio.fechaEnvioTexto }}</td>
+                            <td>
+                                <strong>{{ periodoTexto(envio) }}</strong>
+                                <small class="d-block text-muted">{{ rangoSemanaTexto(envio) }}</small>
+                            </td>
 
-            <th class="sortable" (click)="ordenarPor('estado')">
-              Estatus
-              <i [class]="iconoOrden('estado')"></i>
-            </th>
+                            <td>
+                                <strong>{{ envio.usuarioCarga }}</strong>
+                            </td>
 
-            <th class="acciones-col">Acciones</th>
-          </tr>
-        </thead>
+                            <td>{{ envio.estadoTexto }}</td>
 
-        <tbody>
-          @for (envio of enviosPaginados(); track envio.idSemanalCarga) {
-          <tr>
-            <td>{{ envio.entidadFederativa }}</td>
-            <td>{{ delitosTexto(envio) }}</td>
-            <td>{{ envio.fechaEnvioTexto }}</td>
-            <td>
-              <strong>{{ periodoTexto(envio) }}</strong>
-              <small class="d-block text-muted">{{ rangoSemanaTexto(envio) }}</small>
-            </td>
-
-            <td>
-              <strong>{{ envio.usuarioCarga }}</strong>
-            </td>
-
-            <td>{{ envio.estadoTexto }}</td>
-
-            <td>
-              <div class="acciones">
-                @if (
-                !envio.esRechazadoAdministrador ||
+                            <td>
+                                <div class="acciones">
+                                    @if (
+                                        !envio.esRechazadoAdministrador ||
                 envio.endpointAcuse.length > 0 ||
                 envio.endpointArchivos.length > 0
-                ) {
-                <button type="button" class="btn-icon btn-pdf"
-                  [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
-                  [disabled]="operacionEnCurso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
-                  @if (descargandoAcuse() === envio.codigoReferencia) {
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  } @else {
-                  <i class="fa-solid fa-file-pdf"></i>
-                  }
-                </button>
+                                    ) {
+                                        <button
+                                            type="button"
+                                            class="btn-icon btn-pdf"
+                                            [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
+                                            [disabled]="operacionEnCurso() || !envio.endpointAcuse"
+                                            (click)="verAcuse(envio)"
+                                        >
+                                            @if (descargandoAcuse() === envio.codigoReferencia) {
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            } @else {
+                                                <i class="fa-solid fa-file-pdf"></i>
+                                            }
+                                        </button>
 
-                <button type="button" class="btn-icon btn-excel" title="Descargar archivos enviados"
-                  [disabled]="operacionEnCurso() || !envio.endpointArchivos" (click)="descargarArchivos(envio)">
-                  @if (descargandoArchivos() === envio.codigoReferencia) {
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  } @else {
-                  <i class="fa-solid fa-file-excel"></i>
-                  }
-                </button>
-                }
+                                        <button
+                                            type="button"
+                                            class="btn-icon btn-excel"
+                                            title="Descargar archivos enviados"
+                                            [disabled]="operacionEnCurso() || !envio.endpointArchivos"
+                                            (click)="descargarArchivos(envio)"
+                                        >
+                                            @if (descargandoArchivos() === envio.codigoReferencia) {
+                                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                            } @else {
+                                                <i class="fa-solid fa-file-excel"></i>
+                                            }
+                                        </button>
+                                    }
 
-                @if (
-                envio.puedeResolverPendiente ||
+                                    @if (
+                                        envio.puedeResolverPendiente ||
                 esSuperUsuario() && esPendienteConfirmacionUsuario(envio)
-                ) {
-                <button type="button" class="btn-icon btn-view"
-                  [title]="esSuperUsuario() ? 'Consultar confirmación pendiente del usuario' : 'Resolver operación pendiente'"
-                  [disabled]="operacionEnCurso()" (click)="resolverPendiente(envio)">
-                  @if (esSuperUsuario()) {
-                  <i class="fa-solid fa-bell"></i>
-                  } @else {
-                  <i class="fa-solid fa-pen-to-square"></i>
-                  }
+                                    ) {
+                                        <button
+                                            type="button"
+                                            class="btn-icon btn-view"
+                                            [title]="esSuperUsuario() ? 'Consultar confirmación pendiente del usuario' : 'Resolver operación pendiente'"
+                                            [disabled]="operacionEnCurso()"
+                                            (click)="resolverPendiente(envio)"
+                                        >
+                                            @if (esSuperUsuario()) {
+                                                <i class="fa-solid fa-bell"></i>
+                                            } @else {
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            }
+                                        </button>
+                                    }
+
+                                    @if (envio.esRechazadoAdministrador) {
+                                        <details class="position-relative" (toggle)="ajustarPosicionMotivo($event)">
+                                            <summary
+                                                class="btn-icon btn-view"
+                                                title="Ver motivo de rechazo"
+                                                style="list-style: none; cursor: pointer;"
+                                            >
+                                                <i class="fa-solid fa-circle-exclamation"></i>
+                                            </summary>
+
+                                            <div
+                                                class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo"
+                                            >
+                                                <strong class="d-block mb-2">Motivo del rechazo</strong>
+
+                                                <div class="mb-2">
+                                                    {{ envio.motivoRechazo || 'Sin motivo registrado.' }}
+                                                </div>
+
+                                                @if (envio.usuarioResolucion) {
+                                                    <small class="d-block text-muted">
+                                                        <strong>Rechazado por:</strong>
+                                                        {{ envio.usuarioResolucion }}
+                                                    </small>
+                                                }
+
+                                                @if (envio.fechaRechazoTexto) {
+                                                    <small class="d-block text-muted">
+                                                        <strong>Fecha:</strong>
+                                                        {{ envio.fechaRechazoTexto }}
+                                                    </small>
+                                                }
+                                            </div>
+                                        </details>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="7" class="text-center p-4">No se encontraron envíos preliminares.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-row">
+            <span> Mostrando {{ enviosPaginados().length }} de {{ enviosFiltrados().length }} registros </span>
+
+            <div class="pagination-actions">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    [disabled]="paginaActual() === 1"
+                    (click)="cambiarPagina(paginaActual() - 1)"
+                >
+                    Anterior
                 </button>
-                }
 
-                @if (envio.esRechazadoAdministrador) {
-                <details class="position-relative" (toggle)="ajustarPosicionMotivo($event)">
-                  <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
-                    style="list-style: none; cursor: pointer;">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                  </summary>
+                <span class="page-indicator"> {{ paginaActual() }} / {{ totalPaginas() }} </span>
 
-                  <div class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo">
-                    <strong class="d-block mb-2">Motivo del rechazo</strong>
-
-                    <div class="mb-2">
-                      {{ envio.motivoRechazo || 'Sin motivo registrado.' }}
-                    </div>
-
-                    @if (envio.usuarioResolucion) {
-                    <small class="d-block text-muted">
-                      <strong>Rechazado por:</strong>
-                      {{ envio.usuarioResolucion }}
-                    </small>
-                    }
-
-                    @if (envio.fechaRechazoTexto) {
-                    <small class="d-block text-muted">
-                      <strong>Fecha:</strong>
-                      {{ envio.fechaRechazoTexto }}
-                    </small>
-                    }
-                  </div>
-                </details>
-                }
-              </div>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="7" class="text-center p-4">
-              No se encontraron envíos preliminares.
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="pagination-row">
-      <span>
-        Mostrando {{ enviosPaginados().length }} de
-        {{ enviosFiltrados().length }} registros
-      </span>
-
-      <div class="pagination-actions">
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaActual() === 1"
-          (click)="cambiarPagina(paginaActual() - 1)">
-          Anterior
-        </button>
-
-        <span class="page-indicator">
-          {{ paginaActual() }} / {{ totalPaginas() }}
-        </span>
-
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaActual() === totalPaginas()"
-          (click)="cambiarPagina(paginaActual() + 1)">
-          Siguiente
-        </button>
-      </div>
-    </div>
-  </section>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    [disabled]="paginaActual() === totalPaginas()"
+                    (click)="cambiarPagina(paginaActual() + 1)"
+                >
+                    Siguiente
+                </button>
+            </div>
+        </div>
+    </section>
 </div>
 
 @if (acuseUrl()) {
-<div class="acuse-modal-backdrop">
-  <div class="acuse-modal">
-    <div class="acuse-modal-header">
-      <h2>{{ acuseTitulo() }}</h2>
+    <div class="acuse-modal-backdrop">
+        <div class="acuse-modal">
+            <div class="acuse-modal-header">
+                <h2>{{ acuseTitulo() }}</h2>
 
-      <button type="button" class="acuse-close" (click)="cerrarAcuse()">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+                <button type="button" class="acuse-close" (click)="cerrarAcuse()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <iframe class="acuse-frame" [src]="acuseUrl()" title="Informe preliminar"> </iframe>
+
+            <div class="acuse-modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="cerrarAcuse()">Cerrar</button>
+            </div>
+        </div>
     </div>
-
-    <iframe class="acuse-frame" [src]="acuseUrl()" title="Informe preliminar">
-    </iframe>
-
-    <div class="acuse-modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="cerrarAcuse()">
-        Cerrar
-      </button>
-    </div>
-  </div>
-</div>
 }

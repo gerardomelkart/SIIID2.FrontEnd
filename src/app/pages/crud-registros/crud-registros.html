@@ -1,370 +1,448 @@
 <div class="admin-page">
-  <div class="admin-header">
-    <div>
-      <h1>Administración de usuarios</h1>
-      <p>Gestión de cuentas, roles, entidad federativa y permisos operativos del sistema.</p>
-    </div>
-
-    <button type="button" class="btn btn-siiid" (click)="abrirNuevoUsuario()">
-      <i class="fa-solid fa-user-plus"></i>
-      Nuevo usuario
-    </button>
-  </div>
-
-  <div class="admin-kpis">
-    <div class="kpi-card">
-      <div class="kpi-value">{{ totalUsuarios() }}</div>
-      <div class="kpi-label">Usuarios registrados</div>
-    </div>
-
-    <div class="kpi-card kpi-ok">
-      <div class="kpi-value">{{ totalActivos() }}</div>
-      <div class="kpi-label">Activos</div>
-    </div>
-
-    <div class="kpi-card kpi-warn">
-      <div class="kpi-value">{{ totalInactivos() }}</div>
-      <div class="kpi-label">Inactivos</div>
-    </div>
-
-    <div class="kpi-card kpi-gold">
-      <div class="kpi-value">{{ totalSuperUsuarios() }}</div>
-      <div class="kpi-label">Super usuarios</div>
-    </div>
-  </div>
-
-  <div class="siiid-card usuarios-card">
-    <div class="siiid-card-header usuarios-card-header">
-      <span>
-        <i class="fa-solid fa-users"></i>
-        Usuarios del sistema
-      </span>
-
-      <div class="usuarios-tools">
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()"
-          (click)="exportarUsuariosExcel()">
-          @if (exportandoExcel()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          }
-          Excel
-        </button>
-        <label class="ver-inactivos">
-          <input type="checkbox" [ngModel]="mostrarTodos()" (ngModelChange)="cambiarFiltroTodos($event)">
-          Ver todos
-        </label>
-        <label class="ver-inactivos">
-          <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)">
-          Ver inactivos
-        </label>
-
-        <div class="buscador">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Buscar por nombre, usuario, correo, rol o entidad..." [ngModel]="busqueda()"
-            (ngModelChange)="buscarUsuarios($event)">
+    <div class="admin-header">
+        <div>
+            <h1>Administración de usuarios</h1>
+            <p>Gestión de cuentas, roles, entidad federativa y permisos operativos del sistema.</p>
         </div>
-      </div>
-    </div>
 
-    <div class="table-responsive">
-      <table class="table table-sm usuarios-table">
-        <thead>
-          <tr>
-            <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
-              Nombre
-              <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
-              Usuario
-              <i [class]="iconoOrdenUsuarios('usuario')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('correoElectronico')">
-              Correo
-              <i [class]="iconoOrdenUsuarios('correoElectronico')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('rol')">
-              Rol
-              <i [class]="iconoOrdenUsuarios('rol')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
-              Entidad
-              <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('habilitaMensual')">
-              Acceso
-              <i [class]="iconoOrdenUsuarios('habilitaMensual')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('habilitaCarga')">
-              Carga
-              <i [class]="iconoOrdenUsuarios('habilitaCarga')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('habilitaModificacion')">
-              Modificación
-              <i [class]="iconoOrdenUsuarios('habilitaModificacion')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarUsuariosPor('activo')">
-              Estado
-              <i [class]="iconoOrdenUsuarios('activo')"></i>
-            </th>
-
-            <th class="acciones-col">Acciones</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (usuario of usuariosPaginados(); track usuario.idUsuario) {
-          <tr>
-            <td>
-              <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
-            </td>
-            <td>{{ usuario.usuario }}</td>
-            <td>{{ usuario.correoElectronico }}</td>
-            <td>
-              <span class="rol-badge">{{ usuario.rol }}</span>
-            </td>
-            <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
-            <td>
-              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaMensual"
-                [class.permiso-off]="!usuario.habilitaMensual">
-                {{ usuario.habilitaMensual ? 'Sí' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaCarga"
-                [class.permiso-off]="!usuario.habilitaCarga">
-                {{ usuario.habilitaCarga ? 'Sí' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span class="permiso-badge" [class.permiso-on]="usuario.habilitaModificacion"
-                [class.permiso-off]="!usuario.habilitaModificacion">
-                {{ usuario.habilitaModificacion ? 'Sí' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span class="estado-badge" [class.estado-activo]="usuario.activo"
-                [class.estado-inactivo]="!usuario.activo">
-                {{ usuario.activo ? 'ACTIVO' : 'INACTIVO' }}
-              </span>
-            </td>
-            <td>
-              <div class="acciones">
-                <button type="button" class="btn-icon btn-edit" title="Editar" (click)="abrirEditarUsuario(usuario)">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-
-                <button type="button" class="btn-icon btn-toggle" [class.btn-disabled]="!puedeCambiarEstado(usuario)"
-                  [title]="motivoBloqueoEstado(usuario)" (click)="cambiarEstado(usuario)">
-                  <i class="fa-solid" [class.fa-toggle-on]="usuario.activo" [class.fa-toggle-off]="!usuario.activo"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    @if (usuariosFiltrados().length > 0) {
-    <div class="pagination-row">
-      <span>Mostrando {{ usuariosPaginados().length }} de {{ usuariosFiltrados().length }} usuarios</span>
-
-      <div class="pagination-actions">
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaUsuarios() === 1"
-          (click)="cambiarPaginaUsuarios(paginaUsuarios() - 1)">
-          Anterior
+        <button type="button" class="btn btn-siiid" (click)="abrirNuevoUsuario()">
+            <i class="fa-solid fa-user-plus"></i>
+            Nuevo usuario
         </button>
-
-        <span class="page-indicator">{{ paginaUsuarios() }} / {{ totalPaginasUsuarios() }}</span>
-
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-          [disabled]="paginaUsuarios() === totalPaginasUsuarios()"
-          (click)="cambiarPaginaUsuarios(paginaUsuarios() + 1)">
-          Siguiente
-        </button>
-      </div>
     </div>
-    }
 
-  </div>
+    <div class="admin-kpis">
+        <div class="kpi-card">
+            <div class="kpi-value">{{ totalUsuarios() }}</div>
+            <div class="kpi-label">Usuarios registrados</div>
+        </div>
+
+        <div class="kpi-card kpi-ok">
+            <div class="kpi-value">{{ totalActivos() }}</div>
+            <div class="kpi-label">Activos</div>
+        </div>
+
+        <div class="kpi-card kpi-warn">
+            <div class="kpi-value">{{ totalInactivos() }}</div>
+            <div class="kpi-label">Inactivos</div>
+        </div>
+
+        <div class="kpi-card kpi-gold">
+            <div class="kpi-value">{{ totalSuperUsuarios() }}</div>
+            <div class="kpi-label">Super usuarios</div>
+        </div>
+    </div>
+
+    <div class="siiid-card usuarios-card">
+        <div class="siiid-card-header usuarios-card-header">
+            <span>
+                <i class="fa-solid fa-users"></i>
+                Usuarios del sistema
+            </span>
+
+            <div class="usuarios-tools">
+                <button type="button" class="btn btn-sm btn-secondary" [disabled]="exportandoExcel()" (click)="exportarUsuariosExcel()">
+                    @if (exportandoExcel()) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                    } @else {
+                        <i class="fa-solid fa-file-excel"></i>
+                    }
+                    Excel
+                </button>
+                <label class="ver-inactivos">
+                    <input type="checkbox" [ngModel]="mostrarTodos()" (ngModelChange)="cambiarFiltroTodos($event)" />
+                    Ver todos
+                </label>
+                <label class="ver-inactivos">
+                    <input type="checkbox" [ngModel]="mostrarInactivos()" (ngModelChange)="cambiarFiltroInactivos($event)" />
+                    Ver inactivos
+                </label>
+
+                <div class="buscador">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, usuario, correo, rol o entidad..."
+                        [ngModel]="busqueda()"
+                        (ngModelChange)="buscarUsuarios($event)"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm usuarios-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" (click)="ordenarUsuariosPor('nombreCompleto')">
+                            Nombre
+                            <i [class]="iconoOrdenUsuarios('nombreCompleto')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('usuario')">
+                            Usuario
+                            <i [class]="iconoOrdenUsuarios('usuario')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('correoElectronico')">
+                            Correo
+                            <i [class]="iconoOrdenUsuarios('correoElectronico')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('rol')">
+                            Rol
+                            <i [class]="iconoOrdenUsuarios('rol')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('entidadFederativa')">
+                            Entidad
+                            <i [class]="iconoOrdenUsuarios('entidadFederativa')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('habilitaMensual')">
+                            Acceso
+                            <i [class]="iconoOrdenUsuarios('habilitaMensual')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('habilitaCarga')">
+                            Carga
+                            <i [class]="iconoOrdenUsuarios('habilitaCarga')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('habilitaModificacion')">
+                            Modificación
+                            <i [class]="iconoOrdenUsuarios('habilitaModificacion')"></i>
+                        </th>
+
+                        <th class="sortable" (click)="ordenarUsuariosPor('activo')">
+                            Estado
+                            <i [class]="iconoOrdenUsuarios('activo')"></i>
+                        </th>
+
+                        <th class="acciones-col">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (usuario of usuariosPaginados(); track usuario.idUsuario) {
+                        <tr>
+                            <td>
+                                <div class="usuario-nombre">{{ usuario.nombreCompleto }}</div>
+                            </td>
+                            <td>{{ usuario.usuario }}</td>
+                            <td>{{ usuario.correoElectronico }}</td>
+                            <td>
+                                <span class="rol-badge">{{ usuario.rol }}</span>
+                            </td>
+                            <td>{{ usuario.entidadFederativa || 'Nacional' }}</td>
+                            <td>
+                                <span
+                                    class="permiso-badge"
+                                    [class.permiso-on]="usuario.habilitaMensual"
+                                    [class.permiso-off]="!usuario.habilitaMensual"
+                                >
+                                    {{ usuario.habilitaMensual ? 'Sí' : 'No' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span
+                                    class="permiso-badge"
+                                    [class.permiso-on]="usuario.habilitaCarga"
+                                    [class.permiso-off]="!usuario.habilitaCarga"
+                                >
+                                    {{ usuario.habilitaCarga ? 'Sí' : 'No' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span
+                                    class="permiso-badge"
+                                    [class.permiso-on]="usuario.habilitaModificacion"
+                                    [class.permiso-off]="!usuario.habilitaModificacion"
+                                >
+                                    {{ usuario.habilitaModificacion ? 'Sí' : 'No' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="estado-badge" [class.estado-activo]="usuario.activo" [class.estado-inactivo]="!usuario.activo">
+                                    {{ usuario.activo ? 'ACTIVO' : 'INACTIVO' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="acciones">
+                                    <button type="button" class="btn-icon btn-edit" title="Editar" (click)="abrirEditarUsuario(usuario)">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="btn-icon btn-toggle"
+                                        [class.btn-disabled]="!puedeCambiarEstado(usuario)"
+                                        [title]="motivoBloqueoEstado(usuario)"
+                                        (click)="cambiarEstado(usuario)"
+                                    >
+                                        <i
+                                            class="fa-solid"
+                                            [class.fa-toggle-on]="usuario.activo"
+                                            [class.fa-toggle-off]="!usuario.activo"
+                                        ></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    } @empty {
+                        <tr>
+                            <td colspan="10" class="text-center p-4">No se encontraron usuarios.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (usuariosFiltrados().length > 0) {
+            <div class="pagination-row">
+                <span>Mostrando {{ usuariosPaginados().length }} de {{ usuariosFiltrados().length }} usuarios</span>
+
+                <div class="pagination-actions">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="paginaUsuarios() === 1"
+                        (click)="cambiarPaginaUsuarios(paginaUsuarios() - 1)"
+                    >
+                        Anterior
+                    </button>
+
+                    <span class="page-indicator">{{ paginaUsuarios() }} / {{ totalPaginasUsuarios() }}</span>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="paginaUsuarios() === totalPaginasUsuarios()"
+                        (click)="cambiarPaginaUsuarios(paginaUsuarios() + 1)"
+                    >
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
 </div>
 
 @if (modalAbierto()) {
-<div class="drawer-backdrop" (click)="cerrarModal()"></div>
+    <div class="drawer-backdrop" (click)="cerrarModal()"></div>
 
-<aside class="usuario-drawer">
-  <div class="drawer-header">
-    <div>
-      <h2>{{ modoFormulario() === 'NUEVO' ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
-      <p>{{ modoFormulario() === 'NUEVO' ? 'Registrar una nueva cuenta de acceso.' : 'Modificar datos y permisos del
-        usuario.' }}</p>
-    </div>
+    <aside class="usuario-drawer">
+        <div class="drawer-header">
+            <div>
+                <h2>{{ modoFormulario() === 'NUEVO' ? 'Nuevo usuario' : 'Editar usuario' }}</h2>
+                <p>
+                    {{ modoFormulario() === 'NUEVO' ? 'Registrar una nueva cuenta de acceso.' : 'Modificar datos y permisos del
+        usuario.' }}
+                </p>
+            </div>
 
-    <button type="button" class="drawer-close" (click)="cerrarModal()">×</button>
-  </div>
+            <button type="button" class="drawer-close" (click)="cerrarModal()">×</button>
+        </div>
 
-  <div class="drawer-body">
-    <div class="form-grid">
-      <div class="form-group span-2">
-        <label>Nombre(s) <span>*</span></label>
-        <input class="form-control form-control-sm" placeholder="Ingresa nombre" [ngModel]="formulario().nombre"
-          (ngModelChange)="actualizarCampo('nombre', $event)">
-      </div>
+        <div class="drawer-body">
+            <div class="form-grid">
+                <div class="form-group span-2">
+                    <label>Nombre(s) <span>*</span></label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Ingresa nombre"
+                        [ngModel]="formulario().nombre"
+                        (ngModelChange)="actualizarCampo('nombre', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>Primer apellido <span>*</span></label>
-        <input class="form-control form-control-sm" placeholder="Ingresa primer apellido"
-          [ngModel]="formulario().primerApellido" (ngModelChange)="actualizarCampo('primerApellido', $event)">
-      </div>
+                <div class="form-group">
+                    <label>Primer apellido <span>*</span></label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Ingresa primer apellido"
+                        [ngModel]="formulario().primerApellido"
+                        (ngModelChange)="actualizarCampo('primerApellido', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>Segundo apellido</label>
-        <input class="form-control form-control-sm" placeholder="Ingresa segundo apellido"
-          [ngModel]="formulario().segundoApellido" (ngModelChange)="actualizarCampo('segundoApellido', $event)">
-      </div>
+                <div class="form-group">
+                    <label>Segundo apellido</label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Ingresa segundo apellido"
+                        [ngModel]="formulario().segundoApellido"
+                        (ngModelChange)="actualizarCampo('segundoApellido', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>RFC</label>
-        <input class="form-control form-control-sm" placeholder="Ingresa RFC" [ngModel]="formulario().rfc"
-          (ngModelChange)="actualizarCampo('rfc', $event)">
-      </div>
+                <div class="form-group">
+                    <label>RFC</label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Ingresa RFC"
+                        [ngModel]="formulario().rfc"
+                        (ngModelChange)="actualizarCampo('rfc', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>CURP</label>
-        <input class="form-control form-control-sm" placeholder="Ingresa CURP" [ngModel]="formulario().curp"
-          (ngModelChange)="actualizarCampo('curp', $event)">
-      </div>
+                <div class="form-group">
+                    <label>CURP</label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Ingresa CURP"
+                        [ngModel]="formulario().curp"
+                        (ngModelChange)="actualizarCampo('curp', $event)"
+                    />
+                </div>
 
-      <div class="form-group span-2">
-        <label>Correo electrónico <span>*</span></label>
-        <input class="form-control form-control-sm" placeholder="Ingresa correo"
-          [ngModel]="formulario().correoElectronico" (ngModelChange)="actualizarCampo('correoElectronico', $event)">
-      </div>
+                <div class="form-group span-2">
+                    <label>Correo electrónico <span>*</span></label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Ingresa correo"
+                        [ngModel]="formulario().correoElectronico"
+                        (ngModelChange)="actualizarCampo('correoElectronico', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>Teléfono</label>
-        <input class="form-control form-control-sm" placeholder="Teléfono de contacto"
-          [ngModel]="formulario().telefonoContacto" (ngModelChange)="actualizarCampo('telefonoContacto', $event)">
-      </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Teléfono de contacto"
+                        [ngModel]="formulario().telefonoContacto"
+                        (ngModelChange)="actualizarCampo('telefonoContacto', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>Usuario <span>*</span></label>
-        <input class="form-control form-control-sm" placeholder="Nombre de usuario" [ngModel]="formulario().usuario"
-          (ngModelChange)="actualizarCampo('usuario', $event)">
-      </div>
+                <div class="form-group">
+                    <label>Usuario <span>*</span></label>
+                    <input
+                        class="form-control form-control-sm"
+                        placeholder="Nombre de usuario"
+                        [ngModel]="formulario().usuario"
+                        (ngModelChange)="actualizarCampo('usuario', $event)"
+                    />
+                </div>
 
-      <div class="form-group">
-        <label>Rol <span>*</span></label>
-        <select class="form-select form-select-sm" [ngModel]="formulario().rol"
-          (ngModelChange)="actualizarCampo('rol', $event)">
-          <option value="">Seleccione rol...</option>
-          @for (rol of roles(); track rol.idRol) {
-          <option [value]="rol.rol">{{ rol.rol }}</option>
-          }
-        </select>
-      </div>
+                <div class="form-group">
+                    <label>Rol <span>*</span></label>
+                    <select
+                        class="form-select form-select-sm"
+                        [ngModel]="formulario().rol"
+                        (ngModelChange)="actualizarCampo('rol', $event)"
+                    >
+                        <option value="">Seleccione rol...</option>
+                        @for (rol of roles(); track rol.idRol) {
+                            <option [value]="rol.rol">{{ rol.rol }}</option>
+                        }
+                    </select>
+                </div>
 
-      <div class="form-group">
-        <label>Entidad federativa</label>
-        <select class="form-select form-select-sm" [disabled]="formulario().rol === 'SUPER_USUARIO'"
-          [ngModel]="formulario().idEntidadFederativa" (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)">
-          <option value="">Seleccione entidad...</option>
-          @if (formulario().rol === 'CONSULTA') {
-          <option value="NACIONAL">Nacional — todas las entidades</option>
-          }
-          @for (entidad of entidades(); track entidad.idEntidadFederativa) {
-          <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
-          }
-        </select>
-        @if (formulario().rol === 'CONSULTA') {
-        <small>Consulta únicamente la entidad elegida, o todas si selecciona Nacional, en los módulos habilitados.</small>
-        }
-      </div>
+                <div class="form-group">
+                    <label>Entidad federativa</label>
+                    <select
+                        class="form-select form-select-sm"
+                        [disabled]="formulario().rol === 'SUPER_USUARIO'"
+                        [ngModel]="formulario().idEntidadFederativa"
+                        (ngModelChange)="actualizarCampo('idEntidadFederativa', $event)"
+                    >
+                        <option value="">Seleccione entidad...</option>
+                        @if (formulario().rol === 'CONSULTA') {
+                            <option value="NACIONAL">Nacional — todas las entidades</option>
+                        }
+                        @for (entidad of entidades(); track entidad.idEntidadFederativa) {
+                            <option [value]="entidad.idEntidadFederativa">{{ entidad.nombre }}</option>
+                        }
+                    </select>
+                    @if (formulario().rol === 'CONSULTA') {
+                        <small>Consulta únicamente la entidad elegida, o todas si selecciona Nacional, en los módulos habilitados.</small>
+                    }
+                </div>
 
-      <div class="form-group span-2">
-        <label>Contraseña {{ modoFormulario() === 'NUEVO' ? '*' : '' }}</label>
-        <input class="form-control form-control-sm" type="password" autocomplete="new-password"
-          placeholder="Ingresa contraseña" [ngModel]="formulario().password"
-          (ngModelChange)="actualizarCampo('password', $event)">
-        @if (modoFormulario() === 'EDITAR') {
-        <small>
-          Déjala vacía para conservar la contraseña actual.
-          Al establecer una nueva contraseña, el usuario deberá cambiarla
-          la próxima vez que inicie sesión.
-        </small>
-        } @else {
-        <small>
-          El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
-        </small>
-        }
-      </div>
-    </div>
+                <div class="form-group span-2">
+                    <label>Contraseña {{ modoFormulario() === 'NUEVO' ? '*' : '' }}</label>
+                    <input
+                        class="form-control form-control-sm"
+                        type="password"
+                        autocomplete="new-password"
+                        placeholder="Ingresa contraseña"
+                        [ngModel]="formulario().password"
+                        (ngModelChange)="actualizarCampo('password', $event)"
+                    />
+                    @if (modoFormulario() === 'EDITAR') {
+                        <small>
+                            Déjala vacía para conservar la contraseña actual. Al establecer una nueva contraseña, el usuario deberá
+                            cambiarla la próxima vez que inicie sesión.
+                        </small>
+                    } @else {
+                        <small> El usuario deberá cambiar esta contraseña en su primer inicio de sesión. </small>
+                    }
+                </div>
+            </div>
 
-    <div class="permisos-panel">
-      <div>
-        <strong>Permisos del módulo consolidado</strong>
-        <p>Estos cambios no modifican los permisos del módulo preliminar.</p>
-      </div>
+            <div class="permisos-panel">
+                <div>
+                    <strong>Permisos del módulo consolidado</strong>
+                    <p>Estos cambios no modifican los permisos del módulo preliminar.</p>
+                </div>
 
-      <label class="switch-row">
-        <span>Acceso al módulo consolidado</span>
-        <input type="checkbox" [disabled]="esUsuarioActualFormulario()" [ngModel]="formulario().habilitaMensual"
-          (ngModelChange)="actualizarCampo('habilitaMensual', $event)">
-      </label>
+                <label class="switch-row">
+                    <span>Acceso al módulo consolidado</span>
+                    <input
+                        type="checkbox"
+                        [disabled]="esUsuarioActualFormulario()"
+                        [ngModel]="formulario().habilitaMensual"
+                        (ngModelChange)="actualizarCampo('habilitaMensual', $event)"
+                    />
+                </label>
 
-      @if (esUsuarioActualFormulario()) {
-      <div class="permiso-nota">No puede deshabilitar su propio acceso al módulo consolidado.</div>
-      }
+                @if (esUsuarioActualFormulario()) {
+                    <div class="permiso-nota">No puede deshabilitar su propio acceso al módulo consolidado.</div>
+                }
 
-      @if (formulario().habilitaMensual) {
-      <label class="switch-row">
-        <span>Carga de información</span>
-        <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'" [ngModel]="formulario().habilitaCarga"
-          (ngModelChange)="actualizarCampo('habilitaCarga', $event)">
-      </label>
+                @if (formulario().habilitaMensual) {
+                    <label class="switch-row">
+                        <span>Carga de información</span>
+                        <input
+                            type="checkbox"
+                            [disabled]="formulario().rol === 'CONSULTA'"
+                            [ngModel]="formulario().habilitaCarga"
+                            (ngModelChange)="actualizarCampo('habilitaCarga', $event)"
+                        />
+                    </label>
 
-      <label class="switch-row">
-        <span>Actualización de información</span>
-        <input type="checkbox" [disabled]="formulario().rol === 'CONSULTA'"
-          [ngModel]="formulario().habilitaModificacion"
-          (ngModelChange)="actualizarCampo('habilitaModificacion', $event)">
-      </label>
+                    <label class="switch-row">
+                        <span>Actualización de información</span>
+                        <input
+                            type="checkbox"
+                            [disabled]="formulario().rol === 'CONSULTA'"
+                            [ngModel]="formulario().habilitaModificacion"
+                            (ngModelChange)="actualizarCampo('habilitaModificacion', $event)"
+                        />
+                    </label>
 
-      @if (formulario().rol === 'CONSULTA') {
-      <div class="permiso-nota">El rol CONSULTA tendrá acceso al módulo únicamente para consulta.</div>
-      }
-      }
+                    @if (formulario().rol === 'CONSULTA') {
+                        <div class="permiso-nota">El rol CONSULTA tendrá acceso al módulo únicamente para consulta.</div>
+                    }
+                }
 
-      @if (!formulario().habilitaMensual && !formulario().habilitaSemanal) {
-      <div class="permiso-nota">Debe habilitar al menos un módulo para el usuario.</div>
-      }
-    </div>
+                @if (!formulario().habilitaMensual && !formulario().habilitaSemanal) {
+                    <div class="permiso-nota">Debe habilitar al menos un módulo para el usuario.</div>
+                }
+            </div>
+        </div>
 
-  </div>
+        <div class="drawer-actions">
+            <button type="button" class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
 
-  <div class="drawer-actions">
-    <button type="button" class="btn btn-secondary" (click)="cerrarModal()" [disabled]="guardando()">Cancelar</button>
-
-    <button type="button" class="btn btn-siiid" (click)="guardarUsuario()"
-      [disabled]="guardando() || !formularioValido()">
-      @if (guardando()) {
-      Guardando...
-      } @else {
-      Guardar usuario
-      }
-    </button>
-  </div>
-</aside>
+            <button type="button" class="btn btn-siiid" (click)="guardarUsuario()" [disabled]="guardando() || !formularioValido()">
+                @if (guardando()) {
+                    Guardando...
+                } @else {
+                    Guardar usuario
+                }
+            </button>
+        </div>
+    </aside>
 }

@@ -1,95 +1,95 @@
 .usuario-permiso-card {
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto;
-  align-items: center;
-  gap: 20px;
-  padding: 14px 16px;
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 16px;
 }
 
 .usuario-permisos-grid {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 22px;
-  flex-wrap: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 22px;
+    flex-wrap: nowrap;
 }
 
 .usuario-permiso-card .permiso-mini-switch {
-  min-height: auto;
-  margin: 0;
-  padding: 4px 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 7px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  cursor: pointer;
-  white-space: nowrap;
+    min-height: auto;
+    margin: 0;
+    padding: 4px 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
 .usuario-permiso-card .permiso-mini-switch:hover {
-  border: 0;
-  background: transparent;
+    border: 0;
+    background: transparent;
 }
 
 .usuario-permiso-card .permiso-mini-switch input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex: 0 0 auto;
 }
 
 .usuario-permiso-card .permiso-mini-switch span {
-  color: #222;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1;
+    color: #222;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
 }
 
 .usuario-permiso-card .permiso-mini-switch:has(input:disabled) {
-  cursor: not-allowed;
-  background: transparent;
-  opacity: .5;
+    cursor: not-allowed;
+    background: transparent;
+    opacity: 0.5;
 }
 
 .usuario-sin-acceso {
-  border-left-color: #6c757d;
-  background: #fafafa;
+    border-left-color: #6c757d;
+    background: #fafafa;
 }
 
 .usuario-permiso-info small {
-  display: block;
-  margin-top: 4px;
-  color: #8a5b00;
-  font-size: 11px;
-  font-weight: 700;
+    display: block;
+    margin-top: 4px;
+    color: #8a5b00;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .entidad-table {
-  min-width: 1050px;
+    min-width: 1050px;
 }
 
 .entidad-table thead th.sortable:hover {
-  background: var(--siiid-guinda) !important;
+    background: var(--siiid-guinda) !important;
 }
 
 @media (max-width: 900px) {
-  .usuario-permiso-card {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+    .usuario-permiso-card {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
 
-  .usuario-permisos-grid {
-    justify-content: flex-start;
-  }
+    .usuario-permisos-grid {
+        justify-content: flex-start;
+    }
 }
 
 @media (max-width: 560px) {
-  .usuario-permisos-grid {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
+    .usuario-permisos-grid {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
 }

@@ -1,3 +1,4 @@
+// Exporta consultas por período y alcance; descargar una sábana no altera la remisión almacenada.
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ROLES } from '../../core/constants/roles.constants';
@@ -11,68 +12,76 @@ type TipoPlanoPreliminar = 'COMPLETA' | 'ESTATALES' | 'MUNICIPALES';
 type ModoPlanoPreliminar = 'CONFIRMADO' | 'PREVIO' | 'MIXTO';
 
 @Component({
-  selector: 'app-semanal-sabanas',
-  imports: [FormsModule],
-  templateUrl: './semanal-sabanas.html',
-  styleUrls: ['../informes/informes.css', './semanal-sabanas.css'],
+    selector: 'app-semanal-sabanas',
+    imports: [FormsModule],
+    templateUrl: './semanal-sabanas.html',
+    styleUrls: ['../informes/informes.css', './semanal-sabanas.css'],
 })
-export class SemanalSabanas {
-  private readonly semanalEnviosService = inject(SemanalEnviosService);
-  private readonly sessionService = inject(SessionService);
+export class SemanalSabanas
+{
+    private readonly semanalEnviosService = inject(SemanalEnviosService);
+    private readonly sessionService = inject(SessionService);
 
-  usuario = this.sessionService.usuario;
-  tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
-  esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
-  entidadUsuario = computed(() => this.usuario()?.entidadFederativa ?? '');
+    usuario = this.sessionService.usuario;
+    tieneAlcanceNacionalConsulta = computed(() => tieneAlcanceNacionalConsulta(this.usuario()));
+    esSuperUsuario = computed(() => this.usuario()?.rol === ROLES.SUPER_USUARIO);
+    entidadUsuario = computed(() => this.usuario()?.entidadFederativa ?? '');
 
-  anioCorte = signal(new Date().getFullYear());
-  modoPlano = signal<ModoPlanoPreliminar>('CONFIRMADO');
-  descargandoPlano = signal<TipoPlanoPreliminar | null>(null);
-  descargaEnProceso = computed(() => this.descargandoPlano() !== null);
+    anioCorte = signal(new Date().getFullYear());
+    modoPlano = signal<ModoPlanoPreliminar>('CONFIRMADO');
+    descargandoPlano = signal<TipoPlanoPreliminar | null>(null);
+    descargaEnProceso = computed(() => this.descargandoPlano() !== null);
 
-  ajustarAnio(cantidad: number): void {
-    this.anioCorte.set(this.anioCorte() + cantidad);
-  }
-
-  descargarPlanos(tipo: TipoPlanoPreliminar): void {
-    const anioCorte = Number(this.anioCorte());
-    const modo: ModoPlanoPreliminar = this.esSuperUsuario() ? this.modoPlano() : 'CONFIRMADO';
-
-    if (!Number.isInteger(anioCorte) || anioCorte < 2000 || anioCorte > 2100) {
-      mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
-      return;
+    ajustarAnio(cantidad: number): void
+    {
+        this.anioCorte.set(this.anioCorte() + cantidad);
     }
 
-    this.descargandoPlano.set(tipo);
+    descargarPlanos(tipo: TipoPlanoPreliminar): void
+    {
+        const anioCorte = Number(this.anioCorte());
+        const modo: ModoPlanoPreliminar = this.esSuperUsuario() ? this.modoPlano() : 'CONFIRMADO';
 
-    this.semanalEnviosService.crearTicketDescargaSabanas(anioCorte, tipo, modo).subscribe({
-      next: (response) => {
-        if (!response.ticket) {
-          this.descargandoPlano.set(null);
-          mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
-          return;
+        if(!Number.isInteger(anioCorte) || anioCorte < 2000 || anioCorte > 2100)
+        {
+            mostrarAdvertencia('Año inválido', 'Capture un año de corte válido.');
+            return;
         }
 
-        const iframe = document.createElement('iframe');
+        this.descargandoPlano.set(tipo);
 
-        iframe.src = this.semanalEnviosService.obtenerUrlDescargaSabanas(response.ticket);
-        iframe.style.display = 'none';
+        this.semanalEnviosService.crearTicketDescargaSabanas(anioCorte, tipo, modo).subscribe({
+            next: (response) =>
+            {
+                if(!response.ticket)
+                {
+                    this.descargandoPlano.set(null);
+                    mostrarAdvertencia('Descarga no disponible', 'La API no devolvió un ticket de descarga.');
+                    return;
+                }
 
-        document.body.appendChild(iframe);
-        this.descargandoPlano.set(null);
+                const iframe = document.createElement('iframe');
 
-        setTimeout(() => {
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }, 60000);
-      },
-      error: async (error: unknown) => {
-        this.descargandoPlano.set(null);
+                iframe.src = this.semanalEnviosService.obtenerUrlDescargaSabanas(response.ticket);
+                iframe.style.display = 'none';
 
-        mostrarError(
-          'No fue posible descargar los planos estadísticos',
-          await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
-        );
-      },
-    });
-  }
+                document.body.appendChild(iframe);
+                this.descargandoPlano.set(null);
+
+                setTimeout(() =>
+                {
+                    if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                }, 60000);
+            },
+            error: async (error: unknown) =>
+            {
+                this.descargandoPlano.set(null);
+
+                mostrarError(
+                    'No fue posible descargar los planos estadísticos',
+                    await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente.'),
+                );
+            },
+        });
+    }
 }

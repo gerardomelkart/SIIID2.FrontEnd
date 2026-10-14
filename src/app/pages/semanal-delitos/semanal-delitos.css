@@ -1,607 +1,606 @@
 :host {
-  --semanal-verde: #235B4E;
-  --semanal-verde-oscuro: #10312B;
-  --semanal-dorado: #BC955C;
-  display: block;
-  min-width: 0;
-  max-width: 100%;
+    --semanal-verde: #235b4e;
+    --semanal-verde-oscuro: #10312b;
+    --semanal-dorado: #bc955c;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .semanal-delitos {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  overflow-x: hidden;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .semanal-delitos .semanal-card,
 .semanal-delitos .jerarquia-lista,
 .semanal-delitos .bien-juridico-grupo,
 .semanal-delitos .delito-grupo {
-  min-width: 0;
-  max-width: 100%;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .semanal-delitos .table-responsive {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .semanal-admin-header span {
-  color: var(--semanal-dorado);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: .08em;
+    color: var(--semanal-dorado);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .semanal-admin-header h1 {
-  margin: 3px 0;
-  color: var(--semanal-verde);
-  font-size: 28px;
-  font-weight: 900;
+    margin: 3px 0;
+    color: var(--semanal-verde);
+    font-size: 28px;
+    font-weight: 900;
 }
 
 .semanal-admin-header p {
-  margin: 0;
-  color: #667085;
-  font-weight: 700;
+    margin: 0;
+    color: #667085;
+    font-weight: 700;
 }
 
 .semanal-resumen {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
-  gap: 14px;
-  margin: 20px 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
 }
 
 .resumen-card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-left: 6px solid var(--semanal-verde);
-  padding: 16px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, .1);
+    background: #fff;
+    border: 1px solid #ddd;
+    border-left: 6px solid var(--semanal-verde);
+    padding: 16px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
 .resumen-card strong {
-  display: block;
-  color: var(--semanal-verde);
-  font-size: 30px;
-  line-height: 1;
+    display: block;
+    color: var(--semanal-verde);
+    font-size: 30px;
+    line-height: 1;
 }
 
 .resumen-card span {
-  display: block;
-  margin-top: 7px;
-  color: #444;
-  font-weight: 800;
+    display: block;
+    margin-top: 7px;
+    color: #444;
+    font-weight: 800;
 }
 
 .semanal-card {
-  overflow: hidden;
+    overflow: hidden;
 }
 
 .semanal-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .semanal-buscador {
-  width: 380px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  color: #777;
-  padding: 0 10px;
+    width: 380px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    color: #777;
+    padding: 0 10px;
 }
 
 .semanal-buscador input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-size: 13px;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 13px;
 }
 
 .semanal-mensaje {
-  padding: 28px;
-  text-align: center;
-  color: #667085;
-  font-weight: 700;
+    padding: 28px;
+    text-align: center;
+    color: #667085;
+    font-weight: 700;
 }
 
 .delitos-header-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
 }
 
 .delitos-header-row p {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 .semanal-delitos .semanal-admin-header h1 {
-  color: var(--semanal-verde);
+    color: var(--semanal-verde);
 }
 
 .btn-guardar {
-  min-width: 205px;
-  border: 0;
-  background: var(--semanal-verde);
-  color: #fff;
-  padding: 11px 16px;
-  font-weight: 900;
+    min-width: 205px;
+    border: 0;
+    background: var(--semanal-verde);
+    color: #fff;
+    padding: 11px 16px;
+    font-weight: 900;
 }
 
 .btn-guardar:hover:not(:disabled) {
-  background: var(--semanal-verde-oscuro);
+    background: var(--semanal-verde-oscuro);
 }
 
 .btn-guardar:disabled {
-  opacity: .55;
-  cursor: not-allowed;
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .btn-guardar i {
-  margin-right: 6px;
+    margin-right: 6px;
 }
 
 .semanal-delitos .resumen-card strong {
-  color: var(--semanal-verde);
+    color: var(--semanal-verde);
 }
 
 .resumen-disponibles {
-  border-left-color: var(--semanal-verde-oscuro);
+    border-left-color: var(--semanal-verde-oscuro);
 }
 
 .resumen-seleccionados {
-  border-left-color: var(--semanal-verde);
+    border-left-color: var(--semanal-verde);
 }
 
 .resumen-opcionales {
-  border-left-color: var(--semanal-dorado);
+    border-left-color: var(--semanal-dorado);
 }
 
 .semanal-delitos .semanal-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: var(--semanal-verde-oscuro);
-  color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--semanal-verde-oscuro);
+    color: #fff;
 }
 
-.semanal-delitos .semanal-card-header>span {
-  flex: 0 0 auto;
-  color: #fff;
-  font-weight: 900;
+.semanal-delitos .semanal-card-header > span {
+    flex: 0 0 auto;
+    color: #fff;
+    font-weight: 900;
 }
 
 .jerarquia-herramientas {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .controles-expansion {
-  display: flex;
-  gap: 6px;
+    display: flex;
+    gap: 6px;
 }
 
 .btn-expansion-global {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 34px;
-  border: 1px solid rgba(255, 255, 255, .45);
-  background: rgba(255, 255, 255, .08);
-  color: #fff;
-  padding: 7px 10px;
-  font-size: 11px;
-  font-weight: 900;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: .2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
 .btn-expansion-global:hover:not(:disabled) {
-  border-color: var(--semanal-dorado);
-  background: var(--semanal-dorado);
-  color: var(--semanal-verde-oscuro);
+    border-color: var(--semanal-dorado);
+    background: var(--semanal-dorado);
+    color: var(--semanal-verde-oscuro);
 }
 
 .btn-expansion-global:disabled {
-  opacity: .45;
-  cursor: not-allowed;
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .jerarquia-herramientas .semanal-buscador {
-  flex: 0 1 430px;
+    flex: 0 1 430px;
 }
 
 .nota-extorsion {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  border-bottom: 1px solid #ead8b9;
-  background: #fff8eb;
-  color: #72531f;
-  padding: 11px 14px;
-  font-size: 12px;
-  font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border-bottom: 1px solid #ead8b9;
+    background: #fff8eb;
+    color: #72531f;
+    padding: 11px 14px;
+    font-size: 12px;
+    font-weight: 800;
 }
 
 .jerarquia-lista {
-  display: grid;
-  gap: 18px;
-  background: #f4f7f6;
-  padding: 18px;
+    display: grid;
+    gap: 18px;
+    background: #f4f7f6;
+    padding: 18px;
 }
 
 .bien-juridico-grupo {
-  overflow: hidden;
-  border: 1px solid #cbd8d4;
-  background: #fff;
-  box-shadow: 0 3px 9px rgba(16, 49, 43, .1);
+    overflow: hidden;
+    border: 1px solid #cbd8d4;
+    background: #fff;
+    box-shadow: 0 3px 9px rgba(16, 49, 43, 0.1);
 }
 
 .bien-juridico-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  background: var(--semanal-verde-oscuro);
-  color: #fff;
-  padding: 17px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    background: var(--semanal-verde-oscuro);
+    color: #fff;
+    padding: 17px 18px;
 }
 
 .grupo-identidad,
 .delito-identidad {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
 }
 
 .grupo-identidad {
-  flex: 1;
+    flex: 1;
 }
 
 .btn-colapsar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: .2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
 .btn-colapsar-bien {
-  border: 1px solid rgba(255, 255, 255, .55);
-  background: rgba(255, 255, 255, .08);
-  color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
 }
 
 .btn-colapsar-bien:hover:not(:disabled) {
-  border-color: var(--semanal-dorado);
-  background: var(--semanal-dorado);
-  color: var(--semanal-verde-oscuro);
+    border-color: var(--semanal-dorado);
+    background: var(--semanal-dorado);
+    color: var(--semanal-verde-oscuro);
 }
 
 .btn-colapsar-delito {
-  border: 1px solid #b8cbc4;
-  background: #fff;
-  color: var(--semanal-verde);
+    border: 1px solid #b8cbc4;
+    background: #fff;
+    color: var(--semanal-verde);
 }
 
 .btn-colapsar-delito:hover:not(:disabled) {
-  border-color: var(--semanal-verde);
-  background: var(--semanal-verde);
-  color: #fff;
+    border-color: var(--semanal-verde);
+    background: var(--semanal-verde);
+    color: #fff;
 }
 
 .btn-colapsar:disabled {
-  opacity: .45;
-  cursor: not-allowed;
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .bien-clave {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 58px;
-  min-height: 42px;
-  background: var(--semanal-dorado);
-  color: var(--semanal-verde-oscuro);
-  padding: 8px 10px;
-  font-size: 14px;
-  font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    min-height: 42px;
+    background: var(--semanal-dorado);
+    color: var(--semanal-verde-oscuro);
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 900;
 }
 
 .nivel-etiqueta {
-  display: block;
-  margin-bottom: 2px;
-  color: var(--semanal-dorado);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: .09em;
-  text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+    color: var(--semanal-dorado);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
 }
 
 .bien-juridico-header h2 {
-  margin: 0;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 900;
+    margin: 0;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 900;
 }
 
 .bien-juridico-header p,
 .delito-header p {
-  margin: 3px 0 0;
-  font-size: 11px;
-  font-weight: 700;
-  opacity: .75;
+    margin: 3px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.75;
 }
 
 .delito-grupo {
-  overflow: hidden;
-  margin: 14px;
-  border: 1px solid #d8e1de;
-  background: #fff;
+    overflow: hidden;
+    margin: 14px;
+    border: 1px solid #d8e1de;
+    background: #fff;
 }
 
 .delito-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  border-bottom: 1px solid #cad8d3;
-  background: #edf4f1;
-  padding: 13px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border-bottom: 1px solid #cad8d3;
+    background: #edf4f1;
+    padding: 13px 15px;
 }
 
 .delito-header .nivel-etiqueta {
-  color: var(--semanal-verde);
+    color: var(--semanal-verde);
 }
 
 .delito-header h3 {
-  margin: 0;
-  color: var(--semanal-verde-oscuro);
-  font-size: 16px;
-  font-weight: 900;
+    margin: 0;
+    color: var(--semanal-verde-oscuro);
+    font-size: 16px;
+    font-weight: 900;
 }
 
 .delito-clave-header {
-  margin-right: 8px;
-  color: var(--semanal-verde);
+    margin-right: 8px;
+    color: var(--semanal-verde);
 }
 
 .semanal-delitos .modalidades-table {
-  min-width: 900px;
-  margin: 0;
+    min-width: 900px;
+    margin: 0;
 }
 
 .semanal-delitos .modalidades-table thead th {
-  background: var(--semanal-verde);
-  color: #fff;
+    background: var(--semanal-verde);
+    color: #fff;
 }
 
 .fila-seleccionada td {
-  background: #f1f8f5;
+    background: #f1f8f5;
 }
 
 .fila-obligatoria td {
-  background: #fff8eb;
+    background: #fff8eb;
 }
 
 .modalidad-clave {
-  color: var(--semanal-verde);
-  font-weight: 900;
-  white-space: nowrap;
+    color: var(--semanal-verde);
+    font-weight: 900;
+    white-space: nowrap;
 }
 
 .modalidad-subtipo {
-  min-width: 210px;
-  color: #333;
-  font-weight: 700;
+    min-width: 210px;
+    color: #333;
+    font-weight: 700;
 }
 
 .modalidad-subtipo span {
-  display: block;
-  color: #667085;
-  font-size: 11px;
-  font-weight: 900;
+    display: block;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 900;
 }
 
 .modalidad-nombre {
-  min-width: 260px;
-  color: #222;
-  font-weight: 800;
+    min-width: 260px;
+    color: #222;
+    font-weight: 800;
 }
 
 .badge-obligatorio,
 .estado-badge {
-  display: inline-flex;
-  border-radius: 20px;
-  padding: 4px 8px;
-  font-size: 10px;
-  font-weight: 900;
-  white-space: nowrap;
+    display: inline-flex;
+    border-radius: 20px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
 }
 
 .badge-obligatorio {
-  margin-left: 7px;
-  background: #ead8b9;
-  color: #72531f;
+    margin-left: 7px;
+    background: #ead8b9;
+    color: #72531f;
 }
 
 .estado-activo {
-  background: #e2f3eb;
-  color: #17603e;
+    background: #e2f3eb;
+    color: #17603e;
 }
 
 .estado-inactivo {
-  background: #f2f2f2;
-  color: #666;
+    background: #f2f2f2;
+    color: #666;
 }
 
 .seleccion-control {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
 }
 
 .seleccion-masiva {
-  flex: 0 0 auto;
-  gap: 10px;
-  font-size: 12px;
-  font-weight: 900;
+    flex: 0 0 auto;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 900;
 }
 
 .seleccion-masiva-texto {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 .bien-juridico-header .seleccion-masiva-texto {
-  color: #fff;
+    color: #fff;
 }
 
 .delito-header .seleccion-masiva-texto {
-  color: var(--semanal-verde-oscuro);
+    color: var(--semanal-verde-oscuro);
 }
 
 .seleccion-control input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
 }
 
 .toggle {
-  position: relative;
-  width: 42px;
-  height: 22px;
-  flex: 0 0 auto;
-  border-radius: 20px;
-  background: #aaa;
-  transition: .2s;
+    position: relative;
+    width: 42px;
+    height: 22px;
+    flex: 0 0 auto;
+    border-radius: 20px;
+    background: #aaa;
+    transition: 0.2s;
 }
 
 .toggle::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  transition: .2s;
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: 0.2s;
 }
 
-.seleccion-control input:checked+.toggle {
-  background: var(--semanal-verde);
+.seleccion-control input:checked + .toggle {
+    background: var(--semanal-verde);
 }
 
-.seleccion-control input:checked+.toggle::after {
-  transform: translateX(20px);
+.seleccion-control input:checked + .toggle::after {
+    transform: translateX(20px);
 }
 
-.seleccion-control input:indeterminate+.toggle {
-  background: var(--semanal-dorado);
+.seleccion-control input:indeterminate + .toggle {
+    background: var(--semanal-dorado);
 }
 
-.seleccion-control input:indeterminate+.toggle::after {
-  transform: translateX(10px);
+.seleccion-control input:indeterminate + .toggle::after {
+    transform: translateX(10px);
 }
 
-.seleccion-control input:focus-visible+.toggle {
-  outline: 3px solid rgba(188, 149, 92, .4);
-  outline-offset: 2px;
+.seleccion-control input:focus-visible + .toggle {
+    outline: 3px solid rgba(188, 149, 92, 0.4);
+    outline-offset: 2px;
 }
 
 .seleccion-bloqueada {
-  cursor: not-allowed;
-  opacity: .65;
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 @media (max-width: 1100px) {
-  .semanal-delitos .semanal-card-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
+    .semanal-delitos .semanal-card-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
 
-  .jerarquia-herramientas {
-    width: 100%;
-  }
+    .jerarquia-herramientas {
+        width: 100%;
+    }
 
-  .jerarquia-herramientas .semanal-buscador {
-    flex: 1;
-  }
+    .jerarquia-herramientas .semanal-buscador {
+        flex: 1;
+    }
 }
 
 @media (max-width: 850px) {
+    .semanal-resumen {
+        grid-template-columns: 1fr;
+    }
 
-  .semanal-resumen {
-    grid-template-columns: 1fr;
-  }
+    .semanal-admin-header h1 {
+        font-size: 24px;
+    }
 
-  .semanal-admin-header h1 {
-    font-size: 24px;
-  }
+    .delitos-header-row,
+    .bien-juridico-header,
+    .delito-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
 
-  .delitos-header-row,
-  .bien-juridico-header,
-  .delito-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
+    .btn-guardar {
+        width: 100%;
+    }
 
-  .btn-guardar {
-    width: 100%;
-  }
+    .jerarquia-herramientas {
+        align-items: stretch;
+        flex-direction: column;
+    }
 
-  .jerarquia-herramientas {
-    align-items: stretch;
-    flex-direction: column;
-  }
+    .controles-expansion {
+        width: 100%;
+    }
 
-  .controles-expansion {
-    width: 100%;
-  }
+    .btn-expansion-global {
+        flex: 1;
+    }
 
-  .btn-expansion-global {
-    flex: 1;
-  }
+    .jerarquia-lista {
+        padding: 9px;
+    }
 
-  .jerarquia-lista {
-    padding: 9px;
-  }
+    .delito-grupo {
+        margin: 9px;
+    }
 
-  .delito-grupo {
-    margin: 9px;
-  }
+    .grupo-identidad,
+    .delito-identidad {
+        align-items: flex-start;
+        width: 100%;
+    }
 
-  .grupo-identidad,
-  .delito-identidad {
-    align-items: flex-start;
-    width: 100%;
-  }
-
-  .seleccion-masiva {
-    justify-content: space-between;
-  }
+    .seleccion-masiva {
+        justify-content: space-between;
+    }
 }

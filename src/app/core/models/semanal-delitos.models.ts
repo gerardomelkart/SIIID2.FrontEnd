@@ -1,48 +1,54 @@
-export interface ConfiguracionModalidadSemanalItem {
-  idBienJuridico: number;
-  claveBienJuridico: string;
-  bienJuridico: string;
-  idDelito: number;
-  claveDelito: string;
-  delito: string;
-  idSubtipoDelito: number;
-  claveSubtipo: string;
-  subtipo: string;
-  idModalidadDelito: number;
-  claveModalidad: string;
-  modalidad: string;
-  seleccionado: boolean;
-  esObligatorio: boolean;
-  conservarEntrePeriodos: boolean;
-  orden: number;
+export interface ConfiguracionModalidadSemanalItem
+{
+    idBienJuridico: number;
+    claveBienJuridico: string;
+    bienJuridico: string;
+    idDelito: number;
+    claveDelito: string;
+    delito: string;
+    idSubtipoDelito: number;
+    claveSubtipo: string;
+    subtipo: string;
+    idModalidadDelito: number;
+    claveModalidad: string;
+    modalidad: string;
+    seleccionado: boolean;
+    esObligatorio: boolean;
+    conservarEntrePeriodos: boolean;
+    orden: number;
 }
 
-export interface ConfiguracionModalidadSemanalRequest {
-  idModalidadDelito: number;
-  seleccionado: boolean;
+export interface ConfiguracionModalidadSemanalRequest
+{
+    idModalidadDelito: number;
+    seleccionado: boolean;
 }
 
-export interface ActualizarConfiguracionDelitosSemanalesRequest {
-  modalidades: ConfiguracionModalidadSemanalRequest[];
+export interface ActualizarConfiguracionDelitosSemanalesRequest
+{
+    modalidades: ConfiguracionModalidadSemanalRequest[];
 }
 
-export interface ConfiguracionDelitosSemanalesResponse {
-  esValido: boolean;
-  codigo: string;
-  mensaje: string;
-  totalSeleccionados: number;
-  modalidades: ConfiguracionModalidadSemanalItem[];
+export interface ConfiguracionDelitosSemanalesResponse
+{
+    esValido: boolean;
+    codigo: string;
+    mensaje: string;
+    totalSeleccionados: number;
+    modalidades: ConfiguracionModalidadSemanalItem[];
 }
 
-export interface DelitoSemanalHabilitadoItem {
-  idDelito: number;
-  delito: string;
-  orden: number;
+export interface DelitoSemanalHabilitadoItem
+{
+    idDelito: number;
+    delito: string;
+    orden: number;
 }
 
-export interface DelitosSemanalesHabilitadosResponse {
-  esValido: boolean;
-  codigo: string;
-  mensaje: string;
-  delitos: DelitoSemanalHabilitadoItem[];
+export interface DelitosSemanalesHabilitadosResponse
+{
+    esValido: boolean;
+    codigo: string;
+    mensaje: string;
+    delitos: DelitoSemanalHabilitadoItem[];
 }

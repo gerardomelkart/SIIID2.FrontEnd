@@ -6,82 +6,92 @@ import { InformeEnvioItem, InformeReporteCargasResponse, PeriodoCorteInforme } f
 import type { ModoPlanoDescarga, SabanaTicketResponse, TipoSabanaDescarga } from './informes.service';
 import { FederalArchivosOriginalesResponse } from '../models/federal-archivos-originales.models';
 
-interface FederalAcusesTicketResponse {
-  esValido: boolean;
-  ticket: string;
+interface FederalAcusesTicketResponse
+{
+    esValido: boolean;
+    ticket: string;
 }
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
-export class FederalInformesService {
-  private readonly http = inject(HttpClient);
-  private readonly apiUrl = API_ENDPOINTS.federalInformes;
+export class FederalInformesService
+{
+    private readonly http = inject(HttpClient);
+    private readonly apiUrl = API_ENDPOINTS.federalInformes;
 
-  obtenerPeriodosEnvios() {
-    return this.http.get<PeriodoCorteInforme[]>(`${this.apiUrl}/envios/periodos`);
-  }
-
-  obtenerEnvios(mesCorte: number | undefined, anioCorte: number) {
-    let params = new HttpParams().set('anioCorte', anioCorte);
-    if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
-    return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
-  }
-
-  obtenerReporteCargas(mesCorte?: number, anioCorte?: number) {
-    let params = new HttpParams();
-    if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
-    if (anioCorte !== undefined) params = params.set('anioCorte', anioCorte);
-    return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
-  }
-
-  obtenerArchivosOriginales() {
-    return this.http.get<FederalArchivosOriginalesResponse>(`${this.apiUrl}/archivos-originales`);
-  }
-
-  descargarArchivosOriginales() {
-    return this.http.get(`${this.apiUrl}/archivos-originales/descargar`, { responseType: 'blob', observe: 'response' });
-  }
-
-  crearTicketDescargaAcuses(mesCorte: number | undefined, anioCorte: number) {
-    let params = new HttpParams().set('anioCorte', anioCorte);
-    if (mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
-
-    return this.http.post<FederalAcusesTicketResponse>(
-      `${this.apiUrl}/envios/acuses/ticket`,
-      null,
-      { params },
-    );
-  }
-
-  obtenerUrlDescargaAcuses(ticket: string): string {
-    return `${this.apiUrl}/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
-  }
-
-  crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA', modo: ModoPlanoDescarga = 'CONFIRMADO') {
-    const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo).set('modo', modo);
-    return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, { params });
-  }
-
-  obtenerUrlDescargaSabanas(ticket: string): string {
-    return `${this.apiUrl}/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
-  }
-
-  descargarDesdeEndpoint(endpoint: string) {
-    return this.http.get(this.normalizarEndpoint(endpoint), {
-      responseType: 'blob',
-      observe: 'response',
-    });
-  }
-
-  private normalizarEndpoint(endpoint: string): string {
-    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) return endpoint;
-
-    if (endpoint.startsWith('/api/')) {
-      const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-      return `${base}${endpoint.substring(4)}`;
+    obtenerPeriodosEnvios()
+    {
+        return this.http.get<PeriodoCorteInforme[]>(`${this.apiUrl}/envios/periodos`);
     }
 
-    return endpoint;
-  }
+    obtenerEnvios(mesCorte: number | undefined, anioCorte: number)
+    {
+        let params = new HttpParams().set('anioCorte', anioCorte);
+        if(mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
+        return this.http.get<InformeEnvioItem[]>(`${this.apiUrl}/envios`, { params });
+    }
+
+    obtenerReporteCargas(mesCorte?: number, anioCorte?: number)
+    {
+        let params = new HttpParams();
+        if(mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
+        if(anioCorte !== undefined) params = params.set('anioCorte', anioCorte);
+        return this.http.get<InformeReporteCargasResponse>(`${this.apiUrl}/reporte-cargas`, { params });
+    }
+
+    obtenerArchivosOriginales()
+    {
+        return this.http.get<FederalArchivosOriginalesResponse>(`${this.apiUrl}/archivos-originales`);
+    }
+
+    descargarArchivosOriginales()
+    {
+        return this.http.get(`${this.apiUrl}/archivos-originales/descargar`, { responseType: 'blob', observe: 'response' });
+    }
+
+    crearTicketDescargaAcuses(mesCorte: number | undefined, anioCorte: number)
+    {
+        let params = new HttpParams().set('anioCorte', anioCorte);
+        if(mesCorte !== undefined) params = params.set('mesCorte', mesCorte);
+
+        return this.http.post<FederalAcusesTicketResponse>(`${this.apiUrl}/envios/acuses/ticket`, null, { params });
+    }
+
+    obtenerUrlDescargaAcuses(ticket: string): string
+    {
+        return `${this.apiUrl}/envios/acuses/descargar?ticket=${encodeURIComponent(ticket)}`;
+    }
+
+    crearTicketDescargaSabanas(anioCorte: number, tipo: TipoSabanaDescarga = 'COMPLETA', modo: ModoPlanoDescarga = 'CONFIRMADO')
+    {
+        const params = new HttpParams().set('anioCorte', anioCorte).set('tipo', tipo).set('modo', modo);
+        return this.http.post<SabanaTicketResponse>(`${this.apiUrl}/sabanas/ticket`, null, { params });
+    }
+
+    obtenerUrlDescargaSabanas(ticket: string): string
+    {
+        return `${this.apiUrl}/sabanas/descargar?ticket=${encodeURIComponent(ticket)}`;
+    }
+
+    descargarDesdeEndpoint(endpoint: string)
+    {
+        return this.http.get(this.normalizarEndpoint(endpoint), {
+            responseType: 'blob',
+            observe: 'response',
+        });
+    }
+
+    private normalizarEndpoint(endpoint: string): string
+    {
+        if(endpoint.startsWith('http://') || endpoint.startsWith('https://')) return endpoint;
+
+        if(endpoint.startsWith('/api/'))
+        {
+            const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            return `${base}${endpoint.substring(4)}`;
+        }
+
+        return endpoint;
+    }
 }

@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-topbar',
-  imports: [],
-  templateUrl: './topbar.html',
-  styleUrl: './topbar.css',
+    selector: 'app-topbar',
+    imports: [],
+    templateUrl: './topbar.html',
+    styleUrl: './topbar.css',
 })
-export class Topbar {
-  @Input() menuAbierto = false;
-  @Input() nombreModulo = '';
-  @Output() menuToggle = new EventEmitter<void>();
+export class Topbar
+{
+    @Input() menuAbierto = false;
+    @Input() nombreModulo = '';
+    @Output() menuToggle = new EventEmitter<void>();
 }

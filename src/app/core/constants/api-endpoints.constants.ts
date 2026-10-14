@@ -1,37 +1,30 @@
-const esLocal =
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const esLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-const esQa =
-  window.location.pathname === '/siiid2-qa' ||
-  window.location.pathname.startsWith('/siiid2-qa/');
+const esQa = window.location.pathname === '/siiid2-qa' || window.location.pathname.startsWith('/siiid2-qa/');
 
-export const API_BASE_URL =
-  esLocal ? 'api' :
-  esQa ? '/qa-api/api' :
-  '/beta/api';
+export const API_BASE_URL = esLocal ? 'api' : esQa ? '/qa-api/api' : '/beta/api';
 
 export const API_ENDPOINTS = {
-  auth: `${API_BASE_URL}/auth`,
-  cargas: `${API_BASE_URL}/cargas`,
-  actualizaciones: `${API_BASE_URL}/actualizaciones`,
-  informes: `${API_BASE_URL}/informes`,
-  usuarios: `${API_BASE_URL}/usuarios`,
-  catalogos: `${API_BASE_URL}/catalogos`,
-  administracionCargas: `${API_BASE_URL}/administracion/cargas-pendientes`,
-  semanalDelitos: `${API_BASE_URL}/semanal/delitos`,
-  semanalCargas: `${API_BASE_URL}/semanal/cargas`,
-  semanalAdministracionCargas: `${API_BASE_URL}/semanal/administracion/cargas-pendientes`,
-  semanalEnvios: `${API_BASE_URL}/semanal/envios`,
-  semanalArchivosOriginales: `${API_BASE_URL}/semanal/informes/archivos-originales`,
-  federalCatalogos: `${API_BASE_URL}/federal/catalogos`,
-  federalCargas: `${API_BASE_URL}/federal/cargas`,
-  federalActualizaciones: `${API_BASE_URL}/federal/actualizaciones`,
-  federalAdministracionCargas: `${API_BASE_URL}/federal/administracion/cargas-pendientes`,
-  federalInformes: `${API_BASE_URL}/federal/informes`,
-  banciUsuarios: `${API_BASE_URL}/banci/usuarios`,
-  federalUsuarios: `${API_BASE_URL}/federal/usuarios`,
-  banciCargas: `${API_BASE_URL}/banci/cargas`,
-  banciActualizaciones: `${API_BASE_URL}/banci/actualizaciones`,
-  notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
+    auth: `${API_BASE_URL}/auth`,
+    cargas: `${API_BASE_URL}/cargas`,
+    actualizaciones: `${API_BASE_URL}/actualizaciones`,
+    informes: `${API_BASE_URL}/informes`,
+    usuarios: `${API_BASE_URL}/usuarios`,
+    catalogos: `${API_BASE_URL}/catalogos`,
+    administracionCargas: `${API_BASE_URL}/administracion/cargas-pendientes`,
+    semanalDelitos: `${API_BASE_URL}/semanal/delitos`,
+    semanalCargas: `${API_BASE_URL}/semanal/cargas`,
+    semanalAdministracionCargas: `${API_BASE_URL}/semanal/administracion/cargas-pendientes`,
+    semanalEnvios: `${API_BASE_URL}/semanal/envios`,
+    semanalArchivosOriginales: `${API_BASE_URL}/semanal/informes/archivos-originales`,
+    federalCatalogos: `${API_BASE_URL}/federal/catalogos`,
+    federalCargas: `${API_BASE_URL}/federal/cargas`,
+    federalActualizaciones: `${API_BASE_URL}/federal/actualizaciones`,
+    federalAdministracionCargas: `${API_BASE_URL}/federal/administracion/cargas-pendientes`,
+    federalInformes: `${API_BASE_URL}/federal/informes`,
+    banciUsuarios: `${API_BASE_URL}/banci/usuarios`,
+    federalUsuarios: `${API_BASE_URL}/federal/usuarios`,
+    banciCargas: `${API_BASE_URL}/banci/cargas`,
+    banciActualizaciones: `${API_BASE_URL}/banci/actualizaciones`,
+    notificacionesRechazos: `${API_BASE_URL}/notificaciones/rechazos`,
 } as const;
-

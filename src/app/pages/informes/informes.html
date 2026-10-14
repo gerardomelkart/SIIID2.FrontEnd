@@ -1,571 +1,639 @@
 <div class="informes-page">
-  <div class="informes-header">
-    <div>
-      <h1>Informes</h1>
-      <p>
-        Consulta de envíos, rechazos administrativos y monitoreo de cargas por entidad federativa.
-      </p>
-    </div>
-
-    <div class="rol-chip">
-      <i class="fa-solid fa-user-shield"></i>
-      {{ usuario()?.rol }}
-    </div>
-  </div>
-
-  @if (reporteActivo() === 'ENVIOS') {
-  <section class="siiid-card">
-    <div class="siiid-card-header reporte-card-header">
-      <span>
-        <i class="fa-solid fa-magnifying-glass"></i>
-        Consulta de envíos
-      </span>
-
-      <div class="reporte-actions">
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoEnvios()" (click)="cargarEnvios()">
-          @if (cargandoEnvios()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-rotate"></i>
-          }
-          Actualizar
-        </button>
-
-        <button type="button" class="btn btn-sm btn-secondary"
-          [disabled]="descargaEnProceso() || !periodoEnvioSeleccionado()" (click)="descargarAcusesCorte()">
-          @if (descargandoAcuses()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-zipper"></i>
-          }
-          Descargar acuses
-        </button>
-
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="descargaEnProceso()"
-          (click)="exportarExcel('ENVIOS')">
-          @if (exportandoExcel() === 'ENVIOS') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          }
-          Excel
-        </button>
-
-        <div class="buscador">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Buscar envío..." [ngModel]="busquedaEnvios()"
-            (ngModelChange)="buscarEnvios($event)">
+    <div class="informes-header">
+        <div>
+            <h1>Informes</h1>
+            <p>Consulta de envíos, rechazos administrativos y monitoreo de cargas por entidad federativa.</p>
         </div>
-      </div>
+
+        <div class="rol-chip">
+            <i class="fa-solid fa-user-shield"></i>
+            {{ usuario()?.rol }}
+        </div>
     </div>
 
-    <div class="corte-selector">
-      <div class="corte-selector-title">
-        <i class="fa-solid fa-calendar-days"></i>
-        Corte consultado
-      </div>
+    @if (reporteActivo() === 'ENVIOS') {
+        <section class="siiid-card">
+            <div class="siiid-card-header reporte-card-header">
+                <span>
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Consulta de envíos
+                </span>
 
-      <div class="corte-selector-controls">
-        <select class="form-select form-select-sm" [ngModel]="periodoEnvioSeleccionado()"
-          (ngModelChange)="periodoEnvioSeleccionado.set($event); cambiarCorteEnvios()">
-          @for (periodo of periodosEnvio(); track periodo.mesCorte + '-' + periodo.anioCorte) {
-          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
-            {{ periodo.corte }}
-          </option>
-          }
-        </select>
-      </div>
-    </div>
+                <div class="reporte-actions">
+                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoEnvios()" (click)="cargarEnvios()">
+                        @if (cargandoEnvios()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-rotate"></i>
+                        }
+                        Actualizar
+                    </button>
 
-    @if (!tieneAlcanceNacionalConsulta()) {
-    <div class="filtro-entidad-info">
-      <i class="fa-solid fa-location-dot"></i>
-      Mostrando únicamente envíos de la entidad:
-      <strong>{{ entidadUsuario() }}</strong>
-    </div>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-secondary"
+                        [disabled]="descargaEnProceso() || !periodoEnvioSeleccionado()"
+                        (click)="descargarAcusesCorte()"
+                    >
+                        @if (descargandoAcuses()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-file-zipper"></i>
+                        }
+                        Descargar acuses
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-secondary"
+                        [disabled]="descargaEnProceso()"
+                        (click)="exportarExcel('ENVIOS')"
+                    >
+                        @if (exportandoExcel() === 'ENVIOS') {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-file-excel"></i>
+                        }
+                        Excel
+                    </button>
+
+                    <div class="buscador">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input
+                            type="text"
+                            placeholder="Buscar envío..."
+                            [ngModel]="busquedaEnvios()"
+                            (ngModelChange)="buscarEnvios($event)"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div class="corte-selector">
+                <div class="corte-selector-title">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Corte consultado
+                </div>
+
+                <div class="corte-selector-controls">
+                    <select
+                        class="form-select form-select-sm"
+                        [ngModel]="periodoEnvioSeleccionado()"
+                        (ngModelChange)="periodoEnvioSeleccionado.set($event); cambiarCorteEnvios()"
+                    >
+                        @for (periodo of periodosEnvio(); track periodo.mesCorte + '-' + periodo.anioCorte) {
+                            <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
+                                {{ periodo.corte }}
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            @if (!tieneAlcanceNacionalConsulta()) {
+                <div class="filtro-entidad-info">
+                    <i class="fa-solid fa-location-dot"></i>
+                    Mostrando únicamente envíos de la entidad:
+                    <strong>{{ entidadUsuario() }}</strong>
+                </div>
+            }
+
+            <div class="table-responsive envios-mensual-table-responsive">
+                <table class="table table-sm reporte-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" (click)="ordenarEnviosPor('entidadFederativa')">
+                                Entidad federativa
+                                <i [class]="iconoOrdenEnvios('entidadFederativa')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarEnviosPor('claveEntidad')">
+                                Cve. entidad
+                                <i [class]="iconoOrdenEnvios('claveEntidad')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarEnviosPor('fechaEnvioTexto')">
+                                Fecha de envío
+                                <i [class]="iconoOrdenEnvios('fechaEnvioTexto')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarEnviosPor('corte')">
+                                Corte
+                                <i [class]="iconoOrdenEnvios('corte')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarEnviosPor('usuarioEnvio')">
+                                Usuario envío
+                                <i [class]="iconoOrdenEnvios('usuarioEnvio')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarEnviosPor('estadoTexto')">
+                                Estatus
+                                <i [class]="iconoOrdenEnvios('estadoTexto')"></i>
+                            </th>
+
+                            <th class="acciones-col">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (envio of enviosPaginados(); track envio.idCarga) {
+                            <tr>
+                                <td>{{ envio.entidadFederativa }}</td>
+                                <td>{{ envio.claveEntidad }}</td>
+                                <td>{{ envio.fechaEnvioTexto }}</td>
+                                <td>{{ envio.corte }}</td>
+                                <td>{{ envio.usuarioEnvio }}</td>
+                                <td>{{ envio.estadoTexto }}</td>
+                                <td>
+                                    <div class="acciones">
+                                        @if (
+                                            !envio.esRechazadoAdministrador || envio.endpointAcuse.length > 0 || envio.endpointExcel.length >
+                0
+                                        ) {
+                                            <button
+                                                type="button"
+                                                class="btn-icon btn-pdf"
+                                                [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
+                                                [disabled]="descargaEnProceso() || !envio.endpointAcuse"
+                                                (click)="verAcuse(envio)"
+                                            >
+                                                @if (descargandoAcuse() === envio.codigoReferencia) {
+                                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                                } @else {
+                                                    <i class="fa-solid fa-file-pdf"></i>
+                                                }
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                class="btn-icon btn-excel"
+                                                title="Descargar archivos enviados"
+                                                [disabled]="descargaEnProceso() || !envio.endpointExcel"
+                                                (click)="descargarArchivos(envio)"
+                                            >
+                                                @if (descargandoArchivos() === envio.codigoReferencia) {
+                                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                                } @else {
+                                                    <i class="fa-solid fa-file-excel"></i>
+                                                }
+                                            </button>
+                                        }
+
+                                        @if (envio.esRechazadoAdministrador) {
+                                            <details class="position-relative" (toggle)="ajustarPosicionMotivo($event)">
+                                                <summary
+                                                    class="btn-icon btn-view"
+                                                    title="Ver motivo de rechazo"
+                                                    style="list-style: none; cursor: pointer;"
+                                                >
+                                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                                </summary>
+
+                                                <div
+                                                    class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual"
+                                                >
+                                                    <strong class="d-block mb-2">Motivo del rechazo</strong>
+
+                                                    <div class="mb-2">
+                                                        {{ envio.motivoRechazo || 'Sin motivo registrado.' }}
+                                                    </div>
+
+                                                    @if (envio.usuarioRechazo) {
+                                                        <small class="d-block text-muted">
+                                                            <strong>Rechazado por:</strong>
+                                                            {{ envio.usuarioRechazo }}
+                                                        </small>
+                                                    }
+
+                                                    @if (envio.fechaRechazoTexto) {
+                                                        <small class="d-block text-muted">
+                                                            <strong>Fecha:</strong>
+                                                            {{ envio.fechaRechazoTexto }}
+                                                        </small>
+                                                    }
+                                                </div>
+                                            </details>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="7" class="text-center p-4">No se encontraron envíos.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-row">
+                <span> Mostrando {{ enviosPaginados().length }} de {{ enviosFiltrados().length }} registros </span>
+
+                <div class="pagination-actions">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="paginaEnvios() === 1"
+                        (click)="cambiarPaginaEnvios(paginaEnvios() - 1)"
+                    >
+                        Anterior
+                    </button>
+
+                    <span class="page-indicator">{{ paginaEnvios() }} / {{ totalPaginasEnvios() }}</span>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="paginaEnvios() === totalPaginasEnvios()"
+                        (click)="cambiarPaginaEnvios(paginaEnvios() + 1)"
+                    >
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </section>
     }
 
-    <div class="table-responsive envios-mensual-table-responsive">
-      <table class="table table-sm reporte-table">
-        <thead>
-          <tr>
-            <th class="sortable" (click)="ordenarEnviosPor('entidadFederativa')">
-              Entidad federativa
-              <i [class]="iconoOrdenEnvios('entidadFederativa')"></i>
-            </th>
+    @if (reporteActivo() === 'CARGAS' && puedeVerCargas()) {
+        <section class="siiid-card">
+            <div class="siiid-card-header reporte-card-header">
+                <span>
+                    <i class="fa-solid fa-chart-simple"></i>
+                    Reporte de cargas por entidad
+                </span>
 
-            <th class="sortable" (click)="ordenarEnviosPor('claveEntidad')">
-              Cve. entidad
-              <i [class]="iconoOrdenEnvios('claveEntidad')"></i>
-            </th>
+                <div class="reporte-actions">
+                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoCargas()" (click)="cargarReporteCargas()">
+                        @if (cargandoCargas()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-rotate"></i>
+                        }
+                        Actualizar
+                    </button>
 
-            <th class="sortable" (click)="ordenarEnviosPor('fechaEnvioTexto')">
-              Fecha de envío
-              <i [class]="iconoOrdenEnvios('fechaEnvioTexto')"></i>
-            </th>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-secondary"
+                        [disabled]="descargaEnProceso()"
+                        (click)="exportarExcel('CARGAS')"
+                    >
+                        @if (exportandoExcel() === 'CARGAS') {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-file-excel"></i>
+                        }
+                        Excel
+                    </button>
 
-            <th class="sortable" (click)="ordenarEnviosPor('corte')">
-              Corte
-              <i [class]="iconoOrdenEnvios('corte')"></i>
-            </th>
+                    <div class="buscador">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input
+                            type="text"
+                            placeholder="Buscar carga..."
+                            [ngModel]="busquedaCargas()"
+                            (ngModelChange)="buscarCargas($event)"
+                        />
+                    </div>
+                </div>
+            </div>
 
-            <th class="sortable" (click)="ordenarEnviosPor('usuarioEnvio')">
-              Usuario envío
-              <i [class]="iconoOrdenEnvios('usuarioEnvio')"></i>
-            </th>
+            <div class="corte-selector">
+                <div class="corte-selector-title">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Corte consultado
+                </div>
 
-            <th class="sortable" (click)="ordenarEnviosPor('estadoTexto')">
-              Estatus
-              <i [class]="iconoOrdenEnvios('estadoTexto')"></i>
-            </th>
+                <div class="corte-selector-controls">
+                    <select
+                        class="form-select form-select-sm"
+                        [ngModel]="periodoCorteSeleccionado()"
+                        (ngModelChange)="periodoCorteSeleccionado.set($event); cambiarCorteReporte()"
+                    >
+                        @for (periodo of periodosCorte(); track periodo.mesCorte + '-' + periodo.anioCorte) {
+                            <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
+                                {{ periodo.corte }}
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
 
-            <th class="acciones-col">Acciones</th>
-          </tr>
-        </thead>
+            <div class="table-responsive">
+                <table class="table table-sm reporte-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" (click)="ordenarCargasPor('ordenCarga')">
+                                Ranking
+                                <i [class]="iconoOrdenCargas('ordenCarga')"></i>
+                            </th>
 
-        <tbody>
-          @for (envio of enviosPaginados(); track envio.idCarga) {
-          <tr>
-            <td>{{ envio.entidadFederativa }}</td>
-            <td>{{ envio.claveEntidad }}</td>
-            <td>{{ envio.fechaEnvioTexto }}</td>
-            <td>{{ envio.corte }}</td>
-            <td>{{ envio.usuarioEnvio }}</td>
-            <td>{{ envio.estadoTexto }}</td>
-            <td>
-              <div class="acciones">
-                @if (!envio.esRechazadoAdministrador || envio.endpointAcuse.length > 0 || envio.endpointExcel.length >
-                0) {
-                <button type="button" class="btn-icon btn-pdf"
-                  [title]="envio.esRechazadoAdministrador ? 'Ver informe previo' : 'Ver informe'"
-                  [disabled]="descargaEnProceso() || !envio.endpointAcuse" (click)="verAcuse(envio)">
-                  @if (descargandoAcuse() === envio.codigoReferencia) {
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  } @else {
-                  <i class="fa-solid fa-file-pdf"></i>
-                  }
-                </button>
+                            <th class="sortable" (click)="ordenarCargasPor('entidadFederativa')">
+                                Entidad federativa
+                                <i [class]="iconoOrdenCargas('entidadFederativa')"></i>
+                            </th>
 
-                <button type="button" class="btn-icon btn-excel" title="Descargar archivos enviados"
-                  [disabled]="descargaEnProceso() || !envio.endpointExcel" (click)="descargarArchivos(envio)">
-                  @if (descargandoArchivos() === envio.codigoReferencia) {
-                  <i class="fa-solid fa-spinner fa-spin"></i>
-                  } @else {
-                  <i class="fa-solid fa-file-excel"></i>
-                  }
-                </button>
-                }
+                            <th class="sortable" (click)="ordenarCargasPor('claveEntidad')">
+                                Cve. entidad
+                                <i [class]="iconoOrdenCargas('claveEntidad')"></i>
+                            </th>
 
-                @if (envio.esRechazadoAdministrador) {
-                <details class="position-relative" (toggle)="ajustarPosicionMotivo($event)">
-                  <summary class="btn-icon btn-view" title="Ver motivo de rechazo"
-                    style="list-style: none; cursor: pointer;">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                  </summary>
+                            <th class="sortable" (click)="ordenarCargasPor('corte')">
+                                Periodo
+                                <i [class]="iconoOrdenCargas('corte')"></i>
+                            </th>
 
-                  <div
-                    class="position-absolute end-0 p-3 bg-white border rounded shadow text-start motivo-rechazo-mensual">
-                    <strong class="d-block mb-2">Motivo del rechazo</strong>
+                            <th class="sortable" (click)="ordenarCargasPor('intentos')">
+                                Intentos
+                                <i [class]="iconoOrdenCargas('intentos')"></i>
+                            </th>
 
-                    <div class="mb-2">
-                      {{ envio.motivoRechazo || 'Sin motivo registrado.' }}
+                            <th class="sortable" (click)="ordenarCargasPor('estatusUltimoIntento')">
+                                Estatus
+                                <i [class]="iconoOrdenCargas('estatusUltimoIntento')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarCargasPor('fechaCargaActualizacionTexto')">
+                                Fecha de carga/actualización
+                                <i [class]="iconoOrdenCargas('fechaCargaActualizacionTexto')"></i>
+                            </th>
+
+                            <th class="sortable" (click)="ordenarCargasPor('fechaAprobacionTexto')">
+                                Fecha de aprobación
+                                <i [class]="iconoOrdenCargas('fechaAprobacionTexto')"></i>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (carga of cargasPaginadas(); track carga.idEntidadFederativa) {
+                            <tr>
+                                <td>
+                                    <span class="folio-chip">
+                                        {{ ordenCarga(carga) }}
+                                    </span>
+                                </td>
+                                <td>{{ carga.entidadFederativa }}</td>
+                                <td>{{ carga.claveEntidad }}</td>
+                                <td>{{ carga.corte }}</td>
+                                <td>
+                                    <span class="intentos-chip">{{ carga.intentos }}</span>
+                                </td>
+
+                                <td>
+                                    <span
+                                        class="estatus-badge"
+                                        [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
+                                        [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
+                                        [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)"
+                                    >
+                                        {{ etiquetaEstatusCarga(carga) }}
+                                    </span>
+                                </td>
+                                <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
+                                <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
+                            </tr>
+                        } @empty {
+                            <tr>
+                                <td colspan="8" class="text-center p-4">No se encontraron cargas.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-row">
+                <span> Mostrando {{ cargasPaginadas().length }} de {{ cargasFiltradas().length }} registros </span>
+
+                <div class="pagination-actions">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="paginaCargas() === 1"
+                        (click)="cambiarPaginaCargas(paginaCargas() - 1)"
+                    >
+                        Anterior
+                    </button>
+
+                    <span class="page-indicator">{{ paginaCargas() }} / {{ totalPaginasCargas() }}</span>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="paginaCargas() === totalPaginasCargas()"
+                        (click)="cambiarPaginaCargas(paginaCargas() + 1)"
+                    >
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </section>
+    }
+
+    @if (reporteActivo() === 'SABANAS' && puedeVerSabanas()) {
+        <section class="siiid-card sabanas-card">
+            <div class="siiid-card-header reporte-card-header">
+                <span>
+                    <i class="fa-solid fa-table"></i>
+                    Planos estadísticos
+                </span>
+            </div>
+
+            <div class="sabanas-hero">
+                <div class="sabanas-hero-icon">
+                    <i class="fa-solid fa-file-zipper"></i>
+                </div>
+
+                <div class="sabanas-hero-text">
+                    <h2>Descarga de planos estadísticos anuales</h2>
+                    <p>
+                        @if (esSuperUsuario()) {
+                            Genere archivos estadísticos en formato ZIP por año de corte. Puede descargar la versión completa o únicamente
+                            la parte estatal o municipal.
+                        } @else if (tieneAlcanceNacionalConsulta()) {
+                            Descargue los planos estadísticos confirmados de todas las entidades federativas.
+                        } @else {
+                            Descargue los planos estadísticos de su entidad federativa:
+                            <strong>{{ entidadUsuario() }}</strong
+                            >.
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <div class="sabanas-toolbar" [class.sabanas-toolbar-super]="esSuperUsuario()">
+                <div class="sabana-year-card">
+                    <div class="sabana-year-label">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        Año de corte
                     </div>
 
-                    @if (envio.usuarioRechazo) {
-                    <small class="d-block text-muted">
-                      <strong>Rechazado por:</strong>
-                      {{ envio.usuarioRechazo }}
-                    </small>
-                    }
+                    <div class="sabana-year-input-group">
+                        <button
+                            type="button"
+                            class="sabana-year-step"
+                            [disabled]="descargaEnProceso()"
+                            (click)="anioSabana.set(anioSabana() - 1)"
+                        >
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
 
-                    @if (envio.fechaRechazoTexto) {
-                    <small class="d-block text-muted">
-                      <strong>Fecha:</strong>
-                      {{ envio.fechaRechazoTexto }}
-                    </small>
-                    }
-                  </div>
-                </details>
+                        <input
+                            type="number"
+                            class="sabana-year-input"
+                            min="2000"
+                            max="2100"
+                            [disabled]="descargaEnProceso()"
+                            [ngModel]="anioSabana()"
+                            (ngModelChange)="anioSabana.set(+$event)"
+                        />
+
+                        <button
+                            type="button"
+                            class="sabana-year-step"
+                            [disabled]="descargaEnProceso()"
+                            (click)="anioSabana.set(anioSabana() + 1)"
+                        >
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                @if (esSuperUsuario()) {
+                    <div class="sabana-mode-card">
+                        <div class="sabana-year-label">
+                            <i class="fa-solid fa-layer-group"></i>
+                            Tipo de plano
+                        </div>
+
+                        <select
+                            class="form-select"
+                            [disabled]="descargaEnProceso()"
+                            [ngModel]="modoPlano()"
+                            (ngModelChange)="modoPlano.set($event)"
+                        >
+                            <option value="CONFIRMADO">Plano confirmado</option>
+                            <option value="PREVIO">Plano previo</option>
+                            <option value="MIXTO">Plano mixto</option>
+                        </select>
+
+                        <small class="sabana-mode-help">
+                            @if (modoPlano() === 'CONFIRMADO') {
+                                Usa únicamente cargas confirmadas.
+                            } @else if (modoPlano() === 'PREVIO') {
+                                En periodos con pendientes usa únicamente esas cargas; conserva confirmadas en los demás periodos.
+                            } @else {
+                                Usa pendientes cuando existan y confirmadas para el resto.
+                            }
+                        </small>
+                    </div>
                 }
 
-              </div>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="7" class="text-center p-4">No se encontraron envíos.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                <div class="sabana-info-card">
+                    <div class="sabana-info-badge">
+                        <i class="fa-solid fa-circle-info"></i>
+                        @if (tieneAlcanceNacionalConsulta()) {
+                            Tipos disponibles
+                        } @else {
+                            Descarga limitada a su entidad
+                        }
+                    </div>
 
-    <div class="pagination-row">
-      <span>
-        Mostrando {{ enviosPaginados().length }} de {{ enviosFiltrados().length }} registros
-      </span>
+                    <ul>
+                        <li>
+                            <strong>Plano estadístico:</strong> estatal delitos, municipal delitos, estatal víctimas y municipal víctimas.
+                        </li>
+                        <li><strong>Plano estatal:</strong> estatal delitos y estatal víctimas.</li>
+                        <li><strong>Plano municipal:</strong> municipal delitos y municipal víctimas.</li>
+                    </ul>
+                </div>
+            </div>
 
-      <div class="pagination-actions">
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaEnvios() === 1"
-          (click)="cambiarPaginaEnvios(paginaEnvios() - 1)">
-          Anterior
-        </button>
+            <div class="sabanas-grid">
+                <button
+                    type="button"
+                    class="sabana-option sabana-option-primary"
+                    [disabled]="descargaEnProceso()"
+                    (click)="descargarSabanas('COMPLETA')"
+                >
+                    <div class="sabana-option-icon">
+                        @if (descargandoSabanas() === 'COMPLETA') {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-layer-group"></i>
+                        }
+                    </div>
 
-        <span class="page-indicator">{{ paginaEnvios() }} / {{ totalPaginasEnvios() }}</span>
+                    <div class="sabana-option-body">
+                        <strong>Plano estadístico</strong>
+                        <small>Incluye los 4 archivos estadísticos del año seleccionado.</small>
+                    </div>
+                </button>
 
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-          [disabled]="paginaEnvios() === totalPaginasEnvios()" (click)="cambiarPaginaEnvios(paginaEnvios() + 1)">
-          Siguiente
-        </button>
-      </div>
-    </div>
-  </section>
-  }
+                <button type="button" class="sabana-option" [disabled]="descargaEnProceso()" (click)="descargarSabanas('ESTATALES')">
+                    <div class="sabana-option-icon">
+                        @if (descargandoSabanas() === 'ESTATALES') {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-map"></i>
+                        }
+                    </div>
 
-  @if (reporteActivo() === 'CARGAS' && puedeVerCargas()) {
-  <section class="siiid-card">
-    <div class="siiid-card-header reporte-card-header">
-      <span>
-        <i class="fa-solid fa-chart-simple"></i>
-        Reporte de cargas por entidad
-      </span>
+                    <div class="sabana-option-body">
+                        <strong>Plano estatal</strong>
+                        <small>Descarga únicamente estatal delitos y estatal víctimas.</small>
+                    </div>
+                </button>
 
-      <div class="reporte-actions">
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="cargandoCargas()"
-          (click)="cargarReporteCargas()">
-          @if (cargandoCargas()) {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-rotate"></i>
-          }
-          Actualizar
-        </button>
+                <button type="button" class="sabana-option" [disabled]="descargaEnProceso()" (click)="descargarSabanas('MUNICIPALES')">
+                    <div class="sabana-option-icon">
+                        @if (descargandoSabanas() === 'MUNICIPALES') {
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                        } @else {
+                            <i class="fa-solid fa-city"></i>
+                        }
+                    </div>
 
-        <button type="button" class="btn btn-sm btn-secondary" [disabled]="descargaEnProceso()"
-          (click)="exportarExcel('CARGAS')">
-          @if (exportandoExcel() === 'CARGAS') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-file-excel"></i>
-          }
-          Excel
-        </button>
+                    <div class="sabana-option-body">
+                        <strong>Plano municipal</strong>
+                        <small>Descarga únicamente municipal delitos y municipal víctimas.</small>
+                    </div>
+                </button>
+            </div>
 
-        <div class="buscador">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Buscar carga..." [ngModel]="busquedaCargas()"
-            (ngModelChange)="buscarCargas($event)">
-        </div>
-      </div>
-    </div>
-
-
-
-    <div class="corte-selector">
-      <div class="corte-selector-title">
-        <i class="fa-solid fa-calendar-days"></i>
-        Corte consultado
-      </div>
-
-      <div class="corte-selector-controls">
-        <select class="form-select form-select-sm" [ngModel]="periodoCorteSeleccionado()"
-          (ngModelChange)="periodoCorteSeleccionado.set($event); cambiarCorteReporte()">
-          @for (periodo of periodosCorte(); track periodo.mesCorte + '-' + periodo.anioCorte) {
-          <option [value]="periodo.anioCorte + '-' + periodo.mesCorte.toString().padStart(2, '0')">
-            {{ periodo.corte }}
-          </option>
-          }
-        </select>
-      </div>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-sm reporte-table">
-        <thead>
-          <tr>
-            <th class="sortable" (click)="ordenarCargasPor('ordenCarga')">
-              Ranking
-              <i [class]="iconoOrdenCargas('ordenCarga')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('entidadFederativa')">
-              Entidad federativa
-              <i [class]="iconoOrdenCargas('entidadFederativa')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('claveEntidad')">
-              Cve. entidad
-              <i [class]="iconoOrdenCargas('claveEntidad')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('corte')">
-              Periodo
-              <i [class]="iconoOrdenCargas('corte')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('intentos')">
-              Intentos
-              <i [class]="iconoOrdenCargas('intentos')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('estatusUltimoIntento')">
-              Estatus
-              <i [class]="iconoOrdenCargas('estatusUltimoIntento')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('fechaCargaActualizacionTexto')">
-              Fecha de carga/actualización
-              <i [class]="iconoOrdenCargas('fechaCargaActualizacionTexto')"></i>
-            </th>
-
-            <th class="sortable" (click)="ordenarCargasPor('fechaAprobacionTexto')">
-              Fecha de aprobación
-              <i [class]="iconoOrdenCargas('fechaAprobacionTexto')"></i>
-            </th>
-          </tr>
-        </thead>
-
-        <tbody>
-          @for (carga of cargasPaginadas(); track carga.idEntidadFederativa) {
-          <tr>
-            <td>
-              <span class="folio-chip">
-                {{ ordenCarga(carga) }}
-              </span>
-            </td>
-            <td>{{ carga.entidadFederativa }}</td>
-            <td>{{ carga.claveEntidad }}</td>
-            <td>{{ carga.corte }}</td>
-            <td>
-              <span class="intentos-chip">{{ carga.intentos }}</span>
-            </td>
-
-            <td>
-              <span class="estatus-badge" [class.estatus-confirmado]="esEstatusConfirmado(carga.estatusUltimoIntento)"
-                [class.estatus-pendiente]="esEstatusPendiente(carga.estatusUltimoIntento)"
-                [class.estatus-error]="esEstatusError(carga.estatusUltimoIntento)">
-                {{ etiquetaEstatusCarga(carga) }}
-              </span>
-            </td>
-            <td>{{ carga.fechaCargaActualizacionTexto || '-' }}</td>
-            <td>{{ carga.fechaAprobacionTexto || '-' }}</td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="8" class="text-center p-4">No se encontraron cargas.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="pagination-row">
-      <span>
-        Mostrando {{ cargasPaginadas().length }} de {{ cargasFiltradas().length }} registros
-      </span>
-
-      <div class="pagination-actions">
-        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="paginaCargas() === 1"
-          (click)="cambiarPaginaCargas(paginaCargas() - 1)">
-          Anterior
-        </button>
-
-        <span class="page-indicator">{{ paginaCargas() }} / {{ totalPaginasCargas() }}</span>
-
-        <button type="button" class="btn btn-sm btn-outline-secondary"
-          [disabled]="paginaCargas() === totalPaginasCargas()" (click)="cambiarPaginaCargas(paginaCargas() + 1)">
-          Siguiente
-        </button>
-      </div>
-    </div>
-  </section>
-  }
-
-  @if (reporteActivo() === 'SABANAS' && puedeVerSabanas()) {
-  <section class="siiid-card sabanas-card">
-    <div class="siiid-card-header reporte-card-header">
-      <span>
-        <i class="fa-solid fa-table"></i>
-        Planos estadísticos
-      </span>
-    </div>
-
-    <div class="sabanas-hero">
-      <div class="sabanas-hero-icon">
-        <i class="fa-solid fa-file-zipper"></i>
-      </div>
-
-      <div class="sabanas-hero-text">
-        <h2>Descarga de planos estadísticos anuales</h2>
-        <p>
-          @if (esSuperUsuario()) {
-          Genere archivos estadísticos en formato ZIP por año de corte.
-          Puede descargar la versión completa o únicamente la parte estatal o municipal.
-          } @else if (tieneAlcanceNacionalConsulta()) {
-          Descargue los planos estadísticos confirmados de todas las entidades federativas.
-          } @else {
-          Descargue los planos estadísticos de su entidad federativa:
-          <strong>{{ entidadUsuario() }}</strong>.
-          }
-        </p>
-      </div>
-    </div>
-
-    <div class="sabanas-toolbar" [class.sabanas-toolbar-super]="esSuperUsuario()">
-      <div class="sabana-year-card">
-        <div class="sabana-year-label">
-          <i class="fa-solid fa-calendar-days"></i>
-          Año de corte
-        </div>
-
-        <div class="sabana-year-input-group">
-          <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()"
-            (click)="anioSabana.set(anioSabana() - 1)">
-            <i class="fa-solid fa-minus"></i>
-          </button>
-
-          <input type="number" class="sabana-year-input" min="2000" max="2100" [disabled]="descargaEnProceso()"
-            [ngModel]="anioSabana()" (ngModelChange)="anioSabana.set(+$event)" />
-
-          <button type="button" class="sabana-year-step" [disabled]="descargaEnProceso()"
-            (click)="anioSabana.set(anioSabana() + 1)">
-            <i class="fa-solid fa-plus"></i>
-          </button>
-        </div>
-      </div>
-
-      @if (esSuperUsuario()) {
-      <div class="sabana-mode-card">
-        <div class="sabana-year-label">
-          <i class="fa-solid fa-layer-group"></i>
-          Tipo de plano
-        </div>
-
-        <select class="form-select" [disabled]="descargaEnProceso()" [ngModel]="modoPlano()"
-          (ngModelChange)="modoPlano.set($event)">
-          <option value="CONFIRMADO">Plano confirmado</option>
-          <option value="PREVIO">Plano previo</option>
-          <option value="MIXTO">Plano mixto</option>
-        </select>
-
-        <small class="sabana-mode-help">
-          @if (modoPlano() === 'CONFIRMADO') {
-          Usa únicamente cargas confirmadas.
-          } @else if (modoPlano() === 'PREVIO') {
-          En periodos con pendientes usa únicamente esas cargas; conserva confirmadas en los demás periodos.
-          } @else {
-          Usa pendientes cuando existan y confirmadas para el resto.
-          }
-        </small>
-      </div>
-      }
-
-      <div class="sabana-info-card">
-        <div class="sabana-info-badge">
-          <i class="fa-solid fa-circle-info"></i>
-          @if (tieneAlcanceNacionalConsulta()) {
-          Tipos disponibles
-          } @else {
-          Descarga limitada a su entidad
-          }
-        </div>
-
-        <ul>
-          <li><strong>Plano estadístico:</strong> estatal delitos, municipal delitos, estatal víctimas y municipal
-            víctimas.</li>
-          <li><strong>Plano estatal:</strong> estatal delitos y estatal víctimas.</li>
-          <li><strong>Plano municipal:</strong> municipal delitos y municipal víctimas.</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="sabanas-grid">
-      <button type="button" class="sabana-option sabana-option-primary" [disabled]="descargaEnProceso()"
-        (click)="descargarSabanas('COMPLETA')">
-
-        <div class="sabana-option-icon">
-          @if (descargandoSabanas() === 'COMPLETA') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-layer-group"></i>
-          }
-        </div>
-
-        <div class="sabana-option-body">
-          <strong>Plano estadístico</strong>
-          <small>Incluye los 4 archivos estadísticos del año seleccionado.</small>
-        </div>
-      </button>
-
-      <button type="button" class="sabana-option" [disabled]="descargaEnProceso()"
-        (click)="descargarSabanas('ESTATALES')">
-
-        <div class="sabana-option-icon">
-          @if (descargandoSabanas() === 'ESTATALES') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-map"></i>
-          }
-        </div>
-
-        <div class="sabana-option-body">
-          <strong>Plano estatal</strong>
-          <small>Descarga únicamente estatal delitos y estatal víctimas.</small>
-        </div>
-      </button>
-
-      <button type="button" class="sabana-option" [disabled]="descargaEnProceso()"
-        (click)="descargarSabanas('MUNICIPALES')">
-
-        <div class="sabana-option-icon">
-          @if (descargandoSabanas() === 'MUNICIPALES') {
-          <i class="fa-solid fa-spinner fa-spin"></i>
-          } @else {
-          <i class="fa-solid fa-city"></i>
-          }
-        </div>
-
-        <div class="sabana-option-body">
-          <strong>Plano municipal</strong>
-          <small>Descarga únicamente municipal delitos y municipal víctimas.</small>
-        </div>
-      </button>
-    </div>
-
-    @if (descargandoSabanas()) {
-    <div class="sabana-loading">
-      <div class="sabana-loading-box">
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        <strong>Generando archivo...</strong>
-        <span>
-          La primera descarga puede tardar un poco. Las siguientes descargas sin cambios
-          en la información podrán usar caché.
-        </span>
-      </div>
-    </div>
+            @if (descargandoSabanas()) {
+                <div class="sabana-loading">
+                    <div class="sabana-loading-box">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <strong>Generando archivo...</strong>
+                        <span>
+                            La primera descarga puede tardar un poco. Las siguientes descargas sin cambios en la información podrán usar
+                            caché.
+                        </span>
+                    </div>
+                </div>
+            }
+        </section>
     }
-  </section>
-  }
 
-  @if (acuseUrlSegura()) {
-  <div class="acuse-modal-backdrop">
-    <div class="acuse-modal">
-      <div class="acuse-modal-header">
-        <h2>{{ acuseTitulo() }}</h2>
+    @if (acuseUrlSegura()) {
+        <div class="acuse-modal-backdrop">
+            <div class="acuse-modal">
+                <div class="acuse-modal-header">
+                    <h2>{{ acuseTitulo() }}</h2>
 
-        <button type="button" class="acuse-close" (click)="cerrarAcuse()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+                    <button type="button" class="acuse-close" (click)="cerrarAcuse()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
 
-      <iframe class="acuse-frame" [src]="acuseUrlSegura()" title="Acuse de entrega de información"></iframe>
+                <iframe class="acuse-frame" [src]="acuseUrlSegura()" title="Acuse de entrega de información"></iframe>
 
-      <div class="acuse-modal-footer">
-        <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-  }
+                <div class="acuse-modal-footer">
+                    <button type="button" class="btn btn-siiid" (click)="cerrarAcuse()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
