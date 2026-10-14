@@ -49,9 +49,7 @@ export class BanciFormulario implements OnInit
             this.terminado() ||
             this.resultado()?.estado === 'RECHAZADO_VALIDACION',
     );
-    entidades = computed(
-        () => this.opciones()?.catalogos.filter((c) => c.campo === 'id_ent_hchos' && Number(c.clave) >= 1 && Number(c.clave) <= 32) ?? [],
-    );
+    entidades = computed(() => this.opciones()?.catalogos.filter((c) => c.campo === 'id_ent_hchos') ?? []);
     entidad: number | null = null;
     carpeta: Record<string, string> = {};
     delitos: BanciFormularioDelito[] = [{ datos: {}, victimas: [{}] }];

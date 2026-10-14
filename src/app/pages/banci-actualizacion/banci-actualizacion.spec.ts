@@ -98,8 +98,8 @@ describe('Corrección y recuperación BANCI', () =>
             esSuperUsuario: false,
             idEntidadFederativa: 14,
             catalogos: [
-                { campo: 'constitutiva_delito', clave: '1', descripcion: 'Delito', idEntidadFederativa: null },
-                { campo: 'constitutiva_delito', clave: '2', descripcion: 'No delito', idEntidadFederativa: null },
+                { campo: 'constitutiva_delito', clave: '1', descripcion: 'Delito', codigoRegla: 'DELITO', idEntidadFederativa: null },
+                { campo: 'constitutiva_delito', clave: '2', descripcion: 'No delito', codigoRegla: 'NO_DELITO', idEntidadFederativa: null },
                 { campo: 'motivo_delito', clave: '2.07.04', descripcion: 'Delito de prueba', idEntidadFederativa: null },
                 { campo: 'motivo_no_delito', clave: '1', descripcion: 'Desarrollo', idEntidadFederativa: null },
             ],
@@ -119,6 +119,28 @@ describe('Corrección y recuperación BANCI', () =>
         expect(c.edicion['motivo_desaparicion']).toBe('');
         expect(c.opcionesCampo('motivo_desaparicion').map((o) => o.descripcion)).toEqual(['Desarrollo']);
         c.cambiarSeleccion('constitutiva_delito', '');
+        expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
+    });
+
+    it('obtiene el catálogo de motivos por significado aunque cambien claves y etiquetas', () =>
+    {
+        const c = conCatalogos();
+        c.opciones.update(
+            (actual) =>
+                actual && {
+                    ...actual,
+                    catalogos: actual.catalogos.map((o) =>
+                        o.campo === 'constitutiva_delito'
+                            ? { ...o, clave: o.codigoRegla === 'DELITO' ? '17' : '29', descripcion: 'Etiqueta nueva' }
+                            : o,
+                    ),
+                },
+        );
+        c.cambiarSeleccion('constitutiva_delito', '17');
+        expect(c.opcionesCampo('motivo_desaparicion').map((o) => o.clave)).toEqual(['2.07.04']);
+        c.cambiarSeleccion('constitutiva_delito', '29');
+        expect(c.opcionesCampo('motivo_desaparicion').map((o) => o.clave)).toEqual(['1']);
+        c.cambiarSeleccion('constitutiva_delito', '1');
         expect(c.opcionesCampo('motivo_desaparicion')).toEqual([]);
     });
 

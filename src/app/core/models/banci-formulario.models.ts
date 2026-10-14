@@ -14,6 +14,7 @@ export interface BanciFormularioOpcion
     campo: string;
     clave: string;
     descripcion: string;
+    codigoRegla?: string | null;
     idEntidadFederativa: number | null;
 }
 export interface BanciFormularioOpciones

@@ -68,7 +68,10 @@ describe('Administración propia BANCI', () =>
                 { provide: BanciUsuariosService, useValue: servicio },
                 {
                     provide: CatalogosService,
-                    useValue: { obtenerEntidadesFederativas: () => of([{ idEntidadFederativa: 14, clave: '14', nombre: 'Jalisco' }]) },
+                    useValue: {
+                        obtenerEntidadesFederativas: () =>
+                            of([{ idEntidadFederativa: 14, clave: '14', nombre: 'Jalisco', esEntidadTerritorial: true }]),
+                    },
                 },
                 { provide: SessionService, useValue: { usuario: () => ({ idUsuario: 1, rol: 'SUPER_USUARIO' }) } },
             ],
@@ -98,6 +101,7 @@ describe('Administración propia BANCI', () =>
     it('exige entidad estatal al enlace y admite Consulta nacional sin entidad', () =>
     {
         const c = TestBed.createComponent(BanciUsuarios).componentInstance;
+        c.entidades.set([{ idEntidadFederativa: 14, clave: '14', nombre: 'Jalisco', esEntidadTerritorial: true }]);
         c.formulario.update((f) => ({
             ...f,
             nombre: 'Prueba',

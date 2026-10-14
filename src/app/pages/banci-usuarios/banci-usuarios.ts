@@ -135,7 +135,7 @@ export class BanciUsuarios implements OnInit
         if(
             !this.usuarios().some((u) => u.idUsuario === form.idUsuario && u.esFederal) &&
             form.rol === ROLES.ENLACE_ESTATAL &&
-            !(form.idEntidadFederativa && form.idEntidadFederativa >= 1 && form.idEntidadFederativa <= 32)
+            !this.entidades().some((e) => e.idEntidadFederativa === form.idEntidadFederativa)
         )
             return false;
 
@@ -172,7 +172,7 @@ export class BanciUsuarios implements OnInit
     {
         this.cargarUsuarios();
         this.catalogosService.obtenerEntidadesFederativas().subscribe({
-            next: (entidades) => this.entidades.set(entidades.filter((e) => e.idEntidadFederativa >= 1 && e.idEntidadFederativa <= 32)),
+            next: (entidades) => this.entidades.set(entidades.filter((e) => e.esEntidadTerritorial)),
             error: () => mostrarError('No fue posible cargar las entidades', 'Intente recargar la página.'),
         });
     }

@@ -111,9 +111,7 @@ export class BanciActualizacion implements OnInit
     readonly pendiente = computed(() => this.resultado()?.estado === 'PENDIENTE' && !!this.referencia());
     readonly ocupado = computed(() => this.cargandoBusqueda() || this.cargandoOperacion() || this.descargandoPlantilla());
     readonly pendientesDisponibles = computed(() => this.pendientes().filter((p) => p.codigoReferencia !== this.referencia()));
-    readonly entidades = computed(
-        () => this.opciones()?.catalogos.filter((c) => c.campo === 'id_ent_hchos' && Number(c.clave) >= 1 && Number(c.clave) <= 32) ?? [],
-    );
+    readonly entidades = computed(() => this.opciones()?.catalogos.filter((c) => c.campo === 'id_ent_hchos') ?? []);
 
     ngOnInit(): void
     {
@@ -174,10 +172,19 @@ export class BanciActualizacion implements OnInit
         if(campo === 'motivo_desaparicion')
         {
             const tipo = this.edicion['constitutiva_delito'];
-            if(tipo !== '1' && tipo !== '2') return [];
-            campo = tipo === '1' ? 'motivo_delito' : 'motivo_no_delito';
+            const motivo = this.catalogoMotivo(tipo);
+            if(!motivo) return [];
+            campo = motivo;
         }
         return this.opciones()?.catalogos.filter((o) => o.campo === campo) ?? [];
+    }
+
+    private catalogoMotivo(clave: string | undefined): string | null
+    {
+        const codigo = this.opciones()?.catalogos.find((o) => o.campo === 'constitutiva_delito' && o.clave === clave)?.codigoRegla;
+        if(codigo === 'DELITO') return 'motivo_delito';
+        if(codigo === 'NO_DELITO') return 'motivo_no_delito';
+        return null;
     }
 
     cambiarSeleccion(campo: string, valor: string): void
@@ -281,7 +288,7 @@ export class BanciActualizacion implements OnInit
 
         if(campo === 'motivo_desaparicion')
         {
-            const catalogo = victima.constitutiva_delito === 1 ? 'motivo_delito' : 'motivo_no_delito';
+            const catalogo = this.catalogoMotivo(String(victima.constitutiva_delito));
             const opcion = this.opciones()?.catalogos.find((o) => o.campo === catalogo && o.clave === String(valor));
             if(opcion) return opcion.descripcion;
         }
@@ -309,7 +316,7 @@ export class BanciActualizacion implements OnInit
         const motivo = cambios['motivo_desaparicion'];
         if(tipo || motivo)
         {
-            if(!['1', '2'].includes(tipo ?? '') || !motivo || !this.opcionesCampo('motivo_desaparicion').some((o) => o.clave === motivo))
+            if(!this.catalogoMotivo(tipo) || !motivo || !this.opcionesCampo('motivo_desaparicion').some((o) => o.clave === motivo))
             {
                 this.mensaje.set('Seleccione Constitutiva de delito y un Motivo de desaparición del catálogo correspondiente.');
                 return;

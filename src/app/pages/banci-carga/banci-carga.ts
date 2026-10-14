@@ -55,9 +55,7 @@ export class BanciCarga implements OnInit
     aceptarAdvertencias = false;
     entidad: number | null = null;
 
-    entidades = computed(
-        () => this.opciones()?.catalogos.filter((c) => c.campo === 'id_ent_hchos' && Number(c.clave) >= 1 && Number(c.clave) <= 32) ?? [],
-    );
+    entidades = computed(() => this.opciones()?.catalogos.filter((c) => c.campo === 'id_ent_hchos') ?? []);
 
     necesitaActualizar = signal(false);
     referenciaEnCurso = signal('');

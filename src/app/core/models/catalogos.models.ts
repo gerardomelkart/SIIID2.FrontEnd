@@ -2,6 +2,7 @@ export interface EntidadFederativaCatalogoItem
 {
     idEntidadFederativa: number;
     clave: string;
+    esEntidadTerritorial?: boolean;
     nombre: string;
 }
 
