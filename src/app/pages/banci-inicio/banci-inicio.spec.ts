@@ -1,39 +1,50 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { BanciInicio } from './banci-inicio';
+import { SessionService } from '../../core/services/session.service';
 import { routes } from '../../app.routes';
 
-describe('Preparación mensual BANCI', () =>
+describe('Inicio institucional BANCI', () =>
 {
-    beforeEach(() => TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] }));
-    afterEach(() => TestBed.inject(HttpTestingController).verify());
-    it('muestra que falta preparar el ambiente y no ofrece cargas antiguas', () =>
+    beforeEach(() =>
+        TestBed.configureTestingModule({
+            providers: [
+                provideRouter([]),
+                {
+                    provide: SessionService,
+                    useValue: {
+                        usuario: signal({ rol: 'SUPER_USUARIO', nombre: 'Prueba' }),
+                        habilitaCarga: signal(true),
+                        habilitaModificacion: signal(true),
+                    },
+                },
+            ],
+        }),
+    );
+    it('conserva la bienvenida y accesos de carga y actualización', () =>
     {
         const fixture = TestBed.createComponent(BanciInicio);
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/banci/modelo'))
-            .flush({ instalado: false });
         fixture.detectChanges();
-        expect(fixture.nativeElement.textContent).toContain('pendiente completar');
-        expect(fixture.nativeElement.querySelector('input[type="file"]')).toBeNull();
+        expect(fixture.nativeElement.textContent).toContain('Bienvenido, Prueba');
+        expect(fixture.nativeElement.querySelector('a[href="/banci/carga-masiva"]')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('a[href="/banci/actualizacion/manual"]')).not.toBeNull();
     });
-    it('informa un error de disponibilidad sin habilitar operaciones', () =>
+    it('protege todas las rutas administrativas por rol', () =>
     {
-        const fixture = TestBed.createComponent(BanciInicio);
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/banci/modelo'))
-            .flush({}, { status: 500, statusText: 'Error' });
-        fixture.detectChanges();
-        expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('No fue posible');
+        const hijas = routes.find((r) => r.path === 'banci')!.children!;
+        for(const ruta of hijas.filter((r) => r.path?.startsWith('administracion/')))
+        {
+            expect(ruta.canActivate?.length).toBeGreaterThan(0);
+            expect(ruta.data?.['roles']).toEqual(['SUPER_USUARIO']);
+        }
+        expect(hijas.find((r) => r.path === 'informes/cargas')?.data?.['roles']).toEqual(['SUPER_USUARIO']);
+        expect(hijas.find((r) => r.path === 'informes/originales')?.data?.['roles']).toEqual(['SUPER_USUARIO']);
     });
-    it('retira las rutas de carga, actualización y consulta sustituidas', () =>
+    it('ofrece los cuatro modos sin recuperar formularios del modelo anterior', () =>
     {
-        expect(
-            routes
-                .find((r) => r.path === 'banci')
-                ?.children?.map((r) => r.path)
-                .sort(),
-        ).toEqual(['', 'usuarios']);
+        const hijas = routes.find((r) => r.path === 'banci')!.children!;
+        for(const ruta of ['carga-masiva', 'formulario', 'actualizacion/masiva', 'actualizacion/manual'])
+            expect(hijas.find((r) => r.path === ruta)?.loadComponent).toBeDefined();
     });
 });

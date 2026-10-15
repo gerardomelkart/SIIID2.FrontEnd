@@ -1,0 +1,94 @@
+<div class="banci-page">
+    <section class="page-heading">
+        <div>
+            <h1>Configuración de módulos</h1>
+            <p>Permisos operativos y reglas de BANCI</p>
+        </div>
+        <i class="fa-solid fa-gears"></i>
+    </section>
+    @if (mensaje()) {
+        <div class="alert alert-info" role="status">{{ mensaje() }}</div>
+    }
+    <section class="panel">
+        <h2>Cortes y validaciones</h2>
+        <label class="mb-3">Motivo del cambio<input class="form-control" maxlength="500" [(ngModel)]="motivo" /></label>
+        <div class="table-scroll">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Opción</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (opcion of opciones()?.opciones; track opcion.clave) {
+                        @if (opcion.clave === 'PERMITIR_CORTES_ANTERIORES' || opcion.clave === 'VALIDACIONES_CAMPOS') {
+                            <tr>
+                                <td>{{ opcion.descripcion }}</td>
+                                <td>{{ opcion.habilitado ? 'Activada' : 'Desactivada' }}</td>
+                                <td>
+                                    <button
+                                        class="btn btn-outline-primary"
+                                        (click)="cambiar(opcion.clave,!opcion.habilitado)"
+                                        [disabled]="ocupado() || !opcion.disponible"
+                                    >
+                                        {{ opcion.habilitado ? 'Desactivar' : 'Activar' }}
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p>Las relaciones, los identificadores y la coincidencia con el origen se validan siempre.</p>
+    </section>
+    <section class="panel">
+        <h2>Permisos globales de operación</h2>
+        <div class="acciones">
+            <label
+                ><span><input type="checkbox" [(ngModel)]="cargaGlobal" /> Carga de información</span></label
+            ><label
+                ><span><input type="checkbox" [(ngModel)]="modificacionGlobal" /> Actualización</span></label
+            ><button class="btn btn-primary" (click)="guardarGlobal()" [disabled]="ocupado()">Aplicar a usuarios operativos</button>
+        </div>
+    </section>
+    <section class="panel">
+        <h2>Acceso y permisos por usuario</h2>
+        <div class="table-scroll">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Entidad</th>
+                        <th>Usuario</th>
+                        <th>Acceso BANCI</th>
+                        <th>Carga</th>
+                        <th>Actualización</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (u of usuarios(); track u.idUsuario) {
+                        <tr>
+                            <td>{{ u.entidadFederativa }}</td>
+                            <td>{{ u.usuario }}</td>
+                            <td><input type="checkbox" [(ngModel)]="u.habilitaBanci" [disabled]="ocupado()" /></td>
+                            <td><input type="checkbox" [(ngModel)]="u.habilitaCarga" [disabled]="ocupado() || u.rol === 'CONSULTA'" /></td>
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    [(ngModel)]="u.habilitaModificacion"
+                                    [disabled]="ocupado() || u.rol === 'CONSULTA'"
+                                />
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-primary" (click)="guardarUsuario(u)" [disabled]="ocupado()">Guardar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>

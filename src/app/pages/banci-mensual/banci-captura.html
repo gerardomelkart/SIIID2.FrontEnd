@@ -1,0 +1,305 @@
+<div class="banci-page">
+    <section class="page-heading">
+        <div>
+            <h1>{{ titulo }}</h1>
+            <p>Información BANCI por corte mensual</p>
+        </div>
+        <i class="fa-solid fa-file-circle-plus"></i>
+    </section>
+    @if (mensaje()) {
+        <div class="alert alert-danger" role="alert">{{ mensaje() }}</div>
+    }
+    <section class="panel">
+        <h2>Seleccione el corte</h2>
+        <div class="filtros">
+            <label
+                >Entidad<select class="form-select" [(ngModel)]="entidad" (ngModelChange)="limpiar()" [disabled]="ocupado()">
+                    <option [ngValue]="0">Seleccione</option>
+                    @for (e of opciones()?.entidades; track e.id) {
+                        <option [ngValue]="e.id">{{ e.nombre }}</option>
+                    }
+                </select></label
+            >
+            <label
+                >Mes<input
+                    class="form-control"
+                    type="number"
+                    min="1"
+                    max="12"
+                    [(ngModel)]="mes"
+                    (ngModelChange)="limpiar()"
+                    [disabled]="ocupado() || (!actualizacion && !opciones()?.cortesAnteriores)"
+            /></label>
+            <label
+                >Año<input
+                    class="form-control"
+                    type="number"
+                    [(ngModel)]="anio"
+                    (ngModelChange)="limpiar()"
+                    [disabled]="ocupado() || (!actualizacion && !opciones()?.cortesAnteriores)"
+            /></label>
+            <button class="btn btn-primary" (click)="precargar()" [disabled]="ocupado() || !opciones() || !entidad">Continuar</button>
+        </div>
+    </section>
+    @if (libro(); as datos) {
+        <section class="panel">
+            <div class="section-title">
+                <h2>{{ actualizacion ? 'Información registrada en BANCI' : 'Información del consolidado aceptado' }}</h2>
+                <button class="btn btn-outline-primary" (click)="plantilla()" [disabled]="ocupado()">
+                    <i class="fa-solid fa-file-excel"></i> Descargar plantilla
+                </button>
+            </div>
+            @if (historicaSinOrigen()) {
+                <p class="alert alert-info">
+                    Corte histórico sin origen consolidado. Complete los registros y conserve la relación entre los identificadores.
+                </p>
+            } @else {
+                <p>Los datos precargados están protegidos. Complete los datos personales y de localización de BANCI.</p>
+            }
+            <div class="resumen">
+                <span>{{ datos.carpetas.length }} carpetas</span><span>{{ datos.delitos.length }} delitos</span
+                ><span>{{ datos.victimas.length }} víctimas</span>
+            </div>
+            @if (!manual) {
+                <label class="archivo" (dragover)="$event.preventDefault()" (drop)="soltarArchivo($event)"
+                    >Arrastre o seleccione la plantilla completada (.xlsx, tres pestañas, hasta 50 MB)<input
+                        class="form-control"
+                        type="file"
+                        accept=".xlsx"
+                        (change)="archivoSeleccionado($event)"
+                        [disabled]="ocupado()"
+                /></label>
+                @if (archivo) {
+                    <p class="mt-2">Archivo seleccionado: {{ archivo.name }}</p>
+                }
+            } @else {
+                @if (historicaSinOrigen()) {
+                    <button class="btn btn-outline-primary mb-3" (click)="agregar('carpetas')">Agregar carpeta histórica</button>
+                }
+                <div class="table-scroll">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>No. BANCI</th>
+                                <th>ID carpeta</th>
+                                <th>Nomenclatura</th>
+                                <th>Inicio</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (fila of datos.carpetas; track fila) {
+                                <tr>
+                                    <td>{{ fila.columnas['no_banci'] || 'Pendiente de aprobación' }}</td>
+                                    <td>{{ fila.columnas['id_ci'] }}</td>
+                                    <td>{{ fila.columnas['ntra_ci'] }}</td>
+                                    <td>{{ fila.columnas['fha_de_ini'] }}</td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm" (click)="seleccionar(fila)">Seleccionar</button>
+                                        @if (historicaSinOrigen()) {
+                                            <button class="btn btn-link" (click)="eliminar('carpetas',fila)">Quitar</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+        @if (manual && seleccion(); as carpeta) {
+            <section class="panel" id="banci-complementos">
+                <h2>{{ carpeta.columnas['ntra_ci'] || 'Carpeta histórica' }}</h2>
+                @if (!historicaSinOrigen()) {
+                    <details>
+                        <summary>Ver carpeta y delitos del consolidado</summary>
+                        <div class="campos">
+                            @for (campo of opciones()?.columnas?.carpetas; track campo) {
+                                <label
+                                    >{{ nombreCampo(campo) }}<input class="form-control" [value]="carpeta.columnas[campo] || ''" readonly
+                                /></label>
+                            }
+                        </div>
+                        @for (delito of datos.delitos; track delito) {
+                            @if (delito.columnas['id_ci'] === carpeta.columnas['id_ci']) {
+                                <fieldset class="registro">
+                                    <legend>Delito {{ delito.columnas['id_delito'] }}</legend>
+                                    <div class="campos">
+                                        @for (campo of opciones()?.columnas?.delitos; track campo) {
+                                            <label
+                                                >{{ nombreCampo(campo)
+                                                }}<input class="form-control" [value]="delito.columnas[campo] || ''" readonly
+                                            /></label>
+                                        }
+                                    </div>
+                                </fieldset>
+                            }
+                        }
+                    </details>
+                }
+                @if (historicaSinOrigen()) {
+                    <div class="campos">
+                        @for (campo of opciones()?.columnas?.carpetas; track campo) {
+                            <label
+                                >{{ nombreCampo(campo)
+                                }}<input
+                                    class="form-control"
+                                    [ngModel]="carpeta.columnas[campo]"
+                                    (ngModelChange)="editar(campo,carpeta,$event)"
+                                    [disabled]="ocupado()"
+                            /></label>
+                        }
+                    </div>
+                    <h3>Delitos</h3>
+                    <button class="btn btn-outline-primary" (click)="agregar('delitos')">Agregar delito</button>
+                    @for (fila of datos.delitos; track fila) {
+                        @if (fila.columnas['id_ci'] === carpeta.columnas['id_ci']) {
+                            <fieldset class="registro">
+                                <legend>Delito {{ fila.columnas['id_delito'] }}</legend>
+                                <div class="campos">
+                                    @for (campo of opciones()?.columnas?.delitos; track campo) {
+                                        <label
+                                            >{{ nombreCampo(campo) }}
+                                            @if (catalogo(campo,fila); as lista) {
+                                                <select
+                                                    class="form-select"
+                                                    [ngModel]="fila.columnas[campo] || ''"
+                                                    (ngModelChange)="editar(campo,fila,$event)"
+                                                >
+                                                    <option value="">Seleccione</option>
+                                                    @for (opcion of lista; track opcion.clave) {
+                                                        <option [value]="opcion.clave">{{ opcion.descripcion }}</option>
+                                                    }
+                                                </select>
+                                            } @else {
+                                                <input
+                                                    class="form-control"
+                                                    [type]="campo.startsWith('fha_') ? 'date' : campo.startsWith('hra_') ? 'time' : 'text'"
+                                                    [ngModel]="fila.columnas[campo]"
+                                                    (ngModelChange)="editar(campo,fila,$event)"
+                                                />
+                                            }
+                                        </label>
+                                    }
+                                </div>
+                                <button class="btn btn-link" (click)="eliminar('delitos',fila)">Quitar delito</button>
+                            </fieldset>
+                        }
+                    }
+                    <button class="btn btn-outline-primary mt-3" (click)="agregar('victimas')">Agregar víctima</button>
+                }
+                @for (fila of victimasCarpeta(); track fila) {
+                    <fieldset class="registro">
+                        <legend>Víctima {{ fila.columnas['id_vicf'] }} · Delito {{ fila.columnas['id_delito'] }}</legend>
+                        @if (!historicaSinOrigen()) {
+                            <details>
+                                <summary>Ver datos protegidos del consolidado</summary>
+                                <div class="campos">
+                                    @for (campo of opciones()?.columnas?.victimas; track campo) {
+                                        @if (!editables().includes(campo)) {
+                                            <label
+                                                >{{ nombreCampo(campo)
+                                                }}<input class="form-control" [value]="fila.columnas[campo] || ''" readonly
+                                            /></label>
+                                        }
+                                    }
+                                </div>
+                            </details>
+                        }
+                        <div class="campos">
+                            @for (campo of camposVictima(); track campo) {
+                                <label
+                                    >{{ nombreCampo(campo) }}
+                                    @if (catalogo(campo,fila); as catalogoCampo) {
+                                        <select
+                                            class="form-select"
+                                            [ngModel]="fila.columnas[campo] || ''"
+                                            (ngModelChange)="editar(campo,fila,$event)"
+                                            [disabled]="ocupado()"
+                                        >
+                                            <option value="">Seleccione</option>
+                                            @for (opcion of catalogoCampo; track opcion.clave) {
+                                                <option [value]="opcion.clave">{{ opcion.descripcion }}</option>
+                                            }
+                                        </select>
+                                    } @else if (campo === 'obs' || campo === 'acciones_busqueda') {
+                                        <textarea
+                                            class="form-control"
+                                            rows="3"
+                                            [ngModel]="fila.columnas[campo]"
+                                            (ngModelChange)="editar(campo,fila,$event)"
+                                            [disabled]="ocupado()"
+                                        ></textarea>
+                                    } @else {
+                                        <input
+                                            class="form-control"
+                                            [type]="campo === 'fecha_localizacion' || campo.startsWith('fha_') ? 'date' : 'text'"
+                                            [ngModel]="fila.columnas[campo]"
+                                            (ngModelChange)="editar(campo,fila,$event)"
+                                            [disabled]="ocupado()"
+                                        />
+                                    }
+                                </label>
+                            }
+                        </div>
+                        @if (historicaSinOrigen()) {
+                            <button class="btn btn-link" (click)="eliminar('victimas',fila)">Quitar víctima</button>
+                        }
+                    </fieldset>
+                }
+            </section>
+        }
+        <section class="panel acciones">
+            <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || (!manual && !archivo)">
+                {{ ocupado() ? 'Procesando…' : 'Validar información' }}
+            </button>
+        </section>
+    }
+    @if (errores().length) {
+        <section class="panel" id="banci-errores">
+            <div class="section-title">
+                <h2>Observaciones de la validación ({{ errores().length }})</h2>
+                <button class="btn btn-outline-primary" (click)="exportarErrores()">Descargar observaciones</button>
+            </div>
+            <div class="table-scroll">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Archivo</th>
+                            <th>Fila</th>
+                            <th>Campo</th>
+                            <th>Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (error of errores(); track $index) {
+                            <tr>
+                                <td>{{ error.archivo }}</td>
+                                <td>{{ error.fila }}</td>
+                                <td>{{ error.campo }}</td>
+                                <td>{{ error.mensaje }}</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+    @if (validacion(); as resultado) {
+        <section class="panel">
+            <h2>Informe previo</h2>
+            @for (advertencia of resultado.advertencias; track $index) {
+                <p class="alert alert-warning">Fila {{ advertencia.fila }}: {{ advertencia.mensaje }}</p>
+            }
+            <p>
+                Validación completada: {{ resultado.carpetas }} carpetas, {{ resultado.delitos }} delitos y
+                {{ resultado.victimas }} víctimas.
+            </p>
+            <p>Continúe para enviar la información a revisión administrativa. Las operaciones de superusuario se integran directamente.</p>
+            <div class="acciones">
+                <button class="btn btn-primary" (click)="confirmar(true)" [disabled]="ocupado()">Continuar</button
+                ><button class="btn btn-outline-danger" (click)="confirmar(false)" [disabled]="ocupado()">Descartar</button>
+            </div>
+        </section>
+    }
+</div>

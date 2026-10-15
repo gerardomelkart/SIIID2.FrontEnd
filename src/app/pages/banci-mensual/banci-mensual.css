@@ -1,0 +1,145 @@
+:host {
+    display: block;
+}
+.banci-page {
+    padding: 6px;
+}
+.page-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    background: white;
+    border-left: 7px solid var(--siiid-guinda);
+    padding: 24px;
+    box-shadow: 0 4px 10px #00000015;
+}
+h1 {
+    color: var(--siiid-guinda);
+    font-size: 1.7rem;
+    font-weight: 750;
+    margin: 0 0 8px;
+}
+h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--siiid-guinda);
+    margin-bottom: 18px;
+}
+h3 {
+    font-size: 1rem;
+}
+.page-heading p {
+    margin: 0;
+    color: #666;
+}
+.page-heading > i {
+    font-size: 2rem;
+    color: var(--siiid-dorado);
+}
+.panel {
+    background: white;
+    padding: 24px;
+    margin-bottom: 18px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.filtros,
+.campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 0.9rem;
+    color: #444;
+}
+.btn-primary {
+    background: var(--siiid-guinda);
+    border-color: var(--siiid-guinda);
+}
+.btn-outline-primary {
+    color: var(--siiid-guinda);
+    border-color: var(--siiid-guinda);
+}
+.btn-outline-primary:hover {
+    background: var(--siiid-guinda);
+    color: white;
+}
+.section-title,
+.acciones,
+.resumen {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.acciones {
+    justify-content: flex-start;
+}
+.resumen {
+    justify-content: flex-start;
+    margin: 16px 0;
+}
+.resumen span {
+    padding: 8px 14px;
+    background: #f7f3f9;
+    border-left: 3px solid var(--siiid-dorado);
+}
+.archivo {
+    padding: 25px;
+    border: 2px dashed #bc955c;
+    background: #fafafa;
+}
+.table-scroll {
+    overflow: auto;
+    max-height: 580px;
+}
+th {
+    white-space: nowrap;
+    background: #f7f3f9;
+    position: sticky;
+    top: 0;
+}
+td {
+    vertical-align: middle;
+    min-width: 90px;
+}
+.registro {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    padding: 20px;
+}
+legend {
+    float: none;
+    width: auto;
+    padding: 0 10px;
+    color: var(--siiid-guinda);
+    font-size: 1rem;
+    font-weight: 700;
+}
+input[readonly] {
+    background: #f1f1f1;
+}
+details {
+    margin-bottom: 18px;
+}
+summary {
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+@media (max-width: 600px) {
+    .panel,
+    .page-heading {
+        padding: 16px;
+    }
+    .campos,
+    .filtros {
+        grid-template-columns: 1fr;
+    }
+}

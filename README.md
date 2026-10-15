@@ -51,6 +51,8 @@ Validar compilación y pruebas de los módulos afectados. Los tests unitarios no
 
 Usar cuatro espacios y llaves de bloques, clases e interfaces en una línea independiente. Mantener firmas y condiciones en una línea hasta 140 columnas. Los objetos conservan el formato de Prettier. Ejecutar `npm run format:estilo`: aplica Prettier y el estilo de llaves con TypeScript, comprobando que el árbol del código conserve su estructura. La configuración evita reformatear el contenido de plantillas literales. Los comentarios documentan permisos, flujos y recursos del navegador.
 
-## BANCI mensual — bloque 1
+## BANCI mensual: vistas y operación
 
-Se retiraron las pantallas y servicios del modelo anterior, incluida la oferta de cruce en mensual/federal. BANCI muestra preparación y mantiene administración de usuarios. No hay una carga operativa hasta el bloque de precarga por corte. Publicar con la API y `desarrollo/11_banci_mensual_bloque1.sql` de BD; consultar la guía `documentacion/banci_bloque1_instalacion.md` del repositorio BD.
+Se recuperó el diseño institucional original y se conectaron carga/actualización masiva y manual, informes, originales, aprobación administrativa y configuración al modelo mensual. Requiere el script `desarrollo/12_banci_mensual_operacion.sql` de SIIID2BD después del bloque 1.
+
+Guía coordinada y prueba de QA: `SIIID2BD/documentacion/banci_operacion_mensual.md`. Conservar `ArchivosOriginalesBanci` al publicar API. El nuevo cruce del consolidado y las reclasificaciones permanecen en el bloque 5, desactivado.
