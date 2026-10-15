@@ -1,5 +1,5 @@
 import { nombreCampo } from './banci-campos';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, firstValueFrom } from 'rxjs';
@@ -29,6 +29,7 @@ export class BanciCaptura
     readonly titulo = `${this.actualizacion ? 'Actualización' : 'Carga'} ${this.manual ? 'manual' : 'masiva'}`;
     readonly cargaGuiada = !this.manual && !this.actualizacion;
     readonly plantillaDescargada = signal(false);
+    private readonly originalEditable = signal('');
     readonly opciones = signal<BanciOpciones | null>(null);
     readonly libro = signal<BanciLibro | null>(null);
     readonly errores = signal<BanciError[]>([]);
@@ -76,6 +77,7 @@ export class BanciCaptura
     limpiar(): void
     {
         this.plantillaDescargada.set(false);
+        this.originalEditable.set('');
         this.libro.set(null);
         this.validacion.set(null);
         this.errores.set([]);
@@ -94,6 +96,7 @@ export class BanciCaptura
                 next: (libro) =>
                 {
                     this.libro.set(libro);
+                    this.originalEditable.set(this.firmaEditable());
                     this.historicaSinOrigen.set(!this.actualizacion && libro.carpetas.length === 0);
                 },
                 error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
@@ -179,6 +182,17 @@ export class BanciCaptura
     {
         return this.libro()?.victimas.filter((f) => f.columnas['id_ci'] === this.seleccion()?.columnas['id_ci']) ?? [];
     }
+    private firmaEditable(): string
+    {
+        return JSON.stringify(this.libro()?.victimas.map((f) => this.editables().map((c) => f.columnas[c]?.trim() ?? '')) ?? []);
+    }
+    readonly hayCambios = computed(() => this.originalEditable() !== '' && this.firmaEditable() !== this.originalEditable());
+    mostrarProtegido(campo: string): boolean
+    {
+        return (
+            !this.editables().includes(campo) && !['nombre_vicfem', '1apellido_vicfem', '2apellido_vicfem', 'curp_vicfem'].includes(campo)
+        );
+    }
     camposVictima(): string[]
     {
         return this.historicaSinOrigen() ? (this.opciones()?.columnas.victimas ?? []) : this.editables();
@@ -216,6 +230,7 @@ export class BanciCaptura
             ))
                 hijo.columnas['id_delito'] = valor;
         fila.columnas[campo] = valor;
+        this.libro.update((libro) => (libro ? { ...libro } : libro));
         this.validacion.set(null);
         if(campo === 'constitutiva_delito') fila.columnas['motivo_desaparicion'] = '';
         if(campo === 'localizado_o_no_localizado')
@@ -252,6 +267,7 @@ export class BanciCaptura
     validar(): void
     {
         if(this.cargaGuiada && !this.plantillaDescargada()) return;
+        if(this.manual && this.actualizacion && !this.hayCambios()) return;
         const libro = this.libro();
         if(!libro || (!this.manual && !this.archivo)) return;
         this.ocupado.set(true);
@@ -262,7 +278,11 @@ export class BanciCaptura
             next: (r) =>
             {
                 this.errores.set(r.errores);
-                if(r.esValido) this.validacion.set(r);
+                if(r.esValido)
+                {
+                    this.validacion.set(r);
+                    setTimeout(() => document.getElementById('banci-informe')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                }
                 if(r.errores.length) setTimeout(() => document.getElementById('banci-errores')?.scrollIntoView({ behavior: 'smooth' }));
             },
             error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),

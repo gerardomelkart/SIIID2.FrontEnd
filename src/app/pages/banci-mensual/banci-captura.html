@@ -59,6 +59,18 @@
             <button class="btn btn-primary mb-3" (click)="precargar()" [disabled]="ocupado()">Continuar</button>
         }
     }
+    @if (actualizacion && manual && libro() && !hayCambios() && !validacion()) {
+        <p class="alert alert-info">
+            Seleccione una carpeta y modifique sus datos personales o de localización para habilitar la validación.
+        </p>
+    }
+    @if (!actualizacion) {
+        <p class="alert alert-info">
+            Las cargas adicionales se suman a la información aprobada y no borran ni sustituyen registros. La plantilla incluye únicamente
+            las carpetas nuevas pendientes del corte. Para retirar una carpeta del registro activo debe utilizar Actualización y registrar
+            la reclasificación del delito; su historial se conserva.
+        </p>
+    }
     @if (cargaGuiada) {
         <section class="panel paso-descarga">
             <div class="paso-titulo">
@@ -107,11 +119,13 @@
                 @if (archivo) {
                     <p class="archivo-elegido"><i class="fa-solid fa-file-excel" aria-hidden="true"></i>{{ archivo.name }}</p>
                 }
-                <div class="acciones mt-3">
-                    <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || !archivo">
-                        {{ ocupado() ? 'Validando…' : 'Validar información' }}
-                    </button>
-                </div>
+                @if (!validacion()) {
+                    <div class="acciones mt-3">
+                        <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || !archivo">
+                            {{ ocupado() ? 'Validando…' : 'Validar información' }}
+                        </button>
+                    </div>
+                }
             }
         </section>
     }
@@ -192,6 +206,8 @@
                                 @for (campo of opciones()?.columnas?.carpetas; track campo) {
                                     <label
                                         >{{ nombreCampo(campo)
+
+
                                         }}<input class="form-control" [value]="carpeta.columnas[campo] || ''" readonly
                                     /></label>
                                 }
@@ -204,6 +220,8 @@
                                             @for (campo of opciones()?.columnas?.delitos; track campo) {
                                                 <label
                                                     >{{ nombreCampo(campo)
+
+
 
                                                     }}<input class="form-control" [value]="delito.columnas[campo] || ''" readonly
                                                 /></label>
@@ -219,6 +237,8 @@
                             @for (campo of opciones()?.columnas?.carpetas; track campo) {
                                 <label
                                     >{{ nombreCampo(campo)
+
+
 
                                     }}<input
                                         class="form-control"
@@ -274,9 +294,11 @@
                                     <summary>Ver datos protegidos del consolidado</summary>
                                     <div class="campos">
                                         @for (campo of opciones()?.columnas?.victimas; track campo) {
-                                            @if (!editables().includes(campo)) {
+                                            @if (mostrarProtegido(campo)) {
                                                 <label
                                                     >{{ nombreCampo(campo)
+
+
 
                                                     }}<input class="form-control" [value]="fila.columnas[campo] || ''" readonly
                                                 /></label>
@@ -328,11 +350,13 @@
                     }
                 </section>
             }
-            <section class="panel acciones">
-                <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || (!manual && !archivo)">
-                    {{ ocupado() ? 'Procesando…' : 'Validar información' }}
-                </button>
-            </section>
+            @if (!validacion() && (!actualizacion || !manual || hayCambios())) {
+                <section class="panel acciones">
+                    <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || (!manual && !archivo)">
+                        {{ ocupado() ? 'Procesando…' : 'Validar información' }}
+                    </button>
+                </section>
+            }
         }
     }
     @if (errores().length) {
@@ -366,7 +390,7 @@
         </section>
     }
     @if (validacion(); as resultado) {
-        <section class="panel">
+        <section class="panel" id="banci-informe" tabindex="-1">
             <h2>Informe previo</h2>
             @for (advertencia of resultado.advertencias; track $index) {
                 <p class="alert alert-warning">Fila {{ advertencia.fila }}: {{ advertencia.mensaje }}</p>

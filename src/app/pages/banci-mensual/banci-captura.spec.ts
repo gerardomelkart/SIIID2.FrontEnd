@@ -105,6 +105,60 @@ describe('Carga BANCI por cortes', () =>
         expect(f.componentInstance.plantillaDescargada()).toBe(false);
         expect(f.componentInstance.ocupado()).toBe(false);
     });
+    it('muestra la validación manual solamente al modificar datos y la oculta al revertirlos', () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: true, actualizacion: true } } } });
+        const f = crear();
+        f.componentInstance.precargar();
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/precarga'))
+            .flush({
+                entidad: 9,
+                mes: 9,
+                anio: 2026,
+                actualizacion: true,
+                carpetas: [{ numeroFila: 2, columnas: { id_ci: '1', ntra_ci: 'CARPETA' } }],
+                delitos: [],
+                victimas: [{ numeroFila: 2, columnas: { id_ci: '1', id_delito: '1', id_vicf: '1', nomb: 'Persona' } }],
+            });
+        f.detectChanges();
+        expect(f.componentInstance.hayCambios()).toBe(false);
+        expect(f.nativeElement.querySelector('.panel.acciones')).toBeNull();
+        f.componentInstance.validar();
+        TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/validar/manual'));
+        const victima = f.componentInstance.libro()!.victimas[0];
+        f.componentInstance.editar('nomb', victima, 'Persona actualizada');
+        f.detectChanges();
+        expect(f.componentInstance.hayCambios()).toBe(true);
+        expect(f.nativeElement.querySelector('.panel.acciones')).not.toBeNull();
+        f.componentInstance.editar('nomb', victima, 'Persona');
+        f.detectChanges();
+        expect(f.componentInstance.hayCambios()).toBe(false);
+    });
+    it('no duplica los datos personales del origen en el formulario', () =>
+    {
+        const f = crear();
+        for(const campo of ['nombre_vicfem', '1apellido_vicfem', '2apellido_vicfem', 'curp_vicfem'])
+            expect(f.componentInstance.mostrarProtegido(campo)).toBe(false);
+        expect(f.componentInstance.mostrarProtegido('id_ci')).toBe(true);
+        expect(f.componentInstance.mostrarProtegido('id_tv')).toBe(true);
+    });
+    it('al validar desplaza la vista al informe y retira el botón de validación', async () =>
+    {
+        const f = crear();
+        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
+        f.componentInstance.validar();
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/validar/manual'))
+            .flush({ esValido: true, referencia: 'prueba', errores: [], advertencias: [] });
+        f.detectChanges();
+        const informe = f.nativeElement.querySelector('#banci-informe');
+        const scroll = vi.fn();
+        Object.defineProperty(informe, 'scrollIntoView', { value: scroll });
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+        expect(f.nativeElement.querySelector('.panel.acciones')).toBeNull();
+    });
     it('no muestra registros inventados cuando la precarga falla', () =>
     {
         const f = crear();
