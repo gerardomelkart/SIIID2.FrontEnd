@@ -1,0 +1,157 @@
+.periodo-envio {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 4px 20px;
+    color: #5b5460;
+    font-size: 0.95rem;
+}
+.periodo-envio > i {
+    color: var(--siiid-dorado);
+    font-size: 1.2rem;
+}
+.periodo-envio strong {
+    margin-left: 8px;
+    color: var(--siiid-guinda);
+    text-transform: capitalize;
+}
+.entidad-envio {
+    margin-left: auto;
+    font-weight: 600;
+}
+.paso-titulo {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.paso-titulo h2 {
+    margin: 2px 0 8px;
+    font-size: 1.2rem;
+}
+.paso-titulo p {
+    margin: 0;
+    color: #68616c;
+    line-height: 1.6;
+    max-width: 850px;
+}
+.paso-numero {
+    display: grid;
+    place-items: center;
+    flex: 0 0 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--siiid-guinda);
+    color: white;
+    font-weight: 800;
+}
+.tarjeta-plantilla {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 26px;
+    background: #faf7fc;
+    border: 1px solid #e5d9eb;
+    border-radius: 8px;
+}
+.icono-excel {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 86px;
+    flex-shrink: 0;
+    color: #20734a;
+    background: white;
+    border: 1px solid #e0e7e2;
+    border-radius: 8px;
+    font-size: 2.6rem;
+}
+.descripcion-plantilla {
+    flex: 1;
+}
+.descripcion-plantilla h3 {
+    font-size: 1.1rem;
+    font-weight: 750;
+    color: var(--siiid-guinda);
+    margin-bottom: 8px;
+}
+.descripcion-plantilla p {
+    max-width: 680px;
+    margin-bottom: 10px;
+    color: #56505b;
+    line-height: 1.6;
+}
+.descripcion-plantilla span {
+    font-size: 0.85rem;
+    color: #77717b;
+}
+.descargar-plantilla {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 13px 20px;
+    min-width: 225px;
+    font-weight: 650;
+}
+.paso-bloqueado {
+    background: #fafafa;
+    border-style: dashed;
+}
+.paso-bloqueado .paso-numero {
+    background: #817888;
+}
+.paso-carga .archivo {
+    align-items: center;
+    gap: 12px;
+    padding: 30px;
+    background: #fdfbff;
+    border-color: #b99bc9;
+    border-radius: 8px;
+}
+.paso-carga .archivo > i {
+    font-size: 2rem;
+    color: var(--siiid-guinda);
+}
+.paso-carga .archivo input {
+    max-width: 650px;
+    background: white;
+}
+.archivo-elegido {
+    margin-top: 16px;
+    color: #20734a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 1000px) {
+    .tarjeta-plantilla {
+        flex-wrap: wrap;
+    }
+    .descargar-plantilla {
+        width: 100%;
+    }
+}
+@media (max-width: 600px) {
+    .periodo-envio {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .entidad-envio {
+        margin-left: 0;
+        width: 100%;
+    }
+    .tarjeta-plantilla {
+        padding: 18px;
+        gap: 14px;
+    }
+    .icono-excel {
+        width: 52px;
+        height: 62px;
+        font-size: 2rem;
+    }
+    .descripcion-plantilla {
+        min-width: 180px;
+    }
+}

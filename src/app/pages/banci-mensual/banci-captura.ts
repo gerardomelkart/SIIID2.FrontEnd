@@ -2,22 +2,33 @@ import { nombreCampo } from './banci-campos';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
+import Swal from 'sweetalert2';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SessionService } from '../../core/services/session.service';
 import { BanciLibro, BanciFila, BanciOpciones, BanciError, BanciValidacion } from '../../core/models/banci-mensual.models';
 import { BanciMensualService, descargarBanci } from '../../core/services/banci-mensual.service';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { confirmarAccion, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
-@Component({ selector: 'app-banci-captura', imports: [FormsModule], templateUrl: './banci-captura.html', styleUrl: './banci-mensual.css' })
+@Component({
+    selector: 'app-banci-captura',
+    imports: [FormsModule],
+    templateUrl: './banci-captura.html',
+    styleUrls: ['./banci-mensual.css', './banci-carga.css'],
+})
 export class BanciCaptura
 {
     readonly nombreCampo = nombreCampo;
     private readonly api = inject(BanciMensualService);
+    private readonly session = inject(SessionService);
     private readonly ruta = inject(ActivatedRoute);
     readonly actualizacion = this.ruta.snapshot.data['actualizacion'] === true;
     readonly manual = this.ruta.snapshot.data['manual'] === true;
     readonly titulo = `${this.actualizacion ? 'Actualización' : 'Carga'} ${this.manual ? 'manual' : 'masiva'}`;
+    readonly cargaGuiada = !this.manual && !this.actualizacion;
+    readonly plantillaDescargada = signal(false);
     readonly opciones = signal<BanciOpciones | null>(null);
     readonly libro = signal<BanciLibro | null>(null);
     readonly errores = signal<BanciError[]>([]);
@@ -43,8 +54,28 @@ export class BanciCaptura
             error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
         });
     }
+    puedeElegirEntidad(): boolean
+    {
+        return this.session.usuario()?.rol === 'SUPER_USUARIO';
+    }
+    puedeElegirCorte(): boolean
+    {
+        return this.actualizacion || this.opciones()?.cortesAnteriores === true;
+    }
+    entidadNombre(): string
+    {
+        return this.opciones()?.entidades.find((e) => e.id === this.entidad)?.nombre ?? '';
+    }
+    periodoNombre(): string
+    {
+        if(!this.mes || !this.anio) return '';
+        return new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+            new Date(Date.UTC(this.anio, this.mes - 1, 1)),
+        );
+    }
     limpiar(): void
     {
+        this.plantillaDescargada.set(false);
         this.libro.set(null);
         this.validacion.set(null);
         this.errores.set([]);
@@ -68,20 +99,48 @@ export class BanciCaptura
                 error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
             });
     }
-    plantilla(): void
+    async plantilla(): Promise<void>
     {
+        if(this.ocupado() || !this.entidad || !this.opciones()) return;
         this.ocupado.set(true);
-        this.api
-            .plantilla(this.entidad, this.mes, this.anio, this.actualizacion)
-            .pipe(finalize(() => this.ocupado.set(false)))
-            .subscribe({
-                next: (blob) => descargarBanci(blob, `BANCI_${this.anio}${String(this.mes).padStart(2, '0')}.xlsx`),
-                error: async (e) => this.mensaje.set(await this.errorDescarga(e)),
-            });
+        this.mensaje.set('');
+        try
+        {
+            if(this.cargaGuiada)
+            {
+                const libro = await firstValueFrom(this.api.precarga(this.entidad, this.mes, this.anio, false));
+                const sinOrigen = libro.carpetas.length === 0;
+                const respuesta = await Swal.fire({
+                    icon: 'warning',
+                    title: sinOrigen ? 'Descargar plantilla histórica' : 'Descargar información precargada',
+                    text: sinOrigen
+                        ? 'Este corte histórico no tiene información aceptada en el módulo Consolidado. ¿Desea descargar la plantilla para capturar la información histórica de su fiscalía?'
+                        : '¿Desea descargar la información reportada por su fiscalía en el Sistema de Integración de Información de Incidencia Delictiva? La carga BANCI deberá coincidir con la información aceptada en el módulo Consolidado para el periodo seleccionado. Complete únicamente los datos complementarios de BANCI.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Descargar información',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#6f2c91',
+                    reverseButtons: true,
+                });
+                if(!respuesta.isConfirmed) return;
+                this.limpiar();
+                this.libro.set(libro);
+                this.historicaSinOrigen.set(sinOrigen);
+            }
+            const blob = await firstValueFrom(this.api.plantilla(this.entidad, this.mes, this.anio, this.actualizacion));
+            descargarBanci(blob, `BANCI_${this.anio}${String(this.mes).padStart(2, '0')}.xlsx`);
+            this.plantillaDescargada.set(true);
+        } catch (e)
+        {
+            this.mensaje.set(await this.errorDescarga(e));
+        } finally
+        {
+            this.ocupado.set(false);
+        }
     }
-    private async errorDescarga(e: { error?: unknown }): Promise<string>
+    private async errorDescarga(e: unknown): Promise<string>
     {
-        if(e.error instanceof Blob)
+        if(e instanceof HttpErrorResponse && e.error instanceof Blob)
         {
             try
             {
@@ -97,7 +156,7 @@ export class BanciCaptura
     {
         evento.preventDefault();
         const archivo = evento.dataTransfer?.files[0];
-        if(archivo && !this.ocupado())
+        if(archivo && !this.ocupado() && (!this.cargaGuiada || this.plantillaDescargada()))
         {
             this.archivo = archivo;
             this.validacion.set(null);
@@ -106,6 +165,7 @@ export class BanciCaptura
     }
     archivoSeleccionado(evento: Event): void
     {
+        if(this.cargaGuiada && !this.plantillaDescargada()) return;
         this.archivo = (evento.target as HTMLInputElement).files?.[0] ?? null;
         this.validacion.set(null);
         this.errores.set([]);
@@ -191,6 +251,7 @@ export class BanciCaptura
     }
     validar(): void
     {
+        if(this.cargaGuiada && !this.plantillaDescargada()) return;
         const libro = this.libro();
         if(!libro || (!this.manual && !this.archivo)) return;
         this.ocupado.set(true);

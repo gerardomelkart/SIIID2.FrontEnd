@@ -172,7 +172,7 @@ export class App implements OnInit
         const rutaActual = basePath && pathname.startsWith(basePath) ? pathname.slice(basePath.length) || '/' : pathname;
 
         // Estas rutas deben conservarse al recargar.
-        if(rutaActual === '/login' || rutaActual === '/cambiar-password')
+        if(rutaActual === '/login' || rutaActual === '/cambiar-password' || /^\/banci(?:\/|$)/.test(rutaActual))
         {
             return;
         }
