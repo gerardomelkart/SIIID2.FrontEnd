@@ -1,3 +1,4 @@
+// Gestiona correcciones de Federal con sus propios resultados de validación y revisión previa.
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -513,6 +514,90 @@ export class FederalActualizacion implements OnInit
 
         this.procesandoConfirmacion.set(true);
         this.estadoPeriodo.set('CONFIRMANDO');
+
+        this.actualizacionService
+            .confirmarActualizacion({
+                codigoReferencia,
+                aceptar: true,
+            })
+            .pipe(
+                switchMap((response) =>
+                {
+                    if(response.estado === 'PENDIENTE_APROBACION')
+                    {
+                        return of({
+                            response,
+                            acuseDescargado: false,
+                            blob: null as Blob | null,
+                        });
+                    }
+
+                    return this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
+                        map((blob: Blob) => ({
+                            response,
+                            acuseDescargado: true,
+                            blob,
+                        })),
+                        catchError(() =>
+                            of({
+                                response,
+                                acuseDescargado: false,
+                                blob: null as Blob | null,
+                            }),
+                        ),
+                    );
+                }),
+            )
+            .subscribe({
+                next: (resultado) =>
+                {
+                    this.procesandoConfirmacion.set(false);
+                    this.mensajeConfirmacion.set('');
+
+                    if(resultado.response.estado === 'PENDIENTE_APROBACION')
+                    {
+                        this.limpiarUrlsPdf();
+
+                        mostrarExitoInstitucional(
+                            'Actualizacion enviada a revision',
+                            resultado.response.mensaje || 'La actualizacion quedo pendiente de aprobacion administrativa.',
+                        ).then(() =>
+                        {
+                            this.reiniciarFormulario();
+                            this.estadoPeriodo.set('SIN_CONSULTAR');
+                            this.router.navigateByUrl('/federal');
+                        });
+
+                        return;
+                    }
+
+                    if(resultado.blob)
+                    {
+                        this.reemplazarAcuseConfirmado(resultado.blob);
+                    }
+
+                    this.estadoPeriodo.set('CONFIRMADO');
+
+                    mostrarExito(
+                        'Actualizacion completada',
+                        resultado.acuseDescargado
+                            ? undefined
+                            : 'La actualizacion fue confirmada, pero no fue posible cargar el acuse confirmado.',
+                    );
+                },
+                error: (error: unknown) =>
+                {
+                    this.procesandoConfirmacion.set(false);
+                    this.mensajeConfirmacion.set('');
+
+                    this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+
+                    mostrarError(
+                        'No fue posible procesar la actualización',
+                        obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+                    );
+                },
+            });
     }
 
     rechazarActualizacion(): void

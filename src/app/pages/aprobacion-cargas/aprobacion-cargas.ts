@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { CargaPendienteAdministracionDetalle, CargaPendienteAdministracionItem } from '../../core/models/administracion-cargas.models';
 import { AdministracionCargasService } from '../../core/services/administracion-cargas.service';
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
-import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { obtenerErrorPayload, obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 import { ActualizacionDiferenciaRegistro, ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { ActualizacionService } from '../../core/services/actualizacion.service';
@@ -330,6 +330,33 @@ export class AprobacionCargas implements OnInit, OnDestroy
             allowEscapeKey: false,
             showConfirmButton: false,
             didOpen: () => Swal.showLoading(),
+        });
+
+        this.administracionService.aprobar(carga.codigoReferencia).subscribe({
+            next: (response) =>
+            {
+                this.procesando.set(null);
+                this.detalle.set(null);
+                this.diferenciasDetalle.set(null);
+                this.mostrarDiferenciasDetalle.set(false);
+                Swal.close();
+
+                mostrarExitoInstitucional('Carga aprobada', response.mensaje || 'La información fue incorporada correctamente.');
+
+                this.cargarPendientes();
+            },
+            error: (error: unknown) =>
+            {
+                this.procesando.set(null);
+                Swal.close();
+
+                mostrarError(
+                    'No fue posible aprobar la carga',
+                    obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
+                );
+
+                this.cargarPendientes();
+            },
         });
     }
 

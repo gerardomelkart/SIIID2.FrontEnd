@@ -1,3 +1,4 @@
+// Presenta validación y diferencias de una corrección mensual antes de pedir la decisión de integración.
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
@@ -473,6 +474,60 @@ export class Actualizacion implements OnInit
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
         this.limpiarUrlsPdf();
+
+        this.actualizacionService
+            .validarActualizacion(mes, anio, archivos.carpetas!, archivos.delitos!, archivos.victimas!, idEntidad)
+            .subscribe({
+                next: async (response: CargaValidacionResponse) =>
+                {
+                    this.respuestaValidacion.set(response);
+
+                    if(!response.esValido)
+                    {
+                        this.estadoPeriodo.set('VALIDADO_ERROR');
+                        return;
+                    }
+
+                    if(this.hayAdvertenciasDeDecision())
+                    {
+                        this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
+
+                        await mostrarAdvertencia(
+                            'Advertencias detectadas',
+                            'La validación terminó correctamente, pero contiene advertencias que no bloquean la actualización. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
+                        );
+
+                        return;
+                    }
+
+                    this.prepararRevisionDiferencias(response.codigoReferencia);
+                },
+                error: (error: unknown) =>
+                {
+                    if(esErrorEnvioArchivos(error))
+                    {
+                        this.estadoPeriodo.set('DISPONIBLE');
+                        this.errorGeneral.set(
+                            'No fue posible leer o enviar alguno de los archivos. Verifique que estén cerrados en Excel y vuelva a seleccionarlos.',
+                        );
+                        return;
+                    }
+
+                    const response = obtenerErrorPayload<CargaValidacionResponse>(error);
+
+                    if(response?.resumenValidacion || response?.errores)
+                    {
+                        this.respuestaValidacion.set(response);
+                        this.estadoPeriodo.set('VALIDADO_ERROR');
+                        return;
+                    }
+
+                    this.estadoPeriodo.set('DISPONIBLE');
+                    this.errorGeneral.set(
+                        obtenerMensajeErrorHttp(error, 'Intente nuevamente.') || 'No fue posible validar la actualización.',
+                    );
+                },
+            });
     }
     aceptarAdvertenciasActualizacion(): void
     {
@@ -518,6 +573,90 @@ export class Actualizacion implements OnInit
 
         this.procesandoConfirmacion.set(true);
         this.estadoPeriodo.set('CONFIRMANDO');
+
+        this.actualizacionService
+            .confirmarActualizacion({
+                codigoReferencia,
+                aceptar: true,
+            })
+            .pipe(
+                switchMap((response) =>
+                {
+                    if(response.estado === 'PENDIENTE_APROBACION')
+                    {
+                        return of({
+                            response,
+                            acuseDescargado: false,
+                            blob: null as Blob | null,
+                        });
+                    }
+
+                    return this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
+                        map((blob: Blob) => ({
+                            response,
+                            acuseDescargado: true,
+                            blob,
+                        })),
+                        catchError(() =>
+                            of({
+                                response,
+                                acuseDescargado: false,
+                                blob: null as Blob | null,
+                            }),
+                        ),
+                    );
+                }),
+            )
+            .subscribe({
+                next: (resultado) =>
+                {
+                    this.procesandoConfirmacion.set(false);
+                    this.mensajeConfirmacion.set('');
+
+                    if(resultado.response.estado === 'PENDIENTE_APROBACION')
+                    {
+                        this.limpiarUrlsPdf();
+
+                        mostrarExitoInstitucional(
+                            'Actualizacion enviada a revision',
+                            resultado.response.mensaje || 'La actualizacion quedo pendiente de aprobacion administrativa.',
+                        ).then(() =>
+                        {
+                            this.reiniciarFormulario();
+                            this.estadoPeriodo.set('SIN_CONSULTAR');
+                            this.router.navigateByUrl('/');
+                        });
+
+                        return;
+                    }
+
+                    if(resultado.blob)
+                    {
+                        this.reemplazarAcuseConfirmado(resultado.blob);
+                    }
+
+                    this.estadoPeriodo.set('CONFIRMADO');
+
+                    mostrarExito(
+                        'Actualizacion completada',
+                        resultado.acuseDescargado
+                            ? undefined
+                            : 'La actualizacion fue confirmada, pero no fue posible cargar el acuse confirmado.',
+                    );
+                },
+                error: (error: unknown) =>
+                {
+                    this.procesandoConfirmacion.set(false);
+                    this.mensajeConfirmacion.set('');
+
+                    this.estadoPeriodo.set('MOSTRANDO_ACUSE');
+
+                    mostrarError(
+                        'No fue posible procesar la actualización',
+                        obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+                    );
+                },
+            });
     }
 
     rechazarActualizacion(): void

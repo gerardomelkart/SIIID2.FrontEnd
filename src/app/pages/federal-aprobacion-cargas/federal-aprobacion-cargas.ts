@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { CargaPendienteAdministracionDetalle, CargaPendienteAdministracionItem } from '../../core/models/administracion-cargas.models';
 import { FederalAdministracionCargasService } from '../../core/services/federal-administracion-cargas.service';
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
-import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { obtenerErrorPayload, obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 import { ActualizacionDiferenciaRegistro, ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { FederalActualizacionService } from '../../core/services/federal-actualizacion.service';
@@ -333,6 +333,34 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy
             allowEscapeKey: false,
             showConfirmButton: false,
             didOpen: () => Swal.showLoading(),
+        });
+
+        this.administracionService.aprobar(carga.codigoReferencia).subscribe({
+            next: (response) =>
+            {
+                this.procesando.set(null);
+                this.cerrarDetalle();
+                Swal.close();
+
+                mostrarExitoInstitucional(
+                    `${this.esActualizacion(carga) ? 'Actualización' : 'Carga'} Federal aprobada`,
+                    response.mensaje || 'La información fue incorporada correctamente.',
+                );
+
+                this.cargarPendientes();
+            },
+            error: (error: unknown) =>
+            {
+                this.procesando.set(null);
+                Swal.close();
+
+                mostrarError(
+                    `No fue posible aprobar la ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
+                    obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
+                );
+
+                this.cargarPendientes();
+            },
         });
     }
 

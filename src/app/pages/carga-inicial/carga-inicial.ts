@@ -1,10 +1,11 @@
+// Valida los archivos y conserva el ciclo de revisión, confirmación y aprobación administrativa.
 import { Component, inject, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
 import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { CargaService } from '../../core/services/carga.service';
 import { catchError, map, of, switchMap } from 'rxjs';
@@ -238,6 +239,60 @@ export class CargaInicial
         this.mensaje.set('Procesando...');
         this.respuesta.set(null);
         this.limpiarUrlsPdf();
+
+        this.cargaService.validarArchivos(archivos.carpetas!, archivos.delitos!, archivos.victimas!).subscribe({
+            next: async (response) =>
+            {
+                this.respuesta.set(response);
+                this.mensaje.set(response.mensaje || '');
+
+                if(!response.esValido)
+                {
+                    this.estado.set('VALIDADO_ERROR');
+                    return;
+                }
+
+                if(this.hayAdvertenciasDeDecision())
+                {
+                    this.estado.set('VALIDADO_ADVERTENCIA');
+
+                    await mostrarAdvertencia(
+                        'Advertencias detectadas',
+                        'La validación terminó correctamente, pero contiene advertencias que no bloquean la carga. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
+                    );
+
+                    return;
+                }
+
+                this.abrirAcusePrevio(response.codigoReferencia);
+            },
+            error: (error: unknown) =>
+            {
+                if(esErrorEnvioArchivos(error))
+                {
+                    this.estado.set('INICIAL');
+                    this.errorGeneral.set(
+                        'No fue posible leer o enviar alguno de los archivos. Verifique que estén cerrados en Excel y vuelva a seleccionarlos.',
+                    );
+                    this.mensaje.set('');
+                    return;
+                }
+
+                const response = obtenerErrorPayload<CargaValidacionResponse>(error);
+
+                if(response?.resumenValidacion || response?.errores)
+                {
+                    this.respuesta.set(response);
+                    this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
+                    this.estado.set('VALIDADO_ERROR');
+                    return;
+                }
+
+                this.estado.set('INICIAL');
+                this.errorGeneral.set(obtenerMensajeErrorHttp(error, 'Intente nuevamente.') || 'No fue posible validar los archivos.');
+                this.mensaje.set('');
+            },
+        });
     }
 
     continuarAAcusePrevio(): void
@@ -267,6 +322,79 @@ export class CargaInicial
         }
 
         this.estado.set('CONFIRMANDO');
+
+        this.cargaService
+            .confirmarCarga({
+                codigoReferencia,
+                aceptar: true,
+            })
+            .pipe(
+                switchMap((response) =>
+                {
+                    if(response.estado === 'PENDIENTE_APROBACION')
+                    {
+                        return of({
+                            response,
+                            acuseDescargado: false,
+                            blob: null as Blob | null,
+                        });
+                    }
+
+                    return this.cargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
+                        map((blob: Blob) => ({
+                            response,
+                            acuseDescargado: true,
+                            blob,
+                        })),
+                        catchError(() =>
+                            of({
+                                response,
+                                acuseDescargado: false,
+                                blob: null as Blob | null,
+                            }),
+                        ),
+                    );
+                }),
+            )
+            .subscribe({
+                next: (resultado) =>
+                {
+                    if(resultado.response.estado === 'PENDIENTE_APROBACION')
+                    {
+                        this.limpiarUrlsPdf();
+
+                        mostrarExitoInstitucional(
+                            'Carga enviada a revision',
+                            resultado.response.mensaje || 'La carga quedo pendiente de aprobacion administrativa.',
+                        ).then(() =>
+                        {
+                            this.reiniciarFormulario();
+                            this.estado.set('INICIAL');
+                            this.router.navigateByUrl('/');
+                        });
+
+                        return;
+                    }
+
+                    if(resultado.blob)
+                    {
+                        this.reemplazarAcuseConfirmado(resultado.blob);
+                    }
+
+                    this.estado.set('CONFIRMADO');
+
+                    mostrarExito(
+                        'Carga completada',
+                        resultado.acuseDescargado ? undefined : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
+                    );
+                },
+                error: (error: unknown) =>
+                {
+                    this.estado.set('MOSTRANDO_ACUSE');
+
+                    mostrarError('No fue posible procesar la carga', obtenerMensajeErrorHttp(error, 'Revise la conexion con la API.'));
+                },
+            });
     }
 
     rechazarCarga(): void
