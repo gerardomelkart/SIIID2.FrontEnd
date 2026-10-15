@@ -132,11 +132,7 @@ export class BanciUsuarios implements OnInit
     formularioValido = computed(() =>
     {
         const form = this.formulario();
-        if(
-            !this.usuarios().some((u) => u.idUsuario === form.idUsuario && u.esFederal) &&
-            form.rol === ROLES.ENLACE_ESTATAL &&
-            !this.entidades().some((e) => e.idEntidadFederativa === form.idEntidadFederativa)
-        )
+        if(form.rol === ROLES.ENLACE_ESTATAL && !this.entidades().some((e) => e.idEntidadFederativa === form.idEntidadFederativa))
             return false;
 
         if(

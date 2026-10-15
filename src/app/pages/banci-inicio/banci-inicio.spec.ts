@@ -1,35 +1,39 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { BanciInicio } from './banci-inicio';
-import { SessionService } from '../../core/services/session.service';
+import { routes } from '../../app.routes';
 
-describe('Inicio BANCI y permisos', () =>
+describe('Preparación mensual BANCI', () =>
 {
-    afterEach(() => TestBed.resetTestingModule());
-    it.each([
-        ['CONSULTA', false, false, false, false],
-        ['ENLACE_ESTATAL', true, false, true, false],
-        ['ENLACE_ESTATAL', false, true, false, true],
-        ['SUPER_USUARIO', false, false, true, true],
-    ])('%s respeta carga=%s y actualización=%s', (rol, carga, actualizacion, verCarga, verActualizacion) =>
+    beforeEach(() => TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] }));
+    afterEach(() => TestBed.inject(HttpTestingController).verify());
+    it('muestra que falta preparar el ambiente y no ofrece cargas antiguas', () =>
     {
-        TestBed.configureTestingModule({
-            imports: [BanciInicio],
-            providers: [
-                provideRouter([]),
-                {
-                    provide: SessionService,
-                    useValue: { usuario: () => ({ rol }), habilitaCarga: () => carga, habilitaModificacion: () => actualizacion },
-                },
-            ],
-        });
-        const f = TestBed.createComponent(BanciInicio);
-        f.detectChanges();
-        expect(!!f.nativeElement.querySelector('a[href="/banci/carga-masiva"]')).toBe(verCarga);
-        expect(!!f.nativeElement.querySelector('a[href="/banci/actualizacion/manual"]')).toBe(verActualizacion);
-        expect(!!f.nativeElement.querySelector('a[href="/banci/actualizacion/masiva"]')).toBe(verActualizacion);
-        expect(f.nativeElement.textContent).not.toContain('Histórico BANCI');
-        expect(f.nativeElement.textContent).not.toContain('En desarrollo');
+        const fixture = TestBed.createComponent(BanciInicio);
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/banci/modelo'))
+            .flush({ instalado: false });
+        fixture.detectChanges();
+        expect(fixture.nativeElement.textContent).toContain('pendiente completar');
+        expect(fixture.nativeElement.querySelector('input[type="file"]')).toBeNull();
+    });
+    it('informa un error de disponibilidad sin habilitar operaciones', () =>
+    {
+        const fixture = TestBed.createComponent(BanciInicio);
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/banci/modelo'))
+            .flush({}, { status: 500, statusText: 'Error' });
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('No fue posible');
+    });
+    it('retira las rutas de carga, actualización y consulta sustituidas', () =>
+    {
+        expect(
+            routes
+                .find((r) => r.path === 'banci')
+                ?.children?.map((r) => r.path)
+                .sort(),
+        ).toEqual(['', 'usuarios']);
     });
 });

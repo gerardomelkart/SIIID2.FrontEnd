@@ -1,5 +1,3 @@
-// Usa el ciclo de carga Federal y presenta el cruce BANCI antes de aceptar o rechazar la remisión.
-import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { Component, computed, signal } from '@angular/core';
 import { inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -7,7 +5,7 @@ import { Router } from '@angular/router';
 
 import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
-import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FederalCargaService } from '../../core/services/federal-carga.service';
 import { catchError, map, of, switchMap } from 'rxjs';
@@ -46,7 +44,6 @@ type EstadoCarga =
 })
 export class FederalCarga
 {
-    private readonly cruce = inject(BanciCruceService);
     archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
 
     estado = signal<EstadoCarga>('INICIAL');
@@ -243,62 +240,6 @@ export class FederalCarga
         this.mensaje.set('Procesando...');
         this.respuesta.set(null);
         this.limpiarUrlsPdf();
-
-        this.federalCargaService.validarArchivos(archivos.carpetas!, archivos.delitos!, archivos.victimas!).subscribe({
-            next: async (response) =>
-            {
-                this.respuesta.set(response);
-                void this.cruce.mostrarBloqueo(response.errores ?? [], 'federal');
-                this.mensaje.set(response.mensaje || '');
-
-                if(!response.esValido)
-                {
-                    this.estado.set('VALIDADO_ERROR');
-                    return;
-                }
-
-                if(this.hayAdvertenciasDeDecision())
-                {
-                    this.estado.set('VALIDADO_ADVERTENCIA');
-
-                    await mostrarAdvertencia(
-                        'Advertencias detectadas',
-                        'La validación terminó correctamente, pero contiene advertencias que no bloquean la carga. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
-                    );
-
-                    return;
-                }
-
-                this.abrirAcusePrevio(response.codigoReferencia);
-            },
-            error: (error: unknown) =>
-            {
-                if(esErrorEnvioArchivos(error))
-                {
-                    this.estado.set('INICIAL');
-                    this.errorGeneral.set(
-                        'No fue posible leer o enviar alguno de los archivos. Verifique que estén cerrados en Excel y vuelva a seleccionarlos.',
-                    );
-                    this.mensaje.set('');
-                    return;
-                }
-
-                const response = obtenerErrorPayload<CargaValidacionResponse>(error);
-
-                if(response?.resumenValidacion || response?.errores)
-                {
-                    this.respuesta.set(response);
-                    void this.cruce.mostrarBloqueo(response.errores ?? [], 'federal');
-                    this.mensaje.set(response.mensaje || 'Se encontraron inconsistencias en los archivos.');
-                    this.estado.set('VALIDADO_ERROR');
-                    return;
-                }
-
-                this.estado.set('INICIAL');
-                this.errorGeneral.set(obtenerMensajeErrorHttp(error, 'Intente nuevamente.') || 'No fue posible validar los archivos.');
-                this.mensaje.set('');
-            },
-        });
     }
 
     continuarAAcusePrevio(): void
@@ -328,86 +269,6 @@ export class FederalCarga
         }
 
         this.estado.set('CONFIRMANDO');
-
-        this.federalCargaService
-            .confirmarCarga({
-                codigoReferencia,
-                aceptar: true,
-            })
-            .pipe(
-                switchMap((response) =>
-                {
-                    if(response.estado === 'PENDIENTE_APROBACION')
-                    {
-                        return of({
-                            response,
-                            acuseDescargado: false,
-                            blob: null as Blob | null,
-                        });
-                    }
-
-                    return this.federalCargaService.descargarAcuseConfirmado(codigoReferencia).pipe(
-                        map((blob: Blob) => ({
-                            response,
-                            acuseDescargado: true,
-                            blob,
-                        })),
-                        catchError(() =>
-                            of({
-                                response,
-                                acuseDescargado: false,
-                                blob: null as Blob | null,
-                            }),
-                        ),
-                    );
-                }),
-            )
-            .subscribe({
-                next: (resultado) =>
-                {
-                    if(resultado.response.estado === 'PENDIENTE_APROBACION')
-                    {
-                        this.limpiarUrlsPdf();
-
-                        mostrarExitoInstitucional(
-                            'Carga enviada a revision',
-                            resultado.response.mensaje || 'La carga quedo pendiente de aprobacion administrativa.',
-                        ).then(() =>
-                        {
-                            this.reiniciarFormulario();
-                            this.estado.set('INICIAL');
-                            this.router.navigateByUrl('/federal');
-                        });
-
-                        return;
-                    }
-
-                    if(resultado.blob)
-                    {
-                        this.reemplazarAcuseConfirmado(resultado.blob);
-                    }
-
-                    this.estado.set('CONFIRMADO');
-
-                    mostrarExito(
-                        'Carga completada',
-                        resultado.acuseDescargado ? undefined : 'La carga fue confirmada, pero no fue posible cargar el acuse confirmado.',
-                    );
-                },
-                error: (error: unknown) =>
-                {
-                    const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
-                    if(bloqueo?.errores?.some((e) => e.codigo.startsWith('BANCI_')))
-                    {
-                        this.estado.set('MOSTRANDO_ACUSE');
-                        void this.cruce.mostrarBloqueo(bloqueo.errores, 'federal');
-                        return;
-                    }
-                    this.estado.set('MOSTRANDO_ACUSE');
-
-                    mostrarError('No fue posible procesar la carga', obtenerMensajeErrorHttp(error, 'Revise la conexion con la API.'));
-                },
-            });
     }
 
     rechazarCarga(): void
@@ -532,13 +393,6 @@ export class FederalCarga
         }
 
         this.cargandoAcusePrevio.set(true);
-        if(!(await this.cruce.ofrecer(codigoReferencia, 'federal')))
-        {
-            this.cargandoAcusePrevio.set(false);
-            this.estado.set('VALIDADO_ADVERTENCIA');
-            this.errorGeneral.set('La carga sigue pendiente. Vuelva a continuar para revisar el cruce BANCI.');
-            return;
-        }
 
         this.federalCargaService.descargarAcusePrevio(codigoReferencia).subscribe({
             next: (blob) =>

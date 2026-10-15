@@ -1,4 +1,3 @@
-import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { CargaValidacionResponse } from '../../core/models/carga.models';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 
@@ -9,7 +8,7 @@ import Swal from 'sweetalert2';
 import { CargaPendienteAdministracionDetalle, CargaPendienteAdministracionItem } from '../../core/models/administracion-cargas.models';
 import { FederalAdministracionCargasService } from '../../core/services/federal-administracion-cargas.service';
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
-import { obtenerErrorPayload, obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 
 import { ActualizacionDiferenciaRegistro, ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { FederalActualizacionService } from '../../core/services/federal-actualizacion.service';
@@ -32,7 +31,6 @@ interface SeccionDiferenciasAdmin
 })
 export class FederalAprobacionCargas implements OnInit, OnDestroy
 {
-    private readonly cruce = inject(BanciCruceService);
     private readonly administracionService = inject(FederalAdministracionCargasService);
     private readonly actualizacionService = inject(FederalActualizacionService);
     private readonly cdr = inject(ChangeDetectorRef);
@@ -335,42 +333,6 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy
             allowEscapeKey: false,
             showConfirmButton: false,
             didOpen: () => Swal.showLoading(),
-        });
-
-        this.administracionService.aprobar(carga.codigoReferencia).subscribe({
-            next: (response) =>
-            {
-                this.procesando.set(null);
-                this.cerrarDetalle();
-                Swal.close();
-
-                mostrarExitoInstitucional(
-                    `${this.esActualizacion(carga) ? 'Actualización' : 'Carga'} Federal aprobada`,
-                    response.mensaje || 'La información fue incorporada correctamente.',
-                );
-
-                this.cargarPendientes();
-            },
-            error: (error: unknown) =>
-            {
-                this.procesando.set(null);
-                Swal.close();
-
-                const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
-                if(bloqueo?.errores?.some((e) => e.codigo.startsWith('BANCI_')))
-                {
-                    void this.cruce.mostrarBloqueo(bloqueo.errores, 'federal');
-                    this.cargarPendientes();
-                    return;
-                }
-
-                mostrarError(
-                    `No fue posible aprobar la ${this.esActualizacion(carga) ? 'actualización' : 'carga'} Federal`,
-                    obtenerMensajeErrorHttp(error, 'La carga pudo haber sido resuelta por otro usuario.'),
-                );
-
-                this.cargarPendientes();
-            },
         });
     }
 

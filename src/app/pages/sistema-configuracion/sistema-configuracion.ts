@@ -71,11 +71,6 @@ export class SistemaConfiguracionPage
         const datos = this.datos();
         if(!datos || this.cargando() || this.guardando()) return;
         if(clave !== 'MODULO_ACTIVO' && !datos.opciones.some((o) => o.modulo === modulo && o.clave === clave && o.disponible)) return;
-        if(habilitado && clave === 'CRUCE_BANCI' && !datos.modulos.some((m) => m.clave === 'BANCI' && m.activo))
-        {
-            this.error.set('Active BANCI antes de habilitar el cruce.');
-            return;
-        }
         if(
             habilitado &&
             clave === 'RENAPO' &&

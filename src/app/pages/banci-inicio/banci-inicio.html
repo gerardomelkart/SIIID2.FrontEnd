@@ -1,113 +1,15 @@
-<div class="dashboard-page">
-    <section class="welcome-card">
-        <div class="welcome-content">
-            <div class="welcome-icon">
-                <i class="fa-solid fa-database"></i>
-            </div>
-
-            <div>
-                <h1>Bienvenido, {{ nombreUsuario() }}</h1>
-
-                <p>
-                    Base Nacional de Carpetas de Investigación para Desaparición Forzada de Personas y Desaparición Cometida por
-                    Particulares.
-                </p>
-
-                <div class="welcome-meta">
-                    <span>
-                        <i class="fa-solid fa-user-shield"></i>
-                        {{ rolDescripcion() }}
-                    </span>
-
-                    <span>
-                        <i class="fa-solid fa-location-dot"></i>
-                        {{ entidadUsuario() }}
-                    </span>
-
-                    <span>
-                        <i class="fa-solid fa-layer-group"></i>
-                        BANCI / DFPyCPP
-                    </span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="status-grid">
-        <div class="status-card" [class.status-card-activo]="puedeCapturar()">
-            <div class="status-number" [class.status-activo]="puedeCapturar()">
-                {{ puedeCapturar() ? 'Habilitada' : 'Sin permiso' }}
-            </div>
-
-            <div class="status-label">Carga de información</div>
-        </div>
-
-        <div class="status-card" [class.status-card-activo]="puedeActualizar()">
-            <div class="status-number" [class.status-activo]="puedeActualizar()">
-                {{ puedeActualizar() ? 'Habilitada' : 'Sin permiso' }}
-            </div>
-
-            <div class="status-label">Actualización</div>
-        </div>
-
-        <div class="status-card">
-            <div class="status-number">DFPyCPP</div>
-
-            <div class="status-label">Micro-Dato BANCI</div>
-        </div>
-    </section>
-
-    <section class="quick-access-card">
-        <div class="section-header">
-            <div>
-                <h2>Accesos disponibles</h2>
-                <p>Seleccione una opción para continuar.</p>
-            </div>
-        </div>
-
-        <div class="quick-access-grid">
-            @if (puedeCapturar()) {
-                <a class="quick-link" routerLink="/banci/carga-masiva"
-                    ><div class="quick-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                    <div>
-                        <strong>Carga masiva</strong
-                        ><span>Integre un libro Excel con tres hojas o los archivos Carpetas, Delitos y Víctimas.</span>
-                    </div></a
-                >
-                <a class="quick-link" routerLink="/banci/formulario"
-                    ><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                    <div><strong>Carga manual</strong><span>Registre una carpeta nueva con sus delitos y víctimas.</span></div></a
-                >
-            }
-            @if (puedeActualizar()) {
-                <a class="quick-link" routerLink="/banci/actualizacion/manual"
-                    ><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                    <div>
-                        <strong>Actualización manual</strong
-                        ><span>Busque una víctima y actualice sus datos de localización o personales.</span>
-                    </div></a
-                >
-                <a class="quick-link" routerLink="/banci/actualizacion/masiva"
-                    ><div class="quick-icon"><i class="fa-solid fa-file-excel"></i></div>
-                    <div>
-                        <strong>Actualización masiva</strong
-                        ><span>Actualice víctimas registradas mediante la plantilla de actualización.</span>
-                    </div></a
-                >
-            }
-            <a class="quick-link" routerLink="/banci/consulta"
-                ><div class="quick-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                <div>
-                    <strong>Consulta de información</strong
-                    ><span>Consulte carpetas por mes y año, con el detalle de delitos y víctimas.</span>
-                </div></a
-            >
-            @if (usuario()?.rol === 'SUPER_USUARIO') {
-                <a class="quick-link" routerLink="/banci/usuarios"
-                    ><div class="quick-icon"><i class="fa-solid fa-users"></i></div>
-                    <div><strong>Usuarios</strong><span>Administre el acceso y los permisos de BANCI.</span></div></a
-                >
-            }
-        </div>
-    </section>
-</div>
+<section class="card p-4">
+    <h1>BANCI</h1>
+    <h2>Carga por cortes mensuales</h2>
+    <p>
+        Estamos preparando la carga y actualización con información aceptada del consolidado. Estas opciones se habilitarán al completar su
+        nuevo flujo de aprobación.
+    </p>
+    <p>La administración de usuarios continúa disponible para los superusuarios.</p>
+    @if (instalado() === false) {
+        <p role="status">Está pendiente completar la preparación de BANCI en este ambiente.</p>
+    }
+    @if (error()) {
+        <p role="alert">{{ error() }}</p>
+    }
+</section>

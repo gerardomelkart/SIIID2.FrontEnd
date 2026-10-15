@@ -1,5 +1,3 @@
-// Gestiona correcciones de Federal con sus propios resultados de validación y revisión previa.
-import { BanciCruceService } from '../../core/services/banci-cruce.service';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -58,7 +56,6 @@ type EstadoPeriodo =
 })
 export class FederalActualizacion implements OnInit
 {
-    private readonly cruce = inject(BanciCruceService);
     private readonly actualizacionService = inject(FederalActualizacionService);
     private readonly sanitizer = inject(DomSanitizer);
     private readonly router = inject(Router);
@@ -516,97 +513,6 @@ export class FederalActualizacion implements OnInit
 
         this.procesandoConfirmacion.set(true);
         this.estadoPeriodo.set('CONFIRMANDO');
-
-        this.actualizacionService
-            .confirmarActualizacion({
-                codigoReferencia,
-                aceptar: true,
-            })
-            .pipe(
-                switchMap((response) =>
-                {
-                    if(response.estado === 'PENDIENTE_APROBACION')
-                    {
-                        return of({
-                            response,
-                            acuseDescargado: false,
-                            blob: null as Blob | null,
-                        });
-                    }
-
-                    return this.actualizacionService.descargarAcuseConfirmado(codigoReferencia).pipe(
-                        map((blob: Blob) => ({
-                            response,
-                            acuseDescargado: true,
-                            blob,
-                        })),
-                        catchError(() =>
-                            of({
-                                response,
-                                acuseDescargado: false,
-                                blob: null as Blob | null,
-                            }),
-                        ),
-                    );
-                }),
-            )
-            .subscribe({
-                next: (resultado) =>
-                {
-                    this.procesandoConfirmacion.set(false);
-                    this.mensajeConfirmacion.set('');
-
-                    if(resultado.response.estado === 'PENDIENTE_APROBACION')
-                    {
-                        this.limpiarUrlsPdf();
-
-                        mostrarExitoInstitucional(
-                            'Actualizacion enviada a revision',
-                            resultado.response.mensaje || 'La actualizacion quedo pendiente de aprobacion administrativa.',
-                        ).then(() =>
-                        {
-                            this.reiniciarFormulario();
-                            this.estadoPeriodo.set('SIN_CONSULTAR');
-                            this.router.navigateByUrl('/federal');
-                        });
-
-                        return;
-                    }
-
-                    if(resultado.blob)
-                    {
-                        this.reemplazarAcuseConfirmado(resultado.blob);
-                    }
-
-                    this.estadoPeriodo.set('CONFIRMADO');
-
-                    mostrarExito(
-                        'Actualizacion completada',
-                        resultado.acuseDescargado
-                            ? undefined
-                            : 'La actualizacion fue confirmada, pero no fue posible cargar el acuse confirmado.',
-                    );
-                },
-                error: (error: unknown) =>
-                {
-                    const bloqueo = obtenerErrorPayload<CargaValidacionResponse>(error);
-                    if(bloqueo?.errores?.some((e) => e.codigo.startsWith('BANCI_')))
-                    {
-                        this.estadoPeriodo.set('MOSTRANDO_ACUSE');
-                        void this.cruce.mostrarBloqueo(bloqueo.errores, 'federal');
-                        return;
-                    }
-                    this.procesandoConfirmacion.set(false);
-                    this.mensajeConfirmacion.set('');
-
-                    this.estadoPeriodo.set('MOSTRANDO_ACUSE');
-
-                    mostrarError(
-                        'No fue posible procesar la actualización',
-                        obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
-                    );
-                },
-            });
     }
 
     rechazarActualizacion(): void
@@ -862,13 +768,6 @@ export class FederalActualizacion implements OnInit
         }
 
         this.generandoAcusePrevio.set(true);
-        if(!(await this.cruce.ofrecer(codigoReferencia, 'federal')))
-        {
-            this.generandoAcusePrevio.set(false);
-            this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
-            this.errorGeneral.set('La carga sigue pendiente. Vuelva a continuar para revisar el cruce BANCI.');
-            return;
-        }
 
         this.errorGeneral.set('');
 

@@ -1,14 +1,24 @@
 :host {
-    --siiid-guinda: #6f2c91;
-    --siiid-dorado: #bc955c;
-    --siiid-bg: #f7f3f9;
+    --banci-color: #6f2c91;
+    display: block;
 }
-
-.sidebar {
-    border-top: 5px solid var(--siiid-dorado);
+.siiid-shell {
+    min-height: 100vh;
+    background: #f7f3f9;
 }
-
-.system-info span {
-    color: var(--siiid-guinda);
-    font-weight: 900;
+header {
+    background: white;
+    border-bottom: 4px solid var(--siiid-dorado);
+}
+header strong {
+    color: var(--banci-color);
+    font-size: 1.4rem;
+}
+a,
+.btn-link {
+    color: var(--banci-color);
+}
+main {
+    max-width: 1440px;
+    margin: auto;
 }

@@ -16,7 +16,7 @@ describe('Configuración del sistema', () =>
         ],
         opciones: [
             { modulo: 'BANCI', clave: 'RENAPO', descripcion: 'RENAPO', habilitado: true, disponible: true, efectivo: true },
-            { modulo: 'BANCI', clave: 'CRUCE_BANCI', descripcion: 'Cruce', habilitado: false, disponible: false, efectivo: false },
+            { modulo: 'BANCI', clave: 'RENAPO', descripcion: 'RENAPO', habilitado: false, disponible: false, efectivo: false },
         ],
     };
     const usuarios = [
@@ -60,20 +60,6 @@ describe('Configuración del sistema', () =>
             expect(c.cambio()).toBeNull();
             expect(c.error()).toContain('feminicidio');
         }
-    });
-    it('no habilita el cruce cuando BANCI está apagado', () =>
-    {
-        const c = TestBed.createComponent(SistemaConfiguracionPage).componentInstance;
-        c.datos.set({
-            ...datos,
-            modulos: [{ clave: 'BANCI', nombre: 'BANCI', activo: false }],
-            opciones: [
-                { modulo: 'MENSUAL', clave: 'CRUCE_BANCI', descripcion: 'Cruce', disponible: true, habilitado: false, efectivo: false },
-            ],
-        });
-        c.preparar('MENSUAL', 'CRUCE_BANCI', true, 'Cruce');
-        expect(c.cambio()).toBeNull();
-        expect(c.error()).toContain('Active BANCI');
     });
     it('muestra municipio para los cuatro módulos y dos opciones independientes en semanal', () =>
     {
@@ -219,12 +205,6 @@ describe('Configuración del sistema', () =>
         c.guardar();
         c.guardar();
         expect(servicio.cambiar).toHaveBeenCalledTimes(1);
-    });
-    it('no permite activar un cruce pendiente', () =>
-    {
-        const c = TestBed.createComponent(SistemaConfiguracionPage).componentInstance;
-        c.preparar('BANCI', 'CRUCE_BANCI', true, 'Cruce');
-        expect(c.cambio()).toBeNull();
     });
     it('un conflicto invalida la pantalla y exige recargar antes de otro cambio', () =>
     {

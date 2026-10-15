@@ -15,7 +15,6 @@ export interface BanciUsuarioDetalleResponse
 
 export interface BanciUsuarioDetalle
 {
-    esFederal?: boolean;
     idUsuario: number;
     idEntidadFederativa: number | null;
     entidadFederativa: string | null;
