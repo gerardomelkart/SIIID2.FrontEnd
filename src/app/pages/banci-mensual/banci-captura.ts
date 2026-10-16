@@ -26,7 +26,7 @@ export class BanciCaptura
     readonly actualizacion = this.ruta.snapshot.data['actualizacion'] === true;
     readonly manual = this.ruta.snapshot.data['manual'] === true;
     readonly titulo = `${this.actualizacion ? 'Actualización' : 'Carga'} ${this.manual ? 'manual' : 'masiva'}`;
-    readonly cargaGuiada = !this.manual && !this.actualizacion;
+    readonly cargaGuiada = !this.manual;
     readonly plantillaDescargada = signal(false);
     readonly ultimoEnvio = signal<{ referencia: string; estado: string } | null>(null);
     private originales: BanciFila[] = [];
@@ -109,20 +109,27 @@ export class BanciCaptura
     async plantilla(): Promise<void>
     {
         if(this.ocupado() || !this.entidad || !this.opciones()) return;
+        if(this.cargaGuiada) this.limpiar();
         this.ocupado.set(true);
         this.mensaje.set('');
         try
         {
             if(this.cargaGuiada)
             {
-                const libro = await firstValueFrom(this.api.precarga(this.entidad, this.mes, this.anio, false));
+                const libro = await firstValueFrom(this.api.precarga(this.entidad, this.mes, this.anio, this.actualizacion));
                 const sinOrigen = libro.carpetas.length === 0;
                 const respuesta = await Swal.fire({
                     icon: 'warning',
-                    title: sinOrigen ? 'Descargar plantilla histórica' : 'Descargar información precargada',
-                    text: sinOrigen
-                        ? 'Este corte histórico no tiene información aceptada en el módulo Consolidado. ¿Desea descargar la plantilla para capturar la información histórica de su fiscalía?'
-                        : '¿Desea descargar la información reportada por su fiscalía en el Sistema de Integración de Información de Incidencia Delictiva? La carga BANCI deberá coincidir con la información aceptada en el módulo Consolidado para el periodo seleccionado. Complete únicamente los datos complementarios de BANCI.',
+                    title: this.actualizacion
+                        ? 'Descargar plantilla de actualización'
+                        : sinOrigen
+                          ? 'Descargar plantilla histórica'
+                          : 'Descargar información precargada',
+                    text: this.actualizacion
+                        ? 'Descargue la información aprobada en BANCI, modifique únicamente los datos personales o de localización que correspondan y cargue la plantilla completa. Solo se enviarán los registros que reciban cambios.'
+                        : sinOrigen
+                          ? 'Este corte histórico no tiene información aceptada en el módulo Consolidado. ¿Desea descargar la plantilla para capturar la información histórica de su fiscalía?'
+                          : '¿Desea descargar la información reportada por su fiscalía en el Sistema de Integración de Información de Incidencia Delictiva? La carga BANCI deberá coincidir con la información aceptada en el módulo Consolidado para el periodo seleccionado. Complete únicamente los datos complementarios de BANCI.',
                     showCancelButton: true,
                     confirmButtonText: 'Descargar información',
                     cancelButtonText: 'Cancelar',

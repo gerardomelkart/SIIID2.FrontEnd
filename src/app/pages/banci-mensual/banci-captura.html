@@ -88,15 +88,15 @@
             <div class="paso-titulo">
                 <span class="paso-numero">1</span>
                 <div>
-                    <h2>Descargue la información de su fiscalía</h2>
-                    <p>La plantilla contiene las carpetas, delitos y víctimas del corte mensual, organizados en tres pestañas.</p>
+                    <h2>{{ actualizacion ? 'Descargue la información registrada en BANCI' : 'Descargue la información de su fiscalía' }}</h2>
+                    <p>{{ actualizacion ? 'La plantilla contiene los registros aprobados de BANCI para el periodo seleccionado, organizados en tres pestañas.' : 'La plantilla contiene las carpetas, delitos y víctimas del corte mensual, organizados en tres pestañas.' }}</p>
                 </div>
             </div>
             <div class="tarjeta-plantilla">
                 <div class="icono-excel"><i class="fa-solid fa-file-excel" aria-hidden="true"></i></div>
                 <div class="descripcion-plantilla">
                     <h3>Plantilla BANCI precargada</h3>
-                    <p>Conserve los datos del Consolidado y complete únicamente la información complementaria de BANCI.</p>
+                    <p>{{ actualizacion ? 'Modifique los datos personales o de localización que correspondan; conserve los identificadores y las tres pestañas completas.' : 'Conserve los datos del Consolidado y complete únicamente la información complementaria de BANCI.' }}</p>
                     <span>Excel · Carpetas, Delitos y Víctimas</span>
                 </div>
                 <button class="btn btn-primary descargar-plantilla" (click)="plantilla()" [disabled]="ocupado() || !opciones() || !entidad">
@@ -118,7 +118,7 @@
                 <div>
                     <h2>Cargue la plantilla completada</h2>
                     <p>
-                        {{ plantillaDescargada() ? 'Agregue los datos complementarios, guarde el archivo y cárguelo para validar la información.' : 'Primero descargue la plantilla del paso 1. Después podrá cargar el archivo completado.' }}
+                        {{ plantillaDescargada() ? (actualizacion ? 'Guarde sus cambios y cargue la plantilla completa. Solo se enviarán los registros modificados.' : 'Agregue los datos complementarios, guarde el archivo y cárguelo para validar la información.') : 'Primero descargue la plantilla del paso 1. Después podrá cargar el archivo completado.' }}
                     </p>
                 </div>
             </div>

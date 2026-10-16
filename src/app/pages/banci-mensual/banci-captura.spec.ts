@@ -271,4 +271,57 @@ describe('Carga BANCI por cortes', () =>
         expect(f.componentInstance.libroParaEnviar()).toBe(libro);
         expect(f.nativeElement.textContent).not.toContain('Las cargas adicionales se suman');
     });
+    it('la actualización masiva muestra los mismos pasos y bloquea el archivo hasta descargar', () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: true } } } });
+        const f = crear();
+        expect(f.nativeElement.querySelector('.paso-descarga')).not.toBeNull();
+        expect(f.nativeElement.querySelector('.paso-carga')).not.toBeNull();
+        expect(f.nativeElement.querySelector('input[type="file"]')).toBeNull();
+        f.componentInstance.archivoSeleccionado({ target: { files: [new File(['datos'], 'actualizacion.xlsx')] } } as unknown as Event);
+        expect(f.componentInstance.archivo).toBeNull();
+        f.componentInstance.plantillaDescargada.set(true);
+        f.detectChanges();
+        expect(f.nativeElement.querySelector('input[type="file"]')).not.toBeNull();
+    });
+    it('la descarga de actualización precarga los aprobados y permite cancelar antes de habilitar el archivo', async () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: true } } } });
+        const aviso = vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: false, isDenied: false, isDismissed: true });
+        const f = crear();
+        const descarga = f.componentInstance.plantilla();
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/precarga') && r.params.get('actualizacion') === 'true')
+            .flush({
+                entidad: 9,
+                mes: 9,
+                anio: 2026,
+                actualizacion: true,
+                carpetas: [{ numeroFila: 2, columnas: { id_ci: '1' } }],
+                delitos: [],
+                victimas: [],
+            });
+        await descarga;
+        expect(aviso).toHaveBeenCalledWith(expect.objectContaining({ title: 'Descargar plantilla de actualización' }));
+        expect(f.componentInstance.plantillaDescargada()).toBe(false);
+        TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/plantilla'));
+    });
+    it('un periodo ya registrado rechaza la descarga y retira cualquier archivo previamente habilitado', async () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: false } } } });
+        const f = crear();
+        f.componentInstance.plantillaDescargada.set(true);
+        f.componentInstance.archivo = new File(['datos'], 'anterior.xlsx');
+        const descarga = f.componentInstance.plantilla();
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/precarga'))
+            .flush({ mensaje: 'El periodo ya tiene información BANCI registrada.' }, { status: 400, statusText: 'Bad Request' });
+        await descarga;
+        f.detectChanges();
+        expect(f.componentInstance.mensaje()).toContain('ya tiene información BANCI');
+        expect(f.componentInstance.plantillaDescargada()).toBe(false);
+        expect(f.componentInstance.archivo).toBeNull();
+        expect(f.nativeElement.querySelector('input[type="file"]')).toBeNull();
+        TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/plantilla'));
+    });
 });
