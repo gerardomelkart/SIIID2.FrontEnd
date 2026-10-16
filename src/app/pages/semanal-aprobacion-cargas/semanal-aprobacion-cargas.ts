@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, inject, sign
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
+import { timeout } from 'rxjs';
 import {
     SemanalCargaBloqueAdministracionItem,
     SemanalCargaPendienteAdministracionDetalle,
@@ -11,6 +12,7 @@ import { SemanalAdministracionCargasService } from '../../core/services/semanal-
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { esTimeoutConsultaDiferencias, TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS, AVISO_DETALLE_DIFERENCIAS_ADMIN } from '../../core/utils/diferencias-timeout.utils';
 import { ActualizacionDiferenciaRegistro, ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { SemanalCargaService } from '../../core/services/semanal-carga.service';
 
@@ -753,7 +755,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy
         this.cargandoDiferenciasDetalle.set(true);
         this.errorDiferenciasDetalle.set('');
 
-        this.semanalCargaService.obtenerDiferencias(codigoReferencia, 0).subscribe({
+        this.semanalCargaService.obtenerDiferencias(codigoReferencia, 0).pipe(timeout({ first: TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS })).subscribe({
             next: (response) =>
             {
                 if(this.codigoDiferenciasDetalle !== codigoReferencia) return;
@@ -777,7 +779,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy
 
                 this.cargandoDiferenciasDetalle.set(false);
                 this.errorDiferenciasDetalle.set(
-                    obtenerMensajeErrorHttp(error, 'No fue posible consultar el resumen de diferencias de la actualización preliminar.'),
+                    esTimeoutConsultaDiferencias(error) ? AVISO_DETALLE_DIFERENCIAS_ADMIN : obtenerMensajeErrorHttp(error, 'No fue posible consultar el resumen de diferencias de la actualización preliminar.'),
                 );
             },
         });
@@ -789,7 +791,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy
         this.cargandoDiferenciasDetalle.set(true);
         this.errorDiferenciasDetalle.set('');
 
-        this.semanalCargaService.obtenerDiferencias(codigoReferencia, 100, true).subscribe({
+        this.semanalCargaService.obtenerDiferencias(codigoReferencia, 100, true).pipe(timeout({ first: TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS })).subscribe({
             next: (response) =>
             {
                 if(this.codigoDiferenciasDetalle !== codigoReferencia) return;
@@ -829,7 +831,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy
 
                 this.cargandoDiferenciasDetalle.set(false);
                 this.errorDiferenciasDetalle.set(
-                    obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización preliminar.'),
+                    esTimeoutConsultaDiferencias(error) ? AVISO_DETALLE_DIFERENCIAS_ADMIN : obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización preliminar.'),
                 );
             },
         });

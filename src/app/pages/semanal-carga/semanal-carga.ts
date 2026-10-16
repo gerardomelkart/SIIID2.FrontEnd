@@ -26,8 +26,9 @@ import {
 } from '../../core/utils/archivo-carga.utils';
 import { confirmarAccion, mostrarAdvertencia, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { esTimeoutConsultaDiferencias, TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS, AVISO_DETALLE_DIFERENCIAS } from '../../core/utils/diferencias-timeout.utils';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { finalize } from 'rxjs';
+import { finalize, timeout } from 'rxjs';
 import { ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { CatalogosService } from '../../core/services/catalogos.service';
 import { EntidadFederativaCatalogoItem } from '../../core/models/catalogos.models';
@@ -206,6 +207,7 @@ export class SemanalCarga implements OnInit
     respuesta = signal<SemanalCargaValidacionResponse | null>(null);
     resultadoConfirmacion = signal<ConfirmarCargaResponse | null>(null);
     diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
+    detalleDiferenciasOmitido = signal(false);
     cargandoDiferencias = signal(false);
     validandoSemana = signal(false);
     exportandoValidacion = signal(false);
@@ -910,6 +912,7 @@ export class SemanalCarga implements OnInit
         this.respuesta.set(null);
         this.resultadoConfirmacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.errorGeneral.set('');
         this.operacionCargaCero.set(false);
         this.errorCargaCero.set('');
@@ -929,6 +932,7 @@ export class SemanalCarga implements OnInit
         this.respuesta.set(null);
         this.resultadoConfirmacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.errorGeneral.set('');
         this.idDelitoCargaCero.set('');
         this.idEntidadFederativa.set('');
@@ -1122,10 +1126,11 @@ export class SemanalCarga implements OnInit
         this.cargandoDiferencias.set(true);
         this.errorGeneral.set('');
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
 
         this.semanalCargaService
             .obtenerDiferencias(codigoReferencia, 100)
-            .pipe(finalize(() => this.cargandoDiferencias.set(false)))
+            .pipe(timeout({ first: TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS }), finalize(() => this.cargandoDiferencias.set(false)))
             .subscribe({
                 next: (response) =>
                 {
@@ -1142,6 +1147,13 @@ export class SemanalCarga implements OnInit
                 error: (error: unknown) =>
                 {
                     this.estado.set('RESULTADO');
+                    if(esTimeoutConsultaDiferencias(error))
+                    {
+                        this.detalleDiferenciasOmitido.set(true);
+                        void mostrarAdvertencia('Detalle no disponible', AVISO_DETALLE_DIFERENCIAS)
+                            .then(() => this.abrirAcusePrevio(codigoReferencia));
+                        return;
+                    }
                     this.errorGeneral.set(obtenerMensajeErrorHttp(error, 'La consulta de diferencias tardó demasiado o fue interrumpida.'));
                 },
             });
@@ -1168,6 +1180,7 @@ export class SemanalCarga implements OnInit
         this.respuesta.set(null);
         this.resultadoConfirmacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.errorGeneral.set('');
         this.limpiarAcusePrevio();
         this.estado.set('CAPTURA');

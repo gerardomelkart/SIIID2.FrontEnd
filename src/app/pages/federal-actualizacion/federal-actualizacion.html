@@ -868,6 +868,12 @@
         </div>
 
         <div class="acuse-body">
+            @if (detalleDiferenciasOmitido()) {
+                <div class="alert alert-warning m-3" role="alert">
+                    El detalle de diferencias no pudo mostrarse en el tiempo disponible.
+                    Revise el informe previo antes de decidir; la actualización continúa validada.
+                </div>
+            }
             @if (acuseConfirmadoUrl()) {
                 <iframe class="acuse-frame" [src]="acuseConfirmadoUrl()" title="Acuse confirmado de actualización"></iframe>
             } @else if (acusePrevioUrl()) {

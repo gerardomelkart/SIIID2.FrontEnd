@@ -8,7 +8,8 @@ import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils
 import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
-import { catchError, finalize, map, of, switchMap } from 'rxjs';
+import { esTimeoutConsultaDiferencias, TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS, AVISO_DETALLE_DIFERENCIAS } from '../../core/utils/diferencias-timeout.utils';
+import { catchError, finalize, map, of, switchMap, timeout } from 'rxjs';
 
 import {
     ActualizacionAnioDisponibleItem,
@@ -92,6 +93,7 @@ export class FederalActualizacion implements OnInit
     respuestaPeriodo = signal<ActualizacionPeriodoResponse | null>(null);
     respuestaValidacion = signal<CargaValidacionResponse | null>(null);
     diferencias = signal<ActualizacionDiferenciasResponse | null>(null);
+    detalleDiferenciasOmitido = signal(false);
 
     mensajePeriodo = signal('');
     errorGeneral = signal('');
@@ -100,6 +102,7 @@ export class FederalActualizacion implements OnInit
 
     archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
 
+    private estadoRetornoDiferencias: EstadoPeriodo = 'DISPONIBLE';
     private acusePrevioObjectUrl: string | null = null;
     private acuseConfirmadoObjectUrl: string | null = null;
 
@@ -272,6 +275,7 @@ export class FederalActualizacion implements OnInit
         this.respuestaPeriodo.set(null);
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.mensajePeriodo.set('');
         this.errorGeneral.set('');
         this.limpiarArchivos();
@@ -292,6 +296,7 @@ export class FederalActualizacion implements OnInit
         this.respuestaPeriodo.set(null);
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.mensajePeriodo.set('Consultando periodo seleccionado...');
         this.errorGeneral.set('');
 
@@ -334,6 +339,7 @@ export class FederalActualizacion implements OnInit
 
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.errorGeneral.set('');
 
         if(archivo && !(await esArchivoCargaLegible(archivo)))
@@ -376,6 +382,7 @@ export class FederalActualizacion implements OnInit
 
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.errorGeneral.set('');
 
         if(!(await esArchivoCargaLegible(archivo)))
@@ -418,6 +425,7 @@ export class FederalActualizacion implements OnInit
         this.errorGeneral.set('');
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.limpiarUrlsPdf();
 
         this.actualizacionService.validarActualizacion(mes, anio, archivos.carpetas!, archivos.delitos!, archivos.victimas!).subscribe({
@@ -770,6 +778,7 @@ export class FederalActualizacion implements OnInit
         this.limpiarArchivos();
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.errorGeneral.set('');
         this.limpiarUrlsPdf();
         this.estadoPeriodo.set('DISPONIBLE');
@@ -805,14 +814,17 @@ export class FederalActualizacion implements OnInit
     en caso de error porque el loading permanecería activo.
   */
         const estadoRetorno: EstadoPeriodo = estadoAnterior === 'VALIDANDO' ? 'DISPONIBLE' : estadoAnterior;
+        this.estadoRetornoDiferencias = estadoRetorno;
 
         this.cargandoDiferencias.set(true);
         this.errorGeneral.set('');
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
 
         this.actualizacionService
             .obtenerDiferencias(codigoReferencia, 100)
             .pipe(
+                timeout({ first: TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS }),
                 finalize(() =>
                 {
                     this.cargandoDiferencias.set(false);
@@ -836,6 +848,13 @@ export class FederalActualizacion implements OnInit
                 error: (error: unknown) =>
                 {
                     this.estadoPeriodo.set(estadoRetorno);
+                    if(esTimeoutConsultaDiferencias(error))
+                    {
+                        this.detalleDiferenciasOmitido.set(true);
+                        void mostrarAdvertencia('Detalle no disponible', AVISO_DETALLE_DIFERENCIAS)
+                            .then(() => this.abrirAcusePrevio(codigoReferencia));
+                        return;
+                    }
 
                     this.errorGeneral.set(
                         obtenerMensajeErrorHttp(error, 'La consulta de diferencias tardó demasiado o fue interrumpida.') ||
@@ -872,7 +891,7 @@ export class FederalActualizacion implements OnInit
                 },
                 error: (error: unknown) =>
                 {
-                    this.estadoPeriodo.set('MOSTRANDO_DIFERENCIAS');
+                    this.estadoPeriodo.set(this.diferencias() ? 'MOSTRANDO_DIFERENCIAS' : this.estadoRetornoDiferencias);
 
                     this.errorGeneral.set(
                         obtenerMensajeErrorHttp(error, 'La validación fue correcta, pero no fue posible generar el informe previo.'),
@@ -923,6 +942,7 @@ export class FederalActualizacion implements OnInit
         this.respuestaPeriodo.set(null);
         this.respuestaValidacion.set(null);
         this.diferencias.set(null);
+        this.detalleDiferenciasOmitido.set(false);
         this.mensajePeriodo.set('');
         this.errorGeneral.set('');
     }

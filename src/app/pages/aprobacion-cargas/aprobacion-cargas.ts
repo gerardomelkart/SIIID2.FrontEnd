@@ -5,10 +5,12 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
+import { timeout } from 'rxjs';
 import { CargaPendienteAdministracionDetalle, CargaPendienteAdministracionItem } from '../../core/models/administracion-cargas.models';
 import { AdministracionCargasService } from '../../core/services/administracion-cargas.service';
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
+import { esTimeoutConsultaDiferencias, TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS, AVISO_DETALLE_DIFERENCIAS_ADMIN } from '../../core/utils/diferencias-timeout.utils';
 
 import { ActualizacionDiferenciaRegistro, ActualizacionDiferenciasResponse } from '../../core/models/actualizacion.models';
 import { ActualizacionService } from '../../core/services/actualizacion.service';
@@ -650,7 +652,7 @@ export class AprobacionCargas implements OnInit, OnDestroy
         this.cargandoDiferenciasDetalle.set(true);
         this.errorDiferenciasDetalle.set('');
 
-        this.actualizacionService.obtenerDiferencias(codigoReferencia, 0).subscribe({
+        this.actualizacionService.obtenerDiferencias(codigoReferencia, 0).pipe(timeout({ first: TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS })).subscribe({
             next: (response) =>
             {
                 if(this.codigoDiferenciasDetalle !== codigoReferencia) return;
@@ -674,7 +676,7 @@ export class AprobacionCargas implements OnInit, OnDestroy
 
                 this.cargandoDiferenciasDetalle.set(false);
                 this.errorDiferenciasDetalle.set(
-                    obtenerMensajeErrorHttp(error, 'No fue posible consultar el resumen de diferencias de la actualización.'),
+                    esTimeoutConsultaDiferencias(error) ? AVISO_DETALLE_DIFERENCIAS_ADMIN : obtenerMensajeErrorHttp(error, 'No fue posible consultar el resumen de diferencias de la actualización.'),
                 );
             },
         });
@@ -686,7 +688,7 @@ export class AprobacionCargas implements OnInit, OnDestroy
         this.cargandoDiferenciasDetalle.set(true);
         this.errorDiferenciasDetalle.set('');
 
-        this.actualizacionService.obtenerDiferencias(codigoReferencia, 100, false).subscribe({
+        this.actualizacionService.obtenerDiferencias(codigoReferencia, 100, false).pipe(timeout({ first: TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS })).subscribe({
             next: (response) =>
             {
                 if(this.codigoDiferenciasDetalle !== codigoReferencia) return;
@@ -726,7 +728,7 @@ export class AprobacionCargas implements OnInit, OnDestroy
 
                 this.cargandoDiferenciasDetalle.set(false);
                 this.errorDiferenciasDetalle.set(
-                    obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización.'),
+                    esTimeoutConsultaDiferencias(error) ? AVISO_DETALLE_DIFERENCIAS_ADMIN : obtenerMensajeErrorHttp(error, 'No fue posible consultar las diferencias de la actualización.'),
                 );
             },
         });
