@@ -50,6 +50,11 @@
                                 <button class="btn btn-outline-primary btn-sm" (click)="ver(fila)" [disabled]="ocupado()">
                                     Ver detalle
                                 </button>
+                                @if (fila.estado === 'PENDIENTE_APROBACION' || fila.estado.startsWith('CONFIRMADO')) {
+                                    <button class="btn btn-outline-primary btn-sm" (click)="acuse(fila)" [disabled]="ocupado()">
+                                        Descargar acuse
+                                    </button>
+                                }
                                 @if (reporte === 'originales') {
                                     <button class="btn btn-outline-primary btn-sm" (click)="descargar(fila)" [disabled]="ocupado()">
                                         Descargar original

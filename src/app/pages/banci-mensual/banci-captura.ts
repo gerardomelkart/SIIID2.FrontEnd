@@ -10,7 +10,6 @@ import { BanciLibro, BanciFila, BanciOpciones, BanciError, BanciValidacion } fro
 import { BanciMensualService, descargarBanci } from '../../core/services/banci-mensual.service';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
-import { confirmarAccion, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
 @Component({
     selector: 'app-banci-captura',
@@ -29,6 +28,8 @@ export class BanciCaptura
     readonly titulo = `${this.actualizacion ? 'Actualización' : 'Carga'} ${this.manual ? 'manual' : 'masiva'}`;
     readonly cargaGuiada = !this.manual && !this.actualizacion;
     readonly plantillaDescargada = signal(false);
+    readonly ultimoEnvio = signal<{ referencia: string; estado: string } | null>(null);
+    private originales: BanciFila[] = [];
     private readonly originalEditable = signal('');
     readonly opciones = signal<BanciOpciones | null>(null);
     readonly libro = signal<BanciLibro | null>(null);
@@ -76,6 +77,8 @@ export class BanciCaptura
     }
     limpiar(): void
     {
+        this.ultimoEnvio.set(null);
+        this.originales = [];
         this.plantillaDescargada.set(false);
         this.originalEditable.set('');
         this.libro.set(null);
@@ -90,12 +93,13 @@ export class BanciCaptura
         this.limpiar();
         this.ocupado.set(true);
         this.api
-            .precarga(this.entidad, this.mes, this.anio, this.actualizacion)
+            .precarga(this.entidad, this.mes, this.anio, this.actualizacion, this.manual)
             .pipe(finalize(() => this.ocupado.set(false)))
             .subscribe({
                 next: (libro) =>
                 {
                     this.libro.set(libro);
+                    this.originales = structuredClone(libro.victimas);
                     this.originalEditable.set(this.firmaEditable());
                     this.historicaSinOrigen.set(!this.actualizacion && libro.carpetas.length === 0);
                 },
@@ -130,7 +134,7 @@ export class BanciCaptura
                 this.libro.set(libro);
                 this.historicaSinOrigen.set(sinOrigen);
             }
-            const blob = await firstValueFrom(this.api.plantilla(this.entidad, this.mes, this.anio, this.actualizacion));
+            const blob = await firstValueFrom(this.api.plantilla(this.entidad, this.mes, this.anio, this.actualizacion, this.manual));
             descargarBanci(blob, `BANCI_${this.anio}${String(this.mes).padStart(2, '0')}.xlsx`);
             this.plantillaDescargada.set(true);
         } catch (e)
@@ -176,6 +180,7 @@ export class BanciCaptura
     seleccionar(fila: BanciFila): void
     {
         this.seleccion.set(fila);
+        this.validacion.set(null);
         setTimeout(() => document.getElementById('banci-complementos')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     }
     victimasCarpeta(): BanciFila[]
@@ -193,9 +198,53 @@ export class BanciCaptura
             !this.editables().includes(campo) && !['nombre_vicfem', '1apellido_vicfem', '2apellido_vicfem', 'curp_vicfem'].includes(campo)
         );
     }
-    camposVictima(): string[]
+    camposVictima(fila: BanciFila): string[]
     {
-        return this.historicaSinOrigen() ? (this.opciones()?.columnas.victimas ?? []) : this.editables();
+        const campos = this.historicaSinOrigen() ? (this.opciones()?.columnas.victimas ?? []) : this.editables();
+        const localizado = this.opciones()?.catalogos['localizacion']?.find((o) => o.codigo === 'LOCALIZADO');
+        return campos.filter(
+            (c) =>
+                !['con_o_sin_vida', 'fecha_localizacion', 'constitutiva_delito', 'motivo_desaparicion'].includes(c) ||
+                fila.columnas['localizado_o_no_localizado'] === String(localizado?.clave),
+        );
+    }
+    private llave(fila: BanciFila): string
+    {
+        return JSON.stringify(['id_ci', 'id_delito', 'id_vicf'].map((c) => fila.columnas[c]?.trim() ?? ''));
+    }
+    libroParaEnviar(): BanciLibro | null
+    {
+        const libro = this.libro();
+        if(!libro || !this.manual) return libro;
+        let victimas: BanciFila[];
+        if(this.actualizacion)
+        {
+            const anteriores = new Map(this.originales.map((f) => [this.llave(f), f]));
+            victimas = libro.victimas.filter((f) =>
+            {
+                const anterior = anteriores.get(this.llave(f));
+                return !anterior || this.editables().some((c) => (f.columnas[c]?.trim() ?? '') !== (anterior.columnas[c]?.trim() ?? ''));
+            });
+        } else
+        {
+            if(!this.seleccion()) return null;
+            victimas = libro.victimas.filter((f) => f.columnas['id_ci'] === this.seleccion()!.columnas['id_ci']);
+        }
+        const carpetas = new Set(victimas.map((f) => f.columnas['id_ci']));
+        // En alta se conserva toda la carpeta elegida, aunque falte completar una víctima.
+        if(!this.actualizacion) carpetas.add(this.seleccion()!.columnas['id_ci']);
+        const delitos = new Set(victimas.map((f) => JSON.stringify([f.columnas['id_ci'], f.columnas['id_delito']])));
+        return {
+            ...libro,
+            manual: true,
+            victimas,
+            carpetas: libro.carpetas.filter((f) => carpetas.has(f.columnas['id_ci'])),
+            delitos: libro.delitos.filter((f) =>
+                this.actualizacion
+                    ? delitos.has(JSON.stringify([f.columnas['id_ci'], f.columnas['id_delito']]))
+                    : carpetas.has(f.columnas['id_ci']),
+            ),
+        };
     }
     editables(): string[]
     {
@@ -268,8 +317,8 @@ export class BanciCaptura
     {
         if(this.cargaGuiada && !this.plantillaDescargada()) return;
         if(this.manual && this.actualizacion && !this.hayCambios()) return;
-        const libro = this.libro();
-        if(!libro || (!this.manual && !this.archivo)) return;
+        const libro = this.libroParaEnviar();
+        if(!libro || (!this.manual && !this.archivo) || (this.manual && this.actualizacion && !libro.victimas.length)) return;
         this.ocupado.set(true);
         this.mensaje.set('');
         this.validacion.set(null);
@@ -292,11 +341,15 @@ export class BanciCaptura
     {
         const referencia = this.validacion()?.referencia;
         if(!referencia) return;
-        const confirmacion = await confirmarAccion(
-            aceptar ? 'Confirmar envío' : 'Descartar envío',
-            aceptar ? '¿Desea continuar con el envío de información BANCI?' : '¿Desea descartar este envío validado?',
-            aceptar ? 'Continuar' : 'Descartar',
-        );
+        const confirmacion = await Swal.fire({
+            icon: 'warning',
+            title: aceptar ? 'Confirmar envío BANCI' : 'Descartar envío BANCI',
+            text: aceptar ? '¿Desea continuar con el envío de información BANCI?' : '¿Desea descartar este envío validado?',
+            showCancelButton: true,
+            confirmButtonText: aceptar ? 'Confirmar envío' : 'Descartar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#6f2c91',
+        });
         if(!confirmacion.isConfirmed) return;
         this.ocupado.set(true);
         this.api
@@ -306,9 +359,28 @@ export class BanciCaptura
                 next: (r) =>
                 {
                     this.limpiar();
-                    void mostrarExitoInstitucional('Envío procesado', r.estado.replaceAll('_', ' '));
+                    if(aceptar) this.ultimoEnvio.set({ referencia, estado: r.estado });
+                    void Swal.fire({
+                        icon: 'success',
+                        title: 'Envío procesado',
+                        text: r.estado.replaceAll('_', ' '),
+                        confirmButtonColor: '#6f2c91',
+                    });
                 },
                 error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+            });
+    }
+    descargarAcuse(): void
+    {
+        const envio = this.ultimoEnvio();
+        if(!envio || this.ocupado()) return;
+        this.ocupado.set(true);
+        this.api
+            .acuse(envio.referencia)
+            .pipe(finalize(() => this.ocupado.set(false)))
+            .subscribe({
+                next: (blob) => descargarBanci(blob, `BANCI_acuse_${envio.referencia}.pdf`),
+                error: async (e) => this.mensaje.set(await this.errorDescarga(e)),
             });
     }
     exportarErrores(): void

@@ -9,6 +9,7 @@ export interface BanciLibro
     mes: number;
     anio: number;
     actualizacion: boolean;
+    manual?: boolean;
     cambios?: { carpeta: string; delito: string; victima: string; campo: string; anterior: string; nuevo: string }[];
     carpetas: BanciFila[];
     delitos: BanciFila[];

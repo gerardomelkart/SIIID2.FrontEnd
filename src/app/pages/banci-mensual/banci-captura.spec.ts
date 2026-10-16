@@ -147,6 +147,7 @@ describe('Carga BANCI por cortes', () =>
     {
         const f = crear();
         f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
+        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
         f.componentInstance.validar();
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/validar/manual'))
@@ -186,11 +187,88 @@ describe('Carga BANCI por cortes', () =>
     {
         const f = crear();
         f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
+        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
         f.componentInstance.validar();
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/validar/manual'))
             .flush({ esValido: false, errores: [{ archivo: 'victimas', fila: 2, campo: 'curp', mensaje: 'CURP inválida' }] });
         expect(f.componentInstance.errores()[0].campo).toBe('curp');
         expect(f.componentInstance.validacion()).toBeNull();
+    });
+    it('la captura manual envía solo la carpeta seleccionada y conserva sus hijos', () =>
+    {
+        const f = crear();
+        const carpetas = ['1', '2'].map((id) => ({ numeroFila: Number(id) + 1, columnas: { id_ci: id } }));
+        f.componentInstance.libro.set({
+            entidad: 9,
+            mes: 9,
+            anio: 2026,
+            actualizacion: false,
+            carpetas,
+            delitos: ['1', '2'].map((id) => ({ numeroFila: Number(id) + 1, columnas: { id_ci: id, id_delito: 'D' } })),
+            victimas: ['1', '2'].map((id) => ({ numeroFila: Number(id) + 1, columnas: { id_ci: id, id_delito: 'D', id_vicf: 'V' } })),
+        });
+        expect(f.componentInstance.libroParaEnviar()).toBeNull();
+        f.componentInstance.seleccionar(carpetas[1]);
+        const envio = f.componentInstance.libroParaEnviar()!;
+        expect(envio.manual).toBe(true);
+        expect(envio.carpetas.map((r) => r.columnas['id_ci'])).toEqual(['2']);
+        expect(envio.delitos.map((r) => r.columnas['id_ci'])).toEqual(['2']);
+        expect(envio.victimas.map((r) => r.columnas['id_ci'])).toEqual(['2']);
+    });
+    it('la actualización manual envía una víctima modificada y excluye las demás', () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: true, actualizacion: true } } } });
+        const f = crear();
+        f.componentInstance.precargar();
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/precarga') && r.params.get('manual') === 'true')
+            .flush({
+                entidad: 9,
+                mes: 9,
+                anio: 2026,
+                actualizacion: true,
+                carpetas: [{ numeroFila: 2, columnas: { id_ci: '1' } }],
+                delitos: [{ numeroFila: 2, columnas: { id_ci: '1', id_delito: 'D' } }],
+                victimas: ['1', '2'].map((id) => ({
+                    numeroFila: Number(id) + 1,
+                    columnas: { id_ci: '1', id_delito: 'D', id_vicf: id, nomb: 'Persona' },
+                })),
+            });
+        f.componentInstance.editar('nomb', f.componentInstance.libro()!.victimas[1], 'Persona modificada');
+        f.componentInstance.validar();
+        const envio = TestBed.inject(HttpTestingController).expectOne((r) => r.url.endsWith('/validar/manual'));
+        expect(envio.request.body.victimas.length).toBe(1);
+        expect(envio.request.body.victimas[0].columnas.id_vicf).toBe('2');
+        expect(envio.request.body.carpetas.length).toBe(1);
+        expect(envio.request.body.delitos.length).toBe(1);
+        envio.flush({ esValido: false, errores: [] });
+    });
+    it('oculta condición de vida y datos de localización mientras siga no localizada', () =>
+    {
+        const f = crear();
+        f.componentInstance.opciones.set({
+            ...opciones,
+            complementos: [
+                'localizado_o_no_localizado',
+                'con_o_sin_vida',
+                'fecha_localizacion',
+                'constitutiva_delito',
+                'motivo_desaparicion',
+            ],
+        });
+        const fila = { numeroFila: 2, columnas: { localizado_o_no_localizado: '49', con_o_sin_vida: '' } };
+        expect(f.componentInstance.camposVictima(fila)).toEqual(['localizado_o_no_localizado']);
+        fila.columnas.localizado_o_no_localizado = '45';
+        expect(f.componentInstance.camposVictima(fila)).toContain('con_o_sin_vida');
+    });
+    it('la masiva conserva todas las filas para validar coincidencia exacta en servidor', () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: false } } } });
+        const f = crear();
+        const libro = { entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] };
+        f.componentInstance.libro.set(libro);
+        expect(f.componentInstance.libroParaEnviar()).toBe(libro);
+        expect(f.nativeElement.textContent).not.toContain('Las cargas adicionales se suman');
     });
 });

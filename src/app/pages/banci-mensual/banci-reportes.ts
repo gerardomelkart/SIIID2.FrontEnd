@@ -109,6 +109,17 @@ export class BanciReportes
                     this.mensaje.set('No fue posible descargar el original. Verifique la conservación de archivos en este ambiente.'),
             });
     }
+    acuse(fila: BanciEnvio): void
+    {
+        this.ocupado.set(true);
+        this.api
+            .acuse(fila.referencia)
+            .pipe(finalize(() => this.ocupado.set(false)))
+            .subscribe({
+                next: (blob) => descargarBanci(blob, `BANCI_acuse_${fila.referencia}.pdf`),
+                error: () => this.mensaje.set('No fue posible descargar el acuse BANCI.'),
+            });
+    }
     exportar(): void
     {
         void exportarFilasExcel(

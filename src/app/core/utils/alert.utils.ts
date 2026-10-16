@@ -6,7 +6,9 @@ const MODULO_ACTIVO_KEY = 'siiid_modulo_activo';
 
 function obtenerColorPrimario(): string
 {
-    return localStorage.getItem(MODULO_ACTIVO_KEY)?.toUpperCase() === 'SEMANAL' ? COLOR_PRIMARIO_SEMANAL : COLOR_PRIMARIO_MENSUAL;
+    const modulo = localStorage.getItem(MODULO_ACTIVO_KEY)?.toUpperCase();
+    if(modulo === 'BANCI') return '#6f2c91';
+    return modulo === 'SEMANAL' ? COLOR_PRIMARIO_SEMANAL : COLOR_PRIMARIO_MENSUAL;
 }
 const COLOR_EXITO = '#2f80d0';
 

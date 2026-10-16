@@ -61,15 +61,27 @@
     }
     @if (actualizacion && manual && libro() && !hayCambios() && !validacion()) {
         <p class="alert alert-info">
-            Seleccione una carpeta y modifique sus datos personales o de localización para habilitar la validación.
+            Seleccione una carpeta y modifique sus datos personales o de localización para habilitar la validación. Solo se enviarán las víctimas que reciban cambios.
         </p>
     }
     @if (!actualizacion) {
         <p class="alert alert-info">
-            Las cargas adicionales se suman a la información aprobada y no borran ni sustituyen registros. La plantilla incluye únicamente
-            las carpetas nuevas pendientes del corte. Para retirar una carpeta del registro activo debe utilizar Actualización y registrar
-            la reclasificación del delito; su historial se conserva.
+            @if (manual) {
+                Seleccione una de las carpetas pendientes reportadas en el SIIID mensual y complete sus datos BANCI.
+                Cada envío manual incluye únicamente la carpeta seleccionada, con sus delitos y víctimas.
+            } @else {
+                La carga masiva debe incluir exactamente todas las carpetas, delitos y víctimas de desaparición reportados
+                en el SIIID mensual para la entidad y periodo seleccionados, ni más ni menos.
+            }
         </p>
+    }
+    @if (ultimoEnvio(); as envio) {
+        <section class="panel" role="status">
+            <h2>Envío BANCI registrado</h2>
+            <p>{{ envio.estado.replaceAll('_', ' ') }}</p>
+            <p>El acuse contiene el resumen de lo reportado. Los folios de carpetas nuevas se asignan al aprobar el envío.</p>
+            <button class="btn btn-primary" (click)="descargarAcuse()" [disabled]="ocupado()">Descargar acuse PDF</button>
+        </section>
     }
     @if (cargaGuiada) {
         <section class="panel paso-descarga">
@@ -308,7 +320,7 @@
                                 </details>
                             }
                             <div class="campos">
-                                @for (campo of camposVictima(); track campo) {
+                                @for (campo of camposVictima(fila); track campo) {
                                     <label
                                         >{{ nombreCampo(campo) }}
                                         @if (catalogo(campo,fila); as catalogoCampo) {
@@ -350,7 +362,7 @@
                     }
                 </section>
             }
-            @if (!validacion() && (!actualizacion || !manual || hayCambios())) {
+            @if (!validacion() && (!manual || (actualizacion ? hayCambios() : seleccion()))) {
                 <section class="panel acciones">
                     <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || (!manual && !archivo)">
                         {{ ocupado() ? 'Procesando…' : 'Validar información' }}
@@ -401,7 +413,7 @@
             </p>
             <p>Continúe para enviar la información a revisión administrativa. Las operaciones de superusuario se integran directamente.</p>
             <div class="acciones">
-                <button class="btn btn-primary" (click)="confirmar(true)" [disabled]="ocupado()">Continuar</button
+                <button class="btn btn-primary" (click)="confirmar(true)" [disabled]="ocupado()">Confirmar envío</button
                 ><button class="btn btn-outline-danger" (click)="confirmar(false)" [disabled]="ocupado()">Descartar</button>
             </div>
         </section>
