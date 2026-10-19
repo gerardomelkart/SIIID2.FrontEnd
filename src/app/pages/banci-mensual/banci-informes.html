@@ -40,6 +40,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="paginacion-envios"><span>{{ filtradas().length }} {{ originales ? 'entidades con archivo' : 'entidades' }} · Página {{ pagina() }} de {{ paginas() }}</span><div class="acciones"><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() === 1" (click)="pagina.set(pagina() - 1)">Anterior</button><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() >= paginas()" (click)="pagina.set(pagina() + 1)">Siguiente</button></div></div>
+        <div class="paginacion-envios"><span>{{ filasVista().length }} {{ originales ? 'entidades con archivo' : 'entidades' }} · Página {{ pagina() }} de {{ paginas() }}</span><div class="acciones"><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() === 1" (click)="pagina.set(pagina() - 1)">Anterior</button><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() >= paginas()" (click)="pagina.set(pagina() + 1)">Siguiente</button></div></div>
     </section>
 </div>

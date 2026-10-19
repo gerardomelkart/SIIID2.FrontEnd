@@ -13,7 +13,7 @@ describe('Reportes administrativos BANCI', () =>
         return TestBed.createComponent(BanciInformes);
     }
     afterEach(() => { TestBed.inject(HttpTestingController).verify(); vi.restoreAllMocks(); });
-    it('conserva las 32 entidades, pagina y permite buscar las que no tienen carga', () =>
+    it('conserva las 32 entidades para Excel y oculta las que no tienen carga en la vista', () =>
     {
         const f = crear('cargas');
         const http = TestBed.inject(HttpTestingController);
@@ -23,13 +23,14 @@ describe('Reportes administrativos BANCI', () =>
         req.flush(Array.from({ length: 32 }, (_, i) => ({ entidad: i + 1, entidadNombre: `Entidad ${i + 1}`, ranking: i === 0 ? 1 : null, intentos: i === 0 ? 2 : 0, estado: i === 0 ? 'CONFIRMADO' : 'SIN_CARGA', fechaCarga: null, fechaAprobacion: null })));
         f.detectChanges();
         const c = f.componentInstance;
-        expect(c.cargasVisibles().length).toBe(20);
-        expect(c.paginas()).toBe(2);
-        c.pagina.set(2);
-        expect(c.cargasVisibles().length).toBe(12);
+        expect(c.filtradas().length).toBe(32);
+        expect(c.cargasVisibles().length).toBe(1);
+        expect(c.paginas()).toBe(1);
+        expect(f.nativeElement.textContent).not.toContain('Sin carga');
         c.buscar('Sin carga');
         expect(c.pagina()).toBe(1);
         expect(c.filtradas().length).toBe(31);
+        expect(c.cargasVisibles().length).toBe(0);
         expect(f.nativeElement.textContent).toContain('Reporte de cargas');
     });
     it('no consulta un periodo vacío cuando no hay cortes', () =>

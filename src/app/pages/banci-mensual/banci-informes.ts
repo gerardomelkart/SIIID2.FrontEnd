@@ -48,9 +48,10 @@ export class BanciInformes
                 return String(valor(a)).localeCompare(String(valor(b)), 'es', { numeric: true }) * (this.ascendente() ? 1 : -1) || a.entidadNombre.localeCompare(b.entidadNombre, 'es');
             });
     });
-    readonly paginas = computed(() => Math.max(1, Math.ceil(this.filtradas().length / 20)));
-    readonly cargasVisibles = computed(() => this.filtradas().slice((this.pagina() - 1) * 20, this.pagina() * 20) as BanciReporteCarga[]);
-    readonly originalesVisibles = computed(() => this.filtradas().slice((this.pagina() - 1) * 20, this.pagina() * 20) as BanciArchivoOriginal[]);
+    readonly filasVista = computed(() => this.filtradas().filter(f => !('intentos' in f) || f.intentos > 0));
+    readonly paginas = computed(() => Math.max(1, Math.ceil(this.filasVista().length / 20)));
+    readonly cargasVisibles = computed(() => this.filasVista().slice((this.pagina() - 1) * 20, this.pagina() * 20) as BanciReporteCarga[]);
+    readonly originalesVisibles = computed(() => this.filasVista().slice((this.pagina() - 1) * 20, this.pagina() * 20) as BanciArchivoOriginal[]);
 
     constructor() { this.actualizar(); }
     clave(p: BanciPeriodo): string { return `${p.anio}-${String(p.mes).padStart(2, '0')}`; }
