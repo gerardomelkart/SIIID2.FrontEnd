@@ -27,3 +27,5 @@
 .reporte-card-header { flex-wrap: wrap; }
 .reporte-actions { flex-direction: row; max-width: 100%; }
 @media (max-width: 900px) { .reporte-actions { width: 100%; justify-content: flex-start; } .reporte-actions .buscador { height: 36px; } }
+.acciones details { margin: 0; flex: 0 0 34px; width: 34px; height: 34px; }
+.acciones details summary { margin: 0; vertical-align: top; }
