@@ -121,4 +121,16 @@ describe('Aprobación de cargas BANCI con esquema mensual', () =>
         expect(f.componentInstance.seleccion()?.referencia).toBe(pendiente.referencia);
         expect(f.componentInstance.mensaje()).toContain('resuelta');
     });
+    it('al revisar espera a renderizar y lleva la resolución a la parte inferior visible', async () =>
+    {
+        const f = crear();
+        const scroll = vi.fn();
+        vi.spyOn(document, 'getElementById').mockReturnValue({ scrollIntoView: scroll } as unknown as HTMLElement);
+        vi.spyOn(window, 'requestAnimationFrame').mockImplementation(cb => window.setTimeout(() => cb(0), 0));
+        revisar(f);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        expect(document.getElementById).toHaveBeenCalledWith('resolucion-carga-banci');
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'end' });
+    });
+
 });

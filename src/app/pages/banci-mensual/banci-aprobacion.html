@@ -56,7 +56,7 @@
             </section>
             }
             <div class="descargas-row"><button class="btn-descarga btn-pdf" [disabled]="ocupado()" (click)="acuse()"><i class="fa-solid fa-file-pdf"></i> Ver informe previo</button>@if (!fila.manual && fila.tieneOriginal && fila.nombreOriginal) { <button class="btn-descarga btn-zip" [disabled]="ocupado()" (click)="original()"><i class="fa-solid fa-file-excel"></i> Descargar archivo original</button> }</div>
-            <div class="resolucion-row"><button class="btn-rechazar" [disabled]="ocupado()" (click)="resolver(false)"><i class="fa-solid fa-xmark"></i> Rechazar</button><button class="btn-aprobar" [disabled]="ocupado()" (click)="resolver(true)"><i class="fa-solid fa-check"></i> Aprobar carga</button></div>
+            <div id="resolucion-carga-banci" class="resolucion-row"><button class="btn-rechazar" [disabled]="ocupado()" (click)="resolver(false)"><i class="fa-solid fa-xmark"></i> Rechazar</button><button class="btn-aprobar" [disabled]="ocupado()" (click)="resolver(true)"><i class="fa-solid fa-check"></i> Aprobar carga</button></div>
         </section>
     } }
 </div>

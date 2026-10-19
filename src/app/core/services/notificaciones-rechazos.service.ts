@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { API_ENDPOINTS } from '../constants/api-endpoints.constants';
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/api-endpoints.constants';
 
 export interface NotificacionRechazoResponse
 {
@@ -15,6 +15,11 @@ export class NotificacionesRechazosService
 {
     private readonly http = inject(HttpClient);
     private readonly apiUrl = API_ENDPOINTS.notificacionesRechazos;
+
+    consumirBanci()
+    {
+        return this.http.post<NotificacionRechazoResponse>(`${API_BASE_URL}/banci/mensual/notificaciones/rechazos/consumir`, null);
+    }
 
     consumirMensual()
     {

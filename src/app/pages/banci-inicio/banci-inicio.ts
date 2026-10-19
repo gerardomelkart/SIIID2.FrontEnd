@@ -1,10 +1,11 @@
+import { RecordatorioCarga } from '../../shared/recordatorio-carga/recordatorio-carga';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SessionService } from '../../core/services/session.service';
 
 @Component({
     selector: 'app-banci-inicio',
-    imports: [RouterLink],
+    imports: [RouterLink, RecordatorioCarga],
     templateUrl: './banci-inicio.html',
     styleUrl: './banci-inicio.css',
 })

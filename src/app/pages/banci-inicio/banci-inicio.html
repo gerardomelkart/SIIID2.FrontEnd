@@ -1,4 +1,5 @@
 <div class="dashboard-page">
+    @if (usuario()?.rol === 'ENLACE_ESTATAL' && puedeCapturar()) { <app-recordatorio-carga modulo="banci"></app-recordatorio-carga> }
     <section class="welcome-card">
         <div class="welcome-content">
             <div class="welcome-icon">

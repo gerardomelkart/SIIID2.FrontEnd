@@ -4,8 +4,16 @@
 .aprobacion-table tbody tr:hover { background: #faf6fc; }
 .detalle-dato strong { overflow-wrap: anywhere; }
 .nota-muestra { margin: 16px 0 10px; font-size: 12px; color: #667085; }
-.muestra-scroll { max-height: 420px; }
-.muestra-scroll thead { position: sticky; top: 0; z-index: 1; }
+.muestra-scroll { display: block; min-width: 0; overflow: auto; max-height: 650px; }
+
 .cambios-admin-title h3 { color: var(--siiid-guinda); }
 #detalle-carga-banci { scroll-margin-top: 20px; }
 @media (max-width: 650px) { .totales-grid { grid-template-columns: 1fr; } }
+
+.cambios-admin-acciones, .descargas-row, .resolucion-row { flex-wrap: wrap; gap: 12px; }
+.cambios-admin-acciones button, .descargas-row button, .resolucion-row button { white-space: normal; min-height: 40px; }
+.diferencias-admin-table { table-layout: fixed; width: 100%; }
+.diferencias-admin-table th, .diferencias-admin-table td { overflow-wrap: anywhere; }
+.identificadores-admin { min-width: 0; }
+.identificadores-admin span { overflow-wrap: anywhere; }
+@media (max-width: 800px) { .diferencia-admin-registro-head { flex-direction: column; } .identificadores-admin { justify-content: flex-start; } }

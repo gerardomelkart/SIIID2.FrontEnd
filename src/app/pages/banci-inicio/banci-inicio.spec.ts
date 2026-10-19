@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -10,7 +12,7 @@ describe('Inicio institucional BANCI', () =>
     beforeEach(() =>
         TestBed.configureTestingModule({
             providers: [
-                provideRouter([]),
+                provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
                 {
                     provide: SessionService,
                     useValue: {
@@ -47,4 +49,16 @@ describe('Inicio institucional BANCI', () =>
         for(const ruta of ['carga-masiva', 'formulario', 'actualizacion/masiva', 'actualizacion/manual'])
             expect(hijas.find((r) => r.path === ruta)?.loadComponent).toBeDefined();
     });
+    it('muestra al enlace el recordatorio de carpetas pendientes de carga', () =>
+    {
+        (TestBed.inject(SessionService).usuario as ReturnType<typeof signal>).set({ rol: 'ENLACE_ESTATAL', nombre: 'Enlace' });
+        const f = TestBed.createComponent(BanciInicio); f.detectChanges();
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne(r => r.url.endsWith('/banci/mensual/recordatorio')).flush({ hayPendiente: true, titulo: 'Carga BANCI pendiente', mensaje: 'Hay carpetas pendientes de enviar.', periodo: 'septiembre de 2026', delitos: [] });
+        f.detectChanges();
+        expect(f.nativeElement.textContent).toContain('Carga BANCI pendiente');
+        expect(f.nativeElement.textContent).toContain('Hay carpetas pendientes');
+        http.verify();
+    });
+
 });

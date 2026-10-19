@@ -137,3 +137,9 @@ La configuración de BANCI usa el mismo diseño que el consolidado: controles gl
 Las reglas de validación y las cargas de cortes anteriores se administran únicamente en Configuración del sistema. Se retira el endpoint duplicado PUT /api/banci/mensual/configuracion; las reglas existentes siguen aplicándose en la carga y actualización. No requiere cambios en base de datos. Publicar API y frontend juntos.
 
 En aprobación BANCI, el resumen y la muestra de diferencias se muestran únicamente en actualizaciones, agrupados por víctima con el esquema del consolidado. Las cargas iniciales no ofrecen diferencias y se retira la muestra adicional de registros.
+
+### Avisos y distribución BANCI
+
+BANCI consulta los rechazos propios al entrar y cada minuto, con el mismo aviso y acceso a envíos del consolidado. Registra su consulta una sola vez en la bitácora BANCI existente, sin tablas ni columnas adicionales. El inicio incorpora el recordatorio compartido de carga pendiente, calculado sobre carpetas del corte anterior todavía no aprobadas ni enviadas a revisión.
+
+La revisión administrativa desplaza la resolución al borde inferior visible tras renderizar. La muestra de diferencias contiene su desplazamiento sin superponer descargas o resolución. La consulta de envíos amplía el selector de corte y distribuye acciones y botones con separación y ajuste al ancho disponible. Los cambios de estilo se limitan a BANCI.

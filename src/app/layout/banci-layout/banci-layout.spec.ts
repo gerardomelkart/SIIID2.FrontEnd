@@ -1,3 +1,7 @@
+import { of } from 'rxjs';
+import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
+import { NotificacionesRechazosService } from '../../core/services/notificaciones-rechazos.service';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -12,6 +16,7 @@ describe('Diseño institucional BANCI', () =>
         TestBed.configureTestingModule({
             providers: [
                 provideRouter([]),
+                { provide: NotificacionesRechazosService, useValue: { consumirBanci: vi.fn(() => of({ hayNotificacion: false, cantidad: 0 })) } },
                 {
                     provide: SessionService,
                     useValue: {
@@ -59,4 +64,21 @@ describe('Diseño institucional BANCI', () =>
         f.detectChanges();
         expect(f.nativeElement.querySelector('aside.mobile-open')).toBeNull();
     });
+    it('avisa de rechazos al enlace y dirige a sus envíos', async () =>
+    {
+        vi.useFakeTimers();
+        const sesion = TestBed.inject(SessionService);
+        (sesion.usuario as ReturnType<typeof signal>).set({ rol: 'ENLACE_ESTATAL', nombre: 'Enlace' });
+        const servicio = TestBed.inject(NotificacionesRechazosService);
+        vi.mocked(servicio.consumirBanci).mockReturnValue(of({ hayNotificacion: true, cantidad: 1 }));
+        const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+        const alerta = vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: true, isDenied: false, isDismissed: false });
+        const f = TestBed.createComponent(BanciLayout); f.detectChanges();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(servicio.consumirBanci).toHaveBeenCalledOnce();
+        expect(alerta).toHaveBeenCalled();
+        expect(navegar).toHaveBeenCalledWith('/banci/informes/envios');
+        f.destroy(); vi.useRealTimers(); vi.restoreAllMocks();
+    });
+
 });

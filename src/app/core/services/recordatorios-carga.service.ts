@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { API_BASE_URL } from '../constants/api-endpoints.constants';
 
-export type ModuloRecordatorioCarga = 'mensual' | 'semanal' | 'federal';
+export type ModuloRecordatorioCarga = 'mensual' | 'semanal' | 'federal' | 'banci';
 
 export interface RecordatorioCargaResponse
 {
@@ -23,6 +23,6 @@ export class RecordatoriosCargaService
 
     obtener(modulo: ModuloRecordatorioCarga)
     {
-        return this.http.get<RecordatorioCargaResponse>(`${this.apiUrl}/${modulo}`);
+        return this.http.get<RecordatorioCargaResponse>(modulo === 'banci' ? `${API_BASE_URL}/banci/mensual/recordatorio` : `${this.apiUrl}/${modulo}`);
     }
 }

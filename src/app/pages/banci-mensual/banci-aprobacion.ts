@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
+import { Component, ChangeDetectorRef, computed, inject, OnDestroy, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -19,6 +19,7 @@ import { nombreCampo } from './banci-campos';
 export class BanciAprobacion implements OnDestroy
 {
     private readonly api = inject(BanciMensualService);
+    private readonly cdr = inject(ChangeDetectorRef);
     private readonly diferencias = inject(DiferenciasAdministracionService);
     private readonly sanitizer = inject(DomSanitizer);
     readonly filas = signal<BanciPendiente[]>([]);
@@ -79,7 +80,8 @@ export class BanciAprobacion implements OnDestroy
             next: revision =>
             {
                 this.seleccion.set(fila); this.revision.set(revision);
-                setTimeout(() => document.getElementById('detalle-carga-banci')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }));
+                this.cdr.detectChanges();
+                requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('resolucion-carga-banci')?.scrollIntoView?.({ behavior: 'smooth', block: 'end' })));
             }, error: e => this.error(e),
         });
     }

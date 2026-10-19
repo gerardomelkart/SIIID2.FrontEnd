@@ -10,3 +10,17 @@
 .acciones details summary { list-style: none; cursor: pointer; }
 .motivo-envio { min-width: 210px; max-width: 350px; white-space: normal; padding: 12px; margin-top: 8px; background: #fff7f8; border: 1px solid #ebcbd1; }
 @media (max-width: 600px) { .informes-header, .paginacion-envios { flex-wrap: wrap; } }
+.reporte-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.reporte-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; }
+.reporte-actions .buscador { flex: 1 1 260px; min-width: 0; max-width: 360px; }
+.corte-selector-controls { min-width: 240px; max-width: 100%; }
+.corte-selector-controls select { width: 100%; min-width: 240px; }
+.acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 9px; }
+.acciones .btn-icon { flex: 0 0 34px; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; margin: 0; }
+.acciones details { position: relative; }
+.motivo-envio { position: absolute; right: 0; z-index: 3; box-shadow: 0 4px 14px #0002; }
+@media (max-width: 600px) { .reporte-actions { justify-content: flex-start; width: 100%; } .corte-selector-controls, .corte-selector-controls select { min-width: 0; width: 100%; } }
+.reporte-actions .btn { background: var(--siiid-guinda); border-color: var(--siiid-guinda); color: #fff; border-radius: 5px; padding: 7px 11px; }
+.reporte-actions .btn:hover:not(:disabled) { filter: brightness(.92); }
+
+.acciones { margin: 0; }
