@@ -143,3 +143,7 @@ En aprobación BANCI, el resumen y la muestra de diferencias se muestran únicam
 BANCI consulta los rechazos propios al entrar y cada minuto, con el mismo aviso y acceso a envíos del consolidado. Registra su consulta una sola vez en la bitácora BANCI existente, sin tablas ni columnas adicionales. El inicio incorpora el recordatorio compartido de carga pendiente, calculado sobre carpetas del corte anterior todavía no aprobadas ni enviadas a revisión.
 
 La revisión administrativa desplaza la resolución al borde inferior visible tras renderizar. La muestra de diferencias contiene su desplazamiento sin superponer descargas o resolución. La consulta de envíos amplía el selector de corte y distribuye acciones y botones con separación y ajuste al ancho disponible. Los cambios de estilo se limitan a BANCI.
+
+### Dashboard, recarga y barra de herramientas BANCI
+
+Al recargar una ruta interna de BANCI se vuelve al dashboard del mismo módulo. El inicio ofrece los accesos de carga, actualización y envíos, y los cinco accesos administrativos existentes solo a SUPER_USUARIO. La barra de envíos usa las clases de distribución correctas y conserva filas compactas en escritorio, tableta y móvil. Se verificaron los accesos, la recarga, la ausencia de desbordamiento horizontal y la separación entre muestras de diferencias y botones en Chromium con datos simulados.

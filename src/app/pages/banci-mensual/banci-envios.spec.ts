@@ -86,4 +86,14 @@ describe('Consulta de envíos BANCI con el esquema mensual', () =>
         expect(f.componentInstance.ocupado()).toBe(false);
         expect(f.nativeElement.textContent).toContain('Sin cortes disponibles');
     });
+    it('aplica a la barra de herramientas la distribución de acciones compartida', () =>
+    {
+        const f = crear();
+        const acciones = f.nativeElement.querySelector('.reporte-actions');
+        expect(acciones).not.toBeNull();
+        expect(acciones.querySelectorAll('button').length).toBe(3);
+        expect(acciones.querySelector('.buscador')).not.toBeNull();
+        expect(f.nativeElement.querySelector('.reporte-toolbar')).toBeNull();
+    });
+
 });

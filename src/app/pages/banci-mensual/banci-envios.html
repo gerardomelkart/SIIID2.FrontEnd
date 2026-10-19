@@ -7,7 +7,7 @@
     <section class="siiid-card">
         <div class="siiid-card-header reporte-card-header">
             <span><i class="fa-solid fa-magnifying-glass"></i> Consulta de envíos</span>
-            <div class="reporte-toolbar">
+            <div class="reporte-actions">
                 <button class="btn btn-sm btn-secondary" [disabled]="ocupado()" (click)="actualizar()"><i class="fa-solid" [class.fa-rotate]="!cargando()" [class.fa-spinner]="cargando()" [class.fa-spin]="cargando()"></i> Actualizar</button>
                 <button class="btn btn-sm btn-secondary" [disabled]="ocupado() || !corte()" (click)="acuses()"><i class="fa-solid fa-file-zipper"></i> {{ accion() === 'acuses' ? 'Generando acuses…' : 'Descargar acuses' }}</button>
                 <button class="btn btn-sm btn-secondary" [disabled]="ocupado() || !filtradas().length" (click)="exportar()"><i class="fa-solid fa-file-excel"></i> Excel</button>

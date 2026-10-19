@@ -88,6 +88,10 @@
                 <div><strong>Consulta de envíos</strong><span>Consulte el estado de sus envíos por entidad y corte mensual.</span></div></a
             >
             @if (usuario()?.rol === 'SUPER_USUARIO') {
+<a class="quick-link" routerLink="/banci/informes/cargas"><div class="quick-icon"><i class="fa-solid fa-chart-simple"></i></div><div><strong>Reporte de cargas</strong><span>Monitoreo de intentos y estatus por entidad.</span></div></a>
+<a class="quick-link" routerLink="/banci/informes/originales"><div class="quick-icon"><i class="fa-solid fa-folder-open"></i></div><div><strong>Archivos originales</strong><span>Consulta y descarga de los últimos archivos recibidos por entidad.</span></div></a>
+<a class="quick-link" routerLink="/banci/administracion/cargas-pendientes"><div class="quick-icon"><i class="fa-solid fa-clipboard-check"></i></div><div><strong>Aprobación de cargas</strong><span>Revisión y aceptación administrativa de cargas pendientes.</span></div></a>
+<a class="quick-link" routerLink="/banci/administracion/configuracion"><div class="quick-icon"><i class="fa-solid fa-sliders"></i></div><div><strong>Configuración de módulos</strong><span>Control global y por entidad de permisos operativos.</span></div></a>
                 <a class="quick-link" routerLink="/banci/administracion/usuarios"
                     ><div class="quick-icon"><i class="fa-solid fa-users"></i></div>
                     <div><strong>Usuarios</strong><span>Administre el acceso y los permisos de BANCI.</span></div></a

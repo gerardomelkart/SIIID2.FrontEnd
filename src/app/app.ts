@@ -172,8 +172,15 @@ export class App implements OnInit
         const rutaActual = basePath && pathname.startsWith(basePath) ? pathname.slice(basePath.length) || '/' : pathname;
 
         // Estas rutas deben conservarse al recargar.
-        if(rutaActual === '/login' || rutaActual === '/cambiar-password' || /^\/banci(?:\/|$)/.test(rutaActual))
+        if(rutaActual === '/login' || rutaActual === '/cambiar-password')
         {
+            return;
+        }
+
+        // BANCI conserva su módulo y vuelve a su dashboard al refrescar.
+        if(/^\/banci(?:\/|$)/.test(rutaActual))
+        {
+            if(rutaActual !== '/banci') void this.router.navigateByUrl('/banci');
             return;
         }
 

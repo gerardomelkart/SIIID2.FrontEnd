@@ -61,4 +61,11 @@ describe('Inicio institucional BANCI', () =>
         http.verify();
     });
 
+    it('ofrece al administrador todos los accesos existentes del menú BANCI', () =>
+    {
+        const f = TestBed.createComponent(BanciInicio); f.detectChanges();
+        for(const ruta of ['informes/cargas', 'informes/originales', 'administracion/cargas-pendientes', 'administracion/configuracion', 'administracion/usuarios'])
+            expect(f.nativeElement.querySelector(`a[href="/banci/${ruta}"]`)).not.toBeNull();
+    });
+
 });

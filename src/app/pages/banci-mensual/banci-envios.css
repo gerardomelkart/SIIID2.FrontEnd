@@ -24,3 +24,6 @@
 .reporte-actions .btn:hover:not(:disabled) { filter: brightness(.92); }
 
 .acciones { margin: 0; }
+.reporte-card-header { flex-wrap: wrap; }
+.reporte-actions { flex-direction: row; max-width: 100%; }
+@media (max-width: 900px) { .reporte-actions { width: 100%; justify-content: flex-start; } .reporte-actions .buscador { height: 36px; } }
