@@ -27,8 +27,8 @@ describe('Inicio institucional BANCI', () =>
         const fixture = TestBed.createComponent(BanciInicio);
         fixture.detectChanges();
         expect(fixture.nativeElement.textContent).toContain('Bienvenido, Prueba');
-        expect(fixture.nativeElement.querySelector('a[href="/banci/carga-masiva"]')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('a[href="/banci/actualizacion/manual"]')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('a[href="/banci/carga-mensual"]')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('a[href="/banci/actualizacion-mensual"]')).not.toBeNull();
     });
     it('protege todas las rutas administrativas por rol', () =>
     {

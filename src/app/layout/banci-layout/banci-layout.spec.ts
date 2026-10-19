@@ -45,7 +45,7 @@ describe('Diseño institucional BANCI', () =>
         f.detectChanges();
         const disponibles = routes.find((r) => r.path === 'banci')!.children!.map((r) => `/banci/${r.path}`);
         const enlaces = [...f.nativeElement.querySelectorAll('a[href]')] as HTMLAnchorElement[];
-        expect(enlaces.length).toBe(10);
+        expect(enlaces.length).toBe(8);
         for(const enlace of enlaces) expect(disponibles).toContain(enlace.getAttribute('href'));
     });
     it('el menú móvil se puede abrir y cerrar', () =>

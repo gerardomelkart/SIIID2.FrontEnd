@@ -38,12 +38,8 @@
                     </button>
 
                     @if (cargaAbierta()) {
-                        <a class="menu-link level-2" routerLink="/banci/carga-masiva" routerLinkActive="active">
-                            <i class="fa-solid fa-file-arrow-up"></i>
-                            Carga masiva
-                        </a>
-                        <a class="menu-link level-2" routerLink="/banci/formulario" routerLinkActive="active"
-                            ><i class="fa-solid fa-pen-to-square"></i> Carga manual</a
+                        <a class="menu-link level-2" routerLink="/banci/carga-mensual" routerLinkActive="active"
+                            ><i class="fa-solid fa-calendar-days"></i> Carga mensual</a
                         >
                     }
                 }
@@ -58,11 +54,8 @@
                         <span><i class="fa-solid fa-user-pen"></i> Actualización de información</span>
                     </button>
                     @if (actualizacionAbierta()) {
-                        <a class="menu-link level-2" routerLink="/banci/actualizacion/manual" routerLinkActive="active"
-                            ><i class="fa-solid fa-pen-to-square"></i> Actualización manual</a
-                        >
-                        <a class="menu-link level-2" routerLink="/banci/actualizacion/masiva" routerLinkActive="active"
-                            ><i class="fa-solid fa-file-arrow-up"></i> Actualización masiva</a
+                        <a class="menu-link level-2" routerLink="/banci/actualizacion-mensual" routerLinkActive="active"
+                            ><i class="fa-solid fa-calendar-days"></i> Actualización mensual</a
                         >
                     }
                 }

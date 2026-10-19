@@ -1,5 +1,7 @@
 import { nombreCampo } from './banci-campos';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, firstValueFrom } from 'rxjs';
@@ -17,8 +19,30 @@ import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
     templateUrl: './banci-captura.html',
     styleUrls: ['./banci-mensual.css', './banci-carga.css'],
 })
-export class BanciCaptura
+export class BanciCaptura implements OnDestroy
 {
+    private readonly sanitizer = inject(DomSanitizer);
+    readonly acuseUrl = signal<SafeResourceUrl | null>(null);
+    readonly acuseReferencia = signal<string | null>(null);
+    readonly cargandoAcuse = signal(false);
+    readonly errorAcuse = signal('');
+    private acuseObjectUrl: string | null = null;
+    ngOnDestroy(): void
+    {
+        this.cerrarAcuse();
+    }
+    cerrarAcuse(): void
+    {
+        revocarObjectUrl(this.acuseObjectUrl);
+        this.acuseObjectUrl = null;
+        this.acuseUrl.set(null);
+        this.acuseReferencia.set(null);
+        this.errorAcuse.set('');
+    }
+    private desplazar(id: string): void
+    {
+        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
     readonly nombreCampo = nombreCampo;
     private readonly api = inject(BanciMensualService);
     private readonly session = inject(SessionService);
@@ -77,6 +101,7 @@ export class BanciCaptura
     }
     limpiar(): void
     {
+        this.cerrarAcuse();
         this.ultimoEnvio.set(null);
         this.originales = [];
         this.plantillaDescargada.set(false);
@@ -144,6 +169,7 @@ export class BanciCaptura
             const blob = await firstValueFrom(this.api.plantilla(this.entidad, this.mes, this.anio, this.actualizacion, this.manual));
             descargarBanci(blob, `BANCI_${this.anio}${String(this.mes).padStart(2, '0')}.xlsx`);
             this.plantillaDescargada.set(true);
+            this.desplazar(this.cargaGuiada ? 'banci-carga-archivo' : 'banci-captura-manual');
         } catch (e)
         {
             this.mensaje.set(await this.errorDescarga(e));
@@ -329,6 +355,7 @@ export class BanciCaptura
         this.ocupado.set(true);
         this.mensaje.set('');
         this.validacion.set(null);
+        this.desplazar('banci-proceso');
         const peticion = this.manual ? this.api.validarManual(libro) : this.api.validarArchivo(this.archivo!, libro);
         peticion.pipe(finalize(() => this.ocupado.set(false))).subscribe({
             next: (r) =>
@@ -337,6 +364,7 @@ export class BanciCaptura
                 if(r.esValido)
                 {
                     this.validacion.set(r);
+                    if(r.referencia) this.mostrarAcuse(r.referencia);
                     setTimeout(() => document.getElementById('banci-informe')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
                 }
                 if(r.errores.length) setTimeout(() => document.getElementById('banci-errores')?.scrollIntoView({ behavior: 'smooth' }));
@@ -366,7 +394,11 @@ export class BanciCaptura
                 next: (r) =>
                 {
                     this.limpiar();
-                    if(aceptar) this.ultimoEnvio.set({ referencia, estado: r.estado });
+                    if(aceptar)
+                    {
+                        this.ultimoEnvio.set({ referencia, estado: r.estado });
+                        this.mostrarAcuse(referencia);
+                    }
                     void Swal.fire({
                         icon: 'success',
                         title: 'Envío procesado',
@@ -377,17 +409,26 @@ export class BanciCaptura
                 error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
             });
     }
-    descargarAcuse(): void
+    mostrarAcuse(referencia: string): void
     {
-        const envio = this.ultimoEnvio();
-        if(!envio || this.ocupado()) return;
-        this.ocupado.set(true);
+        this.acuseReferencia.set(referencia);
+        this.cargandoAcuse.set(true);
+        this.errorAcuse.set('');
         this.api
-            .acuse(envio.referencia)
-            .pipe(finalize(() => this.ocupado.set(false)))
+            .acuse(referencia)
+            .pipe(finalize(() => this.cargandoAcuse.set(false)))
             .subscribe({
-                next: (blob) => descargarBanci(blob, `BANCI_acuse_${envio.referencia}.pdf`),
-                error: async (e) => this.mensaje.set(await this.errorDescarga(e)),
+                next: (blob) =>
+                {
+                    if(this.acuseReferencia() !== referencia) return;
+                    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseObjectUrl);
+                    this.acuseObjectUrl = pdf.objectUrl;
+                    this.acuseUrl.set(pdf.safeUrl);
+                },
+                error: async (e) =>
+                {
+                    if(this.acuseReferencia() === referencia) this.errorAcuse.set(await this.errorDescarga(e));
+                },
             });
     }
     exportarErrores(): void

@@ -26,14 +26,18 @@ const opciones: BanciOpciones = {
 describe('Carga BANCI por cortes', () =>
 {
     beforeEach(() =>
+    {
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:banci-prueba');
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() =>
+        {});
         TestBed.configureTestingModule({
             providers: [
                 provideHttpClient(),
                 provideHttpClientTesting(),
                 { provide: ActivatedRoute, useValue: { snapshot: { data: { manual: true, actualizacion: false } } } },
             ],
-        }),
-    );
+        });
+    });
     afterEach(() =>
     {
         TestBed.inject(HttpTestingController).verify();
@@ -152,6 +156,9 @@ describe('Carga BANCI por cortes', () =>
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/validar/manual'))
             .flush({ esValido: true, referencia: 'prueba', errores: [], advertencias: [] });
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/envios/prueba/acuse'))
+            .flush(new Blob(['pdf'], { type: 'application/pdf' }));
         f.detectChanges();
         const informe = f.nativeElement.querySelector('#banci-informe');
         const scroll = vi.fn();
@@ -323,5 +330,70 @@ describe('Carga BANCI por cortes', () =>
         expect(f.componentInstance.archivo).toBeNull();
         expect(f.nativeElement.querySelector('input[type="file"]')).toBeNull();
         TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/plantilla'));
+    });
+    it('abre el acuse previo y lo reemplaza por el final al aceptar, sin descargarlo', async () =>
+    {
+        vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: true, isDenied: false, isDismissed: false });
+        const f = crear();
+        const c = f.componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        c.validacion.set({ esValido: true, referencia: 'acuse-prueba', errores: [] });
+        c.mostrarAcuse('acuse-prueba');
+        http.expectOne((r) => r.url.endsWith('/envios/acuse-prueba/acuse')).flush(new Blob(['previo'], { type: 'application/pdf' }));
+        f.detectChanges();
+        expect(f.nativeElement.querySelector('.acuse-modal iframe')).not.toBeNull();
+        await c.confirmar(true);
+        http.expectOne((r) => r.url.endsWith('/envios/acuse-prueba/confirmar')).flush({ estado: 'CONFIRMADO' });
+        http.expectOne((r) => r.url.endsWith('/envios/acuse-prueba/acuse')).flush(new Blob(['final'], { type: 'application/pdf' }));
+        f.detectChanges();
+        expect(c.ultimoEnvio()?.estado).toBe('CONFIRMADO');
+        expect(f.nativeElement.querySelector('.acuse-modal iframe')).not.toBeNull();
+        expect(f.nativeElement.textContent).not.toContain('Descargar acuse PDF');
+        c.cerrarAcuse();
+        expect(URL.revokeObjectURL).toHaveBeenCalled();
+        expect(c.acuseUrl()).toBeNull();
+    });
+    it('oculta el bloque de descarga y desplaza a la carga de archivo al obtener la plantilla', async () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: true } } } });
+        vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: true, isDenied: false, isDismissed: false });
+        vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() =>
+        {});
+        const f = crear();
+        const descarga = f.componentInstance.plantilla();
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne((r) => r.url.endsWith('/precarga')).flush({
+            entidad: 9,
+            mes: 9,
+            anio: 2026,
+            actualizacion: true,
+            carpetas: [{ numeroFila: 2, columnas: { id_ci: '1' } }],
+            delitos: [],
+            victimas: [],
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        http.expectOne((r) => r.url.endsWith('/plantilla')).flush(new Blob(['excel']));
+        await descarga;
+        f.detectChanges();
+        expect(f.nativeElement.querySelector('.paso-descarga')).toBeNull();
+        const scroll = vi.fn();
+        Object.defineProperty(f.nativeElement.querySelector('#banci-carga-archivo'), 'scrollIntoView', { value: scroll });
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    });
+    it('desplaza hacia el estado de proceso al validar una carga manual', async () =>
+    {
+        const f = crear();
+        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
+        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
+        f.componentInstance.validar();
+        f.detectChanges();
+        const scroll = vi.fn();
+        Object.defineProperty(f.nativeElement.querySelector('#banci-proceso'), 'scrollIntoView', { value: scroll });
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+        TestBed.inject(HttpTestingController)
+            .expectOne((r) => r.url.endsWith('/validar/manual'))
+            .flush({ esValido: false, errores: [] });
     });
 });

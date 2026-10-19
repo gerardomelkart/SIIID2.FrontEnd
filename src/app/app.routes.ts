@@ -235,6 +235,18 @@ export const routes: Routes = [
         children: [
             { path: '', loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio) },
             {
+                path: 'carga-mensual',
+                loadComponent: () => import('./pages/banci-mensual/banci-modalidad').then((m) => m.BanciModalidad),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA', actualizacion: false },
+            },
+            {
+                path: 'actualizacion-mensual',
+                loadComponent: () => import('./pages/banci-mensual/banci-modalidad').then((m) => m.BanciModalidad),
+                canActivate: [permissionGuard],
+                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', actualizacion: true },
+            },
+            {
                 path: 'carga-masiva',
                 loadComponent: () => import('./pages/banci-mensual/banci-captura').then((m) => m.BanciCaptura),
                 canActivate: [permissionGuard],

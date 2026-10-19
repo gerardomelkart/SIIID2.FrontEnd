@@ -1,5 +1,7 @@
 import { nombreCampo } from './banci-campos';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -16,8 +18,21 @@ import { confirmarAccion } from '../../core/utils/alert.utils';
     templateUrl: './banci-reportes.html',
     styleUrl: './banci-mensual.css',
 })
-export class BanciReportes
+export class BanciReportes implements OnDestroy
 {
+    private readonly sanitizer = inject(DomSanitizer);
+    readonly acuseUrl = signal<SafeResourceUrl | null>(null);
+    private acuseObjectUrl: string | null = null;
+    cerrarAcuse(): void
+    {
+        revocarObjectUrl(this.acuseObjectUrl);
+        this.acuseObjectUrl = null;
+        this.acuseUrl.set(null);
+    }
+    ngOnDestroy(): void
+    {
+        this.cerrarAcuse();
+    }
     readonly nombreCampo = nombreCampo;
     private readonly api = inject(BanciMensualService);
     readonly reporte: string = inject(ActivatedRoute).snapshot.data['reporte'];
@@ -116,7 +131,12 @@ export class BanciReportes
             .acuse(fila.referencia)
             .pipe(finalize(() => this.ocupado.set(false)))
             .subscribe({
-                next: (blob) => descargarBanci(blob, `BANCI_acuse_${fila.referencia}.pdf`),
+                next: (blob) =>
+                {
+                    const pdf = crearSafeBlobUrl(blob, this.sanitizer, this.acuseObjectUrl);
+                    this.acuseObjectUrl = pdf.objectUrl;
+                    this.acuseUrl.set(pdf.safeUrl);
+                },
                 error: () => this.mensaje.set('No fue posible descargar el acuse BANCI.'),
             });
     }

@@ -79,11 +79,11 @@
         <section class="panel" role="status">
             <h2>Envío BANCI registrado</h2>
             <p>{{ envio.estado.replaceAll('_', ' ') }}</p>
-            <p>El acuse contiene el resumen de lo reportado. Los folios de carpetas nuevas se asignan al aprobar el envío.</p>
-            <button class="btn btn-primary" (click)="descargarAcuse()" [disabled]="ocupado()">Descargar acuse PDF</button>
+            <button class="btn btn-primary" (click)="mostrarAcuse(envio.referencia)" [disabled]="ocupado()">Ver acuse</button>
         </section>
     }
     @if (cargaGuiada) {
+        @if (!plantillaDescargada()) {
         <section class="panel paso-descarga">
             <div class="paso-titulo">
                 <span class="paso-numero">1</span>
@@ -112,7 +112,8 @@
                 </div>
             }
         </section>
-        <section class="panel paso-carga" [class.paso-bloqueado]="!plantillaDescargada()" [attr.aria-disabled]="!plantillaDescargada()">
+        }
+        <section id="banci-carga-archivo" class="panel paso-carga" [class.paso-bloqueado]="!plantillaDescargada()" [attr.aria-disabled]="!plantillaDescargada()">
             <div class="paso-titulo">
                 <span class="paso-numero">2</span>
                 <div>
@@ -143,12 +144,14 @@
     }
     @if (!cargaGuiada) {
         @if (libro(); as datos) {
-            <section class="panel">
+            <section class="panel" id="banci-captura-manual">
                 <div class="section-title">
                     <h2>{{ actualizacion ? 'Información registrada en BANCI' : 'Información del consolidado aceptado' }}</h2>
+                    @if (!plantillaDescargada()) {
                     <button class="btn btn-outline-primary" (click)="plantilla()" [disabled]="ocupado()">
                         <i class="fa-solid fa-file-excel"></i> Descargar plantilla
                     </button>
+                    }
                 </div>
                 @if (historicaSinOrigen()) {
                     <p class="alert alert-info">
@@ -371,6 +374,9 @@
             }
         }
     }
+    @if (ocupado()) {
+        <section class="panel" id="banci-proceso" role="status">Procesando información BANCI…</section>
+    }
     @if (errores().length) {
         <section class="panel" id="banci-errores">
             <div class="section-title">
@@ -413,9 +419,34 @@
             </p>
             <p>Continúe para enviar la información a revisión administrativa. Las operaciones de superusuario se integran directamente.</p>
             <div class="acciones">
-                <button class="btn btn-primary" (click)="confirmar(true)" [disabled]="ocupado()">Confirmar envío</button
+                <button class="btn btn-primary" (click)="mostrarAcuse(resultado.referencia!)" [disabled]="ocupado()">Revisar acuse</button
                 ><button class="btn btn-outline-danger" (click)="confirmar(false)" [disabled]="ocupado()">Descartar</button>
             </div>
         </section>
     }
 </div>
+
+@if (acuseReferencia(); as referencia) {
+    <div class="acuse-modal" role="dialog" aria-modal="true" aria-label="Acuse de información BANCI">
+        <div class="acuse-header">
+            <span>{{ ultimoEnvio() ? 'Acuse de entrega de información' : 'Informe previo de información' }}</span>
+            <button type="button" class="acuse-close" (click)="cerrarAcuse()" [disabled]="ocupado()" aria-label="Cerrar acuse">×</button>
+        </div>
+        <div class="acuse-body">
+            @if (cargandoAcuse()) { <p role="status">Generando acuse…</p> }
+            @if (errorAcuse()) {
+                <p class="alert alert-danger">{{ errorAcuse() }}</p>
+                <button class="btn btn-primary" (click)="mostrarAcuse(referencia)" [disabled]="cargandoAcuse()">Reintentar</button>
+            }
+            @if (acuseUrl(); as url) { <iframe class="acuse-frame" [src]="url" title="Acuse BANCI"></iframe> }
+        </div>
+        <div class="acuse-actions">
+            @if (validacion() && !ultimoEnvio()) {
+                <button class="btn btn-outline-danger" (click)="confirmar(false)" [disabled]="ocupado()">Rechazar</button>
+                <button class="btn btn-primary" (click)="confirmar(true)" [disabled]="ocupado() || cargandoAcuse() || !acuseUrl()">{{ ocupado() ? 'Procesando…' : 'Aceptar' }}</button>
+            } @else {
+                <button class="btn btn-primary" (click)="cerrarAcuse()">Cerrar</button>
+            }
+        </div>
+    </div>
+}

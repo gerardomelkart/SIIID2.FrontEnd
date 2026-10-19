@@ -67,34 +67,18 @@
 
         <div class="quick-access-grid">
             @if (puedeCapturar()) {
-                <a class="quick-link" routerLink="/banci/carga-masiva"
-                    ><div class="quick-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <a class="quick-link" routerLink="/banci/carga-mensual"
+                    ><div class="quick-icon"><i class="fa-solid fa-calendar-days"></i></div>
                     <div>
-                        <strong>Carga masiva</strong
-                        ><span>Complete la plantilla de tres pestañas precargada desde el consolidado aceptado.</span>
-                    </div></a
-                >
-                <a class="quick-link" routerLink="/banci/formulario"
-                    ><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div>
-                    <div>
-                        <strong>Carga manual</strong
-                        ><span>Complete los datos particulares de BANCI para las carpetas del corte mensual.</span>
+                        <strong>Carga mensual</strong><span>Seleccione captura manual o carga masiva para reportar el periodo.</span>
                     </div></a
                 >
             }
             @if (puedeActualizar()) {
-                <a class="quick-link" routerLink="/banci/actualizacion/manual"
-                    ><div class="quick-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                <a class="quick-link" routerLink="/banci/actualizacion-mensual"
+                    ><div class="quick-icon"><i class="fa-solid fa-calendar-days"></i></div>
                     <div>
-                        <strong>Actualización manual</strong
-                        ><span>Seleccione un corte y actualice los datos personales y de localización.</span>
-                    </div></a
-                >
-                <a class="quick-link" routerLink="/banci/actualizacion/masiva"
-                    ><div class="quick-icon"><i class="fa-solid fa-file-excel"></i></div>
-                    <div>
-                        <strong>Actualización masiva</strong
-                        ><span>Actualice víctimas registradas mediante la plantilla de actualización.</span>
+                        <strong>Actualización mensual</strong><span>Seleccione actualización manual o masiva de registros aprobados.</span>
                     </div></a
                 >
             }

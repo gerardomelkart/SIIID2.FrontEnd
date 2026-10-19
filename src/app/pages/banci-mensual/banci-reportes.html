@@ -52,7 +52,7 @@
                                 </button>
                                 @if (fila.estado === 'PENDIENTE_APROBACION' || fila.estado.startsWith('CONFIRMADO')) {
                                     <button class="btn btn-outline-primary btn-sm" (click)="acuse(fila)" [disabled]="ocupado()">
-                                        Descargar acuse
+                                        Ver acuse
                                     </button>
                                 }
                                 @if (reporte === 'originales') {
@@ -149,3 +149,14 @@
         </section>
     }
 </div>
+
+@if (acuseUrl(); as url) {
+    <div class="acuse-modal" role="dialog" aria-modal="true" aria-label="Acuse de información BANCI">
+        <div class="acuse-header">
+            <span>Acuse de entrega de información</span
+            ><button class="acuse-close" (click)="cerrarAcuse()" aria-label="Cerrar acuse">×</button>
+        </div>
+        <div class="acuse-body"><iframe class="acuse-frame" [src]="url" title="Acuse BANCI"></iframe></div>
+        <div class="acuse-actions"><button class="btn btn-primary" (click)="cerrarAcuse()">Cerrar</button></div>
+    </div>
+}
