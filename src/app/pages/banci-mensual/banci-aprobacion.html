@@ -1,0 +1,57 @@
+<div class="aprobacion-page">
+    <header class="page-header">
+        <div><h1>Aprobación de cargas</h1><p>Revise los envíos BANCI antes de incorporar la información al sistema.</p></div>
+        <div class="header-actions"><span class="pendientes-chip"><i class="fa-solid fa-clock"></i> {{ filas().length }} pendientes</span><button class="btn btn-outline-secondary btn-sm" [disabled]="ocupado()" (click)="actualizar()"><i class="fa-solid fa-rotate" [class.fa-spin]="accion() === 'lista'"></i> Actualizar</button></div>
+    </header>
+    @if (mensaje()) { <div class="alert alert-danger" role="alert">{{ mensaje() }}</div> }
+    <section class="siiid-card bandeja-card">
+        <div class="siiid-card-header card-header-content"><span><i class="fa-solid fa-inbox"></i> Cargas pendientes de revisión</span><div class="buscador"><i class="fa-solid fa-magnifying-glass"></i><input aria-label="Buscar cargas pendientes" placeholder="Buscar entidad, periodo o usuario..." [ngModel]="busqueda()" (ngModelChange)="buscar($event)" /></div></div>
+        @if (accion() === 'lista') { <div class="estado-vacio"><i class="fa-solid fa-spinner fa-spin"></i> Consultando cargas pendientes...</div> }
+        @else {
+            <div class="table-responsive"><table class="table table-sm aprobacion-table">
+                <thead><tr>@for (col of columnas; track col.campo) { <th><button class="btn-orden" [class.activo]="campo() === col.campo" (click)="ordenar(col.campo)">{{ col.titulo }} <i [class]="'fa-solid ' + icono(col.campo)"></i></button></th> }<th>Registros</th><th class="acciones-col">Acciones</th></tr></thead>
+                <tbody>
+                    @for (fila of visibles(); track fila.referencia) {
+                        <tr [class.fila-seleccionada]="seleccion()?.referencia === fila.referencia">
+                            <td><strong>{{ fila.entidadNombre }}</strong></td><td>{{ periodo(fila) }}</td><td><span class="tipo-badge" [class.tipo-actualizacion]="fila.tipo === 'ACTUALIZACION'">{{ tipo(fila) }}</span></td><td>{{ fila.nombreUsuario }}</td><td>{{ fila.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+                            <td><div class="registros-desglose"><div><span>Carpetas</span><strong>{{ fila.totalCarpetas }}</strong></div><div><span>Delitos</span><strong>{{ fila.totalDelitos }}</strong></div><div><span>Víctimas</span><strong>{{ fila.totalVictimas }}</strong></div></div></td>
+                            <td><button class="btn-revisar" [disabled]="ocupado()" (click)="revisar(fila)"><i class="fa-solid" [class.fa-eye]="accion() !== fila.referencia" [class.fa-spinner]="accion() === fila.referencia" [class.fa-spin]="accion() === fila.referencia"></i> Revisar</button></td>
+                        </tr>
+                    } @empty { <tr><td colspan="7"><div class="estado-vacio"><i class="fa-solid fa-circle-check"></i> No hay cargas pendientes para los filtros seleccionados.</div></td></tr> }
+                </tbody>
+            </table></div>
+            <div class="bandeja-footer"><span>{{ filtradas().length }} pendientes · Página {{ pagina() }} de {{ paginas() }}</span><nav class="paginacion-bandeja" aria-label="Paginación de cargas pendientes"><button class="btn-pagina" aria-label="Página anterior" [disabled]="pagina() === 1 || ocupado()" (click)="pagina.set(pagina() - 1)"><i class="fa-solid fa-chevron-left"></i></button><button class="btn-pagina" aria-label="Página siguiente" [disabled]="pagina() === paginas() || ocupado()" (click)="pagina.set(pagina() + 1)"><i class="fa-solid fa-chevron-right"></i></button></nav></div>
+        }
+    </section>
+    @if (revision(); as datos) { @if (seleccion(); as fila) {
+        <section id="detalle-carga-banci" class="siiid-card detalle-card">
+            <div class="detalle-header"><div><span class="detalle-eyebrow">Solicitud pendiente</span><h2>{{ fila.entidadNombre }} — {{ periodo(fila) }}</h2><p>{{ tipo(fila) }}</p></div><button class="btn-cerrar" aria-label="Cerrar detalle" [disabled]="ocupado()" (click)="cerrarDetalle()"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="detalle-grid"><div class="detalle-dato"><span>Entidad federativa</span><strong>{{ fila.entidadNombre }}</strong></div><div class="detalle-dato"><span>Periodo de corte</span><strong>{{ periodo(fila) }}</strong></div><div class="detalle-dato"><span>Tipo de movimiento</span><strong>{{ tipo(fila) }}</strong></div><div class="detalle-dato"><span>Usuario que envió</span><strong>{{ fila.nombreUsuario }}</strong></div><div class="detalle-dato"><span>Fecha de envío</span><strong>{{ fila.fecha | date:'dd/MM/yyyy HH:mm' }}</strong></div><div class="detalle-dato"><span>Archivo original</span><strong>{{ fila.manual ? 'Captura manual' : fila.nombreOriginal || 'No disponible' }}</strong></div></div>
+            <div class="totales-grid">
+                <div class="total-card"><i class="fa-solid fa-folder-open"></i><div><strong>{{ datos.totalCarpetas }}</strong><span>Carpetas</span></div></div>
+                <div class="total-card"><i class="fa-solid fa-scale-balanced"></i><div><strong>{{ datos.totalDelitos }}</strong><span>Delitos</span></div></div>
+                <div class="total-card"><i class="fa-solid fa-people-group"></i><div><strong>{{ datos.totalVictimas }}</strong><span>Víctimas</span></div></div>
+            </div>
+            <div class="descargas-row"><button class="btn-descarga btn-pdf" [disabled]="ocupado()" (click)="acuse()"><i class="fa-solid fa-file-pdf"></i> Ver informe previo</button>@if (!fila.manual && fila.tieneOriginal && fila.nombreOriginal) { <button class="btn-descarga btn-zip" [disabled]="ocupado()" (click)="original()"><i class="fa-solid fa-file-excel"></i> Descargar archivo original</button> }</div>
+            <section class="cambios-admin-section">
+                <div class="cambios-admin-title"><h3>Información propuesta</h3><p>Complementos BANCI enviados para revisión. Los datos se incorporan al aprobar la solicitud.</p></div>
+                <div class="table-responsive"><table class="table table-sm resumen-cambios-table"><thead><tr><th>Víctimas con cambios</th><th>Campos con cambios</th></tr></thead><tbody><tr><td>{{ datos.victimasConCambios }}</td><td>{{ datos.totalCambios }}</td></tr></tbody></table></div>
+                <div class="cambios-admin-acciones"><button class="btn btn-modulo-excel" [disabled]="ocupado() || !datos.totalCambios" (click)="descargarDiferencias()"><i class="fa-solid fa-file-excel"></i> Descargar todas las diferencias en Excel</button><button class="btn-muestra-diferencias" [disabled]="ocupado()" (click)="mostrarCambios.set(!mostrarCambios())"><i class="fa-solid" [class.fa-eye]="!mostrarCambios()" [class.fa-eye-slash]="mostrarCambios()"></i> {{ mostrarCambios() ? 'Ocultar' : 'Ver' }} muestra de diferencias</button></div>
+                @if (mostrarCambios()) {
+                    <p class="nota-muestra">Se muestran hasta {{ datos.limiteMuestra }} cambios de {{ datos.totalCambios }}. El Excel contiene todas las diferencias.</p>
+                    <div class="table-responsive muestra-scroll"><table class="table table-sm diferencias-admin-table"><thead><tr><th>Carpeta</th><th>Delito</th><th>Víctima</th><th>Campo</th><th>Valor anterior</th><th>Valor propuesto</th></tr></thead><tbody>@for (cambio of datos.libro.cambios; track $index) { <tr><td>{{ cambio.carpeta }}</td><td>{{ cambio.delito }}</td><td>{{ cambio.victima }}</td><td>{{ nombreCampo(cambio.campo) }}</td><td>{{ cambio.anterior || '—' }}</td><td>{{ cambio.nuevo || '—' }}</td></tr> } @empty { <tr><td colspan="6" class="sin-diferencias-admin">No hay diferencias de complementos para mostrar.</td></tr> }</tbody></table></div>
+                }
+                <div class="cambios-admin-acciones"><button class="btn-muestra-diferencias" [disabled]="ocupado()" (click)="mostrarRegistros.set(!mostrarRegistros())"><i class="fa-solid fa-table-list"></i> {{ mostrarRegistros() ? 'Ocultar' : 'Ver' }} muestra de registros</button></div>
+                @if (mostrarRegistros()) {
+                    <p class="nota-muestra">Se muestran hasta {{ datos.limiteMuestra }} registros por sección.</p>
+                    <div class="grupos-registros">@for (g of ['carpetas', 'delitos', 'victimas']; track g) { <button class="btn-muestra-diferencias" [class.grupo-activo]="grupo() === g" (click)="grupo.set($any(g))">{{ g === 'carpetas' ? 'Carpetas' : g === 'delitos' ? 'Delitos' : 'Víctimas' }}</button> }</div>
+                    <div class="table-responsive muestra-scroll"><table class="table table-sm diferencias-admin-table"><thead><tr>@for (campo of camposRegistros(); track campo) { <th>{{ nombreCampo(campo) }}</th> }</tr></thead><tbody>@for (registro of datos.libro[grupo()]; track $index) { <tr>@for (campo of camposRegistros(); track campo) { <td>{{ registro.columnas[campo] || '—' }}</td> }</tr> } @empty { <tr><td class="sin-diferencias-admin">No hay registros en esta sección.</td></tr> }</tbody></table></div>
+                }
+            </section>
+            <div class="resolucion-row"><button class="btn-rechazar" [disabled]="ocupado()" (click)="resolver(false)"><i class="fa-solid fa-xmark"></i> Rechazar</button><button class="btn-aprobar" [disabled]="ocupado()" (click)="resolver(true)"><i class="fa-solid fa-check"></i> Aprobar carga</button></div>
+        </section>
+    } }
+</div>
+@if (acuseUrl(); as url) {
+    <div class="acuse-modal-backdrop"><div class="acuse-modal" role="dialog" aria-modal="true" aria-label="Informe previo BANCI"><div class="acuse-modal-header"><h2>Informe previo de entrega de información</h2><button class="acuse-close" aria-label="Cerrar informe" (click)="cerrarAcuse()"><i class="fa-solid fa-xmark"></i></button></div><iframe class="acuse-frame" [src]="url" title="Informe previo BANCI"></iframe><div class="acuse-modal-footer"><button class="btn btn-siiid" (click)="cerrarAcuse()">Cerrar</button></div></div></div>
+}

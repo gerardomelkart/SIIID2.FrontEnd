@@ -1,13 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL } from '../constants/api-endpoints.constants';
-import { BanciEnvio, BanciLibro, BanciOpciones, BanciValidacion, BanciPeriodo, BanciReporteCarga, BanciArchivoOriginal } from '../models/banci-mensual.models';
+import { BanciEnvio, BanciLibro, BanciOpciones, BanciValidacion, BanciPeriodo, BanciReporteCarga, BanciArchivoOriginal, BanciPendiente, BanciRevisionAdministracion } from '../models/banci-mensual.models';
 
 @Injectable({ providedIn: 'root' })
 export class BanciMensualService
 {
     private readonly http = inject(HttpClient);
     private readonly url = `${API_BASE_URL}/banci/mensual`;
+    pendientesAdministracion() { return this.http.get<BanciPendiente[]>(`${this.url}/administracion/pendientes`); }
+    revisionAdministracion(referencia: string) { return this.http.get<BanciRevisionAdministracion>(`${this.url}/administracion/${referencia}/revision`); }
     periodosCargas() { return this.http.get<BanciPeriodo[]>(`${this.url}/reportes/cargas/periodos`); }
     reporteCargas(anio: number, mes: number) { return this.http.get<BanciReporteCarga[]>(`${this.url}/reportes/cargas`, { params: { anio, mes } }); }
     ultimosOriginales() { return this.http.get<BanciArchivoOriginal[]>(`${this.url}/reportes/originales`); }

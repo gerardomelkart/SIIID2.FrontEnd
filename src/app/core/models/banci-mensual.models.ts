@@ -79,3 +79,13 @@ export interface BanciArchivoOriginal {
     referencia: string; entidad: number; entidadNombre: string; mes: number; anio: number;
     tipo: string; fecha: string; nombreOriginal: string; tamanioBytes: number; sha256: string;
 }
+
+export interface BanciPendiente extends BanciEnvio {
+    nombreOriginal: string | null;
+    totalCarpetas: number; totalDelitos: number; totalVictimas: number;
+}
+export interface BanciRevisionAdministracion {
+    totalCarpetas: number; totalDelitos: number; totalVictimas: number;
+    totalCambios: number; victimasConCambios: number; limiteMuestra: number;
+    libro: BanciLibro;
+}

@@ -1,0 +1,13 @@
+.totales-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.detalle-header { background: linear-gradient(90deg, #f6edf9, #fff); }
+.aprobacion-table .fila-seleccionada { background: #f6edf9; }
+.aprobacion-table tbody tr:hover { background: #faf6fc; }
+.detalle-dato strong { overflow-wrap: anywhere; }
+.nota-muestra { margin: 16px 0 10px; font-size: 12px; color: #667085; }
+.muestra-scroll { max-height: 420px; }
+.muestra-scroll thead { position: sticky; top: 0; z-index: 1; }
+.grupos-registros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.grupo-activo { color: white; background: var(--siiid-guinda); }
+.cambios-admin-title h3 { color: var(--siiid-guinda); }
+#detalle-carga-banci { scroll-margin-top: 20px; }
+@media (max-width: 650px) { .totales-grid { grid-template-columns: 1fr; } }

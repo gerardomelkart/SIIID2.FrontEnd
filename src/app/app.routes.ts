@@ -290,7 +290,7 @@ export const routes: Routes = [
             },
             {
                 path: 'administracion/cargas-pendientes',
-                loadComponent: () => import('./pages/banci-mensual/banci-reportes').then((m) => m.BanciReportes),
+                loadComponent: () => import('./pages/banci-mensual/banci-aprobacion').then((m) => m.BanciAprobacion),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO], reporte: 'pendientes' },
             },
