@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import Swal from 'sweetalert2';
 import { BanciOpciones } from '../../core/models/banci-mensual.models';
 import { BanciCaptura } from './banci-captura';
@@ -32,6 +32,7 @@ describe('Carga BANCI por cortes', () =>
         {});
         TestBed.configureTestingModule({
             providers: [
+                provideRouter([]),
                 provideHttpClient(),
                 provideHttpClientTesting(),
                 { provide: ActivatedRoute, useValue: { snapshot: { data: { manual: true, actualizacion: false } } } },
@@ -52,6 +53,33 @@ describe('Carga BANCI por cortes', () =>
         fixture.detectChanges();
         return fixture;
     }
+    for(const actualizacion of [false, true])
+    {
+        it(`permite regresar a la selección de ${actualizacion ? 'actualización' : 'carga'}`, () =>
+        {
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion } } } });
+            const f = crear();
+            expect(f.nativeElement.querySelector('.volver-modalidad').getAttribute('href')).toBe(actualizacion ? '/banci/actualizacion-mensual' : '/banci/carga-mensual');
+        });
+    }
+    it('resalta el área al arrastrar y retira el resaltado al soltar el archivo', () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false } } } });
+        const f = crear();
+        f.componentInstance.plantillaDescargada.set(true);
+        f.detectChanges();
+        const zona = f.nativeElement.querySelector('label.archivo');
+        zona.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }));
+        f.detectChanges();
+        expect(zona.classList.contains('arrastrando')).toBe(true);
+        const archivo = new File(['prueba'], 'BANCI.xlsx');
+        const soltar = new Event('drop', { bubbles: true, cancelable: true });
+        Object.defineProperty(soltar, 'dataTransfer', { value: { files: [archivo] } });
+        zona.dispatchEvent(soltar);
+        f.detectChanges();
+        expect(zona.classList.contains('arrastrando')).toBe(false);
+        expect(f.componentInstance.archivo).toBe(archivo);
+    });
     it('usa el corte del servidor y bloquea su selección al desactivar históricos', async () =>
     {
         const f = crear();
@@ -164,7 +192,7 @@ describe('Carga BANCI por cortes', () =>
         const scroll = vi.fn();
         Object.defineProperty(informe, 'scrollIntoView', { value: scroll });
         await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'end' });
         expect(f.nativeElement.querySelector('.panel.acciones')).toBeNull();
     });
     it('no muestra registros inventados cuando la precarga falla', () =>
@@ -391,7 +419,7 @@ describe('Carga BANCI por cortes', () =>
         const scroll = vi.fn();
         Object.defineProperty(f.nativeElement.querySelector('#banci-proceso'), 'scrollIntoView', { value: scroll });
         await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'end' });
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/validar/manual'))
             .flush({ esValido: false, errores: [] });

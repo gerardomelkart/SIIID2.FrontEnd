@@ -155,3 +155,11 @@
         min-width: 180px;
     }
 }
+
+.archivo { transition: background .15s, border-color .15s, box-shadow .15s; }
+.archivo.arrastrando {
+    background: #eee1f6;
+    border: 2px dashed var(--siiid-guinda);
+    box-shadow: 0 0 0 5px #6f2c911a;
+}
+.archivo.arrastrando > * { pointer-events: none; }

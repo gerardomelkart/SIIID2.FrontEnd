@@ -6,6 +6,7 @@
         </div>
         <i class="fa-solid fa-file-circle-plus"></i>
     </section>
+    <a class="btn btn-outline-primary volver-modalidad" [routerLink]="actualizacion ? '/banci/actualizacion-mensual' : '/banci/carga-mensual'"><i class="fa-solid fa-arrow-left"></i> Volver a elegir Manual o Masiva</a>
     @if (mensaje()) {
         <div class="alert alert-danger" role="alert">{{ mensaje() }}</div>
     }
@@ -124,7 +125,7 @@
                 </div>
             </div>
             @if (plantillaDescargada()) {
-                <label class="archivo" (dragover)="$event.preventDefault()" (drop)="soltarArchivo($event)"
+                <label class="archivo" [class.arrastrando]="arrastrandoArchivo() && !ocupado() && plantillaDescargada()" (dragover)="$event.preventDefault(); arrastrandoArchivo.set(true)" (dragleave)="arrastrandoArchivo.set(false)" (drop)="soltarArchivo($event)"
                     ><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><strong>Arrastre aquí su archivo o selecciónelo</strong
                     ><span>Excel (.xlsx) · Tres pestañas · Hasta 50 MB</span
                     ><input class="form-control" type="file" accept=".xlsx" (change)="archivoSeleccionado($event)" [disabled]="ocupado()"
@@ -165,7 +166,7 @@
                     ><span>{{ datos.victimas.length }} víctimas</span>
                 </div>
                 @if (!manual) {
-                    <label class="archivo" (dragover)="$event.preventDefault()" (drop)="soltarArchivo($event)"
+                    <label class="archivo" [class.arrastrando]="arrastrandoArchivo() && !ocupado() && plantillaDescargada()" (dragover)="$event.preventDefault(); arrastrandoArchivo.set(true)" (dragleave)="arrastrandoArchivo.set(false)" (drop)="soltarArchivo($event)"
                         >Arrastre o seleccione la plantilla completada (.xlsx, tres pestañas, hasta 50 MB)<input
                             class="form-control"
                             type="file"

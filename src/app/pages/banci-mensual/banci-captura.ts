@@ -3,7 +3,7 @@ import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,7 +15,7 @@ import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 
 @Component({
     selector: 'app-banci-captura',
-    imports: [FormsModule],
+    imports: [FormsModule, RouterLink],
     templateUrl: './banci-captura.html',
     styleUrls: ['./banci-mensual.css', './banci-carga.css'],
 })
@@ -39,10 +39,11 @@ export class BanciCaptura implements OnDestroy
         this.acuseReferencia.set(null);
         this.errorAcuse.set('');
     }
-    private desplazar(id: string): void
+    private desplazar(id: string, block: ScrollLogicalPosition = 'start'): void
     {
-        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block }));
     }
+    readonly arrastrandoArchivo = signal(false);
     readonly nombreCampo = nombreCampo;
     private readonly api = inject(BanciMensualService);
     private readonly session = inject(SessionService);
@@ -195,6 +196,7 @@ export class BanciCaptura implements OnDestroy
     soltarArchivo(evento: DragEvent): void
     {
         evento.preventDefault();
+        this.arrastrandoArchivo.set(false);
         const archivo = evento.dataTransfer?.files[0];
         if(archivo && !this.ocupado() && (!this.cargaGuiada || this.plantillaDescargada()))
         {
@@ -355,7 +357,8 @@ export class BanciCaptura implements OnDestroy
         this.ocupado.set(true);
         this.mensaje.set('');
         this.validacion.set(null);
-        this.desplazar('banci-proceso');
+        this.errores.set([]);
+        this.desplazar('banci-proceso', 'end');
         const peticion = this.manual ? this.api.validarManual(libro) : this.api.validarArchivo(this.archivo!, libro);
         peticion.pipe(finalize(() => this.ocupado.set(false))).subscribe({
             next: (r) =>
@@ -365,9 +368,9 @@ export class BanciCaptura implements OnDestroy
                 {
                     this.validacion.set(r);
                     if(r.referencia) this.mostrarAcuse(r.referencia);
-                    setTimeout(() => document.getElementById('banci-informe')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                    this.desplazar('banci-informe', 'end');
                 }
-                if(r.errores.length) setTimeout(() => document.getElementById('banci-errores')?.scrollIntoView({ behavior: 'smooth' }));
+                if(r.errores.length) this.desplazar('banci-errores', 'end');
             },
             error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
         });
