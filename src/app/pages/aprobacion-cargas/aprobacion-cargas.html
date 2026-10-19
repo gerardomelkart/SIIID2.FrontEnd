@@ -380,6 +380,10 @@
                             <h3>Resumen de cambios</h3>
                             <p>Comparación entre la información confirmada y la nueva versión enviada.</p>
                         </div>
+                        <button type="button" class="btn btn-outline-primary" [disabled]="hayOperacionEnCurso()" (click)="descargarTodasDiferencias(carga.codigoReferencia)">
+                            <i class="fa-solid" [class.fa-file-excel]="!descargandoDiferencias()" [class.fa-spinner]="descargandoDiferencias()" [class.fa-spin]="descargandoDiferencias()"></i>
+                            {{ descargandoDiferencias() ? 'Generando Excel completo…' : 'Descargar todas las diferencias en Excel' }}
+                        </button>
                     </div>
 
                     @if (diferenciasParaDetalle(carga.codigoReferencia); as diferencias) {

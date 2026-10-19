@@ -1,3 +1,4 @@
+import { DiferenciasAdministracionService } from '../../core/services/diferencias-administracion.service';
 import { CargaValidacionResponse } from '../../core/models/carga.models';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 
@@ -5,7 +6,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
-import { timeout } from 'rxjs';
+import { finalize, timeout } from 'rxjs';
 import { CargaPendienteAdministracionDetalle, CargaPendienteAdministracionItem } from '../../core/models/administracion-cargas.models';
 import { FederalAdministracionCargasService } from '../../core/services/federal-administracion-cargas.service';
 import { confirmarAccion, mostrarError, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
@@ -33,6 +34,9 @@ interface SeccionDiferenciasAdmin
 })
 export class FederalAprobacionCargas implements OnInit, OnDestroy
 {
+    private readonly diferenciasExcel = inject(DiferenciasAdministracionService);
+    readonly descargandoDiferencias = signal(false);
+
     private readonly administracionService = inject(FederalAdministracionCargasService);
     private readonly actualizacionService = inject(FederalActualizacionService);
     private readonly cdr = inject(ChangeDetectorRef);
@@ -107,6 +111,7 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy
     hayOperacionEnCurso = computed(() =>
     {
         return (
+            this.descargandoDiferencias() ||
             this.cargandoDetalle() !== null ||
             this.cargandoDiferenciasDetalle() ||
             this.descargandoArchivos() !== null ||
@@ -469,6 +474,16 @@ export class FederalAprobacionCargas implements OnInit, OnDestroy
     {
         const texto = archivo.replaceAll('_', ' ').trim().toLowerCase();
         return texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
+    descargarTodasDiferencias(referencia: string): void
+    {
+        if(this.hayOperacionEnCurso()) return;
+        this.descargandoDiferencias.set(true);
+        this.diferenciasExcel.descargar('federal', referencia).pipe(finalize(() => this.descargandoDiferencias.set(false))).subscribe({
+            next: archivo => this.descargarBlob(archivo, 'Diferencias_federal.xlsx'),
+            error: async error => mostrarError('No fue posible descargar las diferencias', await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente. El envío continúa pendiente de aprobación.')),
+        });
     }
 
     private descargarBlob(blob: Blob, nombreArchivo: string): void

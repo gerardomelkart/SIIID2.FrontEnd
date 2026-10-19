@@ -1,3 +1,4 @@
+import { DiferenciasAdministracionService } from '../../core/services/diferencias-administracion.service';
 import { nombreCampo } from './banci-campos';
 import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -8,7 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { BanciEnvio, BanciLibro } from '../../core/models/banci-mensual.models';
 import { BanciMensualService, descargarBanci } from '../../core/services/banci-mensual.service';
-import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+import { obtenerMensajeErrorHttp, obtenerMensajeErrorHttpAsync } from '../../core/utils/http-error.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { confirmarAccion } from '../../core/utils/alert.utils';
 
@@ -20,6 +21,18 @@ import { confirmarAccion } from '../../core/utils/alert.utils';
 })
 export class BanciReportes implements OnDestroy
 {
+    private readonly diferenciasExcel = inject(DiferenciasAdministracionService);
+    readonly descargandoDiferencias = signal(false);
+    descargarTodasDiferencias(): void
+    {
+        const referencia = this.seleccion()?.referencia;
+        if(this.reporte !== 'pendientes' || !referencia || this.descargandoDiferencias() || this.ocupado()) return;
+        this.descargandoDiferencias.set(true);
+        this.diferenciasExcel.descargar('banci', referencia).pipe(finalize(() => this.descargandoDiferencias.set(false))).subscribe({
+            next: archivo => descargarBanci(archivo, 'Diferencias_banci.xlsx'),
+            error: async error => this.mensaje.set(await obtenerMensajeErrorHttpAsync(error, 'No fue posible descargar las diferencias. Intente nuevamente.')),
+        });
+    }
     private readonly sanitizer = inject(DomSanitizer);
     readonly acuseUrl = signal<SafeResourceUrl | null>(null);
     private acuseObjectUrl: string | null = null;

@@ -1,8 +1,9 @@
+import { DiferenciasAdministracionService } from '../../core/services/diferencias-administracion.service';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
-import { timeout } from 'rxjs';
+import { finalize, timeout } from 'rxjs';
 import {
     SemanalCargaBloqueAdministracionItem,
     SemanalCargaPendienteAdministracionDetalle,
@@ -34,6 +35,9 @@ interface SeccionDiferenciasAdmin
 })
 export class SemanalAprobacionCargas implements OnInit, OnDestroy
 {
+    private readonly diferenciasExcel = inject(DiferenciasAdministracionService);
+    readonly descargandoDiferencias = signal(false);
+
     private readonly administracionService = inject(SemanalAdministracionCargasService);
     private readonly semanalCargaService = inject(SemanalCargaService);
     private readonly cdr = inject(ChangeDetectorRef);
@@ -125,6 +129,7 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy
     hayOperacionEnCurso = computed(() =>
     {
         return (
+            this.descargandoDiferencias() ||
             this.cargandoDetalle() !== null ||
             this.cargandoDiferenciasDetalle() ||
             this.descargandoArchivos() !== null ||
@@ -603,6 +608,16 @@ export class SemanalAprobacionCargas implements OnInit, OnDestroy
         this.acuseTitulo.set(
             `Informe previo de ${this.esActualizacion(carga) ? 'actualización' : 'carga'} preliminar — ${carga.entidadFederativa} — ${this.usuarioTexto(carga)} — ${this.periodoTexto(carga)}`,
         );
+    }
+
+    descargarTodasDiferencias(referencia: string): void
+    {
+        if(this.hayOperacionEnCurso()) return;
+        this.descargandoDiferencias.set(true);
+        this.diferenciasExcel.descargar('semanal', referencia).pipe(finalize(() => this.descargandoDiferencias.set(false))).subscribe({
+            next: archivo => this.descargarBlob(archivo, 'Diferencias_semanal.xlsx'),
+            error: async error => mostrarError('No fue posible descargar las diferencias', await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente. El envío continúa pendiente de aprobación.')),
+        });
     }
 
     private descargarBlob(blob: Blob, nombreArchivo: string): void
