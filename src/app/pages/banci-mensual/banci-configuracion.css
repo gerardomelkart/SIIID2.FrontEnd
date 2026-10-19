@@ -1,0 +1,4 @@
+.admin-header h1 { color: var(--siiid-guinda); }
+.module-switch input:checked, .permiso-mini-switch input:checked { accent-color: var(--siiid-guinda); }
+.sortable:hover { background: var(--siiid-guinda-dark) !important; }
+.page-indicator { color: var(--siiid-guinda); }

@@ -68,10 +68,7 @@ export class BanciMensualService
     {
         return this.http.get(`${this.url}/envios/${referencia}/original`, { responseType: 'blob' });
     }
-    configuracion(clave: string, habilitado: boolean, version: number, motivo: string)
-    {
-        return this.http.put(`${this.url}/configuracion`, { clave, habilitado, version, motivo });
-    }
+
 }
 // La URL se revoca después de iniciar la descarga; no se conserva el libro en memoria.
 export function descargarBanci(blob: Blob, nombre: string): void

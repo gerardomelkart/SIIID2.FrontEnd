@@ -1,97 +1,545 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { BanciMensualService } from '../../core/services/banci-mensual.service';
-import { BanciUsuariosService } from '../../core/services/banci-usuarios.service';
-import { BanciOpciones } from '../../core/models/banci-mensual.models';
-import { BanciUsuarioDetalle } from '../../core/models/banci-usuarios.models';
+import {
+    confirmarAccion,
+    mostrarAdvertenciaHtml,
+    mostrarError,
+    mostrarExitoInstitucional,
+    mostrarInfo,
+} from '../../core/utils/alert.utils';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { ROLES } from '../../core/constants/roles.constants';
+import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
+
+import { BanciUsuarioDetalle } from '../../core/models/banci-usuarios.models';
+
+import { EstadoOrden, alternarOrden, obtenerIconoOrden, ordenarPorEstado } from '../../core/utils/sort.utils';
+
+import { BanciUsuariosService } from '../../core/services/banci-usuarios.service';
+import { SessionService } from '../../core/services/session.service';
+
+interface ConfiguracionEntidad
+{
+    idEntidadFederativa: number | null;
+    entidadFederativa: string;
+    totalUsuarios: number;
+    totalUsuariosOperativos: number;
+    usuariosAcceso: number;
+    usuariosCarga: number;
+    usuariosModificacion: number;
+    estadoAcceso: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
+    estadoCarga: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
+    estadoModificacion: 'ACTIVO' | 'INACTIVO' | 'MIXTO';
+}
+
+interface UsuarioPermisoEntidad
+{
+    idUsuario: number;
+    usuario: string;
+    nombreCompleto: string;
+    rol: string;
+    entidadFederativa: string;
+    habilitaBanciOriginal: boolean;
+    habilitaCargaOriginal: boolean;
+    habilitaModificacionOriginal: boolean;
+    habilitaBanci: boolean;
+    habilitaCarga: boolean;
+    habilitaModificacion: boolean;
+    bloqueaOperacion: boolean;
+    esUsuarioActual: boolean;
+}
+
+type CampoOrdenConfiguracionEntidad =
+    | 'entidadFederativa'
+    | 'estadoAcceso'
+    | 'estadoCarga'
+    | 'estadoModificacion'
+    | 'usuariosAcceso'
+    | 'usuariosCarga'
+    | 'usuariosModificacion'
+    | 'totalUsuarios';
 
 @Component({
     selector: 'app-banci-configuracion',
     imports: [FormsModule],
     templateUrl: './banci-configuracion.html',
-    styleUrl: './banci-mensual.css',
+    styleUrls: ['../configuracion/configuracion.css', './banci-configuracion.css'],
 })
-export class BanciConfiguracion
+export class BanciConfiguracion implements OnInit
 {
-    private readonly api = inject(BanciMensualService);
-    private readonly usuariosApi = inject(BanciUsuariosService);
-    readonly opciones = signal<BanciOpciones | null>(null);
-    readonly usuarios = signal<BanciUsuarioDetalle[]>([]);
-    readonly mensaje = signal('');
-    readonly ocupado = signal(false);
-    motivo = '';
-    cargaGlobal = true;
-    modificacionGlobal = true;
-    constructor()
+    private readonly usuariosService = inject(BanciUsuariosService);
+    private readonly sessionService = inject(SessionService);
+
+    cargando = signal(false);
+    guardandoGlobal = signal(false);
+
+    busquedaEntidad = signal('');
+    paginaEntidades = signal(1);
+    readonly tamanioPaginaEntidades = 10;
+
+    habilitaCargaGlobal = signal(true);
+    habilitaModificacionGlobal = signal(true);
+
+    ordenEntidades = signal<EstadoOrden<CampoOrdenConfiguracionEntidad> | null>(null);
+
+    exportandoExcel = signal(false);
+
+    modalEntidadAbierto = signal(false);
+    guardandoEntidad = signal(false);
+    entidadSeleccionada = signal<ConfiguracionEntidad | null>(null);
+    usuariosEntidad = signal<UsuarioPermisoEntidad[]>([]);
+
+    usuarios = signal<BanciUsuarioDetalle[]>([]);
+
+    usuarioActual = this.sessionService.usuario;
+
+    entidadesConfiguracion = computed<ConfiguracionEntidad[]>(() =>
     {
-        this.recargar();
+        const grupos = new Map<string, BanciUsuarioDetalle[]>();
+
+        for(const usuario of this.usuarios())
+        {
+            if(!usuario.activo)
+            {
+                continue;
+            }
+
+            const key = usuario.idEntidadFederativa?.toString() ?? 'NACIONAL';
+            const lista = grupos.get(key) ?? [];
+
+            lista.push(usuario);
+            grupos.set(key, lista);
+        }
+
+        const resultado: ConfiguracionEntidad[] = [];
+
+        grupos.forEach((lista) =>
+        {
+            const primero = lista[0];
+            const usuariosOperativos = lista.filter((usuario) => usuario.rol !== ROLES.CONSULTA);
+            const usuariosAcceso = lista.filter((usuario) => usuario.habilitaBanci).length;
+            const usuariosCarga = usuariosOperativos.filter((usuario) => usuario.habilitaBanci && usuario.habilitaCarga).length;
+            const usuariosModificacion = usuariosOperativos.filter(
+                (usuario) => usuario.habilitaBanci && usuario.habilitaModificacion,
+            ).length;
+
+            resultado.push({
+                idEntidadFederativa: primero.idEntidadFederativa,
+                entidadFederativa: primero.entidadFederativa || 'Nacional',
+                totalUsuarios: lista.length,
+                totalUsuariosOperativos: usuariosOperativos.length,
+                usuariosAcceso,
+                usuariosCarga,
+                usuariosModificacion,
+                estadoAcceso: this.obtenerEstadoPermiso(usuariosAcceso, lista.length),
+                estadoCarga: this.obtenerEstadoPermiso(usuariosCarga, usuariosOperativos.length),
+                estadoModificacion: this.obtenerEstadoPermiso(usuariosModificacion, usuariosOperativos.length),
+            });
+        });
+
+        return resultado;
+    });
+
+    entidadesFiltradas = computed(() =>
+    {
+        const texto = this.busquedaEntidad().trim().toLowerCase();
+
+        const filtradas = !texto
+            ? this.entidadesConfiguracion()
+            : this.entidadesConfiguracion().filter((entidad) => entidad.entidadFederativa.toLowerCase().includes(texto));
+
+        return this.ordenarEntidadesConfiguracion(filtradas);
+    });
+
+    entidadesPaginadas = computed(() =>
+    {
+        const inicio = (this.paginaEntidades() - 1) * this.tamanioPaginaEntidades;
+        return this.entidadesFiltradas().slice(inicio, inicio + this.tamanioPaginaEntidades);
+    });
+
+    totalPaginasEntidades = computed(() => Math.max(1, Math.ceil(this.entidadesFiltradas().length / this.tamanioPaginaEntidades)));
+
+    totalEntidades = computed(() => this.entidadesConfiguracion().length);
+
+    totalEntidadesAccesoActivo = computed(() =>
+    {
+        return this.entidadesConfiguracion().filter((x) => x.usuariosAcceso > 0).length;
+    });
+
+    totalEntidadesCargaActiva = computed(() =>
+    {
+        return this.entidadesConfiguracion().filter((x) => x.usuariosCarga > 0).length;
+    });
+
+    totalEntidadesModificacionActiva = computed(() =>
+    {
+        return this.entidadesConfiguracion().filter((x) => x.usuariosModificacion > 0).length;
+    });
+
+    ngOnInit(): void
+    {
+        this.cargarUsuarios();
     }
-    recargar(): void
+
+    cargarUsuarios(): void
     {
-        this.api.opciones().subscribe({ next: (o) => this.opciones.set(o), error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)) });
-        this.usuariosApi.obtenerUsuarios(false).subscribe({
-            next: (r) => this.usuarios.set(r.usuarios.filter((u) => u.rol !== 'SUPER_USUARIO')),
-            error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+        this.cargando.set(true);
+
+        this.usuariosService.obtenerUsuarios(true).subscribe({
+            next: (response) =>
+            {
+                const usuarios = response.usuarios ?? [];
+
+                this.usuarios.set(usuarios.filter(u => u.rol !== ROLES.SUPER_USUARIO));
+                this.paginaEntidades.set(1);
+                this.sincronizarSwitchesGlobales(this.usuarios());
+                this.cargando.set(false);
+            },
+            error: (error) =>
+            {
+                this.cargando.set(false);
+
+                mostrarError('No fue posible cargar configuración', obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'));
+            },
         });
     }
-    cambiar(clave: string, habilitado: boolean): void
+
+    ordenarEntidadesPor(campo: CampoOrdenConfiguracionEntidad): void
     {
-        if(!this.motivo.trim())
+        this.ordenEntidades.set(alternarOrden(this.ordenEntidades(), campo));
+        this.paginaEntidades.set(1);
+    }
+
+    iconoOrdenEntidades(campo: CampoOrdenConfiguracionEntidad): string
+    {
+        return obtenerIconoOrden(this.ordenEntidades(), campo);
+    }
+
+    buscarEntidades(valor: string): void
+    {
+        this.busquedaEntidad.set(valor);
+        this.paginaEntidades.set(1);
+    }
+
+    cambiarPaginaEntidades(pagina: number): void
+    {
+        if(pagina < 1 || pagina > this.totalPaginasEntidades())
         {
-            this.mensaje.set('Indique el motivo del cambio de configuración.');
             return;
         }
-        this.ocupado.set(true);
-        this.api
-            .configuracion(clave, habilitado, this.opciones()!.version, this.motivo)
-            .pipe(finalize(() => this.ocupado.set(false)))
-            .subscribe({
-                next: () =>
-                {
-                    this.mensaje.set('Configuración actualizada.');
-                    this.recargar();
-                },
-                error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
-            });
+
+        this.paginaEntidades.set(pagina);
     }
-    guardarUsuario(u: BanciUsuarioDetalle): void
+
+    async exportarConfiguracionExcel(): Promise<void>
     {
-        this.ocupado.set(true);
-        this.usuariosApi
-            .actualizarPermisos(u.idUsuario, {
-                habilitaBanci: u.habilitaBanci,
-                habilitaCarga: u.habilitaCarga,
-                habilitaModificacion: u.habilitaModificacion,
-            })
-            .pipe(finalize(() => this.ocupado.set(false)))
-            .subscribe({
-                next: (r) =>
-                {
-                    this.mensaje.set(r.mensaje);
-                    this.recargar();
-                },
-                error: (e) =>
-                {
-                    this.mensaje.set(obtenerMensajeErrorHttp(e));
-                    this.recargar();
-                },
-            });
+        this.exportandoExcel.set(true);
+
+        try
+        {
+            const filas = this.entidadesFiltradas().map((entidad) => ({
+                'Entidad federativa': entidad.entidadFederativa,
+                'Acceso al módulo BANCI': this.etiquetaEstado(entidad.estadoAcceso),
+                'Usuarios con acceso': `${entidad.usuariosAcceso} de ${entidad.totalUsuarios}`,
+                'Carga de archivos': this.etiquetaEstado(entidad.estadoCarga),
+                'Usuarios con carga': `${entidad.usuariosCarga} de ${entidad.totalUsuariosOperativos}`,
+                Actualización: this.etiquetaEstado(entidad.estadoModificacion),
+                'Usuarios con actualización': `${entidad.usuariosModificacion} de ${entidad.totalUsuariosOperativos}`,
+            }));
+
+            const exportado = await exportarFilasExcel(filas, 'BANCI_configuracion_por_entidad.xlsx', 'Configuracion');
+
+            if(!exportado)
+            {
+                mostrarInfo('Sin registros', 'No hay información para exportar.');
+            }
+        } catch
+        {
+            mostrarError('No fue posible exportar', 'Intente nuevamente.');
+        } finally
+        {
+            this.exportandoExcel.set(false);
+        }
     }
-    guardarGlobal(): void
+
+    private ordenarEntidadesConfiguracion(lista: ConfiguracionEntidad[]): ConfiguracionEntidad[]
     {
-        this.ocupado.set(true);
-        this.usuariosApi
-            .actualizarPermisosGlobales({ habilitaCarga: this.cargaGlobal, habilitaModificacion: this.modificacionGlobal })
-            .pipe(finalize(() => this.ocupado.set(false)))
-            .subscribe({
-                next: (r) =>
+        return ordenarPorEstado(lista, this.ordenEntidades(), (entidad, campo) => entidad[campo] ?? '');
+    }
+
+    guardarConfiguracionGlobal(): void
+    {
+        if(this.cargando() || this.guardandoGlobal() || this.guardandoEntidad()) return;
+        confirmarAccion(
+            'Actualizar permisos globales',
+            'Esta acción actualizará carga y actualización para todos los usuarios activos con acceso al módulo BANCI, excepto usuarios con rol CONSULTA.',
+            'Sí, actualizar',
+        ).then((result) =>
+        {
+            if(!result.isConfirmed)
+            {
+                return;
+            }
+
+            this.guardandoGlobal.set(true);
+
+            this.usuariosService
+                .actualizarPermisosGlobales({
+                    habilitaCarga: this.habilitaCargaGlobal(),
+                    habilitaModificacion: this.habilitaModificacionGlobal(),
+                })
+                .subscribe({
+                    next: (response) =>
+                    {
+                        this.guardandoGlobal.set(false);
+
+                        mostrarExitoInstitucional(response.mensaje || 'Configuración global actualizada.');
+
+                        this.cargarUsuarios();
+                    },
+                    error: (error) =>
+                    {
+                        this.guardandoGlobal.set(false);
+
+                        mostrarError(
+                            'No fue posible actualizar configuración global',
+                            obtenerMensajeErrorHttp(error, 'Revise la conexión con la API.'),
+                        );
+                    },
+                });
+        });
+    }
+
+    cambiarCargaGlobal(valor: boolean): void
+    {
+        this.habilitaCargaGlobal.set(valor);
+    }
+
+    cambiarModificacionGlobal(valor: boolean): void
+    {
+        this.habilitaModificacionGlobal.set(valor);
+    }
+
+    etiquetaEstado(estado: 'ACTIVO' | 'INACTIVO' | 'MIXTO'): string
+    {
+        if(estado === 'ACTIVO')
+        {
+            return 'Activo';
+        }
+
+        if(estado === 'INACTIVO')
+        {
+            return 'Inactivo';
+        }
+
+        return 'Mixto';
+    }
+
+    abrirPermisosEntidad(entidad: ConfiguracionEntidad): void
+    {
+        if(this.cargando() || this.guardandoGlobal() || this.guardandoEntidad()) return;
+        const idUsuarioActual = this.usuarioActual()?.idUsuario ?? null;
+
+        const usuariosEntidad = this.usuarios()
+            .filter((usuario) => usuario.activo)
+            .filter((usuario) => usuario.idEntidadFederativa === entidad.idEntidadFederativa)
+            .map((usuario) => ({
+                idUsuario: usuario.idUsuario,
+                usuario: usuario.usuario,
+                nombreCompleto: usuario.nombreCompleto,
+                rol: usuario.rol,
+                entidadFederativa: usuario.entidadFederativa || 'Nacional',
+                habilitaBanciOriginal: usuario.habilitaBanci,
+                habilitaCargaOriginal: usuario.habilitaCarga,
+                habilitaModificacionOriginal: usuario.habilitaModificacion,
+                habilitaBanci: usuario.habilitaBanci,
+                habilitaCarga: usuario.habilitaCarga,
+                habilitaModificacion: usuario.habilitaModificacion,
+                bloqueaOperacion: usuario.rol === ROLES.CONSULTA,
+                esUsuarioActual: usuario.idUsuario === idUsuarioActual,
+            }))
+            .sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto, 'es', { sensitivity: 'base' }));
+
+        this.entidadSeleccionada.set(entidad);
+        this.usuariosEntidad.set(usuariosEntidad);
+        this.modalEntidadAbierto.set(true);
+    }
+
+    cerrarPermisosEntidad(): void
+    {
+        if(this.guardandoEntidad())
+        {
+            return;
+        }
+
+        this.modalEntidadAbierto.set(false);
+        this.entidadSeleccionada.set(null);
+        this.usuariosEntidad.set([]);
+    }
+
+    cambiarPermisoUsuarioEntidad(
+        idUsuario: number,
+        permiso: 'habilitaBanci' | 'habilitaCarga' | 'habilitaModificacion',
+        valor: boolean,
+    ): void
+    {
+        if(this.guardandoEntidad()) return;
+        this.usuariosEntidad.update((usuarios) =>
+            usuarios.map((usuario) =>
+            {
+                if(usuario.idUsuario !== idUsuario)
                 {
-                    this.mensaje.set(r.mensaje);
-                    this.recargar();
+                    return usuario;
+                }
+
+                if(permiso === 'habilitaBanci')
+                {
+                    if(!valor && usuario.esUsuarioActual)
+                    {
+                        return usuario;
+                    }
+
+                    return {
+                        ...usuario,
+                        habilitaBanci: valor,
+                        habilitaCarga: valor ? usuario.habilitaCarga : false,
+                        habilitaModificacion: valor ? usuario.habilitaModificacion : false,
+                    };
+                }
+
+                if(usuario.bloqueaOperacion)
+                {
+                    return usuario;
+                }
+
+                return {
+                    ...usuario,
+                    habilitaBanci: valor ? true : usuario.habilitaBanci,
+                    [permiso]: valor,
+                };
+            }),
+        );
+    }
+
+    hayCambiosEntidad(): boolean
+    {
+        return this.usuariosEntidad().some(
+            (usuario) =>
+                usuario.habilitaBanci !== usuario.habilitaBanciOriginal ||
+                usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+                usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
+        );
+    }
+
+    guardarPermisosEntidad(): void
+    {
+        if(this.cargando() || this.guardandoGlobal() || this.guardandoEntidad()) return;
+        const usuariosModificados = this.usuariosEntidad().filter(
+            (usuario) =>
+                usuario.habilitaBanci !== usuario.habilitaBanciOriginal ||
+                usuario.habilitaCarga !== usuario.habilitaCargaOriginal ||
+                usuario.habilitaModificacion !== usuario.habilitaModificacionOriginal,
+        );
+
+        if(usuariosModificados.length === 0)
+        {
+            mostrarInfo('Sin cambios', 'No hay cambios por guardar.');
+
+            return;
+        }
+
+        confirmarAccion(
+            'Guardar permisos por entidad',
+            `Se actualizarán permisos de ${usuariosModificados.length} usuario(s).`,
+            'Sí, guardar',
+        ).then((result) =>
+        {
+            if(!result.isConfirmed)
+            {
+                return;
+            }
+
+            this.guardandoEntidad.set(true);
+
+            const operaciones = usuariosModificados.map((usuario) =>
+                this.usuariosService.actualizarPermisos(usuario.idUsuario, {
+                    habilitaBanci: usuario.habilitaBanci,
+                    habilitaCarga: usuario.habilitaBanci && !usuario.bloqueaOperacion && usuario.habilitaCarga,
+                    habilitaModificacion: usuario.habilitaBanci && !usuario.bloqueaOperacion && usuario.habilitaModificacion,
+                }).pipe(catchError((error) => of({
+                    esValido: false, codigo: 'ERROR_ACTUALIZAR_USUARIO',
+                    mensaje: obtenerMensajeErrorHttp(error, `No fue posible actualizar ${usuario.usuario}.`),
+                    idUsuario: usuario.idUsuario,
+                }))),
+            );
+
+            forkJoin(operaciones).subscribe({
+                next: (resultados) =>
+                {
+                    this.guardandoEntidad.set(false);
+
+                    const errores = resultados.filter((resultado) => !resultado.esValido);
+
+                    if(errores.length > 0)
+                    {
+                        mostrarAdvertenciaHtml(
+                            'Algunos usuarios no se actualizaron',
+                            errores.map((error) => `• ${error.mensaje}`).join('<br>'),
+                        );
+
+                        this.cargarUsuarios();
+                        return;
+                    }
+
+                    mostrarExitoInstitucional(
+                        'Permisos actualizados',
+                        `Se actualizaron correctamente los permisos de ${usuariosModificados.length} usuario(s).`,
+                    );
+
+                    this.cerrarPermisosEntidad();
+                    this.cargarUsuarios();
                 },
-                error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+                error: (error) =>
+                {
+                    this.guardandoEntidad.set(false);
+
+                    mostrarError('No fue posible actualizar permisos', obtenerMensajeErrorHttp(error, 'Intente nuevamente.'));
+                },
             });
+        });
+    }
+
+    private obtenerEstadoPermiso(totalActivos: number, totalUsuarios: number): 'ACTIVO' | 'INACTIVO' | 'MIXTO'
+    {
+        if(totalUsuarios === 0 || totalActivos === 0)
+        {
+            return 'INACTIVO';
+        }
+
+        if(totalActivos === totalUsuarios)
+        {
+            return 'ACTIVO';
+        }
+
+        return 'MIXTO';
+    }
+
+    private sincronizarSwitchesGlobales(usuarios: BanciUsuarioDetalle[]): void
+    {
+        const usuariosOperativosConAcceso = usuarios.filter(
+            (usuario) => usuario.activo && usuario.rol !== ROLES.CONSULTA && usuario.habilitaBanci,
+        );
+
+        if(usuariosOperativosConAcceso.length === 0)
+        {
+            this.habilitaCargaGlobal.set(false);
+            this.habilitaModificacionGlobal.set(false);
+            return;
+        }
+
+        this.habilitaCargaGlobal.set(usuariosOperativosConAcceso.every((usuario) => usuario.habilitaCarga));
+        this.habilitaModificacionGlobal.set(usuariosOperativosConAcceso.every((usuario) => usuario.habilitaModificacion));
     }
 }
