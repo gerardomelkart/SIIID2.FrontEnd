@@ -6,7 +6,7 @@ import { BanciAprobacion } from './banci-aprobacion';
 import { BanciPendiente, BanciRevisionAdministracion } from '../../core/models/banci-mensual.models';
 
 const pendiente: BanciPendiente = { id: 1, referencia: 'referencia-interna', entidad: 9, entidadNombre: 'Ciudad de México', anio: 2025, mes: 9, tipo: 'CARGA', estado: 'PENDIENTE_APROBACION', nombreUsuario: 'Enlace', fecha: '2026-10-19T18:00:00Z', motivo: null, manual: true, tieneOriginal: false, nombreOriginal: null, totalCarpetas: 1, totalDelitos: 1, totalVictimas: 2 };
-const revision: BanciRevisionAdministracion = { totalCarpetas: 1, totalDelitos: 1, totalVictimas: 2, totalCambios: 101, victimasConCambios: 2, limiteMuestra: 100, libro: { entidad: 9, anio: 2025, mes: 9, actualizacion: false, manual: true, carpetas: [], delitos: [], victimas: [], cambios: [{ carpeta: 'ci', delito: 'del', victima: 'vic', campo: 'edad', anterior: '', nuevo: '42' }] } };
+const revision: BanciRevisionAdministracion = { totalCarpetas: 1, totalDelitos: 1, totalVictimas: 2, totalCambios: 101, victimasConCambios: 2, limiteMuestra: 100, libro: { entidad: 9, anio: 2025, mes: 9, actualizacion: false, manual: true, carpetas: [], delitos: [], victimas: [], cambios: [{ carpeta: 'ci', delito: 'del', victima: 'vic', campo: 'edad', anterior: '', nuevo: '42' }, { carpeta: 'ci', delito: 'del', victima: 'vic', campo: 'sexo', anterior: '1', nuevo: '2' }] } };
 
 describe('Aprobación de cargas BANCI con esquema mensual', () =>
 {
@@ -41,22 +41,31 @@ describe('Aprobación de cargas BANCI con esquema mensual', () =>
         expect(f.componentInstance.pagina()).toBe(1);
         expect(f.componentInstance.visibles().length).toBe(1);
     });
-    it('presenta totales y muestra de diferencias bajo demanda, sin referencia interna ni original manual', () =>
+    it('la carga inicial muestra totales sin diferencias ni controles adicionales', () =>
     {
         const f = crear(); revisar(f);
-        expect(f.nativeElement.textContent).toContain('Información propuesta');
-        expect(f.nativeElement.textContent).toContain('101');
+        expect(f.nativeElement.textContent).not.toContain('Resumen de cambios');
+        expect(f.nativeElement.textContent).not.toContain('muestra de registros');
+        expect(f.nativeElement.textContent).not.toContain('diferencias');
         expect(f.nativeElement.textContent).not.toContain('referencia-interna');
         expect(f.nativeElement.textContent).not.toContain('Descargar archivo original');
         expect(f.nativeElement.querySelector('.muestra-scroll')).toBeNull();
-        f.componentInstance.mostrarCambios.set(true); f.detectChanges();
-        expect(f.nativeElement.querySelector('.muestra-scroll')).not.toBeNull();
+        f.componentInstance.descargarDiferencias();
+        TestBed.inject(HttpTestingController).expectNone(r => r.url.includes('/diferencias/'));
         f.componentInstance.original();
         TestBed.inject(HttpTestingController).expectNone(r => r.url.endsWith('/original'));
     });
     it('descarga todas las diferencias por el servicio administrativo existente', () =>
     {
-        const f = crear(); revisar(f);
+        const fila = { ...pendiente, tipo: 'ACTUALIZACION' };
+        const f = crear([fila]); revisar(f, fila);
+        expect(f.nativeElement.textContent).toContain('Resumen de cambios');
+        expect(f.nativeElement.textContent).toContain('Modificados');
+        expect(f.nativeElement.querySelector('.muestra-scroll')).toBeNull();
+        f.componentInstance.mostrarCambios.set(true); f.detectChanges();
+        expect(f.nativeElement.querySelector('.muestra-scroll')).not.toBeNull();
+        expect(f.nativeElement.querySelectorAll('.diferencia-admin-registro').length).toBe(1);
+        expect(f.nativeElement.querySelectorAll('.diferencias-admin-table tbody tr').length).toBe(2);
         vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: false, isDenied: false, isDismissed: true });
         f.componentInstance.descargarDiferencias();
         TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/administracion/diferencias/banci/referencia-interna/excel')).flush(new Blob(['excel']));

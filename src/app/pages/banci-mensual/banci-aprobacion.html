@@ -32,22 +32,30 @@
                 <div class="total-card"><i class="fa-solid fa-scale-balanced"></i><div><strong>{{ datos.totalDelitos }}</strong><span>Delitos</span></div></div>
                 <div class="total-card"><i class="fa-solid fa-people-group"></i><div><strong>{{ datos.totalVictimas }}</strong><span>Víctimas</span></div></div>
             </div>
-            <div class="descargas-row"><button class="btn-descarga btn-pdf" [disabled]="ocupado()" (click)="acuse()"><i class="fa-solid fa-file-pdf"></i> Ver informe previo</button>@if (!fila.manual && fila.tieneOriginal && fila.nombreOriginal) { <button class="btn-descarga btn-zip" [disabled]="ocupado()" (click)="original()"><i class="fa-solid fa-file-excel"></i> Descargar archivo original</button> }</div>
+            @if (fila.tipo === 'ACTUALIZACION') {
             <section class="cambios-admin-section">
-                <div class="cambios-admin-title"><h3>Información propuesta</h3><p>Complementos BANCI enviados para revisión. Los datos se incorporan al aprobar la solicitud.</p></div>
-                <div class="table-responsive"><table class="table table-sm resumen-cambios-table"><thead><tr><th>Víctimas con cambios</th><th>Campos con cambios</th></tr></thead><tbody><tr><td>{{ datos.victimasConCambios }}</td><td>{{ datos.totalCambios }}</td></tr></tbody></table></div>
+                <div class="cambios-admin-title"><h3>Resumen de cambios</h3><p>Comparación entre la información confirmada y la nueva versión enviada.</p></div>
+                <div class="table-responsive"><table class="table table-sm resumen-cambios-table">
+                    <thead><tr><th>Tipo de registro</th><th>Nuevos</th><th>Modificados</th><th>Eliminados</th></tr></thead>
+                    <tbody><tr><th>Carpetas</th><td>0</td><td>0</td><td>0</td></tr><tr><th>Delitos</th><td>0</td><td>0</td><td>0</td></tr><tr><th>Víctimas</th><td>0</td><td>{{ datos.victimasConCambios }}</td><td>0</td></tr></tbody>
+                    <tfoot><tr><th>Total</th><th>0</th><th>{{ datos.victimasConCambios }}</th><th>0</th></tr></tfoot>
+                </table></div>
                 <div class="cambios-admin-acciones"><button class="btn btn-modulo-excel" [disabled]="ocupado() || !datos.totalCambios" (click)="descargarDiferencias()"><i class="fa-solid fa-file-excel"></i> Descargar todas las diferencias en Excel</button><button class="btn-muestra-diferencias" [disabled]="ocupado()" (click)="mostrarCambios.set(!mostrarCambios())"><i class="fa-solid" [class.fa-eye]="!mostrarCambios()" [class.fa-eye-slash]="mostrarCambios()"></i> {{ mostrarCambios() ? 'Ocultar' : 'Ver' }} muestra de diferencias</button></div>
                 @if (mostrarCambios()) {
                     <p class="nota-muestra">Se muestran hasta {{ datos.limiteMuestra }} cambios de {{ datos.totalCambios }}. El Excel contiene todas las diferencias.</p>
-                    <div class="table-responsive muestra-scroll"><table class="table table-sm diferencias-admin-table"><thead><tr><th>Carpeta</th><th>Delito</th><th>Víctima</th><th>Campo</th><th>Valor anterior</th><th>Valor propuesto</th></tr></thead><tbody>@for (cambio of datos.libro.cambios; track $index) { <tr><td>{{ cambio.carpeta }}</td><td>{{ cambio.delito }}</td><td>{{ cambio.victima }}</td><td>{{ nombreCampo(cambio.campo) }}</td><td>{{ cambio.anterior || '—' }}</td><td>{{ cambio.nuevo || '—' }}</td></tr> } @empty { <tr><td colspan="6" class="sin-diferencias-admin">No hay diferencias de complementos para mostrar.</td></tr> }</tbody></table></div>
-                }
-                <div class="cambios-admin-acciones"><button class="btn-muestra-diferencias" [disabled]="ocupado()" (click)="mostrarRegistros.set(!mostrarRegistros())"><i class="fa-solid fa-table-list"></i> {{ mostrarRegistros() ? 'Ocultar' : 'Ver' }} muestra de registros</button></div>
-                @if (mostrarRegistros()) {
-                    <p class="nota-muestra">Se muestran hasta {{ datos.limiteMuestra }} registros por sección.</p>
-                    <div class="grupos-registros">@for (g of ['carpetas', 'delitos', 'victimas']; track g) { <button class="btn-muestra-diferencias" [class.grupo-activo]="grupo() === g" (click)="grupo.set($any(g))">{{ g === 'carpetas' ? 'Carpetas' : g === 'delitos' ? 'Delitos' : 'Víctimas' }}</button> }</div>
-                    <div class="table-responsive muestra-scroll"><table class="table table-sm diferencias-admin-table"><thead><tr>@for (campo of camposRegistros(); track campo) { <th>{{ nombreCampo(campo) }}</th> }</tr></thead><tbody>@for (registro of datos.libro[grupo()]; track $index) { <tr>@for (campo of camposRegistros(); track campo) { <td>{{ registro.columnas[campo] || '—' }}</td> }</tr> } @empty { <tr><td class="sin-diferencias-admin">No hay registros en esta sección.</td></tr> }</tbody></table></div>
+                    <div class="diferencias-admin-grid muestra-scroll"><section class="diferencias-admin-seccion">
+                        <div class="diferencias-admin-seccion-title"><h4>Víctimas</h4><span>{{ muestraVictimas().length }} registros en la muestra</span></div>
+                        @for (registro of muestraVictimas(); track $index) {
+                            <article class="diferencia-admin-registro movimiento-modificado-card">
+                                <div class="diferencia-admin-registro-head"><span class="movimiento-admin-badge">Modificado</span><div class="identificadores-admin"><span>Carpeta: {{ registro.carpeta }}</span><span>Delito: {{ registro.delito }}</span><span>Víctima: {{ registro.victima }}</span></div></div>
+                                <div class="table-responsive"><table class="table table-sm diferencias-admin-table"><thead><tr><th>Campo</th><th>Valor anterior</th><th>Valor propuesto</th></tr></thead><tbody>@for (cambio of registro.cambios; track $index) { <tr><td class="campo-admin-nombre">{{ nombreCampo(cambio.campo) }}</td><td>{{ cambio.anterior || '—' }}</td><td>{{ cambio.nuevo || '—' }}</td></tr> }</tbody></table></div>
+                            </article>
+                        } @empty { <div class="sin-diferencias-admin">No hay diferencias para mostrar.</div> }
+                    </section></div>
                 }
             </section>
+            }
+            <div class="descargas-row"><button class="btn-descarga btn-pdf" [disabled]="ocupado()" (click)="acuse()"><i class="fa-solid fa-file-pdf"></i> Ver informe previo</button>@if (!fila.manual && fila.tieneOriginal && fila.nombreOriginal) { <button class="btn-descarga btn-zip" [disabled]="ocupado()" (click)="original()"><i class="fa-solid fa-file-excel"></i> Descargar archivo original</button> }</div>
             <div class="resolucion-row"><button class="btn-rechazar" [disabled]="ocupado()" (click)="resolver(false)"><i class="fa-solid fa-xmark"></i> Rechazar</button><button class="btn-aprobar" [disabled]="ocupado()" (click)="resolver(true)"><i class="fa-solid fa-check"></i> Aprobar carga</button></div>
         </section>
     } }

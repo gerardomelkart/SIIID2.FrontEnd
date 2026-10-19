@@ -32,8 +32,6 @@ export class BanciAprobacion implements OnDestroy
     readonly campo = signal('fecha');
     readonly ascendente = signal(true);
     readonly mostrarCambios = signal(false);
-    readonly mostrarRegistros = signal(false);
-    readonly grupo = signal<'carpetas' | 'delitos' | 'victimas'>('carpetas');
     readonly acuseUrl = signal<SafeResourceUrl | null>(null);
     private acuseObjectUrl: string | null = null;
     readonly nombreCampo = nombreCampo;
@@ -47,7 +45,17 @@ export class BanciAprobacion implements OnDestroy
     });
     readonly paginas = computed(() => Math.max(1, Math.ceil(this.filtradas().length / 20)));
     readonly visibles = computed(() => this.filtradas().slice((this.pagina() - 1) * 20, this.pagina() * 20));
-    readonly camposRegistros = computed(() => [...new Set(this.revision()?.libro[this.grupo()].flatMap(f => Object.keys(f.columnas)) ?? [])]);
+    readonly muestraVictimas = computed(() =>
+    {
+        const grupos = new Map<string, { carpeta: string; delito: string; victima: string; cambios: NonNullable<BanciRevisionAdministracion['libro']['cambios']> }>();
+        for(const cambio of this.revision()?.libro.cambios ?? [])
+        {
+            const clave = JSON.stringify([cambio.carpeta, cambio.delito, cambio.victima]);
+            const grupo = grupos.get(clave) ?? { carpeta: cambio.carpeta, delito: cambio.delito, victima: cambio.victima, cambios: [] };
+            grupo.cambios.push(cambio); grupos.set(clave, grupo);
+        }
+        return [...grupos.values()];
+    });
     constructor() { this.actualizar(); }
     periodo(f: { anio: number; mes: number }): string { return new Date(f.anio, f.mes - 1, 1).toLocaleDateString('es-MX', { month: 'long', year: 'numeric' }); }
     tipo(f: BanciPendiente): string { return `${f.tipo === 'ACTUALIZACION' ? 'Actualización' : 'Carga'} ${f.manual ? 'manual' : 'masiva'}`; }
@@ -62,7 +70,7 @@ export class BanciAprobacion implements OnDestroy
             next: filas => { this.filas.set(filas); this.pagina.set(1); }, error: e => this.error(e),
         });
     }
-    cerrarDetalle(): void { this.seleccion.set(null); this.revision.set(null); this.mostrarCambios.set(false); this.mostrarRegistros.set(false); this.grupo.set('carpetas'); }
+    cerrarDetalle(): void { this.seleccion.set(null); this.revision.set(null); this.mostrarCambios.set(false); }
     revisar(fila: BanciPendiente): void
     {
         if(this.ocupado()) return;
@@ -77,7 +85,7 @@ export class BanciAprobacion implements OnDestroy
     }
     descargarDiferencias(): void
     {
-        const fila = this.seleccion(); if(!fila || this.ocupado()) return;
+        const fila = this.seleccion(); if(!fila || fila.tipo !== 'ACTUALIZACION' || this.ocupado()) return;
         this.ocupado.set(true); this.accion.set('diferencias');
         this.diferencias.descargar('banci', fila.referencia).pipe(finalize(() => { this.ocupado.set(false); this.accion.set(''); })).subscribe({
             next: blob => descargarBanci(blob, 'Diferencias_banci.xlsx'), error: e => this.error(e),

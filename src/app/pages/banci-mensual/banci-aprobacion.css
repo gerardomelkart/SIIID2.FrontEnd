@@ -6,8 +6,6 @@
 .nota-muestra { margin: 16px 0 10px; font-size: 12px; color: #667085; }
 .muestra-scroll { max-height: 420px; }
 .muestra-scroll thead { position: sticky; top: 0; z-index: 1; }
-.grupos-registros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.grupo-activo { color: white; background: var(--siiid-guinda); }
 .cambios-admin-title h3 { color: var(--siiid-guinda); }
 #detalle-carga-banci { scroll-margin-top: 20px; }
 @media (max-width: 650px) { .totales-grid { grid-template-columns: 1fr; } }

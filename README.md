@@ -135,3 +135,5 @@ Los nuevos endpoints de pendientes y revisión exigen SUPER_USUARIO y acceso adm
 La configuración de BANCI usa el mismo diseño que el consolidado: controles globales de carga y actualización, resumen por entidad, búsqueda, ordenamiento, paginación, Excel y panel de permisos individuales. Los estados globales se calculan desde las cuentas activas; los administradores generales quedan fuera de la gestión operativa y los usuarios CONSULTA no pueden cargar ni actualizar. Los cambios individuales utilizan el endpoint exclusivo de permisos BANCI, sin editar perfiles ni permisos de otros módulos.
 
 Las reglas de validación y las cargas de cortes anteriores se administran únicamente en Configuración del sistema. Se retira el endpoint duplicado PUT /api/banci/mensual/configuracion; las reglas existentes siguen aplicándose en la carga y actualización. No requiere cambios en base de datos. Publicar API y frontend juntos.
+
+En aprobación BANCI, el resumen y la muestra de diferencias se muestran únicamente en actualizaciones, agrupados por víctima con el esquema del consolidado. Las cargas iniciales no ofrecen diferencias y se retira la muestra adicional de registros.
