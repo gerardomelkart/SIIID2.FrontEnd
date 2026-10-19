@@ -1,0 +1,12 @@
+.informes-header h1 { color: var(--siiid-guinda); }
+.reporte-table thead th { border-color: var(--siiid-guinda); }
+.reporte-table th button { color: inherit; font: inherit; font-weight: 700; border: 0; padding: 0; background: transparent; cursor: pointer; white-space: nowrap; }
+.modalidad-envio { display: block; margin-top: 4px; color: #667085; }
+.estatus-envio { display: inline-block; padding: 5px 9px; border-radius: 6px; background: #e8f3ed; color: #20563d; font-weight: 650; }
+.estatus-envio.pendiente { background: #fff2d6; color: #74531a; }
+.estatus-envio.rechazado { background: #fbe7eb; color: #92263c; }
+.paginacion-envios { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px; }
+.paginacion-envios .acciones { margin: 0; }
+.acciones details summary { list-style: none; cursor: pointer; }
+.motivo-envio { min-width: 210px; max-width: 350px; white-space: normal; padding: 12px; margin-top: 8px; background: #fff7f8; border: 1px solid #ebcbd1; }
+@media (max-width: 600px) { .informes-header, .paginacion-envios { flex-wrap: wrap; } }

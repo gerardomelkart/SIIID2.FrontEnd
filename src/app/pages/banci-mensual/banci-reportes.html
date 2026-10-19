@@ -55,7 +55,7 @@
                                         Ver acuse
                                     </button>
                                 }
-                                @if (reporte === 'originales') {
+                                @if (reporte === 'originales' && !fila.manual && fila.tieneOriginal) {
                                     <button class="btn btn-outline-primary btn-sm" (click)="descargar(fila)" [disabled]="ocupado()">
                                         Descargar original
                                     </button>

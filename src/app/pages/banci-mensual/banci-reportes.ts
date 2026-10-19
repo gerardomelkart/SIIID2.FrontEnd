@@ -127,6 +127,7 @@ export class BanciReportes implements OnDestroy
     }
     descargar(fila: BanciEnvio): void
     {
+        if(fila.manual || !fila.tieneOriginal) return;
         this.ocupado.set(true);
         this.api
             .original(fila.referencia)

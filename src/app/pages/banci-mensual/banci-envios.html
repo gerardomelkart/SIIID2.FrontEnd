@@ -1,0 +1,77 @@
+<div class="informes-page">
+    <div class="informes-header">
+        <div><h1>Consulta de envíos</h1><p>Seguimiento de los envíos BANCI por entidad federativa y corte mensual.</p></div>
+        <div class="rol-chip"><i class="fa-solid fa-user-shield"></i> {{ usuario()?.rol }}</div>
+    </div>
+    @if (mensaje()) { <div class="alert alert-danger" role="alert">{{ mensaje() }}</div> }
+    <section class="siiid-card">
+        <div class="siiid-card-header reporte-card-header">
+            <span><i class="fa-solid fa-magnifying-glass"></i> Consulta de envíos</span>
+            <div class="reporte-toolbar">
+                <button class="btn btn-sm btn-secondary" [disabled]="ocupado()" (click)="actualizar()"><i class="fa-solid" [class.fa-rotate]="!cargando()" [class.fa-spinner]="cargando()" [class.fa-spin]="cargando()"></i> Actualizar</button>
+                <button class="btn btn-sm btn-secondary" [disabled]="ocupado() || !corte()" (click)="acuses()"><i class="fa-solid fa-file-zipper"></i> {{ accion() === 'acuses' ? 'Generando acuses…' : 'Descargar acuses' }}</button>
+                <button class="btn btn-sm btn-secondary" [disabled]="ocupado() || !filtradas().length" (click)="exportar()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                <div class="buscador"><i class="fa-solid fa-magnifying-glass"></i><input aria-label="Buscar envío" placeholder="Buscar envío..." [ngModel]="busqueda()" (ngModelChange)="buscar($event)" /></div>
+            </div>
+        </div>
+        <div class="corte-selector">
+            <div class="corte-selector-title"><i class="fa-solid fa-calendar-days"></i> Corte consultado</div>
+            <div class="corte-selector-controls">
+                <select class="form-select form-select-sm" aria-label="Corte consultado" [disabled]="ocupado() || !periodos().length" [ngModel]="corte()" (ngModelChange)="corte.set($event); consultarCorte()">
+                    @for (periodo of periodos(); track claveCorte(periodo)) { <option [value]="claveCorte(periodo)">{{ corteTexto(periodo) }}</option> }
+                    @empty { <option value="">Sin cortes disponibles</option> }
+                </select>
+            </div>
+        </div>
+        @if (usuario()?.idEntidadFederativa) {
+            <div class="filtro-entidad-info"><i class="fa-solid fa-location-dot"></i> Mostrando únicamente envíos de la entidad: <strong>{{ usuario()?.entidadFederativa }}</strong></div>
+        }
+        <div class="table-responsive envios-mensual-table-responsive">
+            <table class="table table-sm reporte-table">
+                <thead><tr>
+                    <th><button (click)="ordenar('entidadNombre')">Entidad federativa <i [class]="icono('entidadNombre')"></i></button></th>
+                    <th><button (click)="ordenar('entidad')">Cve. entidad <i [class]="icono('entidad')"></i></button></th>
+                    <th><button (click)="ordenar('fecha')">Fecha de envío <i [class]="icono('fecha')"></i></button></th>
+                    <th><button (click)="ordenar('mes')">Corte <i [class]="icono('mes')"></i></button></th>
+                    <th><button (click)="ordenar('nombreUsuario')">Usuario envío <i [class]="icono('nombreUsuario')"></i></button></th>
+                    <th><button (click)="ordenar('estado')">Estatus <i [class]="icono('estado')"></i></button></th>
+                    <th class="acciones-col">Acciones</th>
+                </tr></thead>
+                <tbody>
+                    @for (envio of visibles(); track envio.referencia) {
+                        <tr>
+                            <td>{{ envio.entidadNombre }}</td><td>{{ claveEntidad(envio) }}</td>
+                            <td>{{ envio.fecha | date:'dd/MM/yyyy HH:mm' }}</td><td>{{ corteTexto(envio) }}</td>
+                            <td>{{ envio.nombreUsuario }}<small class="modalidad-envio">{{ tipoTexto(envio) }}</small></td>
+                            <td><span class="estatus-envio" [class.rechazado]="envio.estado === 'RECHAZADO_ADMIN'" [class.pendiente]="envio.estado === 'PENDIENTE_APROBACION'">{{ estadoTexto(envio) }}</span></td>
+                            <td><div class="acciones">
+                                @if (tieneAcuse(envio)) {
+                                    <button class="btn-icon btn-pdf" title="Ver informe" aria-label="Ver informe" [disabled]="ocupado()" (click)="acuse(envio)"><i class="fa-solid fa-file-pdf"></i></button>
+                                }
+                                @if (!envio.manual && envio.tieneOriginal) {
+                                    <button class="btn-icon btn-excel" title="Descargar archivo enviado" aria-label="Descargar archivo enviado" [disabled]="ocupado()" (click)="original(envio)"><i class="fa-solid fa-file-excel"></i></button>
+                                }
+                                @if (envio.estado === 'RECHAZADO_ADMIN') {
+                                    <details><summary class="btn-icon btn-view" title="Ver motivo de rechazo" aria-label="Ver motivo de rechazo"><i class="fa-solid fa-circle-exclamation"></i></summary><div class="motivo-envio"><strong>Motivo del rechazo</strong><p>{{ envio.motivo || 'Sin motivo registrado.' }}</p></div></details>
+                                }
+                            </div></td>
+                        </tr>
+                    } @empty {
+                        <tr><td colspan="7" class="text-center py-4">{{ cargando() ? 'Consultando envíos…' : 'No hay envíos para el corte y la búsqueda seleccionados.' }}</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="paginacion-envios">
+            <span>{{ filtradas().length }} registros · Página {{ pagina() }} de {{ paginas() }}</span>
+            <div class="acciones"><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() === 1" (click)="pagina.set(pagina() - 1)">Anterior</button><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() >= paginas()" (click)="pagina.set(pagina() + 1)">Siguiente</button></div>
+        </div>
+    </section>
+</div>
+@if (acuseUrl(); as url) {
+    <div class="acuse-modal" role="dialog" aria-modal="true" aria-label="Acuse de información BANCI">
+        <div class="acuse-header"><span>Acuse de entrega de información</span><button class="acuse-close" (click)="cerrarAcuse()" aria-label="Cerrar acuse">×</button></div>
+        <div class="acuse-body"><iframe class="acuse-frame" [src]="url" title="Acuse BANCI"></iframe></div>
+        <div class="acuse-actions"><button class="btn btn-primary" (click)="cerrarAcuse()">Cerrar</button></div>
+    </div>
+}

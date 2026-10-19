@@ -65,4 +65,8 @@ export interface BanciEnvio
     nombreUsuario: string;
     fecha: string;
     motivo: string | null;
+    manual: boolean;
+    tieneOriginal: boolean;
 }
+
+export interface BanciPeriodo { anio: number; mes: number; }

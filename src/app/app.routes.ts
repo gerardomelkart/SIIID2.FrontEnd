@@ -272,7 +272,7 @@ export const routes: Routes = [
             },
             {
                 path: 'informes/envios',
-                loadComponent: () => import('./pages/banci-mensual/banci-reportes').then((m) => m.BanciReportes),
+                loadComponent: () => import('./pages/banci-mensual/banci-envios').then((m) => m.BanciEnvios),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL, ROLES.CONSULTA], reporte: 'envios' },
             },
