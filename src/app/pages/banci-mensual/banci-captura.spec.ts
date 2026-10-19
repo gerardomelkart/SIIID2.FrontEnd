@@ -23,10 +23,14 @@ const opciones: BanciOpciones = {
         motivos: [{ condicion: 17, clave: '4', descripcion: 'Motivo desde BD' }],
     },
 };
+const scrollToOriginal = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTo');
+const scrollIntoViewOriginal = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollIntoView');
 describe('Carga BANCI por cortes', () =>
 {
     beforeEach(() =>
     {
+        Object.defineProperty(Element.prototype, 'scrollTo', { configurable: true, writable: true, value: vi.fn() });
+        Object.defineProperty(Element.prototype, 'scrollIntoView', { configurable: true, writable: true, value: vi.fn() });
         vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:banci-prueba');
         vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() =>
         {});
@@ -43,6 +47,10 @@ describe('Carga BANCI por cortes', () =>
     {
         TestBed.inject(HttpTestingController).verify();
         vi.restoreAllMocks();
+        if(scrollToOriginal) Object.defineProperty(Element.prototype, 'scrollTo', scrollToOriginal);
+        else delete (Element.prototype as Partial<Element>).scrollTo;
+        if(scrollIntoViewOriginal) Object.defineProperty(Element.prototype, 'scrollIntoView', scrollIntoViewOriginal);
+        else delete (Element.prototype as Partial<Element>).scrollIntoView;
     });
     function crear()
     {
@@ -187,12 +195,12 @@ describe('Carga BANCI por cortes', () =>
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/envios/prueba/acuse'))
             .flush(new Blob(['pdf'], { type: 'application/pdf' }));
+        const pagina = document.scrollingElement ?? document.documentElement;
+        const scroll = vi.spyOn(pagina, 'scrollTo');
+        Object.defineProperty(pagina, 'scrollHeight', { configurable: true, value: 1800 });
         f.detectChanges();
-        const informe = f.nativeElement.querySelector('#banci-informe');
-        const scroll = vi.fn();
-        Object.defineProperty(informe, 'scrollIntoView', { value: scroll });
         await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'end' });
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', top: 1800 });
         expect(f.nativeElement.querySelector('.panel.acciones')).toBeNull();
     });
     it('no muestra registros inventados cuando la precarga falla', () =>
@@ -341,7 +349,7 @@ describe('Carga BANCI por cortes', () =>
         expect(f.componentInstance.plantillaDescargada()).toBe(false);
         TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/plantilla'));
     });
-    it('un periodo ya registrado rechaza la descarga y retira cualquier archivo previamente habilitado', async () =>
+    it('un periodo sin carpetas pendientes rechaza la descarga y retira cualquier archivo previamente habilitado', async () =>
     {
         TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: false } } } });
         const f = crear();
@@ -350,10 +358,10 @@ describe('Carga BANCI por cortes', () =>
         const descarga = f.componentInstance.plantilla();
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/precarga'))
-            .flush({ mensaje: 'El periodo ya tiene información BANCI registrada.' }, { status: 400, statusText: 'Bad Request' });
+            .flush({ mensaje: 'Ya no hay carpetas pendientes para este periodo.' }, { status: 400, statusText: 'Bad Request' });
         await descarga;
         f.detectChanges();
-        expect(f.componentInstance.mensaje()).toContain('ya tiene información BANCI');
+        expect(f.componentInstance.mensaje()).toContain('Ya no hay carpetas pendientes');
         expect(f.componentInstance.plantillaDescargada()).toBe(false);
         expect(f.componentInstance.archivo).toBeNull();
         expect(f.nativeElement.querySelector('input[type="file"]')).toBeNull();
@@ -402,12 +410,35 @@ describe('Carga BANCI por cortes', () =>
         await new Promise((resolve) => setTimeout(resolve, 0));
         http.expectOne((r) => r.url.endsWith('/plantilla')).flush(new Blob(['excel']));
         await descarga;
+        const scroll = vi.spyOn(Element.prototype, 'scrollIntoView');
         f.detectChanges();
         expect(f.nativeElement.querySelector('.paso-descarga')).toBeNull();
-        const scroll = vi.fn();
-        Object.defineProperty(f.nativeElement.querySelector('#banci-carga-archivo'), 'scrollIntoView', { value: scroll });
         await new Promise((resolve) => setTimeout(resolve, 10));
         expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    });
+    it('al recibir errores desplaza la tabla de observaciones y la página hasta el final', () =>
+    {
+        const f = crear();
+        const pagina = document.scrollingElement ?? document.documentElement;
+        Object.defineProperty(pagina, 'scrollHeight', { configurable: true, value: 2400 });
+        const scrollPagina = vi.spyOn(pagina, 'scrollTo');
+        const desplazamientos: string[] = [];
+        vi.spyOn(HTMLElement.prototype, 'scrollTo').mockImplementation(function(this: HTMLElement, opciones?: ScrollToOptions | number)
+        {
+            if(this.classList.contains('table-scroll') && typeof opciones === 'object' && opciones.top === this.scrollHeight)
+                desplazamientos.push('observaciones');
+        });
+        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
+        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
+        f.componentInstance.validar();
+        TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/validar/manual')).flush({
+            esValido: false,
+            errores: Array.from({ length: 50 }, (_, i) => ({ archivo: 'victimas', fila: i + 2, campo: 'fub', mensaje: 'Complete el dato.' })),
+        });
+        f.detectChanges();
+        expect(f.nativeElement.querySelectorAll('#banci-errores tbody tr').length).toBe(50);
+        expect(desplazamientos).toContain('observaciones');
+        expect(scrollPagina).toHaveBeenCalledWith({ top: 2400, behavior: 'smooth' });
     });
     it('desplaza hacia el estado de proceso al validar una carga manual', async () =>
     {
@@ -415,11 +446,12 @@ describe('Carga BANCI por cortes', () =>
         f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
         f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
         f.componentInstance.validar();
+        const pagina = document.scrollingElement ?? document.documentElement;
+        const scroll = vi.spyOn(pagina, 'scrollTo');
+        Object.defineProperty(pagina, 'scrollHeight', { configurable: true, value: 1800 });
         f.detectChanges();
-        const scroll = vi.fn();
-        Object.defineProperty(f.nativeElement.querySelector('#banci-proceso'), 'scrollIntoView', { value: scroll });
         await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'end' });
+        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', top: 1800 });
         TestBed.inject(HttpTestingController)
             .expectOne((r) => r.url.endsWith('/validar/manual'))
             .flush({ esValido: false, errores: [] });

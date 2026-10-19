@@ -1,5 +1,5 @@
 import { nombreCampo } from './banci-campos';
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, ElementRef, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
@@ -39,9 +39,28 @@ export class BanciCaptura implements OnDestroy
         this.acuseReferencia.set(null);
         this.errorAcuse.set('');
     }
+    private readonly injector = inject(Injector);
+    private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
     private desplazar(id: string, block: ScrollLogicalPosition = 'start'): void
     {
-        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block }));
+        afterNextRender(() =>
+        {
+            const panel = this.elemento.nativeElement.querySelector<HTMLElement>(`#${id}`);
+            if(!panel) return;
+            if(block === 'end')
+            {
+                // Las observaciones también tienen su propio desplazamiento vertical.
+                panel.querySelectorAll<HTMLElement>('.table-scroll').forEach(tabla => tabla.scrollTo({ top: tabla.scrollHeight, behavior: 'smooth' }));
+                for(let padre = panel.parentElement; padre; padre = padre.parentElement)
+                {
+                    if(/auto|scroll/.test(getComputedStyle(padre).overflowY))
+                        padre.scrollTo({ top: padre.scrollHeight, behavior: 'smooth' });
+                }
+                const pagina = document.scrollingElement ?? document.documentElement;
+                pagina.scrollTo({ top: pagina.scrollHeight, behavior: 'smooth' });
+            }
+            else panel.scrollIntoView({ behavior: 'smooth', block });
+        }, { injector: this.injector });
     }
     readonly arrastrandoArchivo = signal(false);
     readonly nombreCampo = nombreCampo;

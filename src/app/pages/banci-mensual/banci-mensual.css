@@ -156,7 +156,7 @@ summary {
 }
 .acuse-header {
     padding: 12px 18px;
-    background: #691c32;
+    background: var(--siiid-guinda, #6f2c91);
     color: white;
     display: flex;
     align-items: center;
