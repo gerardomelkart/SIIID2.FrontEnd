@@ -125,18 +125,22 @@
                 </div>
             </div>
             @if (plantillaDescargada()) {
-                <label class="archivo" [class.arrastrando]="arrastrandoArchivo() && !ocupado() && plantillaDescargada()" (dragover)="$event.preventDefault(); arrastrandoArchivo.set(true)" (dragleave)="arrastrandoArchivo.set(false)" (drop)="soltarArchivo($event)"
-                    ><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><strong>Arrastre aquí su archivo o selecciónelo</strong
-                    ><span>Excel (.xlsx) · Tres pestañas · Hasta 50 MB</span
-                    ><input class="form-control" type="file" accept=".xlsx" (change)="archivoSeleccionado($event)" [disabled]="ocupado()"
-                /></label>
-                @if (archivo) {
+                @if (!archivo) {
+                    <label class="archivo" [class.arrastrando]="arrastrandoArchivo() && !ocupado() && plantillaDescargada()" (dragover)="$event.preventDefault(); arrastrandoArchivo.set(true)" (dragleave)="arrastrandoArchivo.set(false)" (drop)="soltarArchivo($event)"
+                        ><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><strong>Arrastre aquí su archivo o selecciónelo</strong
+                        ><span>Excel (.xlsx) · Tres pestañas · Hasta 50 MB</span
+                        ><input class="form-control" type="file" accept=".xlsx" (change)="archivoSeleccionado($event)" [disabled]="ocupado()"
+                    /></label>
+                } @else {
                     <p class="archivo-elegido"><i class="fa-solid fa-file-excel" aria-hidden="true"></i>{{ archivo.name }}</p>
-                }
-                @if (!validacion()) {
                     <div class="acciones mt-3">
-                        <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado() || !archivo">
-                            {{ ocupado() ? 'Validando…' : 'Validar información' }}
+                        @if (!validacion()) {
+                            <button class="btn btn-primary" (click)="validar()" [disabled]="ocupado()">
+                                {{ ocupado() ? 'Validando…' : 'Validar información' }}
+                            </button>
+                        }
+                        <button class="btn btn-outline-primary" (click)="cambiarArchivo()" [disabled]="ocupado()">
+                            <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> Cargar otro archivo
                         </button>
                     </div>
                 }

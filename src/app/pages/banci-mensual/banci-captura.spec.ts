@@ -85,9 +85,35 @@ describe('Carga BANCI por cortes', () =>
         Object.defineProperty(soltar, 'dataTransfer', { value: { files: [archivo] } });
         zona.dispatchEvent(soltar);
         f.detectChanges();
-        expect(zona.classList.contains('arrastrando')).toBe(false);
+        expect(f.componentInstance.arrastrandoArchivo()).toBe(false);
+        expect(f.nativeElement.querySelector('label.archivo')).toBeNull();
         expect(f.componentInstance.archivo).toBe(archivo);
     });
+    for(const actualizacion of [false, true])
+    {
+        it(`oculta el recuadro al elegir archivo y permite reemplazarlo en ${actualizacion ? 'actualización' : 'carga'}`, () =>
+        {
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion } } } });
+            const f = crear();
+            f.componentInstance.plantillaDescargada.set(true);
+            f.detectChanges();
+            const entrada = f.nativeElement.querySelector('input[type="file"]');
+            Object.defineProperty(entrada, 'files', { value: [new File(['datos'], 'prueba.xlsx')] });
+            entrada.dispatchEvent(new Event('change'));
+            f.detectChanges();
+            expect(f.nativeElement.querySelector('label.archivo')).toBeNull();
+            const botones = [...f.nativeElement.querySelectorAll('#banci-carga-archivo .acciones button')] as HTMLButtonElement[];
+            expect(botones.map(b => b.textContent?.trim())).toEqual(['Validar información', 'Cargar otro archivo']);
+            f.componentInstance.errores.set([{ archivo: 'victimas', fila: 2, campo: 'fub', mensaje: 'Complete el dato.' }]);
+            botones[1].click();
+            f.detectChanges();
+            expect(f.componentInstance.archivo).toBeNull();
+            expect(f.componentInstance.errores()).toEqual([]);
+            expect(f.componentInstance.plantillaDescargada()).toBe(true);
+            expect(f.nativeElement.querySelector('input[type="file"]')).not.toBeNull();
+            expect(f.nativeElement.querySelector('#banci-carga-archivo .acciones')).toBeNull();
+        });
+    }
     it('usa el corte del servidor y bloquea su selección al desactivar históricos', async () =>
     {
         const f = crear();

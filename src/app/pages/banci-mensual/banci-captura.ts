@@ -224,6 +224,16 @@ export class BanciCaptura implements OnDestroy
             this.errores.set([]);
         }
     }
+    cambiarArchivo(): void
+    {
+        if(this.ocupado()) return;
+        this.cerrarAcuse();
+        this.archivo = null;
+        this.arrastrandoArchivo.set(false);
+        this.validacion.set(null);
+        this.errores.set([]);
+        this.mensaje.set('');
+    }
     archivoSeleccionado(evento: Event): void
     {
         if(this.cargaGuiada && !this.plantillaDescargada()) return;
