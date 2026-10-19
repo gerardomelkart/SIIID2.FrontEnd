@@ -278,13 +278,13 @@ export const routes: Routes = [
             },
             {
                 path: 'informes/cargas',
-                loadComponent: () => import('./pages/banci-mensual/banci-reportes').then((m) => m.BanciReportes),
+                loadComponent: () => import('./pages/banci-mensual/banci-informes').then((m) => m.BanciInformes),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO], reporte: 'cargas' },
             },
             {
                 path: 'informes/originales',
-                loadComponent: () => import('./pages/banci-mensual/banci-reportes').then((m) => m.BanciReportes),
+                loadComponent: () => import('./pages/banci-mensual/banci-informes').then((m) => m.BanciInformes),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO], reporte: 'originales' },
             },

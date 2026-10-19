@@ -1,0 +1,45 @@
+<div class="informes-page">
+    <div class="informes-header"><div><h1>{{ titulo }}</h1><p>{{ originales ? 'Últimos archivos originales masivos recibidos por entidad federativa.' : 'Seguimiento de cargas y actualizaciones BANCI por entidad federativa.' }}</p></div></div>
+    @if (mensaje()) { <div class="alert alert-danger" role="alert">{{ mensaje() }}</div> }
+    <section class="siiid-card">
+        <div class="siiid-card-header reporte-card-header">
+            <span><i class="fa-solid" [class.fa-box-archive]="originales" [class.fa-chart-simple]="!originales"></i> {{ originales ? 'Últimos archivos originales por entidad' : 'Reporte de cargas por entidad' }}</span>
+            <div class="reporte-actions">
+                <button class="btn btn-sm btn-secondary" [disabled]="ocupado()" (click)="actualizar()"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+                <button class="btn btn-sm btn-secondary" [disabled]="ocupado() || !filtradas().length" (click)="exportar()"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                <div class="buscador"><i class="fa-solid fa-magnifying-glass"></i><input [placeholder]="originales ? 'Buscar entidad o archivo...' : 'Buscar carga...'" aria-label="Buscar en el reporte" [ngModel]="busqueda()" (ngModelChange)="buscar($event)" /></div>
+            </div>
+        </div>
+        @if (!originales) {
+            <div class="corte-selector">
+                <div class="corte-selector-title"><i class="fa-solid fa-calendar-days"></i> Corte consultado</div>
+                <div class="corte-selector-controls"><select class="form-select form-select-sm" aria-label="Corte consultado" [disabled]="ocupado() || !periodos().length" [ngModel]="corte()" (ngModelChange)="corte.set($event); cambiarCorte()">
+                    @for (p of periodos(); track clave(p)) { <option [value]="clave(p)">{{ periodo(p) }}</option> }
+                    @empty { <option value="">Sin cortes disponibles</option> }
+                </select></div>
+            </div>
+        } @else {
+            <div class="originales-alert"><i class="fa-solid fa-circle-info"></i> Copia íntegra del último archivo masivo recibido por cada entidad. Las capturas manuales no generan archivo original.</div>
+        }
+        <div class="table-responsive">
+            <table class="table table-sm reporte-table">
+                <thead><tr>
+                    @for (col of columnas; track col.campo) { <th><button (click)="ordenar(col.campo)">{{ col.titulo }} <i [class]="icono(col.campo)"></i></button></th> }
+                    @if (originales) { <th>Descargar</th> }
+                </tr></thead>
+                <tbody>
+                    @if (!originales) {
+                        @for (fila of cargasVisibles(); track fila.entidad) {
+                            <tr><td><span class="folio-chip">{{ fila.ranking ?? '—' }}</span></td><td>{{ fila.entidadNombre }}</td><td>{{ claveEntidad(fila) }}</td><td>{{ periodo() }}</td><td><span class="intentos-chip">{{ fila.intentos }}</span></td><td><span class="estatus-envio" [class.pendiente]="fila.estado === 'PENDIENTE_APROBACION' || fila.estado === 'VALIDADO'" [class.rechazado]="fila.estado.startsWith('RECHAZADO')" [class.sin-carga]="fila.estado === 'SIN_CARGA'">{{ estadoTexto(fila.estado) }}</span></td><td>{{ (fila.fechaCarga | date:'dd/MM/yyyy HH:mm') || '—' }}</td><td>{{ (fila.fechaAprobacion | date:'dd/MM/yyyy HH:mm') || '—' }}</td></tr>
+                        } @empty { <tr><td colspan="8" class="text-center py-4">{{ ocupado() ? 'Consultando cargas…' : 'No hay cargas para los filtros seleccionados.' }}</td></tr> }
+                    } @else {
+                        @for (fila of originalesVisibles(); track fila.entidad) {
+                            <tr><td><strong>{{ claveEntidad(fila) }} · {{ fila.entidadNombre }}</strong></td><td><span class="movimiento-chip">{{ tipoTexto(fila.tipo) }}</span></td><td>{{ periodo(fila) }}</td><td>{{ fila.fecha | date:'dd/MM/yyyy HH:mm' }}</td><td><strong class="nombre-original">{{ fila.nombreOriginal }}</strong><small>{{ tamanio(fila.tamanioBytes) }}</small></td><td><div class="acciones"><button class="btn-icon btn-excel" title="Descargar original XLSX" aria-label="Descargar original XLSX" [disabled]="ocupado()" (click)="descargar(fila, false)"><i class="fa-solid fa-file-excel"></i></button><button class="btn btn-sm btn-secondary" [disabled]="ocupado()" (click)="descargar(fila, true)"><i class="fa-solid" [class.fa-file-zipper]="descargando() !== fila.referencia" [class.fa-spinner]="descargando() === fila.referencia" [class.fa-spin]="descargando() === fila.referencia"></i> ZIP</button></div></td></tr>
+                        } @empty { <tr><td colspan="6" class="text-center py-4">{{ ocupado() ? 'Consultando archivos originales…' : 'No hay archivos originales masivos guardados para los filtros seleccionados.' }}</td></tr> }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="paginacion-envios"><span>{{ filtradas().length }} {{ originales ? 'entidades con archivo' : 'entidades' }} · Página {{ pagina() }} de {{ paginas() }}</span><div class="acciones"><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() === 1" (click)="pagina.set(pagina() - 1)">Anterior</button><button class="btn btn-sm btn-outline-secondary" [disabled]="pagina() >= paginas()" (click)="pagina.set(pagina() + 1)">Siguiente</button></div></div>
+    </section>
+</div>

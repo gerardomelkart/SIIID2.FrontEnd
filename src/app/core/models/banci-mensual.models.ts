@@ -70,3 +70,12 @@ export interface BanciEnvio
 }
 
 export interface BanciPeriodo { anio: number; mes: number; }
+
+export interface BanciReporteCarga {
+    entidad: number; entidadNombre: string; ranking: number | null; intentos: number;
+    estado: string; fechaCarga: string | null; fechaAprobacion: string | null;
+}
+export interface BanciArchivoOriginal {
+    referencia: string; entidad: number; entidadNombre: string; mes: number; anio: number;
+    tipo: string; fecha: string; nombreOriginal: string; tamanioBytes: number; sha256: string;
+}
