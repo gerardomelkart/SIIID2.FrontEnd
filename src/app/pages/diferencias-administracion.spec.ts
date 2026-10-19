@@ -1,3 +1,5 @@
+import { DiferenciasAdministracionService } from '../core/services/diferencias-administracion.service';
+import Swal from 'sweetalert2';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -12,7 +14,12 @@ import { BanciEnvio } from '../core/models/banci-mensual.models';
 
 describe('Descarga completa de diferencias administrativas', () =>
 {
-    beforeEach(() => TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] }));
+    beforeEach(() =>
+    {
+        vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: false, isDenied: false, isDismissed: true });
+        vi.spyOn(Swal, 'close').mockImplementation(() => {});
+        TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    });
     afterEach(() =>
     {
         TestBed.inject(HttpTestingController).verify();
@@ -29,15 +36,28 @@ describe('Descarga completa de diferencias administrativas', () =>
             componente.descargarTodasDiferencias('REF-PRUEBA');
             componente.descargarTodasDiferencias('REF-PRUEBA');
             expect(componente.descargandoDiferencias()).toBe(true);
+            expect(Swal.fire).toHaveBeenCalledWith(expect.objectContaining({ allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, text: expect.stringContaining('muchas modificaciones') }));
             const peticion = TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith(`/administracion/diferencias/${modulo}/REF-PRUEBA/excel`));
             expect(peticion.request.responseType).toBe('blob');
             const archivo = new Blob(['excel']);
             peticion.flush(archivo);
             expect(descargar).toHaveBeenCalledWith(archivo, `Diferencias_${modulo}.xlsx`);
             expect(componente.descargandoDiferencias()).toBe(false);
+            expect(Swal.close).toHaveBeenCalled();
             expect(componente.diferenciasDetalle()).toBeNull();
         });
     }
+
+    it('cierra el bloqueo si la descarga falla y usa el azul de Federal', () =>
+    {
+        const error = vi.fn();
+        TestBed.inject(DiferenciasAdministracionService).descargar('federal', 'ERROR').subscribe({ error });
+        expect(Swal.fire).toHaveBeenCalledWith(expect.objectContaining({ loaderHtml: expect.stringContaining('#1f4e79') }));
+        TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/federal/ERROR/excel'))
+            .flush(new Blob(['Error']), { status: 504, statusText: 'Gateway Timeout' });
+        expect(error).toHaveBeenCalledOnce();
+        expect(Swal.close).toHaveBeenCalledOnce();
+    });
 
     for(const reporte of ['pendientes', 'envios'])
     {

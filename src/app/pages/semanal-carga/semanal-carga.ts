@@ -1,3 +1,4 @@
+import { PlantillaGeneradaDirective } from '../../core/directives/plantilla-generada.directive';
 // La pantalla conserva el estado del período semanal para distinguir captura, confirmación y revisión administrativa.
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -68,7 +69,7 @@ interface VistaTramoSemanal
 
 @Component({
     selector: 'app-semanal-carga',
-    imports: [FormsModule],
+    imports: [PlantillaGeneradaDirective, FormsModule],
     templateUrl: './semanal-carga.html',
     styleUrls: ['../../shared/styles/actualizacion-archivos.css', './semanal-carga.css'],
 })
@@ -167,7 +168,6 @@ export class SemanalCarga implements OnInit
         tipo: ArchivoCargaTipo;
         nombre: string;
         icono: string;
-        plantilla: string;
         recibidos: string;
         incluidos: string;
         excluidos: string;
@@ -176,7 +176,6 @@ export class SemanalCarga implements OnInit
             tipo: 'carpetas',
             nombre: 'Carpetas',
             icono: 'fa-folder-open',
-            plantilla: 'plantillas/carpetas.xlsx',
             recibidos: 'Recibidas',
             incluidos: 'Incluidas',
             excluidos: 'Excluidas',
@@ -185,7 +184,6 @@ export class SemanalCarga implements OnInit
             tipo: 'delitos',
             nombre: 'Delitos',
             icono: 'fa-scale-balanced',
-            plantilla: 'plantillas/delitos.xlsx',
             recibidos: 'Recibidos',
             incluidos: 'Incluidos',
             excluidos: 'Excluidos',
@@ -194,7 +192,6 @@ export class SemanalCarga implements OnInit
             tipo: 'victimas',
             nombre: 'Víctimas',
             icono: 'fa-users',
-            plantilla: 'plantillas/victimas.xlsx',
             recibidos: 'Recibidas',
             incluidos: 'Incluidas',
             excluidos: 'Excluidas',

@@ -1,3 +1,4 @@
+import { PlantillaGeneradaDirective } from '../../core/directives/plantilla-generada.directive';
 // Gestiona correcciones de Federal con sus propios resultados de validación y revisión previa.
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -52,7 +53,7 @@ type EstadoPeriodo =
 
 @Component({
     selector: 'app-federal-actualizacion',
-    imports: [FormsModule],
+    imports: [PlantillaGeneradaDirective, FormsModule],
     templateUrl: './federal-actualizacion.html',
     styleUrl: '../../shared/styles/actualizacion-archivos.css',
 })

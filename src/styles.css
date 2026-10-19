@@ -67,3 +67,16 @@ body {
 .swal2-popup {
     z-index: 100000 !important;
 }
+
+.btn-modulo-excel, .btn-modulo-excel:disabled {
+    background: var(--siiid-guinda);
+    border-color: var(--siiid-guinda);
+    color: #fff;
+}
+.btn-modulo-excel:hover, .btn-modulo-excel:focus-visible {
+    background: var(--siiid-guinda);
+    border-color: var(--siiid-guinda);
+    color: #fff;
+    filter: brightness(.9);
+}
+a[plantillaModulo][aria-disabled="true"] { opacity: .65; cursor: wait; }

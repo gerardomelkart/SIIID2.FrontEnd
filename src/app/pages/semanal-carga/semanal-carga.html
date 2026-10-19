@@ -369,7 +369,7 @@
 
                         <div class="plantillas-lista">
                             @for (archivo of tiposArchivo; track archivo.tipo) {
-                                <a [href]="archivo.plantilla" [attr.download]="archivo.tipo + '.xlsx'">
+                                <a plantillaModulo="semanal" [plantillaArchivo]="archivo.tipo">
                                     <img src="img/logo_XLSX.png" [alt]="'Plantilla de ' + archivo.nombre" />
 
                                     <span>

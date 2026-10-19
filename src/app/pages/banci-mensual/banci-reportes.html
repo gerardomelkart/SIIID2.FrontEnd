@@ -86,7 +86,7 @@
             @if (datos.cambios?.length) {
                 <h3>Cambios propuestos</h3>
                 @if (reporte === 'pendientes') {
-                    <button class="btn btn-outline-primary mb-3" [disabled]="ocupado() || descargandoDiferencias()" (click)="descargarTodasDiferencias()">
+                    <button class="btn btn-modulo-excel mb-3" [disabled]="ocupado() || descargandoDiferencias()" (click)="descargarTodasDiferencias()">
                         <i class="fa-solid fa-file-excel"></i> {{ descargandoDiferencias() ? 'Generando Excel completo…' : 'Descargar todas las diferencias en Excel' }}
                     </button>
                 }

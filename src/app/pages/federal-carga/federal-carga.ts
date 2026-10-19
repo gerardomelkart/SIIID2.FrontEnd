@@ -1,3 +1,4 @@
+import { PlantillaGeneradaDirective } from '../../core/directives/plantilla-generada.directive';
 // Valida los archivos y conserva el ciclo de revisión, confirmación y aprobación administrativa.
 import { Component, computed, signal } from '@angular/core';
 import { inject } from '@angular/core';
@@ -39,7 +40,7 @@ type EstadoCarga =
 
 @Component({
     selector: 'app-federal-carga',
-    imports: [],
+    imports: [PlantillaGeneradaDirective],
     templateUrl: './federal-carga.html',
     styleUrl: '../../shared/styles/carga-archivos.css',
 })

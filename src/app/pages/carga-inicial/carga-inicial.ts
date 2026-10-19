@@ -1,3 +1,4 @@
+import { PlantillaGeneradaDirective } from '../../core/directives/plantilla-generada.directive';
 // Valida los archivos y conserva el ciclo de revisión, confirmación y aprobación administrativa.
 import { Component, inject, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -38,7 +39,7 @@ type EstadoCarga =
 
 @Component({
     selector: 'app-carga-inicial',
-    imports: [],
+    imports: [PlantillaGeneradaDirective],
     templateUrl: './carga-inicial.html',
     styleUrl: '../../shared/styles/carga-archivos.css',
 })

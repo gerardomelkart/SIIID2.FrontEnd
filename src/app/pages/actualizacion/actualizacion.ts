@@ -1,3 +1,4 @@
+import { PlantillaGeneradaDirective } from '../../core/directives/plantilla-generada.directive';
 // Presenta validación y diferencias de una corrección mensual antes de pedir la decisión de integración.
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CatalogosService } from '../../core/services/catalogos.service';
@@ -56,7 +57,7 @@ type EstadoPeriodo =
 
 @Component({
     selector: 'app-actualizacion',
-    imports: [FormsModule],
+    imports: [PlantillaGeneradaDirective, FormsModule],
     templateUrl: './actualizacion.html',
     styleUrl: '../../shared/styles/actualizacion-archivos.css',
 })
