@@ -47,6 +47,8 @@ describe('Continuidad de cargas sin el cruce anterior BANCI', () =>
                 errorGeneral: signal(''),
                 respuestaValidacion: signal(null),
                 diferencias: signal(null),
+                detalleDiferenciasOmitido: signal(false),
+                archivoComplementosBanci: signal(null),
                 limpiarUrlsPdf: vi.fn(),
                 actualizacionService: { validarActualizacion },
             };

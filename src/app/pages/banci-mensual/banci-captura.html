@@ -12,7 +12,7 @@
     @if (opciones()) {
         @if (puedeElegirEntidad() || puedeElegirCorte()) {
             <section class="panel seleccion-envio">
-                <h2>{{ puedeElegirCorte() ? 'Periodo del envío' : 'Entidad que reporta' }}</h2>
+                <h2>{{ actualizacion ? 'Mes a actualizar' : puedeElegirCorte() ? 'Periodo del envío' : 'Entidad que reporta' }}</h2>
                 <div class="filtros">
                     @if (puedeElegirEntidad()) {
                         <label
@@ -25,15 +25,16 @@
                     }
                     @if (puedeElegirCorte()) {
                         <label
-                            >Mes<input
-                                class="form-control"
-                                type="number"
-                                min="1"
-                                max="12"
+                            >Mes<select
+                                class="form-select"
                                 [(ngModel)]="mes"
                                 (ngModelChange)="limpiar()"
                                 [disabled]="ocupado()"
-                        /></label>
+                            >
+                                @for (mes of meses; track mes.valor) {
+                                    <option [ngValue]="mes.valor">{{ mes.nombre }}</option>
+                                }
+                            </select></label>
                         <label
                             >Año<input
                                 class="form-control"
@@ -50,7 +51,7 @@
         <div class="periodo-envio" role="status">
             <i class="fa-solid fa-calendar-days" aria-hidden="true"></i
             ><span
-                >Periodo a reportar <strong>{{ periodoNombre() }}</strong></span
+                >{{ actualizacion ? 'Mes a actualizar' : 'Periodo a reportar' }} <strong>{{ periodoNombre() }}</strong></span
             ><span class="entidad-envio">{{ entidadNombre() }}</span>
         </div>
 

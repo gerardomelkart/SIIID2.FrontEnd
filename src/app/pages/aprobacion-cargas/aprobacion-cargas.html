@@ -632,7 +632,7 @@
             </div>
 
             @if (carga.cruceBanci; as banci) {
-                <section class="p-3 mb-3" style="border:2px solid #6f2c91;border-radius:8px">
+                <section class="banci-vinculada">
                     <h3 style="color:#6f2c91">Información BANCI vinculada</h3>
                     <p>La decisión resolverá el Consolidado y BANCI conjuntamente. Ninguna parte se integrará por separado.</p>
                     <p>
@@ -650,7 +650,7 @@
                     @if (banci.totalCambios) {
                         <details>
                             <summary>Ver muestra de cambios BANCI ({{ banci.cambios.length }} de {{ banci.totalCambios }})</summary>
-                            <div style="max-height:360px;overflow:auto">
+                            <div class="banci-cambios-scroll">
                                 <table class="table table-sm">
                                     <thead>
                                         <tr>

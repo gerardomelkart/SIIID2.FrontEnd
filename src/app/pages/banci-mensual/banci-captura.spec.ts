@@ -157,7 +157,26 @@ describe('Carga BANCI por cortes', () =>
         const f = crear();
         f.componentInstance.opciones.set({ ...opciones, cortesAnteriores: true });
         f.detectChanges();
-        expect(f.nativeElement.querySelectorAll('input[type="number"]').length).toBe(2);
+        expect(f.nativeElement.querySelectorAll('input[type="number"]').length).toBe(1);
+        expect(f.nativeElement.querySelectorAll('select option').length).toBe(12);
+    });
+    it('permite actualizar meses anteriores con históricos desactivados y muestra nombres de mes', async () =>
+    {
+        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { actualizacion: true } } } });
+        const f = crear();
+        await f.whenStable();
+        f.detectChanges();
+        expect(f.componentInstance.puedeElegirCorte()).toBe(true);
+        expect(f.nativeElement.textContent).toContain('Mes a actualizar');
+        expect(f.nativeElement.textContent).not.toContain('Periodo a reportar');
+        const selector = f.nativeElement.querySelector('select') as HTMLSelectElement;
+        expect(selector.disabled).toBe(false);
+        expect(selector.options.length).toBe(12);
+        expect(selector.selectedOptions[0].textContent).toContain('Septiembre');
+        selector.selectedIndex = 0;
+        selector.dispatchEvent(new Event('change'));
+        await f.whenStable();
+        expect(f.componentInstance.mes).toBe(1);
     });
     it('impide cargar archivos antes de descargar la plantilla', () =>
     {

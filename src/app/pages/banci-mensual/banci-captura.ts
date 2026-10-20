@@ -94,6 +94,12 @@ export class BanciCaptura implements OnDestroy
     entidad = 0;
     mes = 0;
     anio = 0;
+    readonly meses = Array.from({ length: 12 }, (_, indice) => ({
+        valor: indice + 1,
+        nombre: new Intl.DateTimeFormat('es-MX', { month: 'long', timeZone: 'UTC' })
+            .format(new Date(Date.UTC(2026, indice, 1)))
+            .replace(/^./, letra => letra.toUpperCase()),
+    }));
     archivo: File | null = null;
     constructor()
     {
