@@ -1,3 +1,51 @@
+@if (solicitudComplementosBanci(); as complemento) {
+    <section id="complementos-banci" class="siiid-card mb-4" style="border: 2px solid #6f2c91; scroll-margin-top: 110px">
+        <div class="siiid-card-header" style="background: #6f2c91; color: white">
+            <i class="fa-solid fa-file-excel"></i> Complete la información BANCI
+        </div>
+        <div class="p-4">
+            <p>
+                La actualización contiene <strong>{{ complemento.victimas }} nueva(s) víctima(s) de desaparición</strong>. Complete sus
+                datos complementarios para enviar el Consolidado y BANCI juntos a revisión.
+            </p>
+            <p>
+                Conserve las tres pestañas y los datos precargados. La información se integrará únicamente al aprobar la actualización
+                completa.
+            </p>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <button
+                    class="btn"
+                    style="background:#6f2c91;color:white"
+                    (click)="descargarComplementosBanci()"
+                    [disabled]="estadoPeriodo() === 'VALIDANDO'"
+                >
+                    Descargar plantilla BANCI
+                </button>
+                <label
+                    >Plantilla completada (.xlsx)<input
+                        class="form-control"
+                        type="file"
+                        accept=".xlsx"
+                        (change)="seleccionarComplementosBanci($event)"
+                        [disabled]="estadoPeriodo() === 'VALIDANDO'"
+                /></label>
+                <button
+                    class="btn"
+                    style="background:#6f2c91;color:white"
+                    (click)="validarActualizacion()"
+                    [disabled]="!archivoComplementosBanci() || estadoPeriodo() === 'VALIDANDO'"
+                >
+                    Validar actualización completa
+                </button>
+            </div>
+        </div>
+    </section>
+}
+@if (respuestaValidacion()?.cruceBanci && !respuestaValidacion()?.complementosBanci && respuestaValidacion()?.esValido) {
+    <p class="alert alert-info">
+        Esta actualización incluye información BANCI vinculada. La aprobación o el rechazo resolverá ambos módulos conjuntamente.
+    </p>
+}
 @if (!mostrarTablasErrores()) {
     <div class="row g-4">
         <div class="col-xl-8">
@@ -896,8 +944,8 @@
         <div class="acuse-body">
             @if (detalleDiferenciasOmitido()) {
                 <div class="alert alert-warning m-3" role="alert">
-                    El detalle de diferencias no pudo mostrarse en el tiempo disponible.
-                    Revise el informe previo antes de decidir; la actualización continúa validada.
+                    El detalle de diferencias no pudo mostrarse en el tiempo disponible. Revise el informe previo antes de decidir; la
+                    actualización continúa validada.
                 </div>
             }
             @if (acuseConfirmadoUrl()) {

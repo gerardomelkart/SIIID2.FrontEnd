@@ -53,6 +53,7 @@ export class ActualizacionService
         delitos: File,
         victimas: File,
         idEntidadFederativa?: number | null,
+        complementosBanci?: File | null,
     )
     {
         const formData = new FormData();
@@ -65,6 +66,7 @@ export class ActualizacionService
             formData.append('idEntidadFederativa', idEntidadFederativa.toString());
         }
 
+        if(complementosBanci) formData.append('complementosBanci', complementosBanci);
         formData.append('carpetas', carpetas);
         formData.append('delitos', delitos);
         formData.append('victimas', victimas);

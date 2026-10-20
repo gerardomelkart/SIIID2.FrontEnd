@@ -380,8 +380,18 @@
                             <h3>Resumen de cambios</h3>
                             <p>Comparación entre la información confirmada y la nueva versión enviada.</p>
                         </div>
-                        <button type="button" class="btn btn-modulo-excel mt-2" [disabled]="hayOperacionEnCurso()" (click)="descargarTodasDiferencias(carga.codigoReferencia)">
-                            <i class="fa-solid" [class.fa-file-excel]="!descargandoDiferencias()" [class.fa-spinner]="descargandoDiferencias()" [class.fa-spin]="descargandoDiferencias()"></i>
+                        <button
+                            type="button"
+                            class="btn btn-modulo-excel mt-2"
+                            [disabled]="hayOperacionEnCurso()"
+                            (click)="descargarTodasDiferencias(carga.codigoReferencia)"
+                        >
+                            <i
+                                class="fa-solid"
+                                [class.fa-file-excel]="!descargandoDiferencias()"
+                                [class.fa-spinner]="descargandoDiferencias()"
+                                [class.fa-spin]="descargandoDiferencias()"
+                            ></i>
                             {{ descargandoDiferencias() ? 'Generando Excel completo…' : 'Descargar todas las diferencias en Excel' }}
                         </button>
                     </div>
@@ -621,6 +631,55 @@
                 }
             </div>
 
+            @if (carga.cruceBanci; as banci) {
+                <section class="p-3 mb-3" style="border:2px solid #6f2c91;border-radius:8px">
+                    <h3 style="color:#6f2c91">Información BANCI vinculada</h3>
+                    <p>La decisión resolverá el Consolidado y BANCI conjuntamente. Ninguna parte se integrará por separado.</p>
+                    <p>
+                        {{ banci.carpetas }} carpetas · {{ banci.victimas }} víctimas · {{ banci.nuevas }} nuevas ·
+                        {{ banci.reclasificadas }} reclasificadas
+                    </p>
+                    <button
+                        class="btn mb-3"
+                        style="background:#6f2c91;color:white"
+                        (click)="descargarTodasDiferencias(banci.referencia, 'banci')"
+                        [disabled]="hayOperacionEnCurso()"
+                    >
+                        Descargar diferencias BANCI en Excel
+                    </button>
+                    @if (banci.totalCambios) {
+                        <details>
+                            <summary>Ver muestra de cambios BANCI ({{ banci.cambios.length }} de {{ banci.totalCambios }})</summary>
+                            <div style="max-height:360px;overflow:auto">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Carpeta</th>
+                                            <th>Delito</th>
+                                            <th>Víctima</th>
+                                            <th>Campo</th>
+                                            <th>Anterior</th>
+                                            <th>Propuesto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (cambio of banci.cambios; track $index) {
+                                            <tr>
+                                                <td>{{ cambio.carpeta }}</td>
+                                                <td>{{ cambio.delito }}</td>
+                                                <td>{{ cambio.victima }}</td>
+                                                <td>{{ cambio.campo }}</td>
+                                                <td style="overflow-wrap:anywhere">{{ cambio.anterior }}</td>
+                                                <td style="overflow-wrap:anywhere">{{ cambio.nuevo }}</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                    }
+                </section>
+            }
             <div id="resolucion-carga" class="resolucion-row">
                 <button type="button" class="btn-rechazar" [disabled]="hayOperacionEnCurso()" (click)="rechazar(carga)">
                     @if (procesando() === carga.codigoReferencia) {

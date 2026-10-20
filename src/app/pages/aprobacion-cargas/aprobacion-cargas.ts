@@ -479,12 +479,12 @@ export class AprobacionCargas implements OnInit, OnDestroy
         return texto.charAt(0).toUpperCase() + texto.slice(1);
     }
 
-    descargarTodasDiferencias(referencia: string): void
+    descargarTodasDiferencias(referencia: string, modulo: 'mensual' | 'banci' = 'mensual'): void
     {
         if(this.hayOperacionEnCurso()) return;
         this.descargandoDiferencias.set(true);
-        this.diferenciasExcel.descargar('mensual', referencia).pipe(finalize(() => this.descargandoDiferencias.set(false))).subscribe({
-            next: archivo => this.descargarBlob(archivo, 'Diferencias_mensual.xlsx'),
+        this.diferenciasExcel.descargar(modulo, referencia).pipe(finalize(() => this.descargandoDiferencias.set(false))).subscribe({
+            next: archivo => this.descargarBlob(archivo, `Diferencias_${modulo}.xlsx`),
             error: async error => mostrarError('No fue posible descargar las diferencias', await obtenerMensajeErrorHttpAsync(error, 'Intente nuevamente. El envío continúa pendiente de aprobación.')),
         });
     }

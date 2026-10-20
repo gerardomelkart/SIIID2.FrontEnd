@@ -12,7 +12,11 @@ import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucion
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
-import { esTimeoutConsultaDiferencias, TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS, AVISO_DETALLE_DIFERENCIAS } from '../../core/utils/diferencias-timeout.utils';
+import {
+    esTimeoutConsultaDiferencias,
+    TIEMPO_ESPERA_DETALLE_DIFERENCIAS_MS,
+    AVISO_DETALLE_DIFERENCIAS,
+} from '../../core/utils/diferencias-timeout.utils';
 import { catchError, finalize, map, of, switchMap, timeout } from 'rxjs';
 
 import {
@@ -109,6 +113,24 @@ export class Actualizacion implements OnInit
     mensajePeriodo = signal('');
     errorGeneral = signal('');
 
+    solicitudComplementosBanci = signal<CargaValidacionResponse['complementosBanci']>(null);
+    archivoComplementosBanci = signal<File | null>(null);
+    descargarComplementosBanci(): void
+    {
+        const base64 = this.solicitudComplementosBanci()?.plantillaBase64;
+        if(!base64) return;
+        const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `BANCI_complementos_${this.anioCorte()}${this.mesCorte().padStart(2, '0')}.xlsx`;
+        enlace.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    seleccionarComplementosBanci(evento: Event): void
+    {
+        this.archivoComplementosBanci.set((evento.target as HTMLInputElement).files?.[0] ?? null);
+    }
     archivos = signal<ArchivosCargaSeleccionados>(crearArchivosCargaVacios());
 
     archivoArrastrado = signal<ArchivoCargaTipo | null>(null);
@@ -323,6 +345,8 @@ export class Actualizacion implements OnInit
 
     onPeriodoChange(): void
     {
+        this.solicitudComplementosBanci.set(null);
+        this.archivoComplementosBanci.set(null);
         this.estadoPeriodo.set('SIN_CONSULTAR');
         this.respuestaPeriodo.set(null);
         this.respuestaValidacion.set(null);
@@ -388,6 +412,8 @@ export class Actualizacion implements OnInit
 
     async seleccionarArchivo(event: Event, tipo: ArchivoCargaTipo): Promise<void>
     {
+        this.solicitudComplementosBanci.set(null);
+        this.archivoComplementosBanci.set(null);
         const input = event.target as HTMLInputElement;
         const archivo = obtenerArchivoDesdeEvento(event);
 
@@ -426,6 +452,8 @@ export class Actualizacion implements OnInit
 
     async soltarArchivo(event: DragEvent, tipo: ArchivoCargaTipo): Promise<void>
     {
+        this.solicitudComplementosBanci.set(null);
+        this.archivoComplementosBanci.set(null);
         event.preventDefault();
         event.stopPropagation();
         this.archivoArrastrado.set(null);
@@ -485,18 +513,38 @@ export class Actualizacion implements OnInit
         this.limpiarUrlsPdf();
 
         this.actualizacionService
-            .validarActualizacion(mes, anio, archivos.carpetas!, archivos.delitos!, archivos.victimas!, idEntidad)
+            .validarActualizacion(
+                mes,
+                anio,
+                archivos.carpetas!,
+                archivos.delitos!,
+                archivos.victimas!,
+                idEntidad,
+                this.archivoComplementosBanci(),
+            )
             .subscribe({
                 next: async (response: CargaValidacionResponse) =>
                 {
                     this.respuestaValidacion.set(response);
 
+                    if(response.complementosBanci)
+                    {
+                        this.solicitudComplementosBanci.set(response.complementosBanci);
+                        this.estadoPeriodo.set('DISPONIBLE');
+                        this.archivoComplementosBanci.set(null);
+                        setTimeout(() =>
+                            document.getElementById('complementos-banci')?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+                        );
+                        return;
+                    }
                     if(!response.esValido)
                     {
                         this.estadoPeriodo.set('VALIDADO_ERROR');
                         return;
                     }
 
+                    this.solicitudComplementosBanci.set(null);
+                    this.archivoComplementosBanci.set(null);
                     if(this.hayAdvertenciasDeDecision())
                     {
                         this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
@@ -911,8 +959,9 @@ export class Actualizacion implements OnInit
                     if(esTimeoutConsultaDiferencias(error))
                     {
                         this.detalleDiferenciasOmitido.set(true);
-                        void mostrarAdvertencia('Detalle no disponible', AVISO_DETALLE_DIFERENCIAS)
-                            .then(() => this.abrirAcusePrevio(codigoReferencia));
+                        void mostrarAdvertencia('Detalle no disponible', AVISO_DETALLE_DIFERENCIAS).then(() =>
+                            this.abrirAcusePrevio(codigoReferencia),
+                        );
                         return;
                     }
 
@@ -990,6 +1039,8 @@ export class Actualizacion implements OnInit
 
     private limpiarArchivos(): void
     {
+        this.solicitudComplementosBanci.set(null);
+        this.archivoComplementosBanci.set(null);
         this.archivos.set(crearArchivosCargaVacios());
         this.archivoArrastrado.set(null);
     }

@@ -80,7 +80,7 @@
                 <div class="icono-excel"><i class="fa-solid fa-file-excel" aria-hidden="true"></i></div>
                 <div class="descripcion-plantilla">
                     <h3>Plantilla BANCI precargada</h3>
-                    <p>{{ actualizacion ? 'Modifique los datos personales o de localización que correspondan; conserve los identificadores y las tres pestañas completas.' : 'Conserve los datos del Consolidado y complete únicamente la información complementaria de BANCI.' }}</p>
+                    <p>{{ actualizacion ? 'Modifique los datos personales o de localización. En constitutiva_delito y motivo_desaparicion puede reportar o revertir una reclasificación por víctima; conserve los identificadores y las tres pestañas completas.' : 'Conserve los datos del Consolidado y complete únicamente la información complementaria de BANCI.' }}</p>
                     <span>Excel · Carpetas, Delitos y Víctimas</span>
                 </div>
                 <button class="btn btn-primary descargar-plantilla" (click)="plantilla()" [disabled]="ocupado() || !opciones() || !entidad">

@@ -36,6 +36,15 @@ export interface CargaAdvertenciaAdministracionItem
 
 export interface CargaPendienteAdministracionDetalle extends CargaPendienteAdministracionItem
 {
+    cruceBanci?: {
+        referencia: string;
+        carpetas: number;
+        victimas: number;
+        nuevas: number;
+        reclasificadas: number;
+        totalCambios: number;
+        cambios: { carpeta: string; delito: string; victima: string; campo: string; anterior: string | null; nuevo: string | null }[];
+    } | null;
     advertencias: CargaAdvertenciaAdministracionItem[];
 }
 

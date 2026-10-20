@@ -1,5 +1,7 @@
 export interface CargaValidacionResponse
 {
+    complementosBanci?: { plantillaBase64: string; victimas: number } | null;
+    cruceBanci?: boolean;
     esValido: boolean;
     codigoReferencia: string;
     totalErrores: number;
