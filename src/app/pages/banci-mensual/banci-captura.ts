@@ -62,6 +62,20 @@ export class BanciCaptura implements OnDestroy
             else panel.scrollIntoView({ behavior: 'smooth', block });
         }, { injector: this.injector });
     }
+    private async mostrarError(error: unknown): Promise<void>
+    {
+        let datos = error instanceof HttpErrorResponse ? error.error : null;
+        if(datos instanceof Blob) { try { datos = JSON.parse(await datos.text()); } catch { datos = null; } }
+        if(datos?.codigo === 'BANCI_ENVIO_PENDIENTE') this.limpiar();
+        this.mostrarMensaje(error instanceof HttpErrorResponse && error.error instanceof Blob
+            ? datos?.mensaje || await this.errorDescarga(error)
+            : obtenerMensajeErrorHttp(error));
+    }
+    private mostrarMensaje(texto: string): void
+    {
+        this.mensaje.set(texto);
+        if(texto) this.desplazar('banci-mensaje');
+    }
     readonly arrastrandoArchivo = signal(false);
     readonly nombreCampo = nombreCampo;
     private readonly api = inject(BanciMensualService);
@@ -97,7 +111,7 @@ export class BanciCaptura implements OnDestroy
                 this.mes = opciones.mes;
                 this.anio = opciones.anio;
             },
-            error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+            error: (e) => void this.mostrarError(e),
         });
     }
     puedeElegirEntidad(): boolean
@@ -148,7 +162,7 @@ export class BanciCaptura implements OnDestroy
                     this.originalEditable.set(this.firmaEditable());
                     this.historicaSinOrigen.set(!this.actualizacion && libro.carpetas.length === 0);
                 },
-                error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+                error: (e) => void this.mostrarError(e),
             });
     }
     async plantilla(): Promise<void>
@@ -192,7 +206,7 @@ export class BanciCaptura implements OnDestroy
             this.desplazar(this.cargaGuiada ? 'banci-carga-archivo' : 'banci-captura-manual');
         } catch (e)
         {
-            this.mensaje.set(await this.errorDescarga(e));
+            await this.mostrarError(e);
         } finally
         {
             this.ocupado.set(false);
@@ -401,7 +415,7 @@ export class BanciCaptura implements OnDestroy
                 }
                 if(r.errores.length) this.desplazar('banci-errores', 'end');
             },
-            error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+            error: (e) => void this.mostrarError(e),
         });
     }
     async confirmar(aceptar: boolean): Promise<void>
@@ -438,7 +452,7 @@ export class BanciCaptura implements OnDestroy
                         confirmButtonColor: '#6f2c91',
                     });
                 },
-                error: (e) => this.mensaje.set(obtenerMensajeErrorHttp(e)),
+                error: (e) => void this.mostrarError(e),
             });
     }
     mostrarAcuse(referencia: string): void

@@ -163,3 +163,5 @@
     box-shadow: 0 0 0 5px #6f2c911a;
 }
 .archivo.arrastrando > * { pointer-events: none; }
+
+#banci-mensaje { scroll-margin-top: calc(var(--siiid-topbar-height, 90px) + 16px); }

@@ -8,7 +8,7 @@
     </section>
     <a class="btn btn-outline-primary volver-modalidad" [routerLink]="actualizacion ? '/banci/actualizacion-mensual' : '/banci/carga-mensual'"><i class="fa-solid fa-arrow-left"></i> Volver a elegir Manual o Masiva</a>
     @if (mensaje()) {
-        <div class="alert alert-danger" role="alert">{{ mensaje() }}</div>
+        <div id="banci-mensaje" class="alert alert-danger" role="alert">{{ mensaje() }}</div>
     }
     @if (opciones()) {
         @if (puedeElegirEntidad() || puedeElegirCorte()) {

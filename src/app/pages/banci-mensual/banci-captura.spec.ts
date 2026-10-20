@@ -482,4 +482,47 @@ describe('Carga BANCI por cortes', () =>
             .expectOne((r) => r.url.endsWith('/validar/manual'))
             .flush({ esValido: false, errores: [] });
     });
+    for(const actualizacion of [false, true]) for(const manual of [false, true])
+    {
+        it(`lleva el mensaje de error a la vista en ${actualizacion ? 'actualización' : 'carga'} ${manual ? 'manual' : 'masiva'}`, async () =>
+        {
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual, actualizacion } } } });
+            const f = crear();
+            f.componentInstance.precargar();
+            TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/precarga')).flush({ codigo: 'BANCI_ENVIO_PENDIENTE', mensaje: 'Existe un envío pendiente que incluye estos registros.' }, { status: 409, statusText: 'Conflict' });
+            f.detectChanges();
+            await new Promise(resolve => setTimeout(resolve, 10));
+            const mensaje = f.nativeElement.querySelector('#banci-mensaje');
+            expect(mensaje.textContent).toContain('Existe un envío pendiente');
+            expect(f.componentInstance.libro()).toBeNull();
+            expect(f.componentInstance.plantillaDescargada()).toBe(false);
+            expect(mensaje.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    for(const actualizacion of [false, true]) for(const manual of [false, true])
+    {
+        it(`retira información ya abierta si otro envío la bloquea en ${actualizacion ? 'actualización' : 'carga'} ${manual ? 'manual' : 'masiva'}`, async () =>
+        {
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual, actualizacion } } } });
+            const f = crear(); const c = f.componentInstance;
+            c.precargar();
+            const http = TestBed.inject(HttpTestingController);
+            http.expectOne(r => r.url.endsWith('/precarga')).flush({ entidad: 9, mes: 9, anio: 2026, actualizacion, carpetas: [{ numeroFila: 2, columnas: { id_ci: 'ci' } }], delitos: [{ numeroFila: 2, columnas: { id_ci: 'ci', id_delito: 'del' } }], victimas: [{ numeroFila: 2, columnas: { id_ci: 'ci', id_delito: 'del', id_vicf: 'vic', nomb: 'Antes' } }] });
+            c.libro.update(libro => ({ ...libro!, victimas: libro!.victimas.map(v => ({ ...v, columnas: { ...v.columnas, nomb: 'Después' } })) }));
+            c.seleccion.set(c.libro()!.carpetas[0]);
+            c.plantillaDescargada.set(true); c.archivo = new File(['datos'], 'BANCI.xlsx');
+            c.validar();
+            http.expectOne(r => r.url.endsWith(manual ? '/validar/manual' : '/validar/archivo')).flush({ mensaje: 'Revise los datos capturados.' }, { status: 400, statusText: 'Bad Request' });
+            f.detectChanges(); await new Promise(resolve => setTimeout(resolve, 10));
+            expect(c.libro()).not.toBeNull();
+            expect(f.nativeElement.querySelector('#banci-mensaje').scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+            c.validar();
+            http.expectOne(r => r.url.endsWith(manual ? '/validar/manual' : '/validar/archivo')).flush({ codigo: 'BANCI_ENVIO_PENDIENTE', mensaje: 'Existe un envío pendiente que incluye estos registros.' }, { status: 409, statusText: 'Conflict' });
+            f.detectChanges(); await new Promise(resolve => setTimeout(resolve, 10));
+            expect(c.libro()).toBeNull(); expect(c.archivo).toBeNull(); expect(c.plantillaDescargada()).toBe(false);
+            expect(f.nativeElement.querySelector('#banci-mensaje').textContent).toContain('Existe un envío pendiente');
+        });
+    }
+
 });

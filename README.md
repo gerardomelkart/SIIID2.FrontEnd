@@ -147,3 +147,9 @@ La revisión administrativa desplaza la resolución al borde inferior visible tr
 ### Dashboard, recarga y barra de herramientas BANCI
 
 Al recargar una ruta interna de BANCI se vuelve al dashboard del mismo módulo. El inicio ofrece los accesos de carga, actualización y envíos, y los cinco accesos administrativos existentes solo a SUPER_USUARIO. La barra de envíos usa las clases de distribución correctas y conserva filas compactas en escritorio, tableta y móvil. Se verificaron los accesos, la recarga, la ausencia de desbordamiento horizontal y la separación entre muestras de diferencias y botones en Chromium con datos simulados.
+
+### Bloqueo previo por envíos BANCI pendientes
+
+La precarga y la plantilla de actualización excluyen las víctimas incluidas en envíos pendientes de aprobación; si no quedan registros disponibles se devuelve BANCI_ENVIO_PENDIENTE (HTTP 409). La carga mantiene la exclusión de carpetas ya enviadas o aprobadas. La validación vuelve a comprobar superposición antes de procesar el contenido, además del control transaccional existente.
+
+En captura manual y masiva, tanto de carga como de actualización, ese conflicto retira la información editable y el archivo seleccionado. Los demás errores conservan el trabajo y desplazan la vista al mensaje después de renderizarlo. Publicar API y frontend juntos. No requiere cambios de estructura de base de datos.
