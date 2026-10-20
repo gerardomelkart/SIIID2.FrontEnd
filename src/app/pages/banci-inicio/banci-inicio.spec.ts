@@ -43,11 +43,16 @@ describe('Inicio institucional BANCI', () =>
         expect(hijas.find((r) => r.path === 'informes/cargas')?.data?.['roles']).toEqual(['SUPER_USUARIO']);
         expect(hijas.find((r) => r.path === 'informes/originales')?.data?.['roles']).toEqual(['SUPER_USUARIO']);
     });
-    it('ofrece los cuatro modos sin recuperar formularios del modelo anterior', () =>
+    it('ofrece solo carga y actualización masivas', () =>
     {
         const hijas = routes.find((r) => r.path === 'banci')!.children!;
-        for(const ruta of ['carga-masiva', 'formulario', 'actualizacion/masiva', 'actualizacion/manual'])
+        for(const ruta of ['carga-mensual', 'actualizacion-mensual', 'carga-masiva', 'actualizacion/masiva'])
             expect(hijas.find((r) => r.path === ruta)?.loadComponent).toBeDefined();
+    });
+    it('redirige las antiguas rutas manuales al flujo masivo', () => {
+        const hijas = routes.find(r => r.path === 'banci')!.children!;
+        expect(hijas.find(r => r.path === 'formulario')?.redirectTo).toBe('carga-mensual');
+        expect(hijas.find(r => r.path === 'actualizacion/manual')?.redirectTo).toBe('actualizacion-mensual');
     });
     it('muestra al enlace el recordatorio de carpetas pendientes de carga', () =>
     {

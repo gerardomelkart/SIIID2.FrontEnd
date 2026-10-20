@@ -39,7 +39,7 @@ describe('Carga BANCI por cortes', () =>
                 provideRouter([]),
                 provideHttpClient(),
                 provideHttpClientTesting(),
-                { provide: ActivatedRoute, useValue: { snapshot: { data: { manual: true, actualizacion: false } } } },
+                { provide: ActivatedRoute, useValue: { snapshot: { data: { manual: false, actualizacion: false } } } },
             ],
         });
     });
@@ -61,15 +61,41 @@ describe('Carga BANCI por cortes', () =>
         fixture.detectChanges();
         return fixture;
     }
-    for(const actualizacion of [false, true])
-    {
-        it(`permite regresar a la selección de ${actualizacion ? 'actualización' : 'carga'}`, () =>
-        {
-            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion } } } });
+    for(const actualizacion of [false, true]) {
+        it(`abre directamente el Excel en ${actualizacion ? 'actualización' : 'carga'}`, () => {
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { actualizacion, manual: true } } } });
             const f = crear();
-            expect(f.nativeElement.querySelector('.volver-modalidad').getAttribute('href')).toBe(actualizacion ? '/banci/actualizacion-mensual' : '/banci/carga-mensual');
+            expect(f.nativeElement.textContent).toContain('Plantilla BANCI precargada');
+            expect(f.nativeElement.textContent).not.toContain('Manual o Masiva');
+            expect(f.nativeElement.querySelector('#banci-captura-manual')).toBeNull();
+            expect(f.componentInstance.titulo).toContain('masiva');
+        });
+        it(`valida únicamente el archivo en ${actualizacion ? 'actualización' : 'carga'}`, () => {
+            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { actualizacion } } } });
+            const f = crear(); const c = f.componentInstance;
+            c.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion, carpetas: [], delitos: [], victimas: [] });
+            c.plantillaDescargada.set(true);
+            c.validar();
+            const http = TestBed.inject(HttpTestingController);
+            http.expectNone(r => r.url.endsWith('/validar/archivo'));
+            c.archivo = new File(['excel'], 'original.xlsx'); c.validar();
+            const req = http.expectOne(r => r.url.endsWith('/validar/archivo'));
+            expect(req.request.body.get('archivo').name).toBe('original.xlsx');
+            expect(req.request.body.get('actualizacion')).toBe(String(actualizacion));
+            req.flush({ esValido: false, errores: [{ archivo: 'victimas', fila: 2, campo: 'nomb', mensaje: 'Requerido' }], advertencias: [] });
+            f.detectChanges();
+            expect(f.nativeElement.textContent).toContain('Requerido');
+            http.expectNone(r => r.url.endsWith('/validar/manual'));
         });
     }
+    it('oculta el recuadro al elegir archivo y permite reemplazarlo', () => {
+        const f = crear(); const c = f.componentInstance;
+        c.plantillaDescargada.set(true); c.archivo = new File(['x'], 'prueba.xlsx'); f.detectChanges();
+        expect(f.nativeElement.querySelector('input[type=file]')).toBeNull();
+        expect(f.nativeElement.textContent).toContain('Cargar otro archivo');
+        c.cambiarArchivo(); f.detectChanges();
+        expect(f.nativeElement.querySelector('input[type=file]')).not.toBeNull();
+    });
     it('resalta el área al arrastrar y retira el resaltado al soltar el archivo', () =>
     {
         TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false } } } });
@@ -171,175 +197,6 @@ describe('Carga BANCI por cortes', () =>
         expect(f.componentInstance.plantillaDescargada()).toBe(false);
         expect(f.componentInstance.ocupado()).toBe(false);
     });
-    it('muestra la validación manual solamente al modificar datos y la oculta al revertirlos', () =>
-    {
-        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: true, actualizacion: true } } } });
-        const f = crear();
-        f.componentInstance.precargar();
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/precarga'))
-            .flush({
-                entidad: 9,
-                mes: 9,
-                anio: 2026,
-                actualizacion: true,
-                carpetas: [{ numeroFila: 2, columnas: { id_ci: '1', ntra_ci: 'CARPETA' } }],
-                delitos: [],
-                victimas: [{ numeroFila: 2, columnas: { id_ci: '1', id_delito: '1', id_vicf: '1', nomb: 'Persona' } }],
-            });
-        f.detectChanges();
-        expect(f.componentInstance.hayCambios()).toBe(false);
-        expect(f.nativeElement.querySelector('.panel.acciones')).toBeNull();
-        f.componentInstance.validar();
-        TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/validar/manual'));
-        const victima = f.componentInstance.libro()!.victimas[0];
-        f.componentInstance.editar('nomb', victima, 'Persona actualizada');
-        f.detectChanges();
-        expect(f.componentInstance.hayCambios()).toBe(true);
-        expect(f.nativeElement.querySelector('.panel.acciones')).not.toBeNull();
-        f.componentInstance.editar('nomb', victima, 'Persona');
-        f.detectChanges();
-        expect(f.componentInstance.hayCambios()).toBe(false);
-    });
-    it('no duplica los datos personales del origen en el formulario', () =>
-    {
-        const f = crear();
-        for(const campo of ['nombre_vicfem', '1apellido_vicfem', '2apellido_vicfem', 'curp_vicfem'])
-            expect(f.componentInstance.mostrarProtegido(campo)).toBe(false);
-        expect(f.componentInstance.mostrarProtegido('id_ci')).toBe(true);
-        expect(f.componentInstance.mostrarProtegido('id_tv')).toBe(true);
-    });
-    it('al validar desplaza la vista al informe y retira el botón de validación', async () =>
-    {
-        const f = crear();
-        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
-        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
-        f.componentInstance.validar();
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/validar/manual'))
-            .flush({ esValido: true, referencia: 'prueba', errores: [], advertencias: [] });
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/envios/prueba/acuse'))
-            .flush(new Blob(['pdf'], { type: 'application/pdf' }));
-        const pagina = document.scrollingElement ?? document.documentElement;
-        const scroll = vi.spyOn(pagina, 'scrollTo');
-        Object.defineProperty(pagina, 'scrollHeight', { configurable: true, value: 1800 });
-        f.detectChanges();
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', top: 1800 });
-        expect(f.nativeElement.querySelector('.panel.acciones')).toBeNull();
-    });
-    it('no muestra registros inventados cuando la precarga falla', () =>
-    {
-        const f = crear();
-        f.componentInstance.precargar();
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/precarga'))
-            .flush({ mensaje: 'Sin consolidado aceptado' }, { status: 400, statusText: 'Bad Request' });
-        expect(f.componentInstance.libro()).toBeNull();
-        expect(f.componentInstance.mensaje()).toContain('Sin consolidado');
-    });
-    it('resuelve motivos y estados con claves de catálogo diferentes', () =>
-    {
-        const f = crear();
-        const fila = {
-            numeroFila: 2,
-            columnas: { constitutiva_delito: '17', motivo_desaparicion: '4', fecha_localizacion: '2026-09-01' } as Record<string, string>,
-        };
-        expect(f.componentInstance.catalogo('motivo_desaparicion', fila)?.[0].descripcion).toBe('Motivo desde BD');
-        f.componentInstance.editar('constitutiva_delito', fila, '18');
-        expect(fila.columnas['motivo_desaparicion']).toBe('');
-        f.componentInstance.editar('localizado_o_no_localizado', fila, '49');
-        expect(fila.columnas['fecha_localizacion']).toBe('');
-    });
-    it('envía los datos por el endpoint manual y conserva los errores por fila', () =>
-    {
-        const f = crear();
-        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
-        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
-        f.componentInstance.validar();
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/validar/manual'))
-            .flush({ esValido: false, errores: [{ archivo: 'victimas', fila: 2, campo: 'curp', mensaje: 'CURP inválida' }] });
-        expect(f.componentInstance.errores()[0].campo).toBe('curp');
-        expect(f.componentInstance.validacion()).toBeNull();
-    });
-    it('la captura manual envía solo la carpeta seleccionada y conserva sus hijos', () =>
-    {
-        const f = crear();
-        const carpetas = ['1', '2'].map((id) => ({ numeroFila: Number(id) + 1, columnas: { id_ci: id } }));
-        f.componentInstance.libro.set({
-            entidad: 9,
-            mes: 9,
-            anio: 2026,
-            actualizacion: false,
-            carpetas,
-            delitos: ['1', '2'].map((id) => ({ numeroFila: Number(id) + 1, columnas: { id_ci: id, id_delito: 'D' } })),
-            victimas: ['1', '2'].map((id) => ({ numeroFila: Number(id) + 1, columnas: { id_ci: id, id_delito: 'D', id_vicf: 'V' } })),
-        });
-        expect(f.componentInstance.libroParaEnviar()).toBeNull();
-        f.componentInstance.seleccionar(carpetas[1]);
-        const envio = f.componentInstance.libroParaEnviar()!;
-        expect(envio.manual).toBe(true);
-        expect(envio.carpetas.map((r) => r.columnas['id_ci'])).toEqual(['2']);
-        expect(envio.delitos.map((r) => r.columnas['id_ci'])).toEqual(['2']);
-        expect(envio.victimas.map((r) => r.columnas['id_ci'])).toEqual(['2']);
-    });
-    it('la actualización manual envía una víctima modificada y excluye las demás', () =>
-    {
-        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: true, actualizacion: true } } } });
-        const f = crear();
-        f.componentInstance.precargar();
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/precarga') && r.params.get('manual') === 'true')
-            .flush({
-                entidad: 9,
-                mes: 9,
-                anio: 2026,
-                actualizacion: true,
-                carpetas: [{ numeroFila: 2, columnas: { id_ci: '1' } }],
-                delitos: [{ numeroFila: 2, columnas: { id_ci: '1', id_delito: 'D' } }],
-                victimas: ['1', '2'].map((id) => ({
-                    numeroFila: Number(id) + 1,
-                    columnas: { id_ci: '1', id_delito: 'D', id_vicf: id, nomb: 'Persona' },
-                })),
-            });
-        f.componentInstance.editar('nomb', f.componentInstance.libro()!.victimas[1], 'Persona modificada');
-        f.componentInstance.validar();
-        const envio = TestBed.inject(HttpTestingController).expectOne((r) => r.url.endsWith('/validar/manual'));
-        expect(envio.request.body.victimas.length).toBe(1);
-        expect(envio.request.body.victimas[0].columnas.id_vicf).toBe('2');
-        expect(envio.request.body.carpetas.length).toBe(1);
-        expect(envio.request.body.delitos.length).toBe(1);
-        envio.flush({ esValido: false, errores: [] });
-    });
-    it('oculta condición de vida y datos de localización mientras siga no localizada', () =>
-    {
-        const f = crear();
-        f.componentInstance.opciones.set({
-            ...opciones,
-            complementos: [
-                'localizado_o_no_localizado',
-                'con_o_sin_vida',
-                'fecha_localizacion',
-                'constitutiva_delito',
-                'motivo_desaparicion',
-            ],
-        });
-        const fila = { numeroFila: 2, columnas: { localizado_o_no_localizado: '49', con_o_sin_vida: '' } };
-        expect(f.componentInstance.camposVictima(fila)).toEqual(['localizado_o_no_localizado']);
-        fila.columnas.localizado_o_no_localizado = '45';
-        expect(f.componentInstance.camposVictima(fila)).toContain('con_o_sin_vida');
-    });
-    it('la masiva conserva todas las filas para validar coincidencia exacta en servidor', () =>
-    {
-        TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: false } } } });
-        const f = crear();
-        const libro = { entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] };
-        f.componentInstance.libro.set(libro);
-        expect(f.componentInstance.libroParaEnviar()).toBe(libro);
-        expect(f.nativeElement.textContent).not.toContain('Las cargas adicionales se suman');
-    });
     it('la actualización masiva muestra los mismos pasos y bloquea el archivo hasta descargar', () =>
     {
         TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: true } } } });
@@ -393,28 +250,6 @@ describe('Carga BANCI por cortes', () =>
         expect(f.nativeElement.querySelector('input[type="file"]')).toBeNull();
         TestBed.inject(HttpTestingController).expectNone((r) => r.url.endsWith('/plantilla'));
     });
-    it('abre el acuse previo y lo reemplaza por el final al aceptar, sin descargarlo', async () =>
-    {
-        vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: true, isDenied: false, isDismissed: false });
-        const f = crear();
-        const c = f.componentInstance;
-        const http = TestBed.inject(HttpTestingController);
-        c.validacion.set({ esValido: true, referencia: 'acuse-prueba', errores: [] });
-        c.mostrarAcuse('acuse-prueba');
-        http.expectOne((r) => r.url.endsWith('/envios/acuse-prueba/acuse')).flush(new Blob(['previo'], { type: 'application/pdf' }));
-        f.detectChanges();
-        expect(f.nativeElement.querySelector('.acuse-modal iframe')).not.toBeNull();
-        await c.confirmar(true);
-        http.expectOne((r) => r.url.endsWith('/envios/acuse-prueba/confirmar')).flush({ estado: 'CONFIRMADO' });
-        http.expectOne((r) => r.url.endsWith('/envios/acuse-prueba/acuse')).flush(new Blob(['final'], { type: 'application/pdf' }));
-        f.detectChanges();
-        expect(c.ultimoEnvio()?.estado).toBe('CONFIRMADO');
-        expect(f.nativeElement.querySelector('.acuse-modal iframe')).not.toBeNull();
-        expect(f.nativeElement.textContent).not.toContain('Descargar acuse PDF');
-        c.cerrarAcuse();
-        expect(URL.revokeObjectURL).toHaveBeenCalled();
-        expect(c.acuseUrl()).toBeNull();
-    });
     it('oculta el bloque de descarga y desplaza a la carga de archivo al obtener la plantilla', async () =>
     {
         TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual: false, actualizacion: true } } } });
@@ -442,87 +277,4 @@ describe('Carga BANCI por cortes', () =>
         await new Promise((resolve) => setTimeout(resolve, 10));
         expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
     });
-    it('al recibir errores desplaza la tabla de observaciones y la página hasta el final', () =>
-    {
-        const f = crear();
-        const pagina = document.scrollingElement ?? document.documentElement;
-        Object.defineProperty(pagina, 'scrollHeight', { configurable: true, value: 2400 });
-        const scrollPagina = vi.spyOn(pagina, 'scrollTo');
-        const desplazamientos: string[] = [];
-        vi.spyOn(HTMLElement.prototype, 'scrollTo').mockImplementation(function(this: HTMLElement, opciones?: ScrollToOptions | number)
-        {
-            if(this.classList.contains('table-scroll') && typeof opciones === 'object' && opciones.top === this.scrollHeight)
-                desplazamientos.push('observaciones');
-        });
-        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
-        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
-        f.componentInstance.validar();
-        TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/validar/manual')).flush({
-            esValido: false,
-            errores: Array.from({ length: 50 }, (_, i) => ({ archivo: 'victimas', fila: i + 2, campo: 'fub', mensaje: 'Complete el dato.' })),
-        });
-        f.detectChanges();
-        expect(f.nativeElement.querySelectorAll('#banci-errores tbody tr').length).toBe(50);
-        expect(desplazamientos).toContain('observaciones');
-        expect(scrollPagina).toHaveBeenCalledWith({ top: 2400, behavior: 'smooth' });
-    });
-    it('desplaza hacia el estado de proceso al validar una carga manual', async () =>
-    {
-        const f = crear();
-        f.componentInstance.libro.set({ entidad: 9, mes: 9, anio: 2026, actualizacion: false, carpetas: [], delitos: [], victimas: [] });
-        f.componentInstance.seleccion.set({ numeroFila: 2, columnas: { id_ci: '1' } });
-        f.componentInstance.validar();
-        const pagina = document.scrollingElement ?? document.documentElement;
-        const scroll = vi.spyOn(pagina, 'scrollTo');
-        Object.defineProperty(pagina, 'scrollHeight', { configurable: true, value: 1800 });
-        f.detectChanges();
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', top: 1800 });
-        TestBed.inject(HttpTestingController)
-            .expectOne((r) => r.url.endsWith('/validar/manual'))
-            .flush({ esValido: false, errores: [] });
-    });
-    for(const actualizacion of [false, true]) for(const manual of [false, true])
-    {
-        it(`lleva el mensaje de error a la vista en ${actualizacion ? 'actualización' : 'carga'} ${manual ? 'manual' : 'masiva'}`, async () =>
-        {
-            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual, actualizacion } } } });
-            const f = crear();
-            f.componentInstance.precargar();
-            TestBed.inject(HttpTestingController).expectOne(r => r.url.endsWith('/precarga')).flush({ codigo: 'BANCI_ENVIO_PENDIENTE', mensaje: 'Existe un envío pendiente que incluye estos registros.' }, { status: 409, statusText: 'Conflict' });
-            f.detectChanges();
-            await new Promise(resolve => setTimeout(resolve, 10));
-            const mensaje = f.nativeElement.querySelector('#banci-mensaje');
-            expect(mensaje.textContent).toContain('Existe un envío pendiente');
-            expect(f.componentInstance.libro()).toBeNull();
-            expect(f.componentInstance.plantillaDescargada()).toBe(false);
-            expect(mensaje.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-        });
-    }
-
-    for(const actualizacion of [false, true]) for(const manual of [false, true])
-    {
-        it(`retira información ya abierta si otro envío la bloquea en ${actualizacion ? 'actualización' : 'carga'} ${manual ? 'manual' : 'masiva'}`, async () =>
-        {
-            TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { manual, actualizacion } } } });
-            const f = crear(); const c = f.componentInstance;
-            c.precargar();
-            const http = TestBed.inject(HttpTestingController);
-            http.expectOne(r => r.url.endsWith('/precarga')).flush({ entidad: 9, mes: 9, anio: 2026, actualizacion, carpetas: [{ numeroFila: 2, columnas: { id_ci: 'ci' } }], delitos: [{ numeroFila: 2, columnas: { id_ci: 'ci', id_delito: 'del' } }], victimas: [{ numeroFila: 2, columnas: { id_ci: 'ci', id_delito: 'del', id_vicf: 'vic', nomb: 'Antes' } }] });
-            c.libro.update(libro => ({ ...libro!, victimas: libro!.victimas.map(v => ({ ...v, columnas: { ...v.columnas, nomb: 'Después' } })) }));
-            c.seleccion.set(c.libro()!.carpetas[0]);
-            c.plantillaDescargada.set(true); c.archivo = new File(['datos'], 'BANCI.xlsx');
-            c.validar();
-            http.expectOne(r => r.url.endsWith(manual ? '/validar/manual' : '/validar/archivo')).flush({ mensaje: 'Revise los datos capturados.' }, { status: 400, statusText: 'Bad Request' });
-            f.detectChanges(); await new Promise(resolve => setTimeout(resolve, 10));
-            expect(c.libro()).not.toBeNull();
-            expect(f.nativeElement.querySelector('#banci-mensaje').scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-            c.validar();
-            http.expectOne(r => r.url.endsWith(manual ? '/validar/manual' : '/validar/archivo')).flush({ codigo: 'BANCI_ENVIO_PENDIENTE', mensaje: 'Existe un envío pendiente que incluye estos registros.' }, { status: 409, statusText: 'Conflict' });
-            f.detectChanges(); await new Promise(resolve => setTimeout(resolve, 10));
-            expect(c.libro()).toBeNull(); expect(c.archivo).toBeNull(); expect(c.plantillaDescargada()).toBe(false);
-            expect(f.nativeElement.querySelector('#banci-mensaje').textContent).toContain('Existe un envío pendiente');
-        });
-    }
-
 });

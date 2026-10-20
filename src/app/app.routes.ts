@@ -236,13 +236,13 @@ export const routes: Routes = [
             { path: '', loadComponent: () => import('./pages/banci-inicio/banci-inicio').then((m) => m.BanciInicio) },
             {
                 path: 'carga-mensual',
-                loadComponent: () => import('./pages/banci-mensual/banci-modalidad').then((m) => m.BanciModalidad),
+                loadComponent: () => import('./pages/banci-mensual/banci-captura').then((m) => m.BanciCaptura),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA', actualizacion: false },
             },
             {
                 path: 'actualizacion-mensual',
-                loadComponent: () => import('./pages/banci-mensual/banci-modalidad').then((m) => m.BanciModalidad),
+                loadComponent: () => import('./pages/banci-mensual/banci-captura').then((m) => m.BanciCaptura),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', actualizacion: true },
             },
@@ -252,24 +252,14 @@ export const routes: Routes = [
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA', actualizacion: false, manual: false },
             },
-            {
-                path: 'formulario',
-                loadComponent: () => import('./pages/banci-mensual/banci-captura').then((m) => m.BanciCaptura),
-                canActivate: [permissionGuard],
-                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'CARGA', actualizacion: false, manual: true },
-            },
+            { path: 'formulario', redirectTo: 'carga-mensual', pathMatch: 'full' },
             {
                 path: 'actualizacion/masiva',
                 loadComponent: () => import('./pages/banci-mensual/banci-captura').then((m) => m.BanciCaptura),
                 canActivate: [permissionGuard],
                 data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', actualizacion: true, manual: false },
             },
-            {
-                path: 'actualizacion/manual',
-                loadComponent: () => import('./pages/banci-mensual/banci-captura').then((m) => m.BanciCaptura),
-                canActivate: [permissionGuard],
-                data: { roles: [ROLES.SUPER_USUARIO, ROLES.ENLACE_ESTATAL], permiso: 'MODIFICACION', actualizacion: true, manual: true },
-            },
+            { path: 'actualizacion/manual', redirectTo: 'actualizacion-mensual', pathMatch: 'full' },
             {
                 path: 'informes/envios',
                 loadComponent: () => import('./pages/banci-mensual/banci-envios').then((m) => m.BanciEnvios),

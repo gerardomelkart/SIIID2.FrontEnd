@@ -26,17 +26,13 @@ export class BanciMensualService
     {
         return this.http.get<BanciOpciones>(`${this.url}/opciones`);
     }
-    precarga(entidad: number, mes: number, anio: number, actualizacion: boolean, manual = false)
+    precarga(entidad: number, mes: number, anio: number, actualizacion: boolean)
     {
-        return this.http.get<BanciLibro>(`${this.url}/precarga`, { params: { entidad, mes, anio, actualizacion, manual } });
+        return this.http.get<BanciLibro>(`${this.url}/precarga`, { params: { entidad, mes, anio, actualizacion } });
     }
-    plantilla(entidad: number, mes: number, anio: number, actualizacion: boolean, manual = false)
+    plantilla(entidad: number, mes: number, anio: number, actualizacion: boolean)
     {
-        return this.http.get(`${this.url}/plantilla`, { params: { entidad, mes, anio, actualizacion, manual }, responseType: 'blob' });
-    }
-    validarManual(libro: BanciLibro)
-    {
-        return this.http.post<BanciValidacion>(`${this.url}/validar/manual`, libro);
+        return this.http.get(`${this.url}/plantilla`, { params: { entidad, mes, anio, actualizacion }, responseType: 'blob' });
     }
     validarArchivo(archivo: File, libro: BanciLibro)
     {

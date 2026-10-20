@@ -1,21 +1,20 @@
-import { nombreCampo } from './banci-campos';
-import { Component, OnDestroy, ElementRef, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, ElementRef, Injector, afterNextRender, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { finalize, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SessionService } from '../../core/services/session.service';
-import { BanciLibro, BanciFila, BanciOpciones, BanciError, BanciValidacion } from '../../core/models/banci-mensual.models';
+import { BanciLibro, BanciOpciones, BanciError, BanciValidacion } from '../../core/models/banci-mensual.models';
 import { BanciMensualService, descargarBanci } from '../../core/services/banci-mensual.service';
 import { obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { exportarFilasExcel } from '../../core/utils/excel-export.utils';
 
 @Component({
     selector: 'app-banci-captura',
-    imports: [FormsModule, RouterLink],
+    imports: [FormsModule],
     templateUrl: './banci-captura.html',
     styleUrls: ['./banci-mensual.css', './banci-carga.css'],
 })
@@ -77,25 +76,20 @@ export class BanciCaptura implements OnDestroy
         if(texto) this.desplazar('banci-mensaje');
     }
     readonly arrastrandoArchivo = signal(false);
-    readonly nombreCampo = nombreCampo;
     private readonly api = inject(BanciMensualService);
     private readonly session = inject(SessionService);
     private readonly ruta = inject(ActivatedRoute);
     readonly actualizacion = this.ruta.snapshot.data['actualizacion'] === true;
-    readonly manual = this.ruta.snapshot.data['manual'] === true;
-    readonly titulo = `${this.actualizacion ? 'Actualización' : 'Carga'} ${this.manual ? 'manual' : 'masiva'}`;
-    readonly cargaGuiada = !this.manual;
+    readonly titulo = `${this.actualizacion ? 'Actualización' : 'Carga'} masiva`;
+    readonly cargaGuiada = true;
     readonly plantillaDescargada = signal(false);
     readonly ultimoEnvio = signal<{ referencia: string; estado: string } | null>(null);
-    private originales: BanciFila[] = [];
-    private readonly originalEditable = signal('');
     readonly opciones = signal<BanciOpciones | null>(null);
     readonly libro = signal<BanciLibro | null>(null);
     readonly errores = signal<BanciError[]>([]);
     readonly mensaje = signal('');
     readonly ocupado = signal(false);
     readonly validacion = signal<BanciValidacion | null>(null);
-    readonly seleccion = signal<BanciFila | null>(null);
     readonly historicaSinOrigen = signal(false);
     entidad = 0;
     mes = 0;
@@ -137,33 +131,12 @@ export class BanciCaptura implements OnDestroy
     {
         this.cerrarAcuse();
         this.ultimoEnvio.set(null);
-        this.originales = [];
         this.plantillaDescargada.set(false);
-        this.originalEditable.set('');
         this.libro.set(null);
         this.validacion.set(null);
         this.errores.set([]);
         this.mensaje.set('');
-        this.seleccion.set(null);
         this.archivo = null;
-    }
-    precargar(): void
-    {
-        this.limpiar();
-        this.ocupado.set(true);
-        this.api
-            .precarga(this.entidad, this.mes, this.anio, this.actualizacion, this.manual)
-            .pipe(finalize(() => this.ocupado.set(false)))
-            .subscribe({
-                next: (libro) =>
-                {
-                    this.libro.set(libro);
-                    this.originales = structuredClone(libro.victimas);
-                    this.originalEditable.set(this.firmaEditable());
-                    this.historicaSinOrigen.set(!this.actualizacion && libro.carpetas.length === 0);
-                },
-                error: (e) => void this.mostrarError(e),
-            });
     }
     async plantilla(): Promise<void>
     {
@@ -200,10 +173,10 @@ export class BanciCaptura implements OnDestroy
                 this.libro.set(libro);
                 this.historicaSinOrigen.set(sinOrigen);
             }
-            const blob = await firstValueFrom(this.api.plantilla(this.entidad, this.mes, this.anio, this.actualizacion, this.manual));
+            const blob = await firstValueFrom(this.api.plantilla(this.entidad, this.mes, this.anio, this.actualizacion));
             descargarBanci(blob, `BANCI_${this.anio}${String(this.mes).padStart(2, '0')}.xlsx`);
             this.plantillaDescargada.set(true);
-            this.desplazar(this.cargaGuiada ? 'banci-carga-archivo' : 'banci-captura-manual');
+            this.desplazar('banci-carga-archivo');
         } catch (e)
         {
             await this.mostrarError(e);
@@ -255,154 +228,17 @@ export class BanciCaptura implements OnDestroy
         this.validacion.set(null);
         this.errores.set([]);
     }
-    seleccionar(fila: BanciFila): void
-    {
-        this.seleccion.set(fila);
-        this.validacion.set(null);
-        setTimeout(() => document.getElementById('banci-complementos')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    }
-    victimasCarpeta(): BanciFila[]
-    {
-        return this.libro()?.victimas.filter((f) => f.columnas['id_ci'] === this.seleccion()?.columnas['id_ci']) ?? [];
-    }
-    private firmaEditable(): string
-    {
-        return JSON.stringify(this.libro()?.victimas.map((f) => this.editables().map((c) => f.columnas[c]?.trim() ?? '')) ?? []);
-    }
-    readonly hayCambios = computed(() => this.originalEditable() !== '' && this.firmaEditable() !== this.originalEditable());
-    mostrarProtegido(campo: string): boolean
-    {
-        return (
-            !this.editables().includes(campo) && !['nombre_vicfem', '1apellido_vicfem', '2apellido_vicfem', 'curp_vicfem'].includes(campo)
-        );
-    }
-    camposVictima(fila: BanciFila): string[]
-    {
-        const campos = this.historicaSinOrigen() ? (this.opciones()?.columnas.victimas ?? []) : this.editables();
-        const localizado = this.opciones()?.catalogos['localizacion']?.find((o) => o.codigo === 'LOCALIZADO');
-        return campos.filter(
-            (c) =>
-                !['con_o_sin_vida', 'fecha_localizacion', 'constitutiva_delito', 'motivo_desaparicion'].includes(c) ||
-                fila.columnas['localizado_o_no_localizado'] === String(localizado?.clave),
-        );
-    }
-    private llave(fila: BanciFila): string
-    {
-        return JSON.stringify(['id_ci', 'id_delito', 'id_vicf'].map((c) => fila.columnas[c]?.trim() ?? ''));
-    }
-    libroParaEnviar(): BanciLibro | null
-    {
-        const libro = this.libro();
-        if(!libro || !this.manual) return libro;
-        let victimas: BanciFila[];
-        if(this.actualizacion)
-        {
-            const anteriores = new Map(this.originales.map((f) => [this.llave(f), f]));
-            victimas = libro.victimas.filter((f) =>
-            {
-                const anterior = anteriores.get(this.llave(f));
-                return !anterior || this.editables().some((c) => (f.columnas[c]?.trim() ?? '') !== (anterior.columnas[c]?.trim() ?? ''));
-            });
-        } else
-        {
-            if(!this.seleccion()) return null;
-            victimas = libro.victimas.filter((f) => f.columnas['id_ci'] === this.seleccion()!.columnas['id_ci']);
-        }
-        const carpetas = new Set(victimas.map((f) => f.columnas['id_ci']));
-        // En alta se conserva toda la carpeta elegida, aunque falte completar una víctima.
-        if(!this.actualizacion) carpetas.add(this.seleccion()!.columnas['id_ci']);
-        const delitos = new Set(victimas.map((f) => JSON.stringify([f.columnas['id_ci'], f.columnas['id_delito']])));
-        return {
-            ...libro,
-            manual: true,
-            victimas,
-            carpetas: libro.carpetas.filter((f) => carpetas.has(f.columnas['id_ci'])),
-            delitos: libro.delitos.filter((f) =>
-                this.actualizacion
-                    ? delitos.has(JSON.stringify([f.columnas['id_ci'], f.columnas['id_delito']]))
-                    : carpetas.has(f.columnas['id_ci']),
-            ),
-        };
-    }
-    editables(): string[]
-    {
-        return [...(this.actualizacion ? (this.opciones()?.personales ?? []) : []), ...(this.opciones()?.complementos ?? [])];
-    }
-    catalogo(campo: string, fila: BanciFila)
-    {
-        const clave =
-            (
-                {
-                    localizado_o_no_localizado: 'localizacion',
-                    con_o_sin_vida: 'condicion_vida',
-                    constitutiva_delito: 'constitutiva_delito',
-                    motivo_desaparicion: 'motivos',
-                } as Record<string, string>
-            )[campo] ?? campo;
-        const opciones = this.opciones()?.catalogos[clave];
-        if(campo === 'id_mun_hchos') return opciones?.filter((o) => String(o.condicion) === fila.columnas['id_ent_hchos']) ?? [];
-        return campo === 'motivo_desaparicion'
-            ? (opciones?.filter((o) => String(o.condicion) === fila.columnas['constitutiva_delito']) ?? [])
-            : opciones;
-    }
-    editar(campo: string, fila: BanciFila, valor: string): void
-    {
-        const anterior = fila.columnas[campo];
-        if(this.historicaSinOrigen() && campo === 'id_ci' && this.libro()?.carpetas.includes(fila))
-            for(const hijo of [...this.libro()!.delitos, ...this.libro()!.victimas].filter((f) => f.columnas['id_ci'] === anterior))
-                hijo.columnas['id_ci'] = valor;
-        if(this.historicaSinOrigen() && campo === 'id_delito' && this.libro()?.delitos.includes(fila))
-            for(const hijo of this.libro()!.victimas.filter(
-                (f) => f.columnas['id_ci'] === fila.columnas['id_ci'] && f.columnas['id_delito'] === anterior,
-            ))
-                hijo.columnas['id_delito'] = valor;
-        fila.columnas[campo] = valor;
-        this.libro.update((libro) => (libro ? { ...libro } : libro));
-        this.validacion.set(null);
-        if(campo === 'constitutiva_delito') fila.columnas['motivo_desaparicion'] = '';
-        if(campo === 'localizado_o_no_localizado')
-        {
-            const localizado = this.opciones()?.catalogos['localizacion']?.find((o) => o.codigo === 'LOCALIZADO');
-            if(valor !== String(localizado?.clave))
-                for(const nombre of ['con_o_sin_vida', 'fecha_localizacion', 'constitutiva_delito', 'motivo_desaparicion'])
-                    fila.columnas[nombre] = '';
-        }
-    }
-    agregar(grupo: 'carpetas' | 'delitos' | 'victimas'): void
-    {
-        const libro = this.libro();
-        const opciones = this.opciones();
-        if(!libro || !opciones || !this.historicaSinOrigen()) return;
-        const fila: BanciFila = {
-            numeroFila: libro[grupo].length + 2,
-            columnas: Object.fromEntries(opciones.columnas[grupo].map((c) => [c, ''])),
-        };
-        if(grupo !== 'carpetas') fila.columnas['id_ci'] = this.seleccion()?.columnas['id_ci'] ?? '';
-        libro[grupo].push(fila);
-        this.libro.set({ ...libro });
-        this.validacion.set(null);
-        if(grupo === 'carpetas') this.seleccionar(fila);
-    }
-    eliminar(grupo: 'carpetas' | 'delitos' | 'victimas', fila: BanciFila): void
-    {
-        const libro = this.libro();
-        if(!libro || !this.historicaSinOrigen()) return;
-        libro[grupo] = libro[grupo].filter((f) => f !== fila);
-        this.libro.set({ ...libro });
-        this.validacion.set(null);
-    }
     validar(): void
     {
         if(this.cargaGuiada && !this.plantillaDescargada()) return;
-        if(this.manual && this.actualizacion && !this.hayCambios()) return;
-        const libro = this.libroParaEnviar();
-        if(!libro || (!this.manual && !this.archivo) || (this.manual && this.actualizacion && !libro.victimas.length)) return;
+        const libro = this.libro();
+        if(!libro || !this.archivo) return;
         this.ocupado.set(true);
         this.mensaje.set('');
         this.validacion.set(null);
         this.errores.set([]);
         this.desplazar('banci-proceso', 'end');
-        const peticion = this.manual ? this.api.validarManual(libro) : this.api.validarArchivo(this.archivo!, libro);
+        const peticion = this.api.validarArchivo(this.archivo, libro);
         peticion.pipe(finalize(() => this.ocupado.set(false))).subscribe({
             next: (r) =>
             {
