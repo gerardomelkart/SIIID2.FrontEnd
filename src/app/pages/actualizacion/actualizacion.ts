@@ -8,7 +8,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { exportarValidacionExcel } from '../../core/utils/validacion-excel.utils';
 
-import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import { confirmarAccion, mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 import { ROLES } from '../../core/constants/roles.constants';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
@@ -549,6 +549,13 @@ export class Actualizacion implements OnInit
                     {
                         this.estadoPeriodo.set('VALIDADO_ADVERTENCIA');
 
+                        const sinCurp = this.advertencias().filter(a => a.codigo === 'FEMINICIDIO_MEXICANA_SIN_CURP_ADVERTENCIA');
+                        if(sinCurp.length) {
+                            const decision = await confirmarAccion('Persona mexicana sin CURP',
+                                sinCurp[0].mensaje + (sinCurp.length > 1 ? ` Registros afectados: ${sinCurp.length}.` : ''), 'Continuar');
+                            if(decision.isConfirmed) this.aceptarAdvertenciasActualizacion();
+                            return;
+                        }
                         await mostrarAdvertencia(
                             'Advertencias detectadas',
                             'La validación terminó correctamente, pero contiene advertencias que no bloquean la actualización. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',

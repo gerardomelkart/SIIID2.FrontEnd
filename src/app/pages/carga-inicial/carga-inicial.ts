@@ -4,7 +4,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
-import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import { confirmarAccion, mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
@@ -257,6 +257,13 @@ export class CargaInicial
                 {
                     this.estado.set('VALIDADO_ADVERTENCIA');
 
+                    const sinCurp = this.advertencias().filter(a => a.codigo === 'FEMINICIDIO_MEXICANA_SIN_CURP_ADVERTENCIA');
+                    if(sinCurp.length) {
+                        const decision = await confirmarAccion('Persona mexicana sin CURP',
+                            sinCurp[0].mensaje + (sinCurp.length > 1 ? ` Registros afectados: ${sinCurp.length}.` : ''), 'Continuar');
+                        if(decision.isConfirmed) this.continuarAAcusePrevio();
+                        return;
+                    }
                     await mostrarAdvertencia(
                         'Advertencias detectadas',
                         'La validación terminó correctamente, pero contiene advertencias que no bloquean la carga. Revise el detalle antes de decidir si desea continuar o rechazar la operación.',
