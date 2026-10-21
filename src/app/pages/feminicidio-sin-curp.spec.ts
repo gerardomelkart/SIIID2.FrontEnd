@@ -7,7 +7,7 @@ import { Actualizacion } from './actualizacion/actualizacion';
 describe('Decisión por persona mexicana sin CURP en el Consolidado', () => {
     afterEach(() => vi.restoreAllMocks());
     for(const actualizacion of [false, true]) for(const aceptar of [false, true]) {
-        it(`${actualizacion ? 'actualización' : 'carga'} conserva la revisión al ${aceptar ? 'continuar' : 'cancelar'} el modal`, async () => {
+        it(`${actualizacion ? 'actualización' : 'carga'} conserva la revisión al ${aceptar ? 'continuar' : 'cerrar'} el modal`, async () => {
             const modal = vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: aceptar, isDenied: false, isDismissed: !aceptar });
             const archivo = new File(['datos'], 'prueba.xlsx');
             vi.spyOn(archivo, 'slice').mockReturnValue({ arrayBuffer: async () => new ArrayBuffer(1) } as Blob);
@@ -34,8 +34,9 @@ describe('Decisión por persona mexicana sin CURP en el Consolidado', () => {
             await Promise.resolve();
             expect(modal).toHaveBeenCalledWith(expect.objectContaining({
                 title: 'Persona mexicana sin CURP', text: avisos[0].mensaje,
-                showCancelButton: true, confirmButtonText: 'Continuar', cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Continuar',
             }));
+            expect(modal.mock.calls[0][0]).not.toHaveProperty('showCancelButton', true);
             expect(continuar).not.toHaveBeenCalled();
             expect((actualizacion ? contexto.estadoPeriodo : contexto.estado)()).toBe('VALIDADO_ADVERTENCIA');
             expect((actualizacion ? contexto.respuestaValidacion : contexto.respuesta)()).toEqual(respuesta);

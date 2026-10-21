@@ -4,7 +4,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 
-import { confirmarAccion, mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
+import { mostrarAdvertencia, mostrarError, mostrarExito, mostrarExitoInstitucional } from '../../core/utils/alert.utils';
 
 import { obtenerErrorPayload, obtenerMensajeErrorHttp } from '../../core/utils/http-error.utils';
 import { crearSafeBlobUrl, revocarObjectUrl } from '../../core/utils/blob-url.utils';
@@ -259,7 +259,7 @@ export class CargaInicial
 
                     const sinCurp = this.advertencias().filter(a => a.codigo === 'FEMINICIDIO_MEXICANA_SIN_CURP_ADVERTENCIA');
                     if(sinCurp.length) {
-                        await confirmarAccion('Persona mexicana sin CURP',
+                        await mostrarAdvertencia('Persona mexicana sin CURP',
                             sinCurp[0].mensaje + (sinCurp.length > 1 ? ` Registros afectados: ${sinCurp.length}.` : ''), 'Continuar');
                         return;
                     }

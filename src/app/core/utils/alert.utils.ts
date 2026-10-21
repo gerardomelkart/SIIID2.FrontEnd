@@ -39,9 +39,9 @@ export function mostrarError(title: string, text = 'Intente nuevamente.'): Promi
     return mostrarAlerta('error', { title, text });
 }
 
-export function mostrarAdvertencia(title: string, text?: string): Promise<SweetAlertResult>
+export function mostrarAdvertencia(title: string, text?: string, confirmButtonText = 'OK'): Promise<SweetAlertResult>
 {
-    return mostrarAlerta('warning', { title, text });
+    return mostrarAlerta('warning', { title, text, confirmButtonText });
 }
 
 export function mostrarInfo(title: string, text?: string): Promise<SweetAlertResult>
