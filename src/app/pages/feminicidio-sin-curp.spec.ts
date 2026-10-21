@@ -7,11 +7,14 @@ import { Actualizacion } from './actualizacion/actualizacion';
 describe('Decisión por persona mexicana sin CURP en el Consolidado', () => {
     afterEach(() => vi.restoreAllMocks());
     for(const actualizacion of [false, true]) for(const aceptar of [false, true]) {
-        it(`${actualizacion ? 'actualización' : 'carga'} ${aceptar ? 'continúa' : 'permanece en revisión'} al decidir el modal`, async () => {
+        it(`${actualizacion ? 'actualización' : 'carga'} conserva la revisión al ${aceptar ? 'continuar' : 'cancelar'} el modal`, async () => {
             const modal = vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: aceptar, isDenied: false, isDismissed: !aceptar });
             const archivo = new File(['datos'], 'prueba.xlsx');
             vi.spyOn(archivo, 'slice').mockReturnValue({ arrayBuffer: async () => new ArrayBuffer(1) } as Blob);
-            const avisos = [{ codigo: 'FEMINICIDIO_MEXICANA_SIN_CURP_ADVERTENCIA', mensaje: '¿Está seguro de que desea registrar a una persona mexicana sin CURP? Este registro será observado a nivel administrativo.' }];
+            const avisos = [
+                { codigo: 'FEMINICIDIO_MEXICANA_SIN_CURP_ADVERTENCIA', mensaje: '¿Está seguro de que desea registrar a una persona mexicana sin CURP? Este registro será observado a nivel administrativo.' },
+                { codigo: 'OTRA_ADVERTENCIA', mensaje: 'Otra observación que también debe revisarse antes de aceptar.' },
+            ];
             const respuesta = { esValido: true, codigoReferencia: 'PRUEBA', advertencias: avisos, errores: [] };
             const continuar = vi.fn();
             const contexto = {
@@ -33,7 +36,9 @@ describe('Decisión por persona mexicana sin CURP en el Consolidado', () => {
                 title: 'Persona mexicana sin CURP', text: avisos[0].mensaje,
                 showCancelButton: true, confirmButtonText: 'Continuar', cancelButtonText: 'Cancelar',
             }));
-            expect(continuar).toHaveBeenCalledTimes(aceptar ? 1 : 0);
+            expect(continuar).not.toHaveBeenCalled();
+            expect((actualizacion ? contexto.estadoPeriodo : contexto.estado)()).toBe('VALIDADO_ADVERTENCIA');
+            expect((actualizacion ? contexto.respuestaValidacion : contexto.respuesta)()).toEqual(respuesta);
         });
     }
 });

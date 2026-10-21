@@ -551,9 +551,8 @@ export class Actualizacion implements OnInit
 
                         const sinCurp = this.advertencias().filter(a => a.codigo === 'FEMINICIDIO_MEXICANA_SIN_CURP_ADVERTENCIA');
                         if(sinCurp.length) {
-                            const decision = await confirmarAccion('Persona mexicana sin CURP',
+                            await confirmarAccion('Persona mexicana sin CURP',
                                 sinCurp[0].mensaje + (sinCurp.length > 1 ? ` Registros afectados: ${sinCurp.length}.` : ''), 'Continuar');
-                            if(decision.isConfirmed) this.aceptarAdvertenciasActualizacion();
                             return;
                         }
                         await mostrarAdvertencia(
